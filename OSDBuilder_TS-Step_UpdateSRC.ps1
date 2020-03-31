@@ -8,11 +8,14 @@ $InstallationType = Get-ItemPropertyValue -Path HKLM:\SOFTWARE\OSDBuilder -Name 
 Set-ExecutionPolicy Bypass -Force
 #This Registry Key was se during Step 'Tag CMPSModule Path'
 
+
+Write-Host "Loading CM PS Module"
 if ($env:SMS_ADMIN_UI_PATH)
     {
     Write-Output "Found CM Console in Path, trying to import module"
     Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1) -Verbose   
     if (Get-Module -Name ConfigurationManager){Write-Output "Successfully loaded CM Module from Installed Console"}
+    $PSModulePath = $true
     }
 else
     {
@@ -20,9 +23,12 @@ else
         {
         $CMPSModulePath = Get-ItemPropertyValue -Path HKLM:\SOFTWARE\OSDBuilder -Name CMPSModulePath
         Write-Host $CMPSModulePath
-        if ($CMPSModulePath){$PSModulePath = $true}
+        Import-Module (Join-Path $CMPSModulePath ConfigurationManager.psd1)
+        if (Get-Module -Name ConfigurationManager)
+            {Write-Output "Successfully loaded CM Module from Downloaded Source"
+            $PSModulePath = $true
+            }
         }
-
     catch{
     
         $PSModulePath = $false
@@ -34,8 +40,7 @@ else
 
 if ($PSModulePath)
     {
-    Write-Host "Loading CM PS Module"
-    Import-Module "$CMPSModulePath\ConfigurationManager.psd1"
+    #Import-Module "$CMPSModulePath\ConfigurationManager.psd1"
     #Get SiteCode
     if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName}
     Set-location $SiteCode":"
