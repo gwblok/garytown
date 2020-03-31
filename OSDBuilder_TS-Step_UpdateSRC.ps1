@@ -9,7 +9,7 @@ Set-ExecutionPolicy Bypass -Force
 #This Registry Key was se during Step 'Tag CMPSModule Path'
 
 
-Write-Host "Loading CM PS Module"
+Write-Host "Loading CM PS Module" #First Check for Installed Console PowerShell, then Check for Package Contents to load Module
 if ($env:SMS_ADMIN_UI_PATH)
     {
     Write-Output "Found CM Console in Path, trying to import module"
@@ -30,9 +30,7 @@ else
             }
         }
     catch{
-    
         $PSModulePath = $false
-        
         }
     }
 
