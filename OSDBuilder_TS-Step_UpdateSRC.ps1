@@ -1,3 +1,8 @@
+<#Future, Turn this into Params... well, that doesnt' really help as other steps need this information too...  we'll see
+I would like to parameterize the "Version Field" so you could specify Manually, use a whitty one via a webcall, or nothing.
+
+#>
+
 $SiteCode = Get-ItemPropertyValue -Path HKLM:\SOFTWARE\OSDBuilder -Name SMSTSSiteCode
 $ProviderMachineName = Get-ItemPropertyValue -Path HKLM:\SOFTWARE\OSDBuilder -Name SMSTSMP
 $UpgradePackageID = Get-ItemPropertyValue -Path HKLM:\SOFTWARE\OSDBuilder -Name UpgradePackage
@@ -13,7 +18,7 @@ Write-Host "Loading CM PS Module" #First Check for Installed Console PowerShell,
 if ($env:SMS_ADMIN_UI_PATH)
     {
     Write-Output "Found CM Console in Path, trying to import module"
-    Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1) -Verbose   
+    Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1)  
     if (Get-Module -Name ConfigurationManager){Write-Output "Successfully loaded CM Module from Installed Console"}
     $PSModulePath = $true
     }
@@ -74,17 +79,48 @@ if ($PSModulePath)
     Set-ItemProperty -Path HKLM:\SOFTWARE\OSDBuilder -Name "UBR_$($InstallationType)_$($Releaseid)" -Value $OSMedia.UBR -Force
     Write-Host "Copy of $ReleaseID Content Finished"
     
+    #Set Fun Version in CM Console for the Uploaded Media - Checks for "Holiday" and uses that. - @gwblok
+    if ((Test-NetConnection "www.checkiday.com").PingSucceeded)
+        {
+        [xml]$Events = (New-Object System.Net.WebClient).DownloadString("https://www.checkiday.com/rss.php?tz=America/Chicago")
+        if ($Events)
+            {
+            $EventNames = $Events.rss.channel.item.description
+            #Pick Random Calendar Event
+            [int]$Picker = Get-Random -Minimum 1 -Maximum $EventNames.Count
+            $EventPicked = ($EventNames[$Picker]).'#cdata-section'
+            $VersionName = ($EventPicked.Replace("Today is ","")).replace(" Day!"," Edition")
+            if($VersionName.Contains('National')) {$VersionName = $VersionName.Replace("National","")}
+        
+            Write-Output "OSD Builder TS Version: $VersionName"
+            }
+        else
+            {
+            $VersionName = "BYO ISO Edition"
+            Write-Output "No Special Events today, defaulting to generic"
+            }
+        }
+    else
+        {
+        Write-Output "Can't Connect to Website"
+        $VersionName = "BYO ISO Edition"
+        Write-Output "No Special Events today, defaulting to generic"
+        }
+
+
     #Trigger CM Updates
     Set-location $SiteCode":"
     Write-Host "Updating Image Properites & Updating DPs with new content"
     #Upgrade Media
     $UpgradePackage.ExecuteMethod("ReloadImageProperties", $null)
     Update-CMDistributionPoint -InputObject $UpgradePackage
-    set-CMOperatingSystemInstaller -Id $UpgradePackage.PackageID -Description "OSDBuilder Build on $($OSMedia.ModifiedTime)"
+    set-CMOperatingSystemInstaller -Id $UpgradePackage.PackageID -Description "OSDBuilder Build on $($OSMedia.ModifiedTime).  Built on Machine: $($env:COMPUTERNAME)"
+    set-CMOperatingSystemInstaller -Id $UpgradePackage.PackageID -Version $VersionName
     #OSD Media
     $OSDPackage.ExecuteMethod("ReloadImageProperties", $null)
     Update-CMDistributionPoint -InputObject $OSDPackage
-    Set-CMOperatingSystemImage -Id $OSDPackage.PackageID -Description "OSDBuilder Build on $($OSMedia.ModifiedTime)"
+    Set-CMOperatingSystemImage -Id $OSDPackage.PackageID -Description "OSDBuilder Build on $($OSMedia.ModifiedTime).  Built on Machine: $($env:COMPUTERNAME)"
+    Set-CMOperatingSystemImage -Id $OSDPackage.PackageID -Version $VersionName
     #Confirm Source Version Updated
     Start-Sleep -Seconds 180
     $UpgradePackageUpdated = Get-CMOperatingSystemUpgradePackage -Id $UpgradePackageID 
