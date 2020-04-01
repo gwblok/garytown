@@ -9,6 +9,8 @@ if ((Test-NetConnection "www.checkiday.com").PingSucceeded)
         [int]$Picker = Get-Random -Minimum 1 -Maximum $EventNames.Count
         $EventPicked = ($EventNames[$Picker]).'#cdata-section'
         $VersionName = ($EventPicked.Replace("Today is ","")).replace(" Day!"," Edition")
+        if($VersionName.Contains('National')) {$VersionName = $VersionName.Replace("National","")}
+        
         Write-Output "OSD Builder TS Version: $VersionName"
         }
     else
