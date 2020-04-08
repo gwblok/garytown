@@ -1,3 +1,17 @@
+<# 
+Version 2020.04.08 - @GWBLOK
+Creates Packages for the Models you specify
+HP needs Product Codes
+Dell needs JSONModel, because if you use another script to download things, you'll find that they have different names in their JSON/XML than they use as their Model Name.
+
+Info provided in the table is used to create the Packages and populate differnet fields which the other scripts need to pull down BIOS & Drivers.
+StageTable... if you don't do "Piloting, or Pre-Prod Testing" of Packages using a different source, then you can remove this and write the script... or just comment out "Pre-Prod"
+
+BIOS Download Scripts will be available here on my github.. eventually, likewise for Drivers.
+
+#> 
+
+
 $OperatingSystemDriversSupport = "Windows 10 x64"  #Used to Tag OS Drivers are for (Because we use similar process for Server OS too)
 #$adgroup = "Device Drivers Administrators UAT" #This Group get Full Access on the Import Folder, which I've also disabled, but left for reference.  I doubt anyone will need this unless they want to setup an automated peer-review type process for driver import.
 
@@ -40,32 +54,32 @@ $ModelsTable= @(
 @{ ProdCode = '80D6'; Model = "ZBook 17 G3"; Man = "HP"}
 @{ ProdCode = '842D'; Model = "ZBook 17 G5"; Man = "HP"}
 @{ ProdCode = '860C'; Model = "ZBook 17 G6"; Man = "HP"}
-@{Model = "Latitude 5290"; Man = "Dell"}
-@{Model = "Latitude 5300"; Man = "Dell"}
-@{Model = "Latitude 5400"; Man = "Dell"}
-@{Model = "Latitude 5490"; Man = "Dell"}
-@{Model = "Latitude 5501"; Man = "Dell"}
-@{Model = "Latitude 5580"; Man = "Dell"}
-@{Model = "Latitude 5590"; Man = "Dell"}
-@{Model = "Latitude 7275"; Man = "Dell"}
-@{Model = "Latitude 7280"; Man = "Dell"}
-@{Model = "Latitude 7480"; Man = "Dell"}
-@{Model = "Latitude E5570"; Man = "Dell"}
-@{Model = "Latitude E7250"; Man = "Dell"}
-@{Model = "Latitude E7270"; Man = "Dell"}
-@{Model = "Latitude E7450"; Man = "Dell"}
-@{Model = "Latitude E7470"; Man = "Dell"}
-@{Model = "OptiPlex 3040"; Man = "Dell"}
-@{Model = "OptiPlex 5050"; Man = "Dell"}
-@{Model = "OptiPlex 5060"; Man = "Dell"}
-@{Model = "OptiPlex 5070"; Man = "Dell"}
-@{Model = "OptiPlex 7010"; Man = "Dell"}
-@{Model = "OptiPlex 7040"; Man = "Dell"}
-@{Model = "OptiPlex 7050"; Man = "Dell"}
-@{Model = "OptiPlex 9020"; Man = "Dell"}
-@{Model = "Venue 11 Pro 7140"; Man = "Dell"}
-@{Model = "XPS 13 9365"; Man = "Dell"}
-
+@{JSONModel = "Latitude 5290"; Model = "Latitude 5290"; Man = "Dell"}
+@{JSONModel = "Latitude 5300"; Model = "Latitude 5300"; Man = "Dell"}
+@{JSONModel = "Latitude 5400";Model = "Latitude 5400"; Man = "Dell"}
+@{JSONModel = "Latitude 5490";Model = "Latitude 5490"; Man = "Dell"}
+@{JSONModel = "Latitude 5501";Model = "Latitude 5501"; Man = "Dell"}
+@{JSONModel = "Latitude 5580";Model = "Latitude 5580"; Man = "Dell"}
+@{JSONModel = "Latitude 5590";Model = "Latitude 5590"; Man = "Dell"}
+@{JSONModel = "Latitude 7275";Model = "Latitude 7275"; Man = "Dell"}
+@{JSONModel = "Latitude 7280";Model = "Latitude 7280"; Man = "Dell"}
+@{JSONModel = "Latitude 7480";Model = "Latitude 7480"; Man = "Dell"}
+@{JSONModel = "Latitude E5570";Model = "Latitude E5570"; Man = "Dell"}
+@{JSONModel = "Latitude E7250_7250";Model = "Latitude E7250"; Man = "Dell"}
+@{JSONModel = "Latitude E7270";Model = "Latitude E7270"; Man = "Dell"}
+@{JSONModel = "Latitude E7450";Model = "Latitude E7450"; Man = "Dell"}
+@{JSONModel = "Latitude E7470";Model = "Latitude E7470"; Man = "Dell"}
+@{JSONModel = "OptiPlex 3040";Model = "OptiPlex 3040"; Man = "Dell"}
+@{JSONModel = "OptiPlex 5050";Model = "OptiPlex 5050"; Man = "Dell"}
+@{JSONModel = "OptiPlex 5060";Model = "OptiPlex 5060"; Man = "Dell"}
+@{JSONModel = "OptiPlex 5070";Model = "OptiPlex 5070"; Man = "Dell"}
+@{JSONModel = "OptiPlex 7010";Model = "OptiPlex 7010"; Man = "Dell"}
+@{JSONModel = "OptiPlex 7040";Model = "OptiPlex 7040"; Man = "Dell"}
+@{JSONModel = "OptiPlex 7050";Model = "OptiPlex 7050"; Man = "Dell"}
+@{JSONModel = "OptiPlex 9020";Model = "OptiPlex 9020"; Man = "Dell"}
+@{JSONModel = "Tablet 7140";Model = "Venue 11 Pro 7140"; Man = "Dell"}
+@{JSONModel = "XPS Notebook 9365";Model = "XPS 13 9365"; Man = "Dell"}
+#JSON Model based of Dell XML Data in ftp://ftp.dell.com/catalog/DellSDPCatalogPC.cab
 )
 
 
@@ -162,7 +176,8 @@ foreach ($Type in $PackageTypes)
                 Set-CMPackage -InputObject $PackageCheck -MifName $Stage.Level
                 Set-CMPackage -InputObject $PackageCheck -Path $SourceSharePackageLocation
                 if ($Type.PackageType -eq "Driver"){ Set-CMPackage -InputObject $PackageCheck -MifPublisher $OperatingSystemDriversSupport}
-                Set-CMPackage -InputObject $PackageCheck -MifFileName $Model.Model
+                if ($Model.Man -eq "HP"){Set-CMPackage -InputObject $PackageCheck -MifFileName $Model.Model}
+                if ($Model.Man -eq "Dell"){Set-CMPackage -InputObject $PackageCheck -MifFileName $Model.JSONModel}
         
             #Create Program and Tag for TS - This runs each time as there isn't a way (That I know of) to query if EnableTS is already set, so I just set it each run, no harm done.
             Set-Location -Path "$($SiteCode):"
