@@ -1,7 +1,6 @@
 <#  Version 2020.04.08 - Creator @gwblok - GARYTOWN.COM
     Used to download BIOS Updates from HP
-    This Script was created to build a BIOS Update Package. 
-    Future Scripts based on this will be one that gets the Model / Product info from the machine it's running on and pull down the correct BIOS and run the Updater
+    Grabs BIOS Files based on your CM Package Structure... based on this: https://github.com/gwblok/garytown/blob/master/hardware/CreateCMPackages_BIOS_Drivers.ps1
 
     REQUIREMENTS:  HP Client Management Script Library
     Download / Installer: https://ftp.hp.com/pub/caps-softpaq/cmit/hp-cmsl.html  
