@@ -12,7 +12,7 @@
     Usage... Stage Prod or Pre-Prod.
     If you don't do Pre-Prod... just delete that Param section out and set $Stage = Prod or remove all Stage references complete, do whatever you want I guess.
 
-
+    PROXY... either update or delete the proxy stuff
 #>
 [CmdletBinding()]
     Param (
@@ -132,8 +132,9 @@ foreach ($HPModel in $HPModelsTable) #{Write-Host "$($HPModel.Name)"}
     $Name = $HPModel.MIFFilename
     $MaxBuild = ((Get-HPDeviceDetails -platform $Prodcode -oslist | Where-Object {$_.OperatingSystem -eq "Microsoft Windows 10"}).OperatingSystemRelease | measure -Maximum).Maximum
     $BIOS = Get-HPBiosUpdates -platform $Prodcode -latest
-    $BIOSInfo = Get-SoftpaqList -Platform $Prodcode -Category BIOS -OsVer $MaxBuild | Where-Object {$_.Version -match $BIOS.Ver}
-    if (!($BIOSInfo)){$Description = "SOFTPAQ DATA irregularity, Contact Nathan... jk... contact HP Support" }
+    $BIOSInfo = Get-SoftpaqList -Platform $Prodcode -Category BIOS -OsVer $MaxBuild 
+    $BIOSInfo = $BIOSInfo | Where-Object {$_.Version -match $BIOS.Ver}
+    if (!($BIOSInfo)){$Description = "SOFTPAQ DATA irregularity, Try to Rerun" }
     else{$Description = $BIOSInfo.ReleaseNotes}
      
        #Get Current Driver CMPackage Version from CM
