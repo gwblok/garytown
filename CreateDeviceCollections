@@ -1,4 +1,10 @@
 <#
+V2020.04.08 by @miketerrill
+- Fixed collection model creation by initializing $Models as an array
+- Added normalization support for Microsoft and VMware
+- Simplified the CM Folder creation and added a variable for it (for Brain Mason)
+- Move collections to folder if $CreateCollectionFolder is true
+
 V2020.02.07 by merlinfrombelgium
 - Fixed some typos and grammar
 - Fixed WMI queries to 'select distinct' instead of just 'select'. This returned an array of ProductIDs, where only one is wanted.
@@ -49,26 +55,34 @@ $SiteCode = Get-PSDrive -PSProvider CMSITE
 $ProviderMachineName = (Get-PSDrive -PSProvider CMSITE).Root
 Set-location $SiteCode":"
 
-#Create Default Folder "Operational"
-$CollectionFolder = @{Name ="Operational"; ObjectType =5000; ParentContainerNodeId =0}
-if ((Get-CimInstance -Namespace "root\sms\site_$($SiteCode.Name)" -Class "SMS_ObjectContainerNode"-ComputerName $SiteCode.Root).Name -contains "Operational"){}
-Else{Set-WmiInstance -Namespace "root\sms\site_$($SiteCode.Name)" -Class "SMS_ObjectContainerNode" -Arguments $CollectionFolder -ComputerName $SiteCode.Root |Out-Null}
-$FolderPath =($SiteCode.Name +":\DeviceCollection\" + $CollectionFolder.Name)
-
-
 #Start Custom Script Vars
-$ModelColPrefix = "ModelCol"
-$ManufacturerColPreFix = "ManufacturerCol"
-$Models = $Null
+$ModelColPrefix = "" #If a prefix is required before the collection name enter it here
+$ManufacturerColPreFix = "All " #If a prefix is required before the collection name enter it here
+$Models = @()
 $Model = $Null
 $MachineDatabase = @()
 $LimitingCollection = "All Workstations"  #Creates this later if does not exist
 $CreateManufacturersCollections = $true
 $CreateModelCollections = $true
+$CollectionFolderName = "Workstation Models"
+$CreateCollectionFolder = $true
+
+#Create Collection Folder
+If ((-not (Test-Path -Path ($SiteCode.Name +":\DeviceCollection\$CollectionFolderName"))) -and ($CreateCollectionFolder))
+    {
+    Write-host "Device collection folder name $CollectionFolderName was not found. Creating folder..." -ForegroundColor Green
+    New-Item -Name $CollectionFolderName -Path ($SiteCode.Name +":\DeviceCollection")
+    $FolderPath = ($SiteCode.Name +":\DeviceCollection\$CollectionFolderName")
+    Write-host "Device collection folder $CollectionFolderName created." -ForegroundColor Green
+    }
+elseif ((Test-Path -Path ($SiteCode.Name +":\DeviceCollection\$CollectionFolderName")) -and ($CreateCollectionFolder))
+    {
+    Write-host "Device collection folder name $CollectionFolderName already exists...will move newly created collections to this folder." -ForegroundColor Yellow
+    $FolderPath = ($SiteCode.Name +":\DeviceCollection\$CollectionFolderName")
+    }
 
 #Set Schedule to Evaluate Weekly (from the time you run the script)
 $Schedule = New-CMSchedule -Start (Get-Date).DateTime -RecurInterval Days -RecurCount 7
-
 
 #Confirm All Workstation Collection, or create it if needed
 $AllWorkstationCollection = Get-CMCollection -Name $LimitingCollection
@@ -85,7 +99,6 @@ select SMS_R_System.Name from  SMS_R_System where SMS_R_System.OperatingSystemNa
     }
 else {Write-Host "Found All Workstations Collection ID: $($AllWorkstationCollection.CollectionID), which will be used as the limiting collections moving forward" -ForegroundColor Green}
 
-
 #Start Populating $MachineDatabase Array with the Models you select
 
 #Pick from Manufacturers
@@ -93,7 +106,6 @@ $query = @"
 select DISTINCT SMS_G_System_COMPUTER_SYSTEM.Manufacturer FROM SMS_G_System_COMPUTER_SYSTEM
 "@
 $Manufs = (Get-WmiObject -ComputerName $ProviderMachineName -Namespace "ROOT\SMS\site_$SiteCode" -Query $query).Manufacturer | Sort-Object Manufacturer | Out-GridView -title "Select the Manufacturers which have models you wish to create Collections for" -PassThru
-
 
 #Create Model Collections Area
 if ($CreateModelCollections -eq $true)
@@ -121,7 +133,6 @@ where SMS_G_System_COMPUTER_SYSTEM.Manufacturer = "$Manuf"
         $Models += (Get-WmiObject -ComputerName $ProviderMachineName -Namespace "ROOT\SMS\site_$SiteCode" -Query $query).Model | Sort-Object Model | Out-GridView -title "Select the $Manuf Models you wish to create Collections for" -PassThru
             }
         }
-
 
 #Build the Database Array, going model by model
     foreach ($model in $Models)
@@ -152,8 +163,7 @@ where SMS_G_System_COMPUTER_SYSTEM.Model = "$model"
 "@
         $ProductID = (Get-WmiObject -ComputerName $ProviderMachineName -Namespace "ROOT\SMS\site_$SiteCode" -Query $query).Product
         }
-        
-        
+         
         #Take the Items and place in PS Object    
         $MachineDatabaseObject = New-Object PSObject -Property @{
             Manufacturer     = $Manufacturer
@@ -163,7 +173,6 @@ where SMS_G_System_COMPUTER_SYSTEM.Model = "$model"
         #Take the PS Object and append the Database Array    
         $MachineDatabase += $MachineDatabaseObject
         }
-
 
     #Start Building Required components to create Collections
 
@@ -175,23 +184,24 @@ where SMS_G_System_COMPUTER_SYSTEM.Model = "$model"
         #Standardize Dell & HP Manufacturer Names
         #Set $Collection Name to ModelCol - Manufauturer - Model (or similar variation for HP)
         if ($ColManufacturer -like "De*") {$ColManufacturer = "Dell"}
+        if ($ColManufacturer -like "Mic*") {$ColManufacturer = "Microsoft"}
+        if ($ColManufacturer -like "VMw*") {$ColManufacturer = "VMware"}
         if ($ColManufacturer -like "H*") 
             {
             $ColManufacturer = "HP"
-            $CollectionName = "$ModelColPrefix - $ColModel - $ColProductID"
+            $CollectionName = "$ModelColPrefix$ColModel - $ColProductID"
             $Comment = "Requires Win32_BaseBoard.Product in Inventory: https://www.recastsoftware.com/blog/enable-product-in-win32-baseboard-for-hardware-inventory"
             }
         elseif ($ColManufacturer -like "Leno*")
             {
-            $CollectionName = "$ModelColPrefix - $ColModel - $ColProductID"
+            $CollectionName = "$ModelColPrefix$ColModel - $ColProductID"
             $Comment = "Requires Win32_ComputerSystemProduct.Name & .Version in Inventory: https://www.recastsoftware.com/blog/enable-product-in-win32-baseboard-for-hardware-inventory"
             }
         else 
             {
-            $CollectionName = "$ModelColPrefix - $ColManufacturer $ColModel"
+            $CollectionName = "$ModelColPrefix$ColManufacturer $ColModel"
             $Comment = "No Comment"
             }
-
 
         #Collection Query based on Product ID (HP)
         $CollectionQueryProduct = @"
@@ -235,8 +245,11 @@ WHERE SMS_G_System_COMPUTER_SYSTEM.Model = "$ColModel"
                 Add-CMDeviceCollectionQueryMembershipRule -RuleName "Query $ColModel" -CollectionName "$CollectionName" -QueryExpression $CollectionQueryModel | Out-Null
                 }
             Write-Host "New Collection Created with Name: $CollectionName & ID: $((Get-CMCollection -Name $CollectionName).CollectionID)" -ForegroundColor Green
-            Move-CMObject -FolderPath $FolderPath -InputObject $(Get-CMDeviceCollection -Name $CollectionName)
-            Write-host *** Collection $CollectionName moved to $CollectionFolder.Name folder***
+            If ($CreateCollectionFolder) 
+                {
+                Move-CMObject -FolderPath $FolderPath -InputObject $(Get-CMDeviceCollection -Name $CollectionName)
+                Write-host *** Collection $CollectionName moved to $CollectionFolder.Name folder***
+                }
             }
         Else{Write-Host "Collection: $CollectionName already exist with ID: $CurrentCollectionID" -ForegroundColor Yellow}
         Write-Host "-----" -ForegroundColor DarkGray
@@ -252,6 +265,8 @@ if ($CreateManufacturersCollections -eq $true)
         $ColManufacturer = $Manuf
         if ($ColManufacturer -like "H*"){$ColManufacturer = "H"}
         if ($ColManufacturer -like "Dell*"){$ColManufacturer = "Dell"}
+        if ($ColManufacturer -like "Mic*"){$ColManufacturer = "Microsoft"}
+        if ($ColManufacturer -like "VMw*"){$ColManufacturer = "VMware"}
         else {$ColManufacturer = $Manuf.Substring(0,$Manuf.Length-1)}
 
     $CollectionQueryManufacturer = @"
@@ -263,9 +278,11 @@ select SMS_R_SYSTEM.Name from SMS_R_System inner join SMS_G_System_COMPUTER_SYST
         if ($ColManufacturer -like "H*"){$ColManufacturer = "HP"}
         if ($ColManufacturer -like "Dell*"){$ColManufacturer = "Dell"}
         if ($ColManufacturer -like "LEN*"){$ColManufacturer = "Lenovo"}
-        
+        if ($ColManufacturer -like "Mic*"){$ColManufacturer = "Microsoft"}
+        if ($ColManufacturer -like "VMw*"){$ColManufacturer = "VMware"}
+
         #Start Creation of ManufacturerCollection
-        $CollectionName = "$ManufacturerColPreFix - $ColManufacturer Machines"
+        $CollectionName = "$ManufacturerColPreFix$ColManufacturer Systems"
         $CurrentCollectionID = (Get-CMCollection -Name $CollectionName).CollectionID
         if ($CurrentCollectionID -eq $null)
             {
@@ -273,8 +290,11 @@ select SMS_R_SYSTEM.Name from SMS_R_System inner join SMS_G_System_COMPUTER_SYST
             New-CMDeviceCollection -Name $CollectionName -LimitingCollectionName $LimitingCollection -RefreshSchedule $Schedule -RefreshType Periodic | Out-Null
             Add-CMDeviceCollectionQueryMembershipRule -RuleName "Query $ColManufacturer" -CollectionName "$CollectionName" -QueryExpression $CollectionQueryManufacturer | Out-Null
             Write-Host "New Collection Created with Name: $CollectionName & ID: $((Get-CMCollection -Name $CollectionName).CollectionID)" -ForegroundColor Green
-            Move-CMObject -FolderPath $FolderPath -InputObject $(Get-CMDeviceCollection -Name $CollectionName)
-            Write-host *** Collection $CollectionName moved to $CollectionFolder.Name folder***
+            If ($CreateCollectionFolder) 
+                {
+                Move-CMObject -FolderPath $FolderPath -InputObject $(Get-CMDeviceCollection -Name $CollectionName)
+                Write-host *** Collection $CollectionName moved to $CollectionFolder.Name folder***
+                }
             }
         Else{Write-Host "Collection: $CollectionName already exsit with ID: $CurrentCollectionID" -ForegroundColor Yellow}
         Write-Host "-----" -ForegroundColor DarkGray
