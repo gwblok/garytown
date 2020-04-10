@@ -4,10 +4,9 @@ Mike Terrill & Gary Blok
 CM App DT Program: powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad
 CM App DT User Experience: Install for System, Whether or Not, Normal, NO CHECK on Allow users to view and interact, Determine behavior based on return codes.
 
-CM Deployment: 
-Based on Params or Perviously Installed Access / Visio / Project, it will install those along with the Base.
+Based on Params or Previously Installed Access / Visio / Project, it will install those along with the Base.
 Copies the Installer Media to Cache location (HARD LINKS) and installs from there.
-Version 2020.04.08.1
+
 
 Notes:
 Semi Annual Channel = Broad
@@ -19,6 +18,8 @@ CHANGE LOG:
 2020.04.07 - Changed "FORCEAPPSHUTDOWN" from TRUE to FALSE
 2020.04.08 - Changed "FORCEAPPSHUTDOWN" from FALSE to TRUE because it hangs the installer if a user doesn't close apps, even at deadline.
 2020.04.09 - Added Logging, Having issues with Exit Codes
+2020.04.10 - Added Logging for if a user cancels, notes that in log.
+
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -32,6 +33,7 @@ param (
 
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
+$ScriptVer = "2020.04.10.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -79,14 +81,14 @@ function ExitWithCode
 }
 
 Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "Main"
-Write-CMTraceLog -Message "Starting Script version $Global:ScriptVersion..." -Type 1 -Component "Main"
+Write-CMTraceLog -Message "Starting Script version $ScriptVer..." -Type 1 -Component "Main"
 Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "Main"
 
 
 
 #Get Currently Installed Office Apps
 If (-not $Precache) {
-    $Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge'"
+    #$Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge'"
     $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016'"
     $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
     $A = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Access 20%'"
@@ -187,8 +189,8 @@ if ($PP -or $Project)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-    $newProductApp.SetAttribute("ID","ProjectProXVolume")
-    $newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
+    $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
+    $newProductApp.SetAttribute("PIDKEY","B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
     Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "Main"
@@ -199,8 +201,8 @@ if ($VP -or $Visio)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-    $newProductApp.SetAttribute("ID","VisioProXVolume")
-    $newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
+    $newProductApp.SetAttribute("ID","VisioPro2019Volume")
+    $newProductApp.SetAttribute("PIDKEY","9BGNQ-K37YR-RQHF2-38RQ3-7VCBB")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
     Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "Main"
@@ -210,8 +212,8 @@ if ($PS)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-    $newProductApp.SetAttribute("ID","ProjectStdXVolume")
-    $newProductApp.SetAttribute("PIDKEY","D8NRQ-JTYM3-7J2DX-646CT-6836M")
+    $newProductApp.SetAttribute("ID","ProjectStd2019Volume")
+    $newProductApp.SetAttribute("PIDKEY","C4F7P-NCP8C-6CQPT-MQHV9-JXD2M")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
     Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "Main"
@@ -222,8 +224,8 @@ if ($VS)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-    $newProductApp.SetAttribute("ID","VisioStdXVolume")
-    $newProductApp.SetAttribute("PIDKEY","NY48V-PPYYH-3F4PX-XJRKJ-W4423")
+    $newProductApp.SetAttribute("ID","VisioStd2019Volume")
+    $newProductApp.SetAttribute("PIDKEY","7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
     Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "Main"
@@ -254,9 +256,10 @@ if ($OfficeInstallCode -eq "-2147023294")
     Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
     Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000123}"
     ExitWithCode -exitcode $OfficeInstallCode
-    }
+    } 
 
-if ($Edge)
+
+if ($2016)
     {
     Write-CMTraceLog -Message "Office 2016 was Previously Installed" -Type 1 -Component "Main"
     if($OfficeInstallCode -eq "0")
