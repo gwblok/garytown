@@ -1,0 +1,275 @@
+<#Office 365 Installer Script
+Mike Terrill & Gary Blok
+Based on Params or Perviously Installed Access / Visio / Project, it will install those along with the Base.
+Copies the Installer Media to Cache location (HARD LINKS) and installs from there.
+Version 2020.04.08.1
+
+Notes:
+Semi Annual Channel = Broad
+Semi Annual Channel Targeted = Targeted
+
+
+CHANGE LOG:
+2020.04.07 - Added Exit Code 3010 if Office 2016 previously installed (added detection for previous installed, using $2016)
+2020.04.07 - Changed "FORCEAPPSHUTDOWN" from TRUE to FALSE
+2020.04.08 - Changed "FORCEAPPSHUTDOWN" from FALSE to TRUE because it hangs the installer if a user doesn't close apps, even at deadline.
+2020.04.09 - Added Logging, Having issues with Exit Codes
+#>
+[CmdletBinding(DefaultParameterSetName="Office Options")] 
+param (
+        [Parameter(Mandatory=$false, ParameterSetName='PreCache')][switch]$PreCache,
+
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Access,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Project,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Visio,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Monthly", "Broad", "Targeted")][string]$Channel
+    ) 
+
+$SourceDir = Get-Location
+$O365Cache = "C:\ProgramData\O365_Cache"
+
+#region: CMTraceLog Function formats logging in CMTrace style
+        function Write-CMTraceLog {
+         [CmdletBinding()]
+    Param (
+		    [Parameter(Mandatory=$false)]
+		    $Message,
+ 
+		    [Parameter(Mandatory=$false)]
+		    $ErrorMessage,
+ 
+		    [Parameter(Mandatory=$false)]
+		    $Component = "Office365",
+ 
+		    [Parameter(Mandatory=$false)]
+		    [int]$Type,
+		
+		    [Parameter(Mandatory=$false)]
+		    $LogFile = "C:\Windows\Temp\Office365_Install.log"
+	    )
+    <#
+    Type: 1 = Normal, 2 = Warning (yellow), 3 = Error (red)
+    #>
+	    $Time = Get-Date -Format "HH:mm:ss.ffffff"
+	    $Date = Get-Date -Format "MM-dd-yyyy"
+ 
+	    if ($ErrorMessage -ne $null) {$Type = 3}
+	    if ($Component -eq $null) {$Component = " "}
+	    if ($Type -eq $null) {$Type = 1}
+ 
+	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
+	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
+    }
+
+#Used to set Exit Code in way that CM registers
+function ExitWithCode
+{
+    param
+    (
+        $exitcode
+    )
+
+    $host.SetShouldExit($exitcode)
+    exit
+}
+
+Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "Main"
+Write-CMTraceLog -Message "Starting Script version $Global:ScriptVersion..." -Type 1 -Component "Main"
+Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "Main"
+
+
+
+#Get Currently Installed Office Apps
+If (-not $Precache) {
+    $Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge'"
+    $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016'"
+    $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
+    $A = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Access 20%'"
+    $PP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Professional%'"
+    $PS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Standard%'"
+    $VP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Professional%'"
+    $VS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Standard%'"
+}
+#If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
+if ($O365)
+    {
+    Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "Main"
+    $Configuration = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
+ 
+    $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
+    $Insiders = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
+    $Monthly = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
+    $Targeted = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
+    $Broad = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
+    if ($CurrentChannel -eq $Insiders){$Channel = "Insiders"}
+    if ($CurrentChannel -eq $Monthly){$Channel = "Monthly"}
+    if ($CurrentChannel -eq $Targeted){$Channel = "Targeted"}
+    if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
+    Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "Main"
+    }
+
+If (-not (Test-Path $O365Cache)) {
+    try {
+        New-Item -Path $O365Cache -ItemType Directory -ErrorAction Stop | Out-Null
+    }
+    catch {
+        #Write-Error -Message "Unable to create '$O365Cache'. Error was: $_" -ErrorAction Stop
+    }
+    #Write-Output "Successfully created directory '$O365Cache'."
+    Write-CMTraceLog -Message "Successfully created directory '$O365Cache'." -Type 1 -Component "Main"
+}
+
+If (Test-Path "$O365Cache\*") {
+    Remove-Item -Recurse -Force "$O365Cache\*"
+}
+
+Get-ChildItem $SourceDir -Recurse -directory | Copy-Item -Destination {$_.FullName.Replace($SourceDir, $O365Cache)}  -Force
+
+$Files = Get-ChildItem $SourceDir -Recurse -File
+Foreach ($File in $Files) {
+    New-Item -ItemType HardLink -Path (Join-Path $O365Cache $File.FullName.Replace($SourceDir,"")) -Target $File.FullName
+}
+
+Remove-Item "$O365Cache\O365_Install.ps1" -Force -ErrorAction SilentlyContinue
+Remove-Item "$O365Cache\O365_Prep.ps1" -Force -ErrorAction SilentlyContinue
+Remove-Item "$O365Cache\O365_Uninstall.ps1" -Force -ErrorAction SilentlyContinue
+
+
+[XML]$XML = @"
+<Configuration ID="83d58100-fefb-4cb2-802c-cbbdf19f61f9" Host="cm">
+ <Info Description="Customized Office 365" />
+ <Add OfficeClientEdition="64" Channel="Monthly" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE">
+ <Product ID="O365ProPlusRetail">
+ <Language ID="en-us" />
+ <ExcludeApp ID="Groove" />
+ <ExcludeApp ID="OneDrive" />
+ <ExcludeApp ID="Teams" />
+ </Product>
+ </Add>
+ <Property Name="SharedComputerLicensing" Value="0" />
+ <Property Name="PinIconsToTaskbar" Value="TRUE" />
+ <Property Name="SCLCacheOverride" Value="0" />
+ <Property Name="AUTOACTIVATE" Value="1" />
+ <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+ <Property Name="DeviceBasedLicensing" Value="0" />
+ <RemoveMSI />
+ <AppSettings>
+ <Setup Name="Company" Value="Wells Fargo" />
+ <User Key="software\microsoft\office\16.0\excel\options" Name="defaultformat" Value="51" Type="REG_DWORD" App="excel16" Id="L_SaveExcelfilesas" />
+ <User Key="software\microsoft\office\16.0\powerpoint\options" Name="defaultformat" Value="27" Type="REG_DWORD" App="ppt16" Id="L_SavePowerPointfilesas" />
+ <User Key="software\microsoft\office\16.0\word\options" Name="defaultformat" Value="" Type="REG_SZ" App="word16" Id="L_SaveWordfilesas" />
+ </AppSettings>
+ <Display Level="Full" AcceptEULA="TRUE" />
+</Configuration>
+"@
+
+
+#Change Channel
+$xml.Configuration.Add.SetAttribute("Channel","$Channel")
+Write-CMTraceLog -Message "Setting Office Channel to $Channel" -Type 1 -Component "Main"
+
+#Don't Remove Access from XML if Previously Installed or Called from Param
+if (!($A) -and !($Access))
+    {
+    $newExcludeElement = $xml.CreateElement("ExcludeApp")
+    $newExcludeApp = $xml.Configuration.Add.Product.AppendChild($newExcludeElement)
+    $newExcludeApp.SetAttribute("ID","Access")
+    Write-CMTraceLog -Message "Removing Access from Install XML" -Type 1 -Component "Main"
+    }
+
+#Add Project Pro to XML if Previously Installed or Called from Param
+if ($PP -or $Project)
+    {
+    $newProductElement = $xml.CreateElement("Product")
+    $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+    $newProductApp.SetAttribute("ID","ProjectProXVolume")
+    $newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
+    $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+    $newXmlNameElement.SetAttribute("ID","en-us")  
+    Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "Main"
+    }  
+
+#Add Visio Pro to XML if Previously Installed or Called from Param
+if ($VP -or $Visio)
+    {
+    $newProductElement = $xml.CreateElement("Product")
+    $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+    $newProductApp.SetAttribute("ID","VisioProXVolume")
+    $newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
+    $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+    $newXmlNameElement.SetAttribute("ID","en-us")  
+    Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "Main"
+    }
+#Add Project Standard to XML if Previously Installed or Called from Param
+if ($PS)
+    {
+    $newProductElement = $xml.CreateElement("Product")
+    $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+    $newProductApp.SetAttribute("ID","ProjectStdXVolume")
+    $newProductApp.SetAttribute("PIDKEY","D8NRQ-JTYM3-7J2DX-646CT-6836M")
+    $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+    $newXmlNameElement.SetAttribute("ID","en-us")  
+    Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "Main"
+    }  
+
+#Add Visio Standard to XML if Previously Installed or Called from Param
+if ($VS)
+    {
+    $newProductElement = $xml.CreateElement("Product")
+    $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+    $newProductApp.SetAttribute("ID","VisioStdXVolume")
+    $newProductApp.SetAttribute("PIDKEY","NY48V-PPYYH-3F4PX-XJRKJ-W4423")
+    $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+    $newXmlNameElement.SetAttribute("ID","en-us")  
+    Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "Main"
+    }
+
+Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "Main"
+$xml.Save("$O365Cache\configuration.xml")
+
+
+If (-not $Precache) {
+    #If Office 365 is not installed then run the Office 365 Prep Utility before installing Office 365
+    If (-not $O365)
+        {
+        $ScriptDir = Split-Path $script:MyInvocation.MyCommand.Path
+        Write-CMTraceLog -Message "Starting Office Prep Process" -Type 1 -Component "Main"
+        Invoke-Expression -Command "$ScriptDir\O365_Prep.ps1"
+        Write-CMTraceLog -Message "Finished Office Prep Process" -Type 1 -Component "Main"
+        }
+    Write-CMTraceLog -Message "Starting Office 365 Install" -Type 1 -Component "Main"
+    $InstallOffice = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure $O365Cache\configuration.xml" -Wait -PassThru -WindowStyle Hidden
+    $OfficeInstallCode = $InstallOffice.ExitCode
+    Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "Main"
+    #$exitcode = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure Install_O365$Install_Access$Install_Project$Install_Visio.xml" -Wait -WindowStyle Hidden
+
+if ($OfficeInstallCode -eq "-2147023294")
+    {
+    Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
+    Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000123}"
+    ExitWithCode -exitcode $OfficeInstallCode
+    }
+
+if ($Edge)
+    {
+    Write-CMTraceLog -Message "Office 2016 was Previously Installed" -Type 1 -Component "Main"
+    if($OfficeInstallCode -eq "0")
+        {
+        Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Exit Script with code: 3010" -Type 1 -Component "Main"
+        ExitWithCode -exitcode 3010
+        }
+    else
+        {
+        Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
+        ExitWithCode -exitcode $OfficeInstallCode
+        }
+    }
+else 
+    {
+    Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
+    ExitWithCode -exitcode $OfficeInstallCode
+    }
+}
