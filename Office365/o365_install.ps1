@@ -1,5 +1,10 @@
 <#Office 365 Installer Script
 Mike Terrill & Gary Blok
+
+CM App DT Program: powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad
+CM App DT User Experience: Install for System, Whether or Not, Normal, NO CHECK on Allow users to view and interact, Determine behavior based on return codes.
+
+CM Deployment: 
 Based on Params or Perviously Installed Access / Visio / Project, it will install those along with the Base.
 Copies the Installer Media to Cache location (HARD LINKS) and installs from there.
 Version 2020.04.08.1
