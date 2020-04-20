@@ -1,3 +1,4 @@
+#2020.04.20 - @gwblok - GARYTOWN.COM
 #Discovery Script
 $ModuleName = "NuGet"
 
