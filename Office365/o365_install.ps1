@@ -113,6 +113,8 @@ if ($O365)
     if ($CurrentChannel -eq $Targeted){$Channel = "Targeted"}
     if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
     Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "Main"
+
+    if (Test-Path -Path "$env:ProgramFiles\Microsoft Office\root\Office16\MSACCESS.EXE"){$A = $true}
     }
 
 If (-not (Test-Path $O365Cache)) {
