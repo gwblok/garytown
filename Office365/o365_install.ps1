@@ -19,6 +19,8 @@ CHANGE LOG:
 2020.04.08 - Changed "FORCEAPPSHUTDOWN" from FALSE to TRUE because it hangs the installer if a user doesn't close apps, even at deadline.
 2020.04.09 - Added Logging, Having issues with Exit Codes
 2020.04.10 - Added Logging for if a user cancels, notes that in log.
+2020.04.21 - Added logic to detect if Access was installed with 365 to make sure it doesn't get removed when you install Visio or Projects
+2020.04.22 - Added additional logging around Access
 
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
@@ -114,7 +116,11 @@ if ($O365)
     if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
     Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "Main"
 
-    if (Test-Path -Path "$env:ProgramFiles\Microsoft Office\root\Office16\MSACCESS.EXE"){$A = $true}
+    if (Test-Path -Path "$env:ProgramFiles\Microsoft Office\root\Office16\MSACCESS.EXE")
+        {
+        $A = $true
+        Write-CMTraceLog -Message "Found Access Already Installed" -Type 1 -Component "Main"
+        }
     }
 
 If (-not (Test-Path $O365Cache)) {
@@ -185,6 +191,8 @@ if (!($A) -and !($Access))
     $newExcludeApp.SetAttribute("ID","Access")
     Write-CMTraceLog -Message "Removing Access from Install XML" -Type 1 -Component "Main"
     }
+else{Write-CMTraceLog -Message "Adding Access To Install XML" -Type 1 -Component "Main"}
+
 
 #Add Project Pro to XML if Previously Installed or Called from Param
 if ($PP -or $Project)
