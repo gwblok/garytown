@@ -21,21 +21,40 @@ CHANGE LOG:
 2020.04.10 - Added Logging for if a user cancels, notes that in log.
 2020.04.21 - Added logic to detect if Access was installed with 365 to make sure it doesn't get removed when you install Visio or Projects
 2020.04.22 - Added additional logging around Access
-
+2020.04.23 - Force PowerShell to run in 64-bit mode 
+2020.04.24 - Added options for installing Visio Standard & Project Standard from commandline ($VisioStd & $ProjectStd)
+2020.04.24 - Renamed $Project to $ProjectPro & $Visio to $VisioPro
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
         [Parameter(Mandatory=$false, ParameterSetName='PreCache')][switch]$PreCache,
 
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Access,
-        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Project,
-        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Visio,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectPro,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioPro,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Monthly", "Broad", "Targeted")][string]$Channel
     ) 
 
+#############################################################################
+#If Powershell is running the 32-bit version on a 64-bit machine, we 
+#need to force powershell to run in 64-bit mode .
+#############################################################################
+if ($env:PROCESSOR_ARCHITEW6432 -eq "AMD64") {
+    write-warning "Y'arg Matey, we're off to 64-bit land....."
+    if ($myInvocation.Line) {
+        &"$env:WINDIR\sysnative\windowspowershell\v1.0\powershell.exe" -NonInteractive -NoProfile $myInvocation.Line
+    }else{
+        &"$env:WINDIR\sysnative\windowspowershell\v1.0\powershell.exe" -NonInteractive -NoProfile -file "$($myInvocation.InvocationName)" $args
+    }
+exit $lastexitcode
+}
+
+
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
-$ScriptVer = "2020.04.10.1"
+$ScriptVer = "2020.04.24.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -82,9 +101,9 @@ function ExitWithCode
     exit
 }
 
-Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "Main"
-Write-CMTraceLog -Message "Starting Script version $ScriptVer..." -Type 1 -Component "Main"
-Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "Main"
+Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "o365script"
+Write-CMTraceLog -Message "Starting Script version $ScriptVer..." -Type 1 -Component "o365script"
+Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "o365script"
 
 
 
@@ -102,7 +121,7 @@ If (-not $Precache) {
 #If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
 if ($O365)
     {
-    Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "o365script"
     $Configuration = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
  
     $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
@@ -114,12 +133,12 @@ if ($O365)
     if ($CurrentChannel -eq $Monthly){$Channel = "Monthly"}
     if ($CurrentChannel -eq $Targeted){$Channel = "Targeted"}
     if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
-    Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "o365script"
 
     if (Test-Path -Path "$env:ProgramFiles\Microsoft Office\root\Office16\MSACCESS.EXE")
         {
         $A = $true
-        Write-CMTraceLog -Message "Found Access Already Installed" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Found Access Already Installed" -Type 1 -Component "o365script"
         }
     }
 
@@ -131,7 +150,7 @@ If (-not (Test-Path $O365Cache)) {
         #Write-Error -Message "Unable to create '$O365Cache'. Error was: $_" -ErrorAction Stop
     }
     #Write-Output "Successfully created directory '$O365Cache'."
-    Write-CMTraceLog -Message "Successfully created directory '$O365Cache'." -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Successfully created directory '$O365Cache'." -Type 1 -Component "o365script"
 }
 
 If (Test-Path "$O365Cache\*") {
@@ -181,7 +200,7 @@ Remove-Item "$O365Cache\O365_Uninstall.ps1" -Force -ErrorAction SilentlyContinue
 
 #Change Channel
 $xml.Configuration.Add.SetAttribute("Channel","$Channel")
-Write-CMTraceLog -Message "Setting Office Channel to $Channel" -Type 1 -Component "Main"
+Write-CMTraceLog -Message "Setting Office Channel to $Channel" -Type 1 -Component "o365script"
 
 #Don't Remove Access from XML if Previously Installed or Called from Param
 if (!($A) -and !($Access))
@@ -189,13 +208,13 @@ if (!($A) -and !($Access))
     $newExcludeElement = $xml.CreateElement("ExcludeApp")
     $newExcludeApp = $xml.Configuration.Add.Product.AppendChild($newExcludeElement)
     $newExcludeApp.SetAttribute("ID","Access")
-    Write-CMTraceLog -Message "Removing Access from Install XML" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Removing Access from Install XML" -Type 1 -Component "o365script"
     }
-else{Write-CMTraceLog -Message "Adding Access To Install XML" -Type 1 -Component "Main"}
+else{Write-CMTraceLog -Message "Adding Access To Install XML" -Type 1 -Component "o365script"}
 
 
 #Add Project Pro to XML if Previously Installed or Called from Param
-if ($PP -or $Project)
+if ($PP -or $ProjectPro)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
@@ -203,11 +222,11 @@ if ($PP -or $Project)
     $newProductApp.SetAttribute("PIDKEY","B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
-    Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "o365script"
     }  
 
 #Add Visio Pro to XML if Previously Installed or Called from Param
-if ($VP -or $Visio)
+if ($VP -or $VisioPro)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
@@ -215,10 +234,10 @@ if ($VP -or $Visio)
     $newProductApp.SetAttribute("PIDKEY","9BGNQ-K37YR-RQHF2-38RQ3-7VCBB")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
-    Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "o365script"
     }
 #Add Project Standard to XML if Previously Installed or Called from Param
-if ($PS)
+if ($PS -or $ProjectStd)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
@@ -226,11 +245,11 @@ if ($PS)
     $newProductApp.SetAttribute("PIDKEY","C4F7P-NCP8C-6CQPT-MQHV9-JXD2M")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
-    Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "o365script"
     }  
 
 #Add Visio Standard to XML if Previously Installed or Called from Param
-if ($VS)
+if ($VS -or $VisioStd)
     {
     $newProductElement = $xml.CreateElement("Product")
     $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
@@ -238,10 +257,10 @@ if ($VS)
     $newProductApp.SetAttribute("PIDKEY","7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2")
     $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
     $newXmlNameElement.SetAttribute("ID","en-us")  
-    Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "o365script"
     }
 
-Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "Main"
+Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "o365script"
 $xml.Save("$O365Cache\configuration.xml")
 
 
@@ -250,20 +269,20 @@ If (-not $Precache) {
     If (-not $O365)
         {
         $ScriptDir = Split-Path $script:MyInvocation.MyCommand.Path
-        Write-CMTraceLog -Message "Starting Office Prep Process" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Starting Office Prep Process" -Type 1 -Component "o365script"
         Invoke-Expression -Command "$ScriptDir\O365_Prep.ps1"
-        Write-CMTraceLog -Message "Finished Office Prep Process" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Finished Office Prep Process" -Type 1 -Component "o365script"
         }
-    Write-CMTraceLog -Message "Starting Office 365 Install" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Starting Office 365 Install" -Type 1 -Component "o365script"
     $InstallOffice = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure $O365Cache\configuration.xml" -Wait -PassThru -WindowStyle Hidden
     $OfficeInstallCode = $InstallOffice.ExitCode
-    Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "o365script"
     #$exitcode = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure Install_O365$Install_Access$Install_Project$Install_Visio.xml" -Wait -WindowStyle Hidden
 
 if ($OfficeInstallCode -eq "-2147023294")
     {
-    Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "Main"
-    Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "o365script"
+    Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
     Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000123}"
     ExitWithCode -exitcode $OfficeInstallCode
     } 
@@ -271,23 +290,23 @@ if ($OfficeInstallCode -eq "-2147023294")
 
 if ($2016)
     {
-    Write-CMTraceLog -Message "Office 2016 was Previously Installed" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Office 2016 was Previously Installed" -Type 1 -Component "o365script"
     if($OfficeInstallCode -eq "0")
         {
-        Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "Main"
-        Write-CMTraceLog -Message "Exit Script with code: 3010" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "o365script"
+        Write-CMTraceLog -Message "Exit Script with code: 3010" -Type 1 -Component "o365script"
         ExitWithCode -exitcode 3010
         }
     else
         {
-        Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "Main"
-        Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
+        Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "o365script"
+        Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
         ExitWithCode -exitcode $OfficeInstallCode
         }
     }
 else 
     {
-    Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "Main"
+    Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
     ExitWithCode -exitcode $OfficeInstallCode
     }
 }
