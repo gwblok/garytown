@@ -1,7 +1,24 @@
 <#Office 365 Installer Script
 Mike Terrill & Gary Blok
 
-CM App DT Program: powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad
+CM App DT Program: 
+
+Office 365
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad
+Access:
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access
+Project Professional
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro
+Project Stanard
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd
+Visio Professional
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro
+Visio Standard
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd
+
+The XML as it is below will remove Teams, Install Skype, Remove OneDrive and some other stuff.  Recommend you look over the $XML area and fit to your needs
+
+
 CM App DT User Experience: Install for System, Whether or Not, Normal, NO CHECK on Allow users to view and interact, Determine behavior based on return codes.
 
 Based on Params or Previously Installed Access / Visio / Project, it will install those along with the Base.
