@@ -30,11 +30,11 @@ Deploy Application 2-7 or any combo to "Office 365 Available" User Collection as
  - This will light up the Application for users to install in the Software Center.  Hopefully the machines have the content already downloaded after a couple days so when they trigger it, it checks to see if the dependancy is already installed, and then install office.  If not, it will trigger the dependancy to download first, then run the install.
  
 Pros:
--Use the Same Office Content (PreCache) for all of the different App Installs, so they don't have to download multiple copies of the same content for each different install (Office / Access / Visio / Project)
--Adds flexiblity to PreCache content and provide better user experience for your Self-Service Users
+- Use the Same Office Content (PreCache) for all of the different App Installs, so they don't have to download multiple copies of the same content for each different install (Office / Access / Visio / Project)
+- Adds flexiblity to PreCache content and provide better user experience for your Self-Service Users
 
 Cons:
--Requires 1 addtional Application
+- Requires 1 addtional Application
 
 
 365
