@@ -39,4 +39,8 @@ Cons:
 - Requires 1 addtional Application
 
 
-### 365
+### o365_prep.ps1
+This file is used to help cleanup previous office software before the upgrade.  o365_install.ps1 calls this script unless it already finds office 365 installed, then skips the prep script
+
+### o365_uninstall.ps1
+This will dynamically uninstall office 365 based on parameters, pretty much the same as the install script.
