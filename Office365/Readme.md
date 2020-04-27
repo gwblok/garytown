@@ -2,7 +2,7 @@ o365_install.ps1
 Logging: C:\windows\temp\Office365_Install.log
 This file is configured to be used in when PreCache & Install take place in seperate Applications
 1. Application 1 = o365_install.ps1 -precache -channel broad  
-- Note, in Precache mode, channel doens't mean anything, it's just a required parameter.
+..1 Note, in Precache mode, channel doens't mean anything, it's just a required parameter.
   This will run the script in mode that downloads the content to a local path.
   This gives you the ability to run in a required deployment to get the content downloaded ahead of time
   The source content is the entire payload for office 365
