@@ -24,7 +24,7 @@ This file is configured to be used in when PreCache & Install take place in sepe
 - Apps 3 - 7 are meant to be run after app 2 as an add-on, but would technically work standalone, as it would install office first, then the additional application (Access, Visio, Project)
 
 
-Deployment Scenario:  Deploying Office 365 as Available to User Collection: Office 365 Available.
+#### Deployment Scenario:  Deploying Office 365 as Available to User Collection: Office 365 Available.
 
 Deploy Application 1 (PreCache) to "Office 365 Available" User Collection as Required, Deadline 10PM, Hidden, Not Shown in Software Center.
  - This will get all of the Content for the Office install to start pulling down that night
