@@ -16,10 +16,10 @@ This file is configured to be used in when PreCache & Install take place in sepe
 6. Application 6 = o365_install.ps1 -projectpro -channel broad
 7. Application 7 = o365_install.ps1 -projectstd -channel broad
 
-Apps 2 - 7 are setup identical content, a folder with the 3 scripts (install / prep / uninstall)
-  They would have have the same detection method, except 3-7 would include the EXE of the addtional program you're adding on.
-  The AppDT would have Application 1 (PreCache) set as a Dependency, to ensure that the installer is already downloaded.
-Apps 3 - 7 are meant to be run after app 2 as an add-on, but would technically work standalone, as it would install office first, then the additional application (Access, Visio, Project)
+- Apps 2 - 7 are setup identical content, a folder with the 3 scripts (install / prep / uninstall)
+  - They would have have the same detection method, except 3-7 would include the EXE of the addtional program you're adding on.
+  - The AppDT would have Application 1 (PreCache) set as a Dependency, to ensure that the installer is already downloaded.
+- Apps 3 - 7 are meant to be run after app 2 as an add-on, but would technically work standalone, as it would install office first, then the additional application (Access, Visio, Project)
 
 
 Deployment Scenario:  Deploying Office 365 as Available to User Collection: Office 365 Available.
