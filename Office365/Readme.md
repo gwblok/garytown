@@ -1,4 +1,4 @@
-###o365_install.ps1
+### o365_install.ps1
 Logging: C:\windows\temp\Office365_Install.log
 This file is configured to be used in when PreCache & Install take place in seperate Applications
 1. Application 1 = o365_install.ps1 -precache -channel broad  
@@ -37,4 +37,4 @@ Cons:
 - Requires 1 addtional Application
 
 
-###365
+### 365
