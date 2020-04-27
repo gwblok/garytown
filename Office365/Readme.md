@@ -7,7 +7,7 @@ This file is configured to be used in when PreCache & Install take place in sepe
 - This gives you the ability to run in a required deployment to get the content downloaded ahead of time
 - The source content is the entire payload for office 365
 - Detection method: c:\programdata\o365_cache\office\data\v64_16.XXXXXXXX
-- - You will need to update this every time you update the source content to make sure it matches.
+  - You will need to update this every time you update the source content to make sure it matches.
   
 Application 2 = o365_install.ps1 -channel broad 
 Application 3 = o365_install.ps1 -access -channel broad
