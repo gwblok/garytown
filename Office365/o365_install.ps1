@@ -3,9 +3,16 @@ Mike Terrill & Gary Blok
 
 CM App DT Program (PreCache App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -precache -Channel Broad
  - Deployed to office 365 User Collection as Required ASAP HIDDEN! Not shown in Software Center
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad -CompanyValue GARYTOWN
  - App DT has Requirement of Office PreCache App
  - Deployed to office 365 User Collection as Available ASAP Shown in Software Center  
+
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel Broad -CompanyValue GARYTOWN
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad -CompanyValue BigBank
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel Broad -CompanyValue AZSMUG
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel Broad -CompanyValue MIKETERRILL.COM
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad -CompanyValue "Recast Software"
+
 
 
 CM App DT User Experience: Install for System, Whether or Not, Normal, NO CHECK on Allow users to view and interact, Determine behavior based on return codes.
@@ -34,6 +41,11 @@ CHANGE LOG:
  - Now PreCache will be a separate Application, and will contain the installer bits.  It will be a pre-req for 
  - Install Script is now it's own Application.  Content = 3 scripts, nothing more. It leverages the c:\programdata\o365_cache folder that is setup in PreCache
 2020.04.27 - Added logging for PreCache Process
+2020.05.01 - Updated script to allow the ability to switch from Visio / Project Pro to Standard and vs Versa.
+ - Added "Removal XML section which will automatically add the <remove> section of XML if you want to switch from Std to Pro or otherwise.
+2020.05.01 - Added Param for Company Name ($CompanyValue)
+
+ - Note, 
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -44,7 +56,8 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioPro,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Monthly", "Broad", "Targeted")][string]$Channel
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Monthly", "Broad", "Targeted")][string]$Channel,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$CompanyValue
     ) 
 
 #############################################################################
@@ -124,10 +137,10 @@ If (-not $Precache) {
     $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016'"
     $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
     $A = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Access 20%'"
-    $PP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Professional%'"
-    $PS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Standard%'"
-    $VP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Professional%'"
-    $VS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Standard%'"
+    If (-not $ProjectStd) {$PP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Professional%'"}
+    If (-not $ProjectPro) {$PS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Standard%'"}
+    If (-not $VisioStd) {$VP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Professional%'"}
+    If (-not $VisioPro) {$VS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Standard%'"}
 
     #If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
     if ($O365)
@@ -207,7 +220,7 @@ If (-not $Precache) {
     <Property Name="DeviceBasedLicensing" Value="0" />
     <RemoveMSI />
     <AppSettings>
-    <Setup Name="Company" Value="Wells Fargo" />
+    <Setup Name="Company" Value="Your Company Here" />
     <User Key="software\microsoft\office\16.0\excel\options" Name="defaultformat" Value="51" Type="REG_DWORD" App="excel16" Id="L_SaveExcelfilesas" />
     <User Key="software\microsoft\office\16.0\powerpoint\options" Name="defaultformat" Value="27" Type="REG_DWORD" App="ppt16" Id="L_SavePowerPointfilesas" />
     <User Key="software\microsoft\office\16.0\word\options" Name="defaultformat" Value="" Type="REG_SZ" App="word16" Id="L_SaveWordfilesas" />
@@ -220,6 +233,9 @@ If (-not $Precache) {
     #Change Channel
     $xml.Configuration.Add.SetAttribute("Channel","$Channel")
     Write-CMTraceLog -Message "Setting Office Channel to $Channel" -Type 1 -Component "o365script"
+
+    $XML.Configuration.AppSettings.Setup.SetAttribute("Value", "$CompanyValue")
+    Write-CMTraceLog -Message "Setting Setup Company name to $CompanyValue" -Type 1 -Component "o365script"
 
     #Don't Remove Access from XML if Previously Installed or Called from Param
     if (!($A) -and !($Access))
@@ -277,6 +293,64 @@ If (-not $Precache) {
         $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
         $newXmlNameElement.SetAttribute("ID","en-us")  
         Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "o365script"
+        }
+
+
+    
+    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+    if ($ProjectStd) #If Choosing to Install Project Standard, Added XML to Remove Project Pro
+        {
+        $XMLRemove=$XML.CreateElement("Remove")
+        $XML.Configuration.appendChild($XMLRemove)
+        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+        $newProductElement = $xml.CreateElement("Product")
+        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+        $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
+        #$newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+        $newXmlNameElement.SetAttribute("ID","en-us")  
+        }  
+
+    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+    if ($VisioStd) #If Choosing to Install Visio Standard, Added XML to Remove Visio Pro
+        {
+        $XMLRemove=$XML.CreateElement("Remove")
+        $XML.Configuration.appendChild($XMLRemove)
+        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+        $newProductElement = $xml.CreateElement("Product")
+        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+        $newProductApp.SetAttribute("ID","VisioPro2019Volume")
+        #$newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+        $newXmlNameElement.SetAttribute("ID","en-us")  
+        }
+
+    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+    if ($ProjectPro) #If Choosing to Install Project Pro, Added XML to Remove Project Standard
+        {
+        $XMLRemove=$XML.CreateElement("Remove")
+        $XML.Configuration.appendChild($XMLRemove)
+        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+        $newProductElement = $xml.CreateElement("Product")
+        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+        $newProductApp.SetAttribute("ID","ProjectStd2019Volume")
+        #$newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+        $newXmlNameElement.SetAttribute("ID","en-us")  
+        }  
+
+    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+    if ($VisioPro) #If Choosing to Install Visio Pro, Added XML to Remove Visio 
+        {
+        $XMLRemove=$XML.CreateElement("Remove")
+        $XML.Configuration.appendChild($XMLRemove)
+        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+        $newProductElement = $xml.CreateElement("Product")
+        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+        $newProductApp.SetAttribute("ID","VisioStd2019Volume")
+        #$newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+        $newXmlNameElement.SetAttribute("ID","en-us")  
         }
 
     Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "o365script"
