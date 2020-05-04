@@ -173,6 +173,7 @@ If (-not $Precache) {
         $Monthly = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
         $Targeted = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
         $Broad = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
+        
         #If adding additional items to Office 365, it will autoatmically use the current channel office 365 is using and ignore the parameter in the install program
         if (($ProjectStd) -or ($ProjectPro) -or ($VisioStd) -or ($VisioPro) -or ($Access))
             {
@@ -186,10 +187,16 @@ If (-not $Precache) {
         #If this is just a Office 365 Install, with desired effect of changing the update channel, this will change the registry key and exit without full reinstall.
         else
             {
+            if ($CurrentChannel -eq $Insiders){$CurrentChannel = "Insiders"}
+            if ($CurrentChannel -eq $Monthly){$CurrentChannel = "Monthly"}
+            if ($CurrentChannel -eq $Targeted){$CurrentChannel = "Targeted"}
+            if ($CurrentChannel -eq $Broad){$CurrentChannel = "Broad"}
             Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Current Channel is set to: $CurrentChannel" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Setting to Channel in Parameter: $Channel" -Type 1 -Component "o365script"
-            if ($CurrentChannel -notmatch $Channel)
+            if ($CurrentChannel -ne $Channel)
                 {
+                
                 # Set new update channel
                 Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $Channel -Force
                 # Trigger hardware inventory
@@ -198,6 +205,12 @@ If (-not $Precache) {
                 $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
                 if ($CurrentChannel -notmatch $Channel){Write-CMTraceLog -Message "Failed to Change Office Channel, Still: $CurrentChannel" -Type 3 -Component "o365script"}
                 Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $CurrentChannel" -Type 1 -Component "o365script"}
+                Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
+                Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
+                ExitWithCode -exitcode 0
+                }
+            else
+                {
                 Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
                 ExitWithCode -exitcode 0
                 }
