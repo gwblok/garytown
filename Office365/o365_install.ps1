@@ -197,8 +197,8 @@ If (-not $Precache) {
             if ($TargetChannel -eq "Targeted"){$UpdateChannel = $Targeted}
             if ($TargetChannel -eq "Broad"){$UpdateChannel = $Broad}
             Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Current Channel is set to: $CurrentChannel" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Setting to Channel in Parameter: $ParamChannel" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Current Channel is set to: $CurrentChannelName" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Setting to Channel in Parameter: $Channel" -Type 1 -Component "o365script"
             if ($CurrentChannelName -ne $TargetChannel)
                 {
                 # Set new update channel
