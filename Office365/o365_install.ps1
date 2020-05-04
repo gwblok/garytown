@@ -187,31 +187,41 @@ If (-not $Precache) {
         #If this is just a Office 365 Install, with desired effect of changing the update channel, this will change the registry key and exit without full reinstall.
         else
             {
-            if ($CurrentChannel -eq $Insiders){$CurrentChannel = "Insiders"}
-            if ($CurrentChannel -eq $Monthly){$CurrentChannel = "Monthly"}
-            if ($CurrentChannel -eq $Targeted){$CurrentChannel = "Targeted"}
-            if ($CurrentChannel -eq $Broad){$CurrentChannel = "Broad"}
+            $TargetChannel = $Channel
+            if ($CurrentChannel -eq $Insiders){$CurrentChannelName = "Insiders"}
+            if ($CurrentChannel -eq $Monthly){$CurrentChannelName = "Monthly"}
+            if ($CurrentChannel -eq $Targeted){$CurrentChannelName = "Targeted"}
+            if ($CurrentChannel -eq $Broad){$CurrentChannelName = "Broad"}
+            if ($TargetChannel -eq "Insiders"){$UpdateChannel = $Insiders}
+            if ($TargetChannel -eq "Monthly"){$UpdateChannel = $Monthly}
+            if ($TargetChannel -eq "Targeted"){$UpdateChannel = $Targeted}
+            if ($TargetChannel -eq "Broad"){$UpdateChannel = $Broad}
             Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Current Channel is set to: $CurrentChannel" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Setting to Channel in Parameter: $Channel" -Type 1 -Component "o365script"
-            if ($CurrentChannel -ne $Channel)
+            Write-CMTraceLog -Message "Setting to Channel in Parameter: $ParamChannel" -Type 1 -Component "o365script"
+            if ($CurrentChannelName -ne $TargetChannel)
                 {
-                
                 # Set new update channel
-                Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $Channel -Force
+                Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $UpdateChannel -Force
                 # Trigger hardware inventory
                 [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}')
                 #Confirm
-                $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
-                if ($CurrentChannel -notmatch $Channel){Write-CMTraceLog -Message "Failed to Change Office Channel, Still: $CurrentChannel" -Type 3 -Component "o365script"}
-                Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $CurrentChannel" -Type 1 -Component "o365script"}
-                Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
-                Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
+                $CurrentCDNBaseUrl = (Get-ItemProperty $Configuration).CDNBaseUrl
+                if ($CurrentCDNBaseUrl -notmatch $UpdateChannel)
+                    {
+                    if ($CurrentCDNBaseUrl -eq $Insiders){$CurrentChannelName = "Insiders"}
+                    if ($CurrentCDNBaseUrl -eq $Monthly){$CurrentChannelName = "Monthly"}
+                    if ($CurrentCDNBaseUrl -eq $Targeted){$CurrentChannelName = "Targeted"}
+                    if ($CurrentCDNBaseUrl -eq $Broad){$CurrentChannelName = "Broad"}
+                    Write-CMTraceLog -Message "Failed to Change Office Channel, Still: $CurrentChannelName" -Type 3 -Component "o365script"
+                    }
+                Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $CurrentChannelName" -Type 1 -Component "o365script"}
+                Write-CMTraceLog -Message "Exiting Office Installer Script After Channel Change" -Type 1 -Component "o365script"
                 ExitWithCode -exitcode 0
                 }
             else
                 {
-                Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
+                Write-CMTraceLog -Message "Exiting Office Installer Script with No Channel Change" -Type 1 -Component "o365script"
                 ExitWithCode -exitcode 0
                 }
             }
