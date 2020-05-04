@@ -8,10 +8,10 @@ CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowS
  - Deployed to office 365 User Collection as Available ASAP Shown in Software Center  
 
 CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel Broad -CompanyValue GARYTOWN
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad -CompanyValue BigBank
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad -CompanyValue 'Big Bank'
 CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel Broad -CompanyValue AZSMUG
 CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel Broad -CompanyValue MIKETERRILL.COM
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad -CompanyValue "Recast Software"
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad -CompanyValue 'Recast Software'
 
 
 
