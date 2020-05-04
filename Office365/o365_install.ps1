@@ -8,23 +8,28 @@ CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowS
  - Deployed to office 365 User Collection as Available ASAP Shown in Software Center  
 
 Examples:
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad -CompanyValue GARYTOWN
-Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Data Type: String | Eq: http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Targeted -CompanyValue GARYTOWN
-Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Data Type: String | Eq: http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Monthly -CompanyValue GARYTOWN
-Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Data Type: String | Eq: http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60
+Semi Annual Channel: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad -CompanyValue GARYTOWN
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Data Type: String | Eq: http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
+Semi Annual Channel Targeted: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Targeted -CompanyValue GARYTOWN
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Data Type: String | Eq: http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf
+Monthly Channel: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Monthly -CompanyValue GARYTOWN
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Data Type: String | Eq: http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60
 
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel Broad -CompanyValue GARYTOWN
-Detection: File | Path: %ProgramFiles%\Microsoft Office\root\Office16 | File Name: ACCESS.EXE | Must Exist
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad -CompanyValue 'Big Bank'
-Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectPro2019Volume - en-us | Value: DisplayName | Must Exist
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel Broad -CompanyValue AZSMUG
-Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectStd2019Volume - en-us | Value: DisplayName | Must Exist
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel Broad -CompanyValue MIKETERRILL.NET
-Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioPro2019Volume - en-us | Value: DisplayName | Must Exist
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad -CompanyValue 'Recast Software'
-Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioStd2019Volume - en-us | Value: DisplayName | Must Exist
+Access: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel Broad -CompanyValue GARYTOWN
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Must Exist
+ - Detection: File | Path: %ProgramFiles%\Microsoft Office\root\Office16 | File Name: ACCESS.EXE | Must Exist
+Project Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad -CompanyValue 'Big Bank'
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Must Exist
+ - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectPro2019Volume - en-us | Value: DisplayName | Must Exist
+Project Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel Broad -CompanyValue AZSMUG
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Must Exist
+ - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectStd2019Volume - en-us | Value: DisplayName | Must Exist
+Visio Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel Broad -CompanyValue MIKETERRILL.NET
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Must Exist
+ - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioPro2019Volume - en-us | Value: DisplayName | Must Exist
+Visio Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad -CompanyValue 'Recast Software'
+ - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: UpdateChannel | Must Exist
+ - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioStd2019Volume - en-us | Value: DisplayName | Must Exist
 
 
 CM App DT User Experience: Install for System, Whether or Not, Normal, NO CHECK on Allow users to view and interact, Determine behavior based on return codes.
