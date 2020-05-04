@@ -61,8 +61,11 @@ CHANGE LOG:
 2020.05.01 - Updated script to allow the ability to switch from Visio / Project Pro to Standard and vs Versa.
  - Added "Removal XML section which will automatically add the <remove> section of XML if you want to switch from Std to Pro or otherwise.
 2020.05.01 - Added Param for Company Name ($CompanyValue)
+2020.05.01 - Added Several of the Examples above along with the detection methods
+2020.05.04 - Added the ability for Office to change channels by running the different Office Installers (SAC / SACT / Monthly)
+ - Example: If you Have SAC installed, and you run the Office Monthly Installer, it just flips the registry key to Monthly.  The System will actually change to Monthly the next patch cycle.
 
- - Note, 
+
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -160,22 +163,46 @@ If (-not $Precache) {
     If (-not $VisioPro) {$VS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Standard%'"}
 
     #If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
+#If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
     if ($O365)
         {
         Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "o365script"
         $Configuration = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
- 
         $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
         $Insiders = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
         $Monthly = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
         $Targeted = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
         $Broad = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
-        if ($CurrentChannel -eq $Insiders){$Channel = "Insiders"}
-        if ($CurrentChannel -eq $Monthly){$Channel = "Monthly"}
-        if ($CurrentChannel -eq $Targeted){$Channel = "Targeted"}
-        if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
-        Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "o365script"
-
+        #If adding additional items to Office 365, it will autoatmically use the current channel office 365 is using and ignore the parameter in the install program
+        if (($ProjectStd) -or ($ProjectPro) -or ($VisioStd) -or ($VisioPro) -or ($Access))
+            {
+            Write-CMTraceLog -Message "Adding add-on Project, ignoring Channel Parameter and matching current Channel" -Type 1 -Component "o365script"
+            if ($CurrentChannel -eq $Insiders){$Channel = "Insiders"}
+            if ($CurrentChannel -eq $Monthly){$Channel = "Monthly"}
+            if ($CurrentChannel -eq $Targeted){$Channel = "Targeted"}
+            if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
+            Write-CMTraceLog -Message "Using current Office 365 Channel = $Channel" -Type 1 -Component "o365script"
+            }
+        #If this is just a Office 365 Install, with desired effect of changing the update channel, this will change the registry key and exit without full reinstall.
+        else
+            {
+            Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Setting to Channel in Parameter: $Channel" -Type 1 -Component "o365script"
+            if ($CurrentChannel -notmatch $Channel)
+                {
+                # Set new update channel
+                Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $Channel -Force
+                # Trigger hardware inventory
+                [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}')
+                #Confirm
+                $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
+                if ($CurrentChannel -notmatch $Channel){Write-CMTraceLog -Message "Failed to Change Office Channel, Still: $CurrentChannel" -Type 3 -Component "o365script"}
+                Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $CurrentChannel" -Type 1 -Component "o365script"}
+                Write-CMTraceLog -Message "Exiting Office Installer Script" -Type 1 -Component "o365script"
+                ExitWithCode -exitcode 0
+                }
+            }
+        #Adds Access Back into XML if previously installed when O365 is installed
         if (Test-Path -Path "$env:ProgramFiles\Microsoft Office\root\Office16\MSACCESS.EXE")
             {
             $A = $true
