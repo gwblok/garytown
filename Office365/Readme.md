@@ -3,7 +3,7 @@ Logging: C:\windows\temp\Office365_Install.log
 
 This file is configured to be used in when PreCache & Install take place in seperate Applications
 
-1. Application 1 = o365_install.ps1 -precache -channel broad  
+1. Application 1 = o365_install.ps1 -precache -channel broad -companyvalue 'GARYTOWN'
 - Note, in Precache mode, channel doens't mean anything, it's just a required parameter.
 - This will run the script in mode that downloads the content to a local path.
 - This gives you the ability to run in a required deployment to get the content downloaded ahead of time
@@ -11,12 +11,12 @@ This file is configured to be used in when PreCache & Install take place in sepe
 - Detection method: c:\programdata\o365_cache\office\data\v64_16.XXXXXXXX
   - You will need to update this every time you update the source content to make sure it matches.
   
-2. Application 2 = o365_install.ps1 -channel broad 
-3. Application 3 = o365_install.ps1 -access -channel broad
-4. Application 4 = o365_install.ps1 -visiopro -channel broad
-5. Application 5 = o365_install.ps1 -visiostd -channel broad
-6. Application 6 = o365_install.ps1 -projectpro -channel broad
-7. Application 7 = o365_install.ps1 -projectstd -channel broad
+2. Application 2 = o365_install.ps1 -channel broad -companyvalue 'GARYTOWN'
+3. Application 3 = o365_install.ps1 -access -channel broad -companyvalue 'GARYTOWN'
+4. Application 4 = o365_install.ps1 -visiopro -channel broad -companyvalue 'GARYTOWN'
+5. Application 5 = o365_install.ps1 -visiostd -channel broad -companyvalue 'GARYTOWN'
+6. Application 6 = o365_install.ps1 -projectpro -channel broad -companyvalue 'GARYTOWN'
+7. Application 7 = o365_install.ps1 -projectstd -channel broad -companyvalue 'GARYTOWN'
 
 - Apps 2 - 7 are setup identical content, a folder with the 3 scripts (install / prep / uninstall)
   - They would have have the same detection method, except 3-7 would include the EXE of the addtional program you're adding on.
