@@ -97,7 +97,7 @@ exit $lastexitcode
 
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
-$ScriptVer = "2020.05.04.2"
+$ScriptVer = "2020.05.05.2"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -207,14 +207,11 @@ If (-not $Precache) {
                 [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}')
                 #Confirm
                 $CurrentCDNBaseUrl = (Get-ItemProperty $Configuration).CDNBaseUrl
-                if ($CurrentCDNBaseUrl -notmatch $UpdateChannel)
-                    {
-                    if ($CurrentCDNBaseUrl -eq $Insiders){$CurrentChannelName = "Insiders"}
-                    if ($CurrentCDNBaseUrl -eq $Monthly){$CurrentChannelName = "Monthly"}
-                    if ($CurrentCDNBaseUrl -eq $Targeted){$CurrentChannelName = "Targeted"}
-                    if ($CurrentCDNBaseUrl -eq $Broad){$CurrentChannelName = "Broad"}
-                    Write-CMTraceLog -Message "Failed to Change Office Channel, Still: $CurrentChannelName" -Type 3 -Component "o365script"
-                    }
+                if ($CurrentCDNBaseUrl -eq $Insiders){$CurrentChannelName = "Insiders"}
+                if ($CurrentCDNBaseUrl -eq $Monthly){$CurrentChannelName = "Monthly"}
+                if ($CurrentCDNBaseUrl -eq $Targeted){$CurrentChannelName = "Targeted"}
+                if ($CurrentCDNBaseUrl -eq $Broad){$CurrentChannelName = "Broad"}               
+                if ($CurrentCDNBaseUrl -notmatch $UpdateChannel){Write-CMTraceLog -Message "Failed to Change Office Channel, Still: $CurrentChannelName" -Type 3 -Component "o365script"}
                 Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $CurrentChannelName" -Type 1 -Component "o365script"}
                 Write-CMTraceLog -Message "Exiting Office Installer Script After Channel Change" -Type 1 -Component "o365script"
                 ExitWithCode -exitcode 0
