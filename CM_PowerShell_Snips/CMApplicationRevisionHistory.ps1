@@ -8,4 +8,13 @@ foreach ($OfficeApp in $OfficeApps)
     }
     
 ########################################################################################################################
+#Removes Revision history from ALL Applications.  Be Careful!
+$AllApps = Get-CMApplication
 
+foreach ($App in $AllApps)
+    {
+    Write-Output $App.LocalizedDisplayName
+    Get-CMApplicationRevisionHistory -InputObject $OfficeApp | Where-Object {$_.IsLatest -eq $false} | Remove-CMApplicationRevisionHistory -Force
+    }
+    
+########################################################################################################################
