@@ -97,7 +97,7 @@ exit $lastexitcode
 
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
-$ScriptVer = "2020.05.06.2"
+$ScriptVer = "2020.05.06.3"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -210,6 +210,7 @@ If (-not $Precache) {
                 #Start-Sleep -Seconds 2
                 # Trigger CM Client Actions
                 [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
+                Start-Sleep -Seconds 2
                 [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
                 [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
 
@@ -438,7 +439,10 @@ If (-not $Precache) {
     $OfficeInstallCode = $InstallOffice.ExitCode
     Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "o365script"
     #$exitcode = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure Install_O365$Install_Access$Install_Project$Install_Visio.xml" -Wait -WindowStyle Hidden
-
+    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
+    Start-Sleep -Seconds 2
+    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
+    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
     if ($OfficeInstallCode -eq "-2147023294")
         {
         Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "o365script"
