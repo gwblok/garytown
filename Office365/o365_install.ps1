@@ -194,7 +194,7 @@ If (-not $Precache) {
             if ($TargetChannelName -eq "Targeted"){$TargetChannelValue = $Targeted}
             if ($TargetChannelName -eq "Broad"){$TargetChannelValue = $Broad}
             Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Current Channel is set to: $CurrentChannelName" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Current Channel is set to: $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Setting to Channel in Parameter: $TargetChannelName" -Type 1 -Component "o365script"
             if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue)
                 {
@@ -217,7 +217,7 @@ If (-not $Precache) {
                 $CurrentCDNBaseUrlValue = (Get-ItemProperty $Configuration).CDNBaseUrl
                 $CurrentUpdateChannelValue = (Get-ItemProperty $Configuration).UpdateChannel                        
                 if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue){Write-CMTraceLog -Message "Failed to Change Office Channel" -Type 3 -Component "o365script"}
-                Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $CurrentUpdateChannelName" -Type 1 -Component "o365script"}
+                Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $TargetChannelName" -Type 1 -Component "o365script"}
                 Write-CMTraceLog -Message "Exiting Office Installer Script After Channel Change" -Type 1 -Component "o365script"
                 ExitWithCode -exitcode 0
                 }
