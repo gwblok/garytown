@@ -97,7 +97,7 @@ exit $lastexitcode
 
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
-$ScriptVer = "2020.05.06.1"
+$ScriptVer = "2020.05.06.2"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -199,8 +199,8 @@ If (-not $Precache) {
             if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue)
                 {
                 # Set new update channel
-                Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $UpdateChannel -Force
-                Set-ItemProperty -Path $Configuration -Name "UpdateChannel" -Value $UpdateChannel -Force
+                Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $TargetChannelValue -Force
+                Set-ItemProperty -Path $Configuration -Name "UpdateChannel" -Value $TargetChannelValue -Force
                 $ProcessName = "$env:ProgramFiles\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe"
                 $Click2RunArg1 =  "/changesetting Channel=$Channel"
                 $Click2RunArg2 = "/update user updateprompt=false forceappshutdown=true displaylevel=true"
