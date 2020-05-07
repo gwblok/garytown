@@ -44,3 +44,14 @@ This file is used to help cleanup previous office software before the upgrade.  
 
 ### o365_uninstall.ps1
 This will dynamically uninstall office 365 based on parameters, pretty much the same as the install script.
+
+### o365_Change_Channel_ConfigItem.ps1
+This script can be used for a Baseline deployed to collection to set the Channel for office.
+Use Same Script for Discovery & Remediation, just change $RunMode
+Requires Collection Variables on the Collections you run the Baseline - Looks up the Name of the Collection Variable
+Set the Names for the variables like so:
+ - OfficeChannel-Monthly
+ - OfficeChannel-Broad
+ - OfficeChannel-Targeted
+The values you place in the variables don't get used.
+The script will look at those names and set the Office Channel to the Channel the variable is "named"
