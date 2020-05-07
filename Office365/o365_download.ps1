@@ -1,6 +1,6 @@
 <# GARY BLOK - @gwblok - GARYTOWN.COM
 2020.05.07
-Download Office Content
+Download Office Content (Office w/ Visio 2019 & Project 2019 Bits)
 Update The Application Name to the Application that contains your Office Content - $OfficeContentAppName
 Make sure that your Content APplication only has 1 deploymenttype
 This script will lookup that application, grab the Source Location from the App, back up your current copy, recreate the folder, download office content, copy the o365_Install.ps1 script from the o365_script folder.
