@@ -53,5 +53,6 @@ Set the Names for the variables like so:
  - OfficeChannel-Monthly
  - OfficeChannel-Broad
  - OfficeChannel-Targeted
+
 The values you place in the variables don't get used.
 The script will look at those names and set the Office Channel to the Channel the variable is "named"
