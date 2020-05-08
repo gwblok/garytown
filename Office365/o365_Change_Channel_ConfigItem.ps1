@@ -10,6 +10,9 @@ Set the Names for the variables like so:
 The values you place in the variables don't get used.
 The script will look at those names and set the Office Channel to the Channel the variable is "named"
 
+OR...
+
+Set the $TargetChannelName to Broad / Monthly / Targeted and create 3 Baselines deployed to the 3 collections.  No need to bother with Collection Variables.
 #>
 $RunMode = "Remediate"
 #$TargetChannelName = "Monthly"  #Used for testing
