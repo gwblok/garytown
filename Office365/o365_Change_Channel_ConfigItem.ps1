@@ -1,6 +1,9 @@
 
 <# Change Office Channel Baseline / CI Script
 Gary Blok @gwblok - GARYTOWN.COM
+
+ConfigItem Detection: Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
+
 Use Same Script for Discovery & Remediation, just change $RunMode
 Requires Collection Variables on the Collections you run the Baseline - Looks up the Name of the Collection Variable
 Set the Names for the variables like so:
