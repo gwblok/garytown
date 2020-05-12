@@ -88,7 +88,7 @@ $DownloadArgs = "/Download $env:temp\download.xml"
 $ContentLocation = $ContentLocation.Substring(0,$ContentLocation.Length-1)
 $ContentLocationParent = $ContentLocation.Replace("$(($ContentLocation.Split("\"))[$ContentLocation.Split("\").Count –1])","")
 $PreviousCabName = (Get-ChildItem -Path "$ContentLocation\Office\Data\v64_*.cab").Name
-if (Test-Path "$ContentLocationParent\o365ContentBackup"){Remove-Item "$ContentLocationParent\o365ContentBackup" -Force -Recurse}
+if (Test-Path "$ContentLocationParent\o365_ContentBackup"){Remove-Item "$ContentLocationParent\o365_ContentBackup" -Force -Recurse}
 Rename-Item -path $ContentLocation -NewName "$ContentLocationParent\o365_ContentBackup"
 New-Item -Path $ContentLocation -ItemType Directory -Force
 
