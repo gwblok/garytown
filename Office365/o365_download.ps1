@@ -1,22 +1,36 @@
 <# GARY BLOK - @gwblok - GARYTOWN.COM
-2020.05.07
+
 Download Office Content (Office w/ Visio 2019 & Project 2019 Bits)
-Update The Application Name to the Application that contains your Office Content - $OfficeContentAppName
-Make sure that your Content APplication only has 1 deploymenttype
-This script will lookup that application, grab the Source Location from the App, back up your current copy, recreate the folder, download office content, copy the o365_Install.ps1 script from the o365_script folder.
+
+This script will lookup your office application, grab the Source Location from the App, back up your current copy, recreate the folder, download office content, copy the o365_Install.ps1 script from the backup folder.
 It then will update the detection method (as it is based on the cab name and that it is copied down to the local cache)
 It also updates the content on the DPs
 
+This script is set to download Semi-Annual Channel (BROAD), you can change this in the XML section if you want Targeted or Monthly
+
+THINGS YOU NEED TO UPDATE FOR YOUR ENVIRONEMENT:
+$OfficeContentAppName
+$OfficeContentAppDTName
+$SiteCode
+$ProviderMachineName
+$Channel
+
+Future ideas for script: Create Parameters for: Channel, Office App Name & DT, Override Download Location, Skip Updating Application in CM, others..
+
 Change Log
-2020.05.12
-changed the download.xml to go to env:temp, which resolved an issue when there was a space in the path if the download.xml location was in a folder with a space.
+2020.05.07 - Initial Release
+2020.05.12 - changed the download.xml to go to env:temp, which resolved an issue when there was a space in the path if the download.xml location was in a folder with a space.
+2020.05.12 - replaced hardcode with variable for DT, and added more notes above.
+2020.05.12 - added variable for Channel
 #>
 
-#Set Office App Name & DT Name
-$OfficeContentAppName = "Microsoft Office 365 - Content"
-$OfficeContentAppDTName = "Office 365 ProPlus - Content"
-#Set Cache Location on local host - Used for Detection Method
+#Set Office App Name & DT Name - I have them both set to the same thing in my lab, but if you don't you have the option.
+$OfficeContentAppName = "Microsoft Office 365 Content"
+$OfficeContentAppDTName = "Microsoft Office 365 Content"
+#Set Cache Location on local host - Used for Detection Method when updating the app
 $O365Cache = "C:\ProgramData\O365_Cache"
+#Set the Channel of the Office you want to download.
+$Channel = "Broad" #Monthly & Targeted are other options
 
 # Site configuration
 $SiteCode = "PS2" # Site code 
@@ -33,7 +47,7 @@ if((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue
 #Grab CM Application information to get Source Path location of Office Content
 Set-Location -Path "$($SiteCode):"
 $CMApplication = Get-CMApplication -Name $OfficeContentAppName
-$CMDeploymentType = get-CMDeploymentType -ApplicationName $OfficeContentAppName -DeploymentTypeName "Office 365 ProPlus - Content"
+$CMDeploymentType = get-CMDeploymentType -ApplicationName $OfficeContentAppName -DeploymentTypeName $OfficeContentAppDTName
 [XML]$AppXML = $CMApplication.SDMPackageXML
 $ContentLocation = 	$AppXML.AppMgmtDigest.DeploymentType.Installer.Contents.Content.Location
 Set-Location -Path "c:"
@@ -55,6 +69,9 @@ Set-Location -Path "c:"
   </Add>
 </Configuration>
 "@
+
+#Update Channel
+$xml.Configuration.Add.SetAttribute("Channel","$Channel")
 
 #Update XML to use the Content location of the CM Application
 $newAddAttributeSourcePath = $XML.Configuration.Add
