@@ -6,6 +6,10 @@ Make sure that your Content APplication only has 1 deploymenttype
 This script will lookup that application, grab the Source Location from the App, back up your current copy, recreate the folder, download office content, copy the o365_Install.ps1 script from the o365_script folder.
 It then will update the detection method (as it is based on the cab name and that it is copied down to the local cache)
 It also updates the content on the DPs
+
+Change Log
+2020.05.12
+changed the download.xml to go to env:temp, which resolved an issue when there was a space in the path if the download.xml location was in a folder with a space.
 #>
 
 #Set Office App Name & DT Name
@@ -57,10 +61,10 @@ $newAddAttributeSourcePath = $XML.Configuration.Add
 $newAddAttributeSourcePath.SetAttribute("SourcePath","$ContentLocation")
 
 #Save the XML to the path that this script is running in.
-$xml.Save("$PSScriptRoot\download.xml")
+$xml.Save("$env:temp\download.xml")
 #Define Setup Engine & Command line to run
 $SetupProcess = "$PSScriptRoot\setup.exe"
-$DownloadArgs = "/Download $PSScriptRoot\download.xml"
+$DownloadArgs = "/Download $env:temp\download.xml"
 
 #Backup Current Content to "Backup" and Create Folder Structure to Download in (Matches the Connent Location in the CMApplication)
 
@@ -73,8 +77,8 @@ New-Item -Path $ContentLocation -ItemType Directory -Force
 
 #Start the Office Download
 Start-Process $SetupProcess -ArgumentList $DownloadArgs -Wait
-#Copy the Install Script & Setup.exe into the Content Folder for the Application
-Copy-Item -Path "$ContentLocationParent\o365_script\o365_Install.ps1" -Destination $ContentLocation -Force
+#Copy the Install Script from the backup location & Setup.exe from the working directory into the Content Folder for the Application
+Copy-Item -Path "$ContentLocationParent\o365_ContentBackup\o365_Install.ps1" -Destination $ContentLocation -Force
 Copy-Item -Path $SetupProcess -Destination $ContentLocation -Force
 
 #Get the Cab Name of the updated download and use it for the Detection Method.
