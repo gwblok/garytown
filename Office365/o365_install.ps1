@@ -65,6 +65,7 @@ CHANGE LOG:
 2020.05.04 - Added the ability for Office to change channels by running the different Office Installers (SAC / SACT / Monthly)
  - Example: If you Have SAC installed, and you run the Office Monthly Installer, it just flips the registry key to Monthly.  The System will actually change to Monthly the next patch cycle.
 2020.05.06 - Updated Code to change channel and run CM Client Actions to Trigger Updates
+2020.05.11 - Added $RegistryPath, where we set a registry value to disable the toast notification. (If you're using our Toast Notification Baseline)
 
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
@@ -97,6 +98,7 @@ exit $lastexitcode
 
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
+$RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
 $ScriptVer = "2020.05.06.3"
 
 #region: CMTraceLog Function formats logging in CMTrace style
@@ -143,6 +145,8 @@ function ExitWithCode
     $host.SetShouldExit($exitcode)
     exit
 }
+
+
 
 Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "o365script"
 Write-CMTraceLog -Message "Starting Script version $ScriptVer..." -Type 1 -Component "o365script"
@@ -438,11 +442,26 @@ If (-not $Precache) {
     $InstallOffice = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure $O365Cache\configuration.xml" -Wait -PassThru -WindowStyle Hidden
     $OfficeInstallCode = $InstallOffice.ExitCode
     Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "o365script"
+    
+    #Disable Toast Noticiation
+    if (test-path $RegistryPath)
+        { 
+        $ToastValue = Get-ItemProperty -Path $RegistryPath -Name "Enable_O365_Toast"-ErrorAction SilentlyContinue
+        if ($ToastValue -eq "True")
+            {
+            New-ItemProperty -Path $registryPath -Name "Enable_O365_Toast" -Value "False" -Force
+            CMTraceLog -Message "Disabled Toast Notification via Registry Value" -Type 1 -LogFile $LogFile
+            }
+        }
+
+
     #$exitcode = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure Install_O365$Install_Access$Install_Project$Install_Visio.xml" -Wait -WindowStyle Hidden
     [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
     Start-Sleep -Seconds 2
     [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
     [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
+
+
     if ($OfficeInstallCode -eq "-2147023294")
         {
         Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "o365script"
