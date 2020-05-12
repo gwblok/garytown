@@ -66,7 +66,7 @@ CHANGE LOG:
  - Example: If you Have SAC installed, and you run the Office Monthly Installer, it just flips the registry key to Monthly.  The System will actually change to Monthly the next patch cycle.
 2020.05.06 - Updated Code to change channel and run CM Client Actions to Trigger Updates
 2020.05.11 - Added $RegistryPath, where we set a registry value to disable the toast notification. (If you're using our Toast Notification Baseline)
-
+2020.05.12 - Added XML elements for Visio & Project for the ExcludeApp Property to include OneDrive & Groove at request of client. (Personally I don't believe this is needed)
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -99,7 +99,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.06.3"
+$ScriptVer = "2020.05.12.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -330,7 +330,11 @@ If (-not $Precache) {
         $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
         $newProductApp.SetAttribute("PIDKEY","B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B")
         $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
+        $newXmlNameElement.SetAttribute("ID","en-us")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","Groove")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","OneDrive")    
         Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "o365script"
         }  
 
@@ -342,7 +346,11 @@ If (-not $Precache) {
         $newProductApp.SetAttribute("ID","VisioPro2019Volume")
         $newProductApp.SetAttribute("PIDKEY","9BGNQ-K37YR-RQHF2-38RQ3-7VCBB")
         $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
+        $newXmlNameElement.SetAttribute("ID","en-us")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","Groove")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","OneDrive")     
         Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "o365script"
         }
     #Add Project Standard to XML if Previously Installed or Called from Param
@@ -354,6 +362,10 @@ If (-not $Precache) {
         $newProductApp.SetAttribute("PIDKEY","C4F7P-NCP8C-6CQPT-MQHV9-JXD2M")
         $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
         $newXmlNameElement.SetAttribute("ID","en-us")  
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","Groove")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","OneDrive")   
         Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "o365script"
         }  
 
@@ -366,6 +378,10 @@ If (-not $Precache) {
         $newProductApp.SetAttribute("PIDKEY","7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2")
         $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
         $newXmlNameElement.SetAttribute("ID","en-us")  
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","Groove")
+        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+        $newXmlNameElement.SetAttribute("ID","OneDrive")   
         Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "o365script"
         }
 
