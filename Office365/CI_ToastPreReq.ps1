@@ -1,4 +1,10 @@
-#Office 365 CI Setting #1 Discovery / Remediation Script
+<# Office 365 CI Setting #1 Discovery / Remediation Script
+Gary Blok (@gwblok) & Mike Terril (@miketerrill)
+
+Change log
+2020.05.12 - Add logic to work around if machine / user has several deployments of the apps
+
+#>
 $O365ContentAssignmentName = "Office 365 ProPlus Content"
 $InstallAssignmentName = "Microsoft Office 365 - Semi Annual Channel_" #Used for finding the User Deployment Application Install Policy
 
@@ -46,12 +52,20 @@ CMTraceLog -Message  "-------------------------------------------------" -Type 1
 #Confirm Office 365 Content in CCMCache
 $CIModel = Get-CimInstance -Namespace root/ccm/CIModels -ClassName CCM_AppDeliveryTypeSynclet | Where-Object {$_.AppDeliveryTypeName -match $O365ContentAssignmentName}
 $ContentID = $CIModel.InstallAction.Content.ContentId | Sort-Object -Unique
-$Cache = Get-CimInstance -Namespace root/ccm/SoftMgmtAgent -ClassName CacheInfoEx | Where-Object {$_.ContentID -eq $ContentID}                                                                                                                                                                                    
-$CacheComplete = $Cache.ContentComplete
-if ($ContentID){CMTraceLog -Message  "Content ID: $ContentID" -Type 1 -LogFile $LogFile}
-if ($CacheComplete){CMTraceLog -Message  "Cache Complete: $CacheComplete" -Type 1 -LogFile $LogFile}
-Else {CMTraceLog -Message  "Content not found in CCMCache" -Type 1 -LogFile $LogFile}
+foreach ($ID in $ContentID)
+    {
+    $Cache = Get-CimInstance -Namespace root/ccm/SoftMgmtAgent -ClassName CacheInfoEx | Where-Object {$_.ContentID -eq $ID}                                                                                                                                                                                    
+    if ($Cache.ContentComplete -eq $true)
+        {
+        $CacheComplete = $true
+        $CachCompleteID = $ID   
+        }
+    if ($ID){CMTraceLog -Message  "Content ID: $ID" -Type 1 -LogFile $LogFile}
+    if ($CacheComplete){CMTraceLog -Message  "Cache Complete: $CacheComplete" -Type 1 -LogFile $LogFile}
+    Else {CMTraceLog -Message  "Content not found in CCMCache" -Type 1 -LogFile $LogFile}
+    }
 
+if ($CacheComplete-eq $true) {CMTraceLog -Message  "Cache ID: $ID is Cache Complete" -Type 1 -LogFile $LogFile}
 
 #Check if Office 365 is already installed
 $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
@@ -126,6 +140,7 @@ $CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Nam
 $CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "_Default"}
 $CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "S_1_1_0"}
 #$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -eq "S_1_5_21_1960408961_287218729_839522115_29201717"} 
+#$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -match "S_1_5_21_1123561945_1708537768_1801674531_6347474"}
 foreach ($Policy in $CMUserPolicyItems)
     {
     #$Policy.Name
@@ -143,7 +158,7 @@ foreach ($Policy in $CMUserPolicyItems)
             {
             #Write-Output "Assignement Found!!"
             #$Assignment.AssignmentName
-            CMTraceLog -Message  "** Found Assignment $($Assignment.AssignmentName) ** " -Type 1 -LogFile $LogFilecmtrce
+            CMTraceLog -Message  "** Found Assignment $($Assignment.AssignmentName) ** " -Type 1 -LogFile $LogFile
             CMTraceLog -Message  "* Modifing WMI for Deployment *" -Type 1 -LogFile $LogFile
             CMTraceLog -Message  " Changing UserUIExperience to TRUE" -Type 1 -LogFile $LogFile
             CMTraceLog -Message  " Changing EnforcementDeadline to NULL" -Type 1 -LogFile $LogFile
@@ -152,12 +167,12 @@ foreach ($Policy in $CMUserPolicyItems)
             $AppDeployment.EnforcementDeadline = $null
             $AppDeployment.Put()
             #Confirm
-            $AssignmentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName} -ErrorAction SilentlyContinue
-            $AppDeploymentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | ? {$_.AssignmentID -eq $AssignmentConfirm.AssignmentID}
-            if ($AppDeploymentConfirm.UserUIExperience -eq $true) {CMTraceLog -Message  " Confirmed UserUIExperience now $($AppDeploymentConfirm.UserUIExperience)" -Type 1 -LogFile $LogFile}
-            Else {CMTraceLog -Message  " Confirmed UserUIExperience now $($AppDeploymentConfirm.UserUIExperience)" -Type 3 -LogFile $LogFile}
-            if (!$AppDeploymentConfirm.EnforcementDeadline){CMTraceLog -Message  " Confirmed EnforcementDeadline is NULL" -Type 1 -LogFile $LogFile}
-            Else {CMTraceLog -Message  " EnforcementDeadline is $($AppDeploymentConfirm.EnforcementDeadline)" -Type 3 -LogFile $LogFile}
+            $AssignmentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName -and $_.AssignmentID -eq $Assignment.AssignmentID} -ErrorAction SilentlyContinue
+            #$AppDeploymentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentID -eq $AssignmentConfirm.AssignmentID}
+            if ($AssignmentConfirm.UserUIExperience -eq $true) {CMTraceLog -Message  " Confirmed UserUIExperience now $($AssignmentConfirm.UserUIExperience)" -Type 1 -LogFile $LogFile}
+            Else {CMTraceLog -Message  " Confirmed UserUIExperience now $($AssignmentConfirm.UserUIExperience)" -Type 3 -LogFile $LogFile}
+            if (!$AssignmentConfirm.EnforcementDeadline){CMTraceLog -Message  " Confirmed EnforcementDeadline is NULL" -Type 1 -LogFile $LogFile}
+            Else {CMTraceLog -Message  " EnforcementDeadline is $($AssignmentConfirm.EnforcementDeadline)" -Type 3 -LogFile $LogFile}
             }
         } 
     } 
