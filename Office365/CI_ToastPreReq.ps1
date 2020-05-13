@@ -3,10 +3,12 @@ Gary Blok (@gwblok) & Mike Terril (@miketerrill)
 
 Change log
 2020.05.12 - Add logic to work around if machine / user has several deployments of the apps
+2020.05.13 - Updated Names
 
 #>
+$ScriptVersion = "2020.05.13.1"
 $O365ContentAssignmentName = "Microsoft 365 Content"
-$InstallAssignmentName = "Microsoft 365 Office - Semi Annual Channel Enterprise_" #Used for finding the User Deployment Application Install Policy
+$InstallAssignmentName = "Microsoft 365 Office - Semi-Annual Enterprise Channel_" #Used for finding the User Deployment Application Install Policy
 
 $registryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location
 $SCVisible = $false
@@ -45,9 +47,9 @@ $logfile = "$env:TEMP\o365_Baseline.log"
 	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
 
-CMTraceLog -Message  "-------------------------------------------------" -Type 1 -LogFile $LogFile
+CMTraceLog -Message  "-----------------------------------------------------------" -Type 1 -LogFile $LogFile
 CMTraceLog -Message  "Starting Office 365 CI Setting #1 Discovery / Remediation Script" -Type 2 -LogFile $LogFile
-CMTraceLog -Message  "-------------------------------------------------" -Type 1 -LogFile $LogFile
+CMTraceLog -Message  "------------Script Version: $ScriptVersion  -------------" -Type 1 -LogFile $LogFile
 
 #Confirm Office 365 Content in CCMCache
 $CIModel = Get-CimInstance -Namespace root/ccm/CIModels -ClassName CCM_AppDeliveryTypeSynclet | Where-Object {$_.AppDeliveryTypeName -match $O365ContentAssignmentName}
@@ -89,7 +91,7 @@ foreach ($Policy in $CMUserPolicyItems)
 $namespace = "ROOT\ccm\Policy\$($Policy.name)\ActualConfig"
 $classname = "CCM_ApplicationCIAssignment"
 $CIMClass = Get-CimClass -ClassName $classname -Namespace $namespace -ErrorAction SilentlyContinue
-if ($CIMClass){$Assignment = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName} -ErrorAction SilentlyContinue}
+if ($CIMClass){$Assignment = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName -and $_.AssignmentName -notmatch $O365ContentAssignmentName} -ErrorAction SilentlyContinue}
 if ($Assignment) 
     {
     $AppAssignments += $Assignment
@@ -150,7 +152,7 @@ foreach ($Policy in $CMUserPolicyItems)
     $CIMClass = Get-CimClass -ClassName $classname -Namespace $namespace -ErrorAction SilentlyContinue
     
 
-    if ($CIMClass){$Assignments = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName} -ErrorAction SilentlyContinue}
+    if ($CIMClass){$Assignments = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName -and $_.AssignmentName -notmatch $O365ContentAssignmentName} -ErrorAction SilentlyContinue}
 
     if ($Assignments) 
         {
