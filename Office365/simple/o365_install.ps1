@@ -141,17 +141,20 @@ if ($O365)
     {
     Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "o365script"
     $Configuration = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
- 
-    $CurrentChannel = (Get-ItemProperty $Configuration).CDNBaseUrl
-    $Insiders = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
-    $Monthly = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
-    $Targeted = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
-    $Broad = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
-    if ($CurrentChannel -eq $Insiders){$Channel = "Insiders"}
-    if ($CurrentChannel -eq $Monthly){$Channel = "Monthly"}
-    if ($CurrentChannel -eq $Targeted){$Channel = "Targeted"}
-    if ($CurrentChannel -eq $Broad){$Channel = "Broad"}
-    Write-CMTraceLog -Message "Current Office 365 Channel = $Channel" -Type 1 -Component "o365script"
+    $CurrentCDNBaseUrlValue = (Get-ItemProperty $Configuration).CDNBaseUrl
+    $CurrentUpdateChannelValue = (Get-ItemProperty $Configuration).UpdateChannel
+    $CurrentPreview = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
+    $Current = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
+    $MonthlyEnterprise = "http://officecdn.microsoft.com/pr/55336b82-a18d-4dd6-b5f6-9e5095c314a6"
+    $SemiAnnualPreview = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
+    $SemiAnnual = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
+    if ($CurrentCDNBaseUrlValue -eq $CurrentPreview){$CurrentCDNBaseUrlName = "CurrentPreview"}
+    if ($CurrentCDNBaseUrlValue -eq $Current){$CurrentCDNBaseUrlName = "Current"}
+    if ($CurrentCDNBaseUrlValue -eq $MonthlyEnterprise){$CurrentCDNBaseUrlName = "MonthlyEnterprise"}
+    if ($CurrentCDNBaseUrlValue -eq $SemiAnnualPreview){$CurrentCDNBaseUrlName = "SemiAnnualPreview"}
+    if ($CurrentCDNBaseUrlValue -eq $SemiAnnual){$CurrentCDNBaseUrlName = "SemiAnnual"}
+    Write-CMTraceLog -Message "Current Office 365 Channel = $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
+    $Channel = $CurrentCDNBaseUrlName
 
     if (Test-Path -Path "$env:ProgramFiles\Microsoft Office\root\Office16\MSACCESS.EXE")
         {
