@@ -6,15 +6,15 @@ CM App DT Program:
 Office 365
 powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad
 Access:
-powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel Broad
 Project Professional
-powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad
 Project Standard
-powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel Broad
 Visio Professional
-powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel Broad
 Visio Standard
-powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd
+powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad
 
 The XML as it is below will remove Teams, Install Skype, Remove OneDrive and some other stuff.  Recommend you look over the $XML area and fit to your needs
 
@@ -26,8 +26,8 @@ Copies the Installer Media to Cache location (HARD LINKS) and installs from ther
 
 
 Notes:
-Semi Annual Channel = Broad
-Semi Annual Channel Targeted = Targeted
+Semi Annual Channel = SemiAnnual
+Semi Annual Channel Targeted = SemiAnnualPreview
 
 
 CHANGE LOG:
@@ -41,6 +41,7 @@ CHANGE LOG:
 2020.04.23 - Force PowerShell to run in 64-bit mode 
 2020.04.24 - Added options for installing Visio Standard & Project Standard from commandline ($VisioStd & $ProjectStd)
 2020.04.24 - Renamed $Project to $ProjectPro & $Visio to $VisioPro
+2020.05.12 - Updated to reflect new channel names
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -51,7 +52,7 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioPro,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Monthly", "Broad", "Targeted")][string]$Channel
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual")][string]$Channel
     ) 
 
 #############################################################################
