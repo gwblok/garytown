@@ -3,10 +3,11 @@ Gary Blok (@gwblok) & Mike Terril (@miketerrill)
 
 Change log
 2020.05.12 - Add logic to work around if machine / user has several deployments of the apps
-2020.05.13 - Updated Names
+2020.05.13 - Updated Assignment Names & Added a -notmatch to make sure I didn't grab the wrong assignment
+2020.05.13 - Moved the [if ($AppAssignments.Count -lt 1)] out of the foreach loop.
 
 #>
-$ScriptVersion = "2020.05.13.1"
+$ScriptVersion = "2020.05.13.2"
 $O365ContentAssignmentName = "Microsoft 365 Content"
 $InstallAssignmentName = "Microsoft 365 Office - Semi-Annual Enterprise Channel_" #Used for finding the User Deployment Application Install Policy
 
@@ -110,13 +111,12 @@ if ($Assignment)
         CMTraceLog -Message  "Policy user GUID: $($Policy.Name)" -Type 1 -LogFile $LogFile
         }
     }
+}
 if ($AppAssignments.Count -lt 1)
     {
     CMTraceLog -Message  "Did not find any assignments that matched $InstallAssignmentName" -Type 1 -LogFile $LogFile
     CMTraceLog -Message  "Unable to determine status for SCVisible" -Type 1 -LogFile $LogFile
     }
-
-}
 
 Function ConfigToastReg {
                 [CmdletBinding()]
