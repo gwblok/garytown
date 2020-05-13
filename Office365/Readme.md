@@ -11,12 +11,12 @@ This file is configured to be used in when PreCache & Install take place in sepe
 - Detection method: c:\programdata\o365_cache\office\data\v64_16.XXXXXXXX
   - You will need to update this every time you update the source content to make sure it matches.
   
-2. Application 2 = o365_install.ps1 -channel broad -companyvalue 'GARYTOWN'
-3. Application 3 = o365_install.ps1 -access -channel broad -companyvalue 'GARYTOWN'
-4. Application 4 = o365_install.ps1 -visiopro -channel broad -companyvalue 'GARYTOWN'
-5. Application 5 = o365_install.ps1 -visiostd -channel broad -companyvalue 'GARYTOWN'
-6. Application 6 = o365_install.ps1 -projectpro -channel broad -companyvalue 'GARYTOWN'
-7. Application 7 = o365_install.ps1 -projectstd -channel broad -companyvalue 'GARYTOWN'
+2. Application 2 = o365_install.ps1 -channel SemiAnnual -companyvalue 'GARYTOWN'
+3. Application 3 = o365_install.ps1 -access -channel SemiAnnual -companyvalue 'GARYTOWN'
+4. Application 4 = o365_install.ps1 -visiopro -channel SemiAnnual -companyvalue 'GARYTOWN'
+5. Application 5 = o365_install.ps1 -visiostd -channel SemiAnnual -companyvalue 'GARYTOWN'
+6. Application 6 = o365_install.ps1 -projectpro -channel SemiAnnual -companyvalue 'GARYTOWN'
+7. Application 7 = o365_install.ps1 -projectstd -channel SemiAnnual -companyvalue 'GARYTOWN'
 
 - Apps 2 - 7 are setup identical content, a folder with the 3 scripts (install / prep / uninstall)
   - They would have have the same detection method, except 3-7 would include the EXE of the addtional program you're adding on.
@@ -48,11 +48,3 @@ This will dynamically uninstall office 365 based on parameters, pretty much the 
 ### o365_Change_Channel_ConfigItem.ps1
 This script can be used for a Baseline deployed to collection to set the Channel for office.
 Use Same Script for Discovery & Remediation, just change $RunMode
-Requires Collection Variables on the Collections you run the Baseline - Looks up the Name of the Collection Variable
-Set the Names for the variables like so:
- - OfficeChannel-Monthly
- - OfficeChannel-Broad
- - OfficeChannel-Targeted
-
-The values you place in the variables don't get used.
-The script will look at those names and set the Office Channel to the Channel the variable is "named"
