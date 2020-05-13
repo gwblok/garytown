@@ -5,11 +5,12 @@ Change log
 2020.05.12 - Add logic to work around if machine / user has several deployments of the apps
 2020.05.13 - Updated Assignment Names & Added a -notmatch to make sure I didn't grab the wrong assignment
 2020.05.13 - Moved the [if ($AppAssignments.Count -lt 1)] out of the foreach loop.
+2020.05.13 - Updated o365 detection for new name changes coming - https://docs.microsoft.com/en-us/deployoffice/name-change
 
 #>
-$ScriptVersion = "2020.05.13.2"
+$ScriptVersion = "2020.05.13.3"
 $O365ContentAssignmentName = "Microsoft 365 Content"
-$InstallAssignmentName = "Microsoft 365 Office - Semi-Annual Enterprise Channel_" #Used for finding the User Deployment Application Install Policy
+$InstallAssignmentName = "Microsoft 365 Office - Semi-Annual Enterprise Channel_" #Used for finding the User Deployment Application Install Policy (Append _ to the end of your app)
 
 $registryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location
 $SCVisible = $false
@@ -71,7 +72,7 @@ foreach ($ID in $ContentID)
 if ($CacheComplete-eq $true) {CMTraceLog -Message  "Cache ID: $ID is Cache Complete" -Type 1 -LogFile $LogFile}
 
 #Check if Office 365 is already installed
-$O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
+$O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%' or ARPDisplayName like 'Microsoft 365 for enterprise%'"
 if ($O365){CMTraceLog -Message  "Office 365 is already installed"-Type 1 -LogFile $LogFile}
 else {CMTraceLog -Message "Office 365 is NOT installed"-Type 1 -LogFile $LogFile}
 
@@ -82,8 +83,8 @@ if ($Enable_O365_Toast){CMTraceLog -Message "Enable_O365_Toast = $Enable_O365_To
 else {CMTraceLog -Message  "Enable_O365_Toast Not Created Yet" -Type 1 -LogFile $LogFile}
 
 
-#Check if the User Deployment Policy has been evaluated and if it has already been made visible in Software Center 
-$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -notin ("DefaultMachine", "DefaultUser", "Machine")}
+#Check if the User / Machine Deployment Policy has been evaluated and if it has already been made visible in Software Center 
+$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -notin ("DefaultMachine", "DefaultUser")}
 $CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "_Default"}
 $CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "S_1_1_0"}
 $AppAssignments = @()
@@ -107,6 +108,7 @@ if ($Assignment)
         CMTraceLog -Message  "SCVisible = True" -Type 1 -LogFile $LogFile
         }
     Else {
+        $SCVisible = $false
         CMTraceLog -Message  "SCVisible = False" -Type 1 -LogFile $LogFile
         CMTraceLog -Message  "Policy user GUID: $($Policy.Name)" -Type 1 -LogFile $LogFile
         }
@@ -138,7 +140,7 @@ Function ConfigToastReg {
 
 Function EnableSC {
 #Enable the User Deployment Policy in Software Center 
-$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -notin ("DefaultMachine", "DefaultUser", "Machine")}
+$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -notin ("DefaultMachine", "DefaultUser")}
 $CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "_Default"}
 $CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "S_1_1_0"}
 #$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -eq "S_1_5_21_1960408961_287218729_839522115_29201717"} 
@@ -175,6 +177,7 @@ foreach ($Policy in $CMUserPolicyItems)
             Else {CMTraceLog -Message  " Confirmed UserUIExperience now $($AssignmentConfirm.UserUIExperience)" -Type 3 -LogFile $LogFile}
             if (!$AssignmentConfirm.EnforcementDeadline){CMTraceLog -Message  " Confirmed EnforcementDeadline is NULL" -Type 1 -LogFile $LogFile}
             Else {CMTraceLog -Message  " EnforcementDeadline is $($AssignmentConfirm.EnforcementDeadline)" -Type 3 -LogFile $LogFile}
+            [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000121}') #App Eval
             }
         } 
     } 
