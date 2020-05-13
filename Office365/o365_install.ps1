@@ -102,7 +102,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.13.1"
+$ScriptVer = "2020.05.13.2"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -469,7 +469,7 @@ If (-not $Precache) {
     #Disable Toast Noticiation
     if (test-path $RegistryPath)
         { 
-        $ToastValue = Get-ItemProperty -Path $RegistryPath -Name "Enable_O365_Toast"-ErrorAction SilentlyContinue
+        $ToastValue = Get-ItemPropertyValue -Path $RegistryPath -Name "Enable_O365_Toast"-ErrorAction SilentlyContinue
         if ($ToastValue -eq "True")
             {
             New-ItemProperty -Path $registryPath -Name "Enable_O365_Toast" -Value "False" -Force
