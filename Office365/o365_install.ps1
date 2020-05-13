@@ -1,33 +1,33 @@
 <#Office 365 Installer Script
 Mike Terrill & Gary Blok
 
-CM App DT Program (Content App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -precache -Channel Broad
+CM App DT Program (Content App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -precache -Channel SemiAnnual
  - Deployed to office 365 User Collection as Required ASAP HIDDEN! Not shown in Software Center
-CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad -CompanyValue GARYTOWN
+CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel SemiAnnual -CompanyValue GARYTOWN
  - App DT has Requirement of Office PreCache App
  - Deployed to office 365 User Collection as Available ASAP Shown in Software Center  
 
 Examples:
-Semi Annual Channel: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Broad -CompanyValue GARYTOWN
+Semi Annual Channel: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel SemiAnnual -CompanyValue GARYTOWN
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Data Type: String | Eq: http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114
 Semi Annual Channel Targeted: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Targeted -CompanyValue GARYTOWN
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Data Type: String | Eq: http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf
 Monthly Channel: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Channel Monthly -CompanyValue GARYTOWN
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Data Type: String | Eq: http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60
 
-Access: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel Broad -CompanyValue GARYTOWN
+Access: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -Access -Channel SemiAnnual -CompanyValue GARYTOWN
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: File | Path: %ProgramFiles%\Microsoft Office\root\Office16 | File Name: ACCESS.EXE | Must Exist
-Project Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel Broad -CompanyValue 'Big Bank'
+Project Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectPro -Channel SemiAnnual -CompanyValue 'Big Bank'
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectPro2019Volume - en-us | Value: DisplayName | Must Exist
-Project Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel Broad -CompanyValue AZSMUG
+Project Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel SemiAnnual -CompanyValue AZSMUG
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectStd2019Volume - en-us | Value: DisplayName | Must Exist
-Visio Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel Broad -CompanyValue MIKETERRILL.NET
+Visio Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel SemiAnnual -CompanyValue MIKETERRILL.NET
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioPro2019Volume - en-us | Value: DisplayName | Must Exist
-Visio Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel Broad -CompanyValue 'Recast Software'
+Visio Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel SemiAnnual -CompanyValue 'Recast Software'
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioStd2019Volume - en-us | Value: DisplayName | Must Exist
 
@@ -39,8 +39,8 @@ Copies the Installer Media to Cache location (HARD LINKS) and installs from ther
 
 
 Notes:
-Semi Annual Channel = Broad
-Semi Annual Channel Targeted = Targeted
+Semi-Annual Enterprise Channel [FORMERLY KNOWN AS SAC] = SemiAnnual
+Semi-Annual Enterprise Channel (Preview) [FORMERLY KNOWN AS SACT] = SemiAnnualPreview
 
 
 CHANGE LOG:
@@ -101,7 +101,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.12.2"
+$ScriptVer = "2020.05.12.3"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
