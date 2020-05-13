@@ -69,6 +69,7 @@ CHANGE LOG:
 2020.05.12 - Added XML elements for Visio & Project for the ExcludeApp Property to include OneDrive & Groove at request of client. (Personally I don't believe this is needed)
 2020.05.12 - Updated script to use new Channel Names & Attributes: https://docs.microsoft.com/en-us/DeployOffice/update-channels-changes
  - Can't confirm everything just yet, new ODT is supposed to be released 2020.06.09.  However the Enterprise Monthly Channel works with the most recent release.
+ 2020.05.13 - Added detection for if office / microsoft 365 is already installed based on this pos: https://docs.microsoft.com/en-us/deployoffice/name-change
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -101,7 +102,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.12.3"
+$ScriptVer = "2020.05.13.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -160,8 +161,8 @@ Write-CMTraceLog -Message "=====================================================
 If (-not $Precache) {
     Write-CMTraceLog -Message "Running Script in Install Mode" -Type 1 -Component "o365script"
     #$Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge%'"
-    $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016' or ARPDisplayName like 'Microsoft Edge'"
-    $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
+    $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016'"
+    $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%' or ARPDisplayName like 'Microsoft 365 for enterprise%'"
     $A = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Access 20%'"
     If (-not $ProjectStd) {$PP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Professional%'"}
     If (-not $ProjectPro) {$PS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Standard%'"}
