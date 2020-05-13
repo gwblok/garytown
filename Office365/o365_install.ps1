@@ -67,6 +67,8 @@ CHANGE LOG:
 2020.05.06 - Updated Code to change channel and run CM Client Actions to Trigger Updates
 2020.05.11 - Added $RegistryPath, where we set a registry value to disable the toast notification. (If you're using our Toast Notification Baseline)
 2020.05.12 - Added XML elements for Visio & Project for the ExcludeApp Property to include OneDrive & Groove at request of client. (Personally I don't believe this is needed)
+2020.05.12 - Updated script to use new Channel Names & Attributes: https://docs.microsoft.com/en-us/DeployOffice/update-channels-changes
+ - Can't confirm everything just yet, new ODT is supposed to be released 2020.06.09.  However the Enterprise Monthly Channel works with the most recent release.
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -77,7 +79,7 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioPro,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Monthly", "Broad", "Targeted")][string]$Channel,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual")][string]$Channel,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$CompanyValue
     ) 
 
@@ -99,7 +101,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.12.1"
+$ScriptVer = "2020.05.12.2"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -157,8 +159,8 @@ Write-CMTraceLog -Message "=====================================================
 #Get Currently Installed Office Apps
 If (-not $Precache) {
     Write-CMTraceLog -Message "Running Script in Install Mode" -Type 1 -Component "o365script"
-    #$Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge'"
-    $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016'"
+    #$Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge%'"
+    $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016' or ARPDisplayName like 'Microsoft Edge'"
     $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
     $A = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Access 20%'"
     If (-not $ProjectStd) {$PP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Professional%'"}
@@ -174,29 +176,33 @@ If (-not $Precache) {
         $Configuration = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
         $CurrentCDNBaseUrlValue = (Get-ItemProperty $Configuration).CDNBaseUrl
         $CurrentUpdateChannelValue = (Get-ItemProperty $Configuration).UpdateChannel
-        $Insiders = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
-        $Monthly = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
-        $Targeted = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
-        $Broad = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
-        if ($CurrentCDNBaseUrlValue -eq $Insiders){$CurrentCDNBaseUrlName = "Insiders"}
-        if ($CurrentCDNBaseUrlValue -eq $Monthly){$CurrentCDNBaseUrlName = "Monthly"}
-        if ($CurrentCDNBaseUrlValue -eq $Targeted){$CurrentCDNBaseUrlName = "Targeted"}
-        if ($CurrentCDNBaseUrlValue -eq $Broad){$CurrentCDNBaseUrlName = "Broad"}
+        $CurrentPreview = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
+        $Current = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
+        $MonthlyEnterprise = "http://officecdn.microsoft.com/pr/55336b82-a18d-4dd6-b5f6-9e5095c314a6"
+        $SemiAnnualPreview = "http://officecdn.microsoft.com/pr/b8f9b850-328d-4355-9145-c59439a0c4cf"
+        $SemiAnnual = "http://officecdn.microsoft.com/pr/7ffbc6bf-bc32-4f92-8982-f9dd17fd3114"
+        if ($CurrentCDNBaseUrlValue -eq $CurrentPreview){$CurrentCDNBaseUrlName = "CurrentPreview"}
+        if ($CurrentCDNBaseUrlValue -eq $Current){$CurrentCDNBaseUrlName = "Current"}
+        if ($CurrentCDNBaseUrlValue -eq $MonthlyEnterprise){$CurrentCDNBaseUrlName = "MonthlyEnterprise"}
+        if ($CurrentCDNBaseUrlValue -eq $SemiAnnualPreview){$CurrentCDNBaseUrlName = "SemiAnnualPreview"}
+        if ($CurrentCDNBaseUrlValue -eq $SemiAnnual){$CurrentCDNBaseUrlName = "SemiAnnual"}
 
         #If adding additional items to Office 365, it will autoatmically use the current channel office 365 is using and ignore the parameter in the install program
         if (($ProjectStd) -or ($ProjectPro) -or ($VisioStd) -or ($VisioPro) -or ($Access))
             {
             Write-CMTraceLog -Message "Adding add-on Project, ignoring Channel Parameter and matching current Channel" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Using current Office 365 Channel = $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
+            $Channel = $CurrentCDNBaseUrlName
             }
         #If this is just a Office 365 Install, with desired effect of changing the update channel, this will change the registry key and exit without full reinstall.
         else
             {
             $TargetChannelName = $Channel
-            if ($TargetChannelName -eq "Insiders"){$TargetChannelValue = $Insiders}
-            if ($TargetChannelName -eq "Monthly"){$TargetChannelValue = $Monthly}
-            if ($TargetChannelName -eq "Targeted"){$TargetChannelValue = $Targeted}
-            if ($TargetChannelName -eq "Broad"){$TargetChannelValue = $Broad}
+            if ($TargetChannelName -eq "CurrentPreview"){$TargetChannelValue = $CurrentPreview}
+            if ($TargetChannelName -eq "Current"){$TargetChannelValue = $Current}
+            if ($TargetChannelName -eq "MonthlyEnterprise"){$TargetChannelValue = $MonthlyEnterprise}
+            if ($TargetChannelName -eq "SemiAnnualPreview"){$TargetChannelValue = $SemiAnnualPreview}
+            if ($TargetChannelName -eq "SemiAnnual"){$TargetChannelValue = $SemiAnnual}
             Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Current Channel is set to: $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Setting to Channel in Parameter: $TargetChannelName" -Type 1 -Component "o365script"
@@ -278,7 +284,7 @@ If (-not $Precache) {
     [XML]$XML = @"
 <Configuration ID="83d58100-fefb-4cb2-802c-cbbdf19f61f9" Host="cm">
     <Info Description="Customized Office 365" />
-    <Add OfficeClientEdition="64" Channel="Monthly" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE">
+    <Add OfficeClientEdition="64" Channel="SemiAnnual" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE">
     <Product ID="O365ProPlusRetail">
     <Language ID="en-us" />
     <ExcludeApp ID="Groove" />
