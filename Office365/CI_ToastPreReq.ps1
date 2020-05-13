@@ -5,8 +5,8 @@ Change log
 2020.05.12 - Add logic to work around if machine / user has several deployments of the apps
 
 #>
-$O365ContentAssignmentName = "Office 365 ProPlus Content"
-$InstallAssignmentName = "Microsoft Office 365 - Semi Annual Channel_" #Used for finding the User Deployment Application Install Policy
+$O365ContentAssignmentName = "Microsoft 365 Content"
+$InstallAssignmentName = "Microsoft 365 Office - Semi Annual Channel Enterprise_" #Used for finding the User Deployment Application Install Policy
 
 $registryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location
 $SCVisible = $false
