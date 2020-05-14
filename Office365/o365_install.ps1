@@ -69,7 +69,11 @@ CHANGE LOG:
 2020.05.12 - Added XML elements for Visio & Project for the ExcludeApp Property to include OneDrive & Groove at request of client. (Personally I don't believe this is needed)
 2020.05.12 - Updated script to use new Channel Names & Attributes: https://docs.microsoft.com/en-us/DeployOffice/update-channels-changes
  - Can't confirm everything just yet, new ODT is supposed to be released 2020.06.09.  However the Enterprise Monthly Channel works with the most recent release.
- 2020.05.13 - Added detection for if office / microsoft 365 is already installed based on this pos: https://docs.microsoft.com/en-us/deployoffice/name-change
+2020.05.13 - Added detection for if office / microsoft 365 is already installed based on this pos: https://docs.microsoft.com/en-us/deployoffice/name-change
+2020.05.13 - Added Params for Languages.  It appends the Language onto each Product in the XML
+2020.05.13 - Added Param for "BuildConfigXMLOnly".  When used, it will spit out the Configuration.XML file to c:\ProgramData\O365_Cache folder, it will NOT run the install.
+  - Example: .\o365_Install.ps1 -Channel SemiAnnual -Language fr-fr -CompanyValue "GARYTOWN" -BuildConfigXMLOnly -ProjectPro -VisioStd
+
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -81,7 +85,9 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual")][string]$Channel,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$CompanyValue
+        [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][ValidateSet("en-us", "fr-fr", "zh-cn", "zh-tw", "de-de", "it-it")][string]$Language,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$CompanyValue,
+        [Parameter(Mandatory=$false)][switch]$BuildConfigXMLOnly
     ) 
 
 #############################################################################
@@ -102,7 +108,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.13.2"
+$ScriptVer = "2020.05.13.3"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -198,45 +204,48 @@ If (-not $Precache) {
         #If this is just a Office 365 Install, with desired effect of changing the update channel, this will change the registry key and exit without full reinstall.
         else
             {
-            $TargetChannelName = $Channel
-            if ($TargetChannelName -eq "CurrentPreview"){$TargetChannelValue = $CurrentPreview}
-            if ($TargetChannelName -eq "Current"){$TargetChannelValue = $Current}
-            if ($TargetChannelName -eq "MonthlyEnterprise"){$TargetChannelValue = $MonthlyEnterprise}
-            if ($TargetChannelName -eq "SemiAnnualPreview"){$TargetChannelValue = $SemiAnnualPreview}
-            if ($TargetChannelName -eq "SemiAnnual"){$TargetChannelValue = $SemiAnnual}
-            Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Current Channel is set to: $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Setting to Channel in Parameter: $TargetChannelName" -Type 1 -Component "o365script"
-            if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue)
+            if (!($BuildConfigXMLOnly))
                 {
-                # Set new update channel
-                Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $TargetChannelValue -Force
-                Set-ItemProperty -Path $Configuration -Name "UpdateChannel" -Value $TargetChannelValue -Force
-                $ProcessName = "$env:ProgramFiles\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe"
-                $Click2RunArg1 =  "/changesetting Channel=$Channel"
-                $Click2RunArg2 = "/update user updateprompt=false forceappshutdown=true displaylevel=true"
-                Start-Process -FilePath $ProcessName -ArgumentList $Click2RunArg1
-                Start-Sleep -Seconds 2
-                #Start-Process -FilePath $ProcessName -ArgumentList $Click2RunArg2  #Use this if you're not using CM for patching but instead going right to CDN on internet
-                #Start-Sleep -Seconds 2
-                # Trigger CM Client Actions
-                [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
-                Start-Sleep -Seconds 2
-                [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
-                [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
+                $TargetChannelName = $Channel
+                if ($TargetChannelName -eq "CurrentPreview"){$TargetChannelValue = $CurrentPreview}
+                if ($TargetChannelName -eq "Current"){$TargetChannelValue = $Current}
+                if ($TargetChannelName -eq "MonthlyEnterprise"){$TargetChannelValue = $MonthlyEnterprise}
+                if ($TargetChannelName -eq "SemiAnnualPreview"){$TargetChannelValue = $SemiAnnualPreview}
+                if ($TargetChannelName -eq "SemiAnnual"){$TargetChannelValue = $SemiAnnual}
+                Write-CMTraceLog -Message "Appears to be a Re-install of Office 365" -Type 1 -Component "o365script"
+                Write-CMTraceLog -Message "Current Channel is set to: $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
+                Write-CMTraceLog -Message "Setting to Channel in Parameter: $TargetChannelName" -Type 1 -Component "o365script"
+                if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue)
+                    {
+                    # Set new update channel
+                    Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $TargetChannelValue -Force
+                    Set-ItemProperty -Path $Configuration -Name "UpdateChannel" -Value $TargetChannelValue -Force
+                    $ProcessName = "$env:ProgramFiles\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe"
+                    $Click2RunArg1 =  "/changesetting Channel=$Channel"
+                    $Click2RunArg2 = "/update user updateprompt=false forceappshutdown=true displaylevel=true"
+                    Start-Process -FilePath $ProcessName -ArgumentList $Click2RunArg1
+                    Start-Sleep -Seconds 2
+                    #Start-Process -FilePath $ProcessName -ArgumentList $Click2RunArg2  #Use this if you're not using CM for patching but instead going right to CDN on internet
+                    #Start-Sleep -Seconds 2
+                    # Trigger CM Client Actions
+                    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
+                    Start-Sleep -Seconds 2
+                    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
+                    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
 
-                #Confirm
-                $CurrentCDNBaseUrlValue = (Get-ItemProperty $Configuration).CDNBaseUrl
-                $CurrentUpdateChannelValue = (Get-ItemProperty $Configuration).UpdateChannel                        
-                if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue){Write-CMTraceLog -Message "Failed to Change Office Channel" -Type 3 -Component "o365script"}
-                Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $TargetChannelName" -Type 1 -Component "o365script"}
-                Write-CMTraceLog -Message "Exiting Office Installer Script After Channel Change" -Type 1 -Component "o365script"
-                ExitWithCode -exitcode 0
-                }
-            else
-                {
-                Write-CMTraceLog -Message "Exiting Office Installer Script with No Channel Change" -Type 1 -Component "o365script"
-                ExitWithCode -exitcode 0
+                    #Confirm
+                    $CurrentCDNBaseUrlValue = (Get-ItemProperty $Configuration).CDNBaseUrl
+                    $CurrentUpdateChannelValue = (Get-ItemProperty $Configuration).UpdateChannel                        
+                    if ($CurrentUpdateChannelValue -ne $TargetChannelValue -or $CurrentCDNBaseUrlValue -ne $TargetChannelValue){Write-CMTraceLog -Message "Failed to Change Office Channel" -Type 3 -Component "o365script"}
+                    Else {Write-CMTraceLog -Message "Successfully updated Office Channel to: $TargetChannelName" -Type 1 -Component "o365script"}
+                    Write-CMTraceLog -Message "Exiting Office Installer Script After Channel Change" -Type 1 -Component "o365script"
+                    ExitWithCode -exitcode 0
+                    }
+                else
+                    {
+                    Write-CMTraceLog -Message "Exiting Office Installer Script with No Channel Change" -Type 1 -Component "o365script"
+                    ExitWithCode -exitcode 0
+                    }
                 }
             }
         #Adds Access Back into XML if previously installed when O365 is installed
@@ -260,11 +269,18 @@ If ($Precache) {
         #Write-Output "Successfully created directory '$O365Cache'."
         Write-CMTraceLog -Message "Successfully created directory '$O365Cache'." -Type 1 -Component "o365_PreCache"
     }
-
-    If (Test-Path "$O365Cache\*") {
-        Remove-Item -Recurse -Force "$O365Cache\*"
-        Write-CMTraceLog -Message "Cleared out previous content in cache." -Type 1 -Component "o365_PreCache"
-    }
+    if (!($Language) -or $Language -eq "en-us")
+        {
+        If (Test-Path "$O365Cache\*")
+            {
+            Remove-Item -Recurse -Force "$O365Cache\*"
+            Write-CMTraceLog -Message "Cleared out previous content in cache." -Type 1 -Component "o365_PreCache"
+            }
+        }
+    else
+        {
+        Write-CMTraceLog -Message "Adding $Language content to cache." -Type 1 -Component "o365_PreCache"
+        }
     Write-CMTraceLog -Message "Starting Copy of o365 Media from CCMCache to o365_cache location'." -Type 1 -Component "o365_PreCache"
     Get-ChildItem $SourceDir -Recurse -directory | Copy-Item -Destination {$_.FullName.Replace($SourceDir, $O365Cache)}  -Force
 
@@ -450,69 +466,84 @@ If (-not $Precache) {
         $newXmlNameElement.SetAttribute("ID","en-us")  
         }
 
+    
+    #add additional languages to download
+    if ($Language)
+        {
+        $newProductAttributeLang = $xml.Configuration.Add.Product
+        foreach ($newproduct in $newProductAttributeLang)
+            {
+            $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","$Language")
+            }
+        }
+    
     Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "o365script"
     $xml.Save("$O365Cache\configuration.xml")
 
-    #If Office 365 is not installed then run the Office 365 Prep Utility before installing Office 365
-    If (-not $O365)
+    if (!($BuildConfigXMLOnly))
         {
-        $ScriptDir = Split-Path $script:MyInvocation.MyCommand.Path
-        Write-CMTraceLog -Message "Starting Office Prep Process" -Type 1 -Component "o365script"
-        Invoke-Expression -Command "$ScriptDir\O365_Prep.ps1"
-        Write-CMTraceLog -Message "Finished Office Prep Process" -Type 1 -Component "o365script"
-        }
-    Write-CMTraceLog -Message "Starting Office 365 Install" -Type 1 -Component "o365script"
-    $InstallOffice = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure $O365Cache\configuration.xml" -Wait -PassThru -WindowStyle Hidden
-    $OfficeInstallCode = $InstallOffice.ExitCode
-    Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "o365script"
+        #If Office 365 is not installed then run the Office 365 Prep Utility before installing Office 365
+        If (-not $O365)
+            {
+            $ScriptDir = Split-Path $script:MyInvocation.MyCommand.Path
+            Write-CMTraceLog -Message "Starting Office Prep Process" -Type 1 -Component "o365script"
+            Invoke-Expression -Command "$ScriptDir\O365_Prep.ps1"
+            Write-CMTraceLog -Message "Finished Office Prep Process" -Type 1 -Component "o365script"
+            }
+        Write-CMTraceLog -Message "Starting Office 365 Install" -Type 1 -Component "o365script"
+        $InstallOffice = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure $O365Cache\configuration.xml" -Wait -PassThru -WindowStyle Hidden
+        $OfficeInstallCode = $InstallOffice.ExitCode
+        Write-CMTraceLog -Message "Finished Office Install with code: $OfficeInstallCode" -Type 1 -Component "o365script"
     
-    #Disable Toast Noticiation
-    if (test-path $RegistryPath)
-        { 
-        $ToastValue = Get-ItemPropertyValue -Path $RegistryPath -Name "Enable_O365_Toast"-ErrorAction SilentlyContinue
-        if ($ToastValue -eq "True")
-            {
-            New-ItemProperty -Path $registryPath -Name "Enable_O365_Toast" -Value "False" -Force
-            CMTraceLog -Message "Disabled Toast Notification via Registry Value" -Type 1 -LogFile $LogFile
+        #Disable Toast Noticiation
+        if (test-path $RegistryPath)
+            { 
+            $ToastValue = Get-ItemPropertyValue -Path $RegistryPath -Name "Enable_O365_Toast"-ErrorAction SilentlyContinue
+            if ($ToastValue -eq "True")
+                {
+                New-ItemProperty -Path $registryPath -Name "Enable_O365_Toast" -Value "False" -Force
+                CMTraceLog -Message "Disabled Toast Notification via Registry Value" -Type 1 -LogFile $LogFile
+                }
             }
-        }
 
 
-    #$exitcode = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure Install_O365$Install_Access$Install_Project$Install_Visio.xml" -Wait -WindowStyle Hidden
-    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
-    Start-Sleep -Seconds 2
-    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
-    [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
+        #$exitcode = Start-Process -FilePath $O365Cache\setup.exe -ArgumentList "/configure Install_O365$Install_Access$Install_Project$Install_Visio.xml" -Wait -WindowStyle Hidden
+        [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000001}') #Hardware Inventory to report up new channel to CM
+        Start-Sleep -Seconds 2
+        [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000113}') #Update Scan
+        [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000108}') #Update Eval
 
 
-    if ($OfficeInstallCode -eq "-2147023294")
-        {
-        Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "o365script"
-        Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
-        Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000123}"
-        ExitWithCode -exitcode $OfficeInstallCode
-        } 
-
-
-    if ($2016)
-        {
-        Write-CMTraceLog -Message "Office 2016 was Previously Installed" -Type 1 -Component "o365script"
-        if($OfficeInstallCode -eq "0")
+        if ($OfficeInstallCode -eq "-2147023294")
             {
-            Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "o365script"
-            Write-CMTraceLog -Message "Exit Script with code: 3010" -Type 1 -Component "o365script"
-            ExitWithCode -exitcode 3010
+            Write-CMTraceLog -Message "End User Clicked Cancel when prompted to close applications" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
+            Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000123}"
+            ExitWithCode -exitcode $OfficeInstallCode
+            } 
+
+
+        if ($2016)
+            {
+            Write-CMTraceLog -Message "Office 2016 was Previously Installed" -Type 1 -Component "o365script"
+            if($OfficeInstallCode -eq "0")
+                {
+                Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "o365script"
+                Write-CMTraceLog -Message "Exit Script with code: 3010" -Type 1 -Component "o365script"
+                ExitWithCode -exitcode 3010
+                }
+            else
+                {
+                Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "o365script"
+                Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
+                ExitWithCode -exitcode $OfficeInstallCode
+                }
             }
-        else
+        else 
             {
-            Write-CMTraceLog -Message "Office Setup Finished with Exit Code: $OfficeInstallCode" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
             ExitWithCode -exitcode $OfficeInstallCode
             }
-        }
-    else 
-        {
-        Write-CMTraceLog -Message "Exit Script with code: $OfficeInstallCode" -Type 1 -Component "o365script"
-        ExitWithCode -exitcode $OfficeInstallCode
         }
     }
