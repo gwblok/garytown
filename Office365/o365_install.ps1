@@ -73,7 +73,8 @@ CHANGE LOG:
 2020.05.13 - Added Params for Languages.  It appends the Language onto each Product in the XML
 2020.05.13 - Added Param for "BuildConfigXMLOnly".  When used, it will spit out the Configuration.XML file to c:\ProgramData\O365_Cache folder, it will NOT run the install.
   - Example: .\o365_Install.ps1 -Channel SemiAnnual -Language fr-fr -CompanyValue "GARYTOWN" -BuildConfigXMLOnly -ProjectPro -VisioStd
-
+2020.05.14 - Added Comments and additional logging around the Caching process.
+2020.05.15 - Added ability to set the language set with -language as the default language, but still keeping en-us as option
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -86,6 +87,7 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual")][string]$Channel,
         [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][ValidateSet("en-us", "fr-fr", "zh-cn", "zh-tw", "de-de", "it-it")][string]$Language,
+        [Parameter(Mandatory=$false)][switch]$SetLanguageDefault,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$CompanyValue,
         [Parameter(Mandatory=$false)][switch]$BuildConfigXMLOnly
     ) 
@@ -108,7 +110,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.13.3"
+$ScriptVer = "2020.05.14.2"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -269,7 +271,7 @@ If ($Precache) {
         #Write-Output "Successfully created directory '$O365Cache'."
         Write-CMTraceLog -Message "Successfully created directory '$O365Cache'." -Type 1 -Component "o365_PreCache"
     }
-    if (!($Language) -or $Language -eq "en-us")
+    if (!($Language) -or $Language -eq "en-us") #If Base Content (Base + en-us), clear out previous cache.
         {
         If (Test-Path "$O365Cache\*")
             {
@@ -277,18 +279,26 @@ If ($Precache) {
             Write-CMTraceLog -Message "Cleared out previous content in cache." -Type 1 -Component "o365_PreCache"
             }
         }
-    else
+    else #If addon language content, skip clearing out the previous content and append language files to office cache content.
         {
         Write-CMTraceLog -Message "Adding $Language content to cache." -Type 1 -Component "o365_PreCache"
         }
     Write-CMTraceLog -Message "Starting Copy of o365 Media from CCMCache to o365_cache location'." -Type 1 -Component "o365_PreCache"
-    Get-ChildItem $SourceDir -Recurse -directory | Copy-Item -Destination {$_.FullName.Replace($SourceDir, $O365Cache)}  -Force
+    if (!($Language) -or $Language -eq "en-us") #If Basemedia and not a language addon
+        {
+        #Copy Folder structure from CCMCache 365 Content to Cache location
+        Get-ChildItem $SourceDir -Recurse -directory | Copy-Item -Destination {$_.FullName.Replace($SourceDir, $O365Cache)}  -Force
+        }
+    #Create Hardlinks from CCMCache content to 365 Cache
+    #You must have your content in the language addon "Apps" laid out in the same folder structure as the main office app. (Office\data\16.......\)
+    #Basically the same structure that the download lays it out.  Make sure you also keep the Base Version and Language addons at the same build levels, or it will fail to copy and fail to apply.
 
     $Files = Get-ChildItem $SourceDir -Recurse -File
-    Foreach ($File in $Files) {
-        New-Item -ItemType HardLink -Path (Join-Path $O365Cache $File.FullName.Replace($SourceDir,"")) -Target $File.FullName
-    }
-
+    Foreach ($File in $Files) 
+        {
+        New-Item -ItemType HardLink -Path (Join-Path $O365Cache $File.FullName.Replace($SourceDir,"")) -Target $File.FullName -Verbose
+        Write-CMTraceLog -Message "  Linked file $($File.name) to" (Join-Path $O365Cache $File.FullName.Replace($SourceDir,"")) -Type 1 -Component "o365_PreCache"
+        }    
     Remove-Item "$O365Cache\O365_Install.ps1" -Force -ErrorAction SilentlyContinue
     Remove-Item "$O365Cache\O365_Prep.ps1" -Force -ErrorAction SilentlyContinue
     Remove-Item "$O365Cache\O365_Uninstall.ps1" -Force -ErrorAction SilentlyContinue
@@ -467,16 +477,47 @@ If (-not $Precache) {
         }
 
     
-    #add additional languages to download
+    <#add additional languages to download
+    In the install command, if you leave out -Language, it will default to en-us
+    If you pick a different language like fr-fr, it will set that as default, but still include en-us
+    #>
     if ($Language)
         {
-        $newProductAttributeLang = $xml.Configuration.Add.Product
-        foreach ($newproduct in $newProductAttributeLang)
+        Write-CMTraceLog -Message "Language Param detected, added $Language to XML" -Type 1 -Component "o365script"
+        if ($SetLanguageDefault)#Set Default language to the Language Specified
             {
-            $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
-            $newXmlNameElement.SetAttribute("ID","$Language")
+            Write-CMTraceLog -Message " LanguageDefault Param detected, set $Language to Default" -Type 1 -Component "o365script"
+            $CurrentProductAttributeLang = $xml.Configuration.Add.Product
+            foreach ($currentproduct in $CurrentProductAttributeLang)
+                {
+                $newXmlNameElement = $currentproduct.Language
+                $newXmlNameElement.SetAttribute("ID","$Language")
+                }
+            #Include English in the install if you picked a different language as your default
+            if (!($Language -eq "en-us"))
+                {
+                Write-CMTraceLog -Message " LanguageDefault Param detected, appending en-us to XML" -Type 1 -Component "o365script"
+                $newProductAttributeLang = $xml.Configuration.Add.Product
+                foreach ($newproduct in $newProductAttributeLang)
+                    {
+                    $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
+                    $newXmlNameElement.SetAttribute("ID","en-us")
+                    }
+                 }
             }
-        }
+        else #Append Language, leaving English as Default
+            {
+            Write-CMTraceLog -Message " LanguageDefault Param NOT detected, appending $Language to XML" -Type 1 -Component "o365script"
+            $newProductAttributeLang = $xml.Configuration.Add.Product
+                foreach ($newproduct in $newProductAttributeLang)
+                    {
+                    $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
+                    $newXmlNameElement.SetAttribute("ID","$Language")
+                    }
+                }
+            }
+        
+
     
     Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "o365script"
     $xml.Save("$O365Cache\configuration.xml")
