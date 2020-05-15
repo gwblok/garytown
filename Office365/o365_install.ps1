@@ -75,6 +75,9 @@ CHANGE LOG:
   - Example: .\o365_Install.ps1 -Channel SemiAnnual -Language fr-fr -CompanyValue "GARYTOWN" -BuildConfigXMLOnly -ProjectPro -VisioStd
 2020.05.14 - Added Comments and additional logging around the Caching process.
 2020.05.15 - Added ability to set the language set with -language as the default language, but still keeping en-us as option
+ - Example: .\o365_Install.ps1 -Channel SemiAnnual -Language fr-fr -SetLanguageDefault -CompanyValue "GARYTOWN" -BuildConfigXMLOnly -ProjectPro -VisioStd
+2020.05.16 - Had issues using the new channel names, added code to set Channel to Broad if SemiAnnual and Targeted if SemiAnnualPreview.
+ - I'll have to come back in a month and remove those 6 lines of code. 2 sets of 3 lines, each set starts with: #Temporary until the Channel names are all figured out
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -110,7 +113,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.14.2"
+$ScriptVer = "2020.05.15.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -223,6 +226,10 @@ If (-not $Precache) {
                     Set-ItemProperty -Path $Configuration -Name "CDNBaseUrl" -Value $TargetChannelValue -Force
                     Set-ItemProperty -Path $Configuration -Name "UpdateChannel" -Value $TargetChannelValue -Force
                     $ProcessName = "$env:ProgramFiles\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe"
+                    
+                    #Temporary until the Channel names are all figured out
+                    if ($Channel -eq "SemiAnnual"){$Channel = "Broad"}
+                    if ($Channel -eq "SemiAnnualPreview"){$Channel = "Targeted"} 
                     $Click2RunArg1 =  "/changesetting Channel=$Channel"
                     $Click2RunArg2 = "/update user updateprompt=false forceappshutdown=true displaylevel=true"
                     Start-Process -FilePath $ProcessName -ArgumentList $Click2RunArg1
@@ -336,6 +343,10 @@ If (-not $Precache) {
 </Configuration>
 "@
 
+
+    #Temporary until the Channel names are all figured out
+    if ($Channel -eq "SemiAnnual"){$Channel = "Broad"}
+    if ($Channel -eq "SemiAnnualPreview"){$Channel = "Targeted"} 
 
     #Change Channel
     $xml.Configuration.Add.SetAttribute("Channel","$Channel")
