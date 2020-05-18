@@ -24,7 +24,7 @@ Project Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy By
 Project Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -ProjectStd -Channel SemiAnnual -CompanyValue AZSMUG
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectStd2019Volume - en-us | Value: DisplayName | Must Exist
-Visio Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel SemiAnnual -CompanyValue MIKETERRILL.NET
+Visio Pro: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioPro -Channel SemiAnnual -CompanyValue 'MIKETERRILL.NET'
  - Detection: Registry: HKLM | Key: Software\Microsoft\Office\ClickToRun\Configuration | Value: CDNBaseUrl | Must Exist
  - Detection: Registry: HKLM | Key: SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioPro2019Volume - en-us | Value: DisplayName | Must Exist
 Visio Standard: CM App DT Program (Install App): powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -VisioStd -Channel SemiAnnual -CompanyValue 'Recast Software'
@@ -78,6 +78,7 @@ CHANGE LOG:
  - Example: .\o365_Install.ps1 -Channel SemiAnnual -Language fr-fr -SetLanguageDefault -CompanyValue "GARYTOWN" -BuildConfigXMLOnly -ProjectPro -VisioStd
 2020.05.16 - Had issues using the new channel names, added code to set Channel to Broad if SemiAnnual and Targeted if SemiAnnualPreview.
  - I'll have to come back in a month and remove those 6 lines of code. 2 sets of 3 lines, each set starts with: #Temporary until the Channel names are all figured out
+2020.05.18 - Added Broad & Targeted back into the Script
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -88,7 +89,7 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioPro,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual")][string]$Channel,
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual", "Broad", "Targeted")][string]$Channel,
         [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][ValidateSet("en-us", "fr-fr", "zh-cn", "zh-tw", "de-de", "it-it")][string]$Language,
         [Parameter(Mandatory=$false)][switch]$SetLanguageDefault,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$CompanyValue,
@@ -113,7 +114,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.15.1"
+$ScriptVer = "2020.05.18.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -574,7 +575,6 @@ If (-not $Precache) {
             Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000123}"
             ExitWithCode -exitcode $OfficeInstallCode
             } 
-
 
         if ($2016)
             {
