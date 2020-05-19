@@ -79,6 +79,7 @@ CHANGE LOG:
 2020.05.16 - Had issues using the new channel names, added code to set Channel to Broad if SemiAnnual and Targeted if SemiAnnualPreview.
  - I'll have to come back in a month and remove those 6 lines of code. 2 sets of 3 lines, each set starts with: #Temporary until the Channel names are all figured out
 2020.05.18 - Added Broad & Targeted back into the Script
+2020.05.19 - Fixed Typo in Logging
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -114,7 +115,7 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.18.1"
+$ScriptVer = "2020.05.19.1"
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -203,7 +204,7 @@ If (-not $Precache) {
         #If adding additional items to Office 365, it will autoatmically use the current channel office 365 is using and ignore the parameter in the install program
         if (($ProjectStd) -or ($ProjectPro) -or ($VisioStd) -or ($VisioPro) -or ($Access))
             {
-            Write-CMTraceLog -Message "Adding add-on Project, ignoring Channel Parameter and matching current Channel" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Adding M365 add-on Componet, ignoring Channel Parameter and matching current Channel" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Using current Office 365 Channel = $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
             $Channel = $CurrentCDNBaseUrlName
             }
