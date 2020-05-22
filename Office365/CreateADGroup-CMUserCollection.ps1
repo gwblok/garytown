@@ -1,14 +1,19 @@
-<#GARYTOWN - @gwblok
+<#GARYTOWN - @gwblok 
 Creates AD Groups based on the Names of CM Apps
 Adds a security group to that for easy testing
 Creates CM User Collections
+Creates Avaialble Deployments of the associated apps.
 Adds the new AD Group to that User Collection
 
+
+Change Log initial release: 2020.05.21
+2020.05.22 - Added available Deployment Creation and better detection if things exsit first, as well as logging
 
 #>
 
 #OU where the AD Groups are going to be Created
 $ADGroupOU = "OU=Applications,OU=GARYTOWN,DC=corp,DC=viamonstra,DC=Com"
+
 #Get Apps you want to create Matching AD Groups and CM User Collections for
 $M365Apps = Get-CMApplication | Where-Object {$_.LocalizedDisplayName -match "Microsoft 365" -and $_.LocalizedDisplayName -notmatch "Content"}
 
@@ -41,6 +46,15 @@ foreach ($App in $M365Apps)
         $NewCollection = New-CMCollection -CollectionType User -Name "$($GroupName) - User" -LimitingCollectionId $LimitingCollection.CollectionID -RefreshType None
         }
     else {Write-Host "  CM User Collection $($GroupName) - User already exist, skipping" -ForegroundColor Gray}  
+    $GetCMAppDeployment = $Null
+    $GetCMAppDeployment = Get-CMDeployment -CollectionName "$($GroupName) - User" -SoftwareName $GroupName
+    if (!($GetCMAppDeployment))
+        {
+        Write-Host "  Setting up Available Deployment for $($App.LocalizedDisplayName)" -ForegroundColor Cyan
+        $NewCMAppDeployment = New-CMApplicationDeployment -Name $App.LocalizedDisplayName -DeployAction Install -DeployPurpose Available -CollectionName "$($GroupName) - User"
+        }
+    else{Write-Host "  $($App.LocalizedDisplayName), already deployed to this Collection, skipping" -ForegroundColor Gray}
+
     }
 Write-Host "Completed creating AD Groups, Triggering AD Sync" -ForegroundColor Cyan
 #Trigger AD Sync to pull in the new Groups from AD into CM
@@ -53,15 +67,21 @@ foreach ($App in $M365Apps)
     $GroupName = $app.LocalizedDisplayName
     Write-Host "Starting to Process User Collection $GroupName" -ForegroundColor Green
     $CMUserCollection = Get-CMCollection -Name "$($GroupName) - User"    
-    $UserGroupResource = $null
-    do {
-        $UserGroupResource = Get-CMResource -ResourceType UserGroup -Fast | Where-Object {$_.UserGroupName -eq $GroupName}      
-        if ($UserGroupResource -eq $Null)
-            {
-            Write-Host "AD Group Resource still not in CM, triggering Sync and waiting 1 minute before retry" -ForegroundColor Cyan
-            Start-Sleep -Seconds 60
+    $GetCMUserCollectionMemberShipRule = Get-CMUserCollectionDirectMembershipRule -CollectionId $CMUserCollection.CollectionID | Where-Object {$_.RuleName -match $GroupName}
+    if (!($GetCMUserCollectionMemberShipRule))
+        {
+        $UserGroupResource = $null
+        do {
+            $UserGroupResource = Get-CMResource -ResourceType UserGroup -Fast | Where-Object {$_.UserGroupName -eq $GroupName}      
+            if ($UserGroupResource -eq $Null)
+                {
+                Write-Host "AD Group Resource still not in CM, triggering Sync and waiting 1 minute before retry" -ForegroundColor Cyan
+                Start-Sleep -Seconds 60
+                }
             }
+        while ($UserGroupResource -eq $null)
+        Add-CMUserCollectionDirectMembershipRule -CollectionId $CMUserCollection.CollectionID -ResourceId $UserGroupResource.ResourceId
         }
-    while ($UserGroupResource -eq $null)
-    Add-CMUserCollectionDirectMembershipRule -CollectionId $CMUserCollection.CollectionID -ResourceId $UserGroupResource.ResourceId
+    else {Write-Host "  CM User Collection $($GroupName) - User already has associated group, skipping" -ForegroundColor Gray} 
+        
     }
