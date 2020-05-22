@@ -20,7 +20,6 @@ $M365Apps = Get-CMApplication | Where-Object {$_.LocalizedDisplayName -match "Mi
 #LImiting Collection for the User Collections you're creating
 $LimitingCollection = Get-CMCollection -Name "All User Groups"
 
-#$M365Apps = Get-CMApplication | Where-Object {$_.LocalizedDisplayName -match "Zoomit" -and $_.LocalizedDisplayName -notmatch "Content"}
 foreach ($App in $M365Apps)
     {
     #Grab Name of Apps
