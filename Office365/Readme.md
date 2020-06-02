@@ -1,6 +1,6 @@
->[!NOTE]
->Associated Blog Posts:
->1.
+
+### Associated Blog Posts:
+1. [Office 365 Deployment Series with MEMCM - Post 1 - Intro & PreReqs](https://www.recastsoftware.com/blog/office-365-deployment-series-post-1)
 
 
 ### o365_install.ps1
