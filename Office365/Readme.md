@@ -1,6 +1,12 @@
 
 ### Associated Blog Posts:
 1. [Office 365 Deployment Series with MEMCM - Post 1 - Intro & PreReqs](https://www.recastsoftware.com/blog/office-365-deployment-series-post-1)
+2. [Office 365 Deployment Series with MEMCM - Post 2 - Creating the Office Installer - Simple](https://www.recastsoftware.com/blog/office-365-deployment-series-post-2-creating-the-office-installer-simple)
+3. [Office 365 Deployment Series with MEMCM - Post 3 - Creating the Office Installer - Advanced](https://www.recastsoftware.com/blog/office-365-deployment-series-post-3-creating-the-office-installer-advanced)
+4. [Office 365 Deployment Series with MEMCM - Post 4 - Deployment Methods](https://www.recastsoftware.com/blog/office-365-deployment-series-post-4-deployment-methods)
+5. [Office 365 Deployment Series with MEMCM - Post 5 - Office Updates / ADR](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-post-5-office-updates-adr)
+6. [ffice 365 Deployment Series with MEMCM - Post 6 - Channel Info](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-post-6-channel-info)
+
 
 
 ### o365_install.ps1
