@@ -10,7 +10,7 @@
 ### Associated Blog Posts (Lessons Learned):
 1. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 1 - Content](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-1)
 2. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 2 - Changing Channels](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-2-changing-channels)
-3.[Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 3 - Deployments](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-3-deployments)
+3. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 3 - Deployments](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-3-deployments)
 4. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 4 - Baseline - Toast Notifications](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-4-toast-notifications)
 
 
