@@ -5,7 +5,12 @@
 3. [Office 365 Deployment Series with MEMCM - Post 3 - Creating the Office Installer - Advanced](https://www.recastsoftware.com/blog/office-365-deployment-series-post-3-creating-the-office-installer-advanced)
 4. [Office 365 Deployment Series with MEMCM - Post 4 - Deployment Methods](https://www.recastsoftware.com/blog/office-365-deployment-series-post-4-deployment-methods)
 5. [Office 365 Deployment Series with MEMCM - Post 5 - Office Updates / ADR](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-post-5-office-updates-adr)
-6. [ffice 365 Deployment Series with MEMCM - Post 6 - Channel Info](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-post-6-channel-info)
+6. [Office 365 Deployment Series with MEMCM - Post 6 - Channel Info](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-post-6-channel-info)
+
+1. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 1 - Content](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-1)
+2. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 2 - Changing Channels](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-2-changing-channels)
+3.[Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 3 - Deployments](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-3-deployments)
+4. [Office 365 Deployment Series with MEMCM - Enterprise Deployment Lessons Learned Part 4 - Baseline - Toast Notifications](https://www.recastsoftware.com/blog/office-365-deployment-series-with-memcm-enterprise-deployment-lessons-learned-part-4-toast-notifications)
 
 
 
