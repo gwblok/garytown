@@ -1,4 +1,4 @@
-#Builds the Apps in CM
+#Builds the Apps in CM - Middle of Development
 
 $SC_Description = "***********************************************************************************
 Save your work and close any Office applications before running this install
