@@ -2,14 +2,14 @@
 <# Change Office Channel Baseline / CI Script
 Gary Blok @gwblok - GARYTOWN.COM
 
-ConfigItem Detection: Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%'"
-
+ConfigItem Detection: get-ciminstance -Namespace root\cimv2/sms -ClassName SMS_InstalledSoftware | Where-Object {$_.ARPDisplayName -match "Microsoft Office 365 ProPlus" -or $_.ARPDisplayName -match "Microsoft 365 for enterprise"}
 Use Same Script for Discovery & Remediation, just change $RunMode
 
 Set the $TargetChannelName to Broad / Monthly / Targeted and create 3 Baselines deployed to the 3 collections.  No need to bother with Collection Variables.
 
 Change Log:
 2020.05.19 - Fixed Huge issue where this didn't work at all, how did I miss that? (Wasn't setting the $TargetChannelValue variable)
+2020.06.18 - Updated the Detection Method (above) that is used for the CI.  M365 Name changed recently and required updated detection
 
 #>
 $RunMode = "Remediate"
