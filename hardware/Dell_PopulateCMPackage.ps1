@@ -1,6 +1,6 @@
 
 <# 
-Version 2020.04.08 - @GWBLOK
+Version 2020.06.22 - @GWBLOK
 Downloads BIOS Updates for Packages in CM (Requires specific Package Structure).. see here:https://github.com/gwblok/garytown/blob/master/hardware/CreateCMPackages_BIOS_Drivers.ps1
 Downloads the Dell SCUP Catalog Cab File, Extracts XML, Loads XML, finds BIOS downloads for corrisponding Models, downloads them if update is available (compared to the CM Package), then updates the CM Package
 
@@ -72,7 +72,8 @@ if (test-path -path $CabPath)
         }
     }
 
-if (!(test-path -path $CabPath)-or $SkipDownload) 
+if ((test-path -path $CabPath)-or $SkipDownload) {Write-Host "Skipped Downloading Cab" -ForegroundColor Green}
+else   
     {
     Write-Host "Downloading Dell Cab" -ForegroundColor Yellow
     Invoke-WebRequest -Uri "http://downloads.dell.com/catalog/DellSDPCatalogPC.cab" -OutFile $CabPath -UseBasicParsing -Verbose -Proxy $ProxyServer
@@ -156,13 +157,13 @@ foreach ($Model in $DellModelsTable)
                     Import-Module BitsTransfer
                     $DownloadAttempts = 0
                     if ($UseProxy -eq $true) 
-                        {Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -ProxyUsage Override -ProxyList $BitsProxyList -DisplayName $TargetFileName -Asynchronous}
+                        {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -ProxyUsage Override -ProxyList $BitsProxyList -DisplayName $TargetFileName -Asynchronous}
                     else 
-                        {Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Asynchronous}
+                        {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Asynchronous}
                     do
                         {
                         $DownloadAttempts++
-                        Get-BitsTransfer -Name $TargetFileName | Resume-BitsTransfer
+                        $GetBitsTransfer = Get-BitsTransfer -Name $TargetFileName | Resume-BitsTransfer
                         }
                     while
                         ((test-path "$TargetFilePathName") -ne $true -and $DownloadAttempts -lt 15)
@@ -177,7 +178,7 @@ foreach ($Model in $DellModelsTable)
                 Write-Host " Completed Process for $($Model.MIFFilename) with updated BIOS $Version" -ForegroundColor Green
                 Set-Location -Path "C:" 
                 }
-            }
+            }           
         }
     if (!($DeviceMatches))
         {
@@ -187,5 +188,4 @@ foreach ($Model in $DellModelsTable)
         Set-Location -Path "C:" 
         }
     }
-
 
