@@ -1,6 +1,6 @@
 
 <# 
-Version 2020.06.22 - @GWBLOK
+Version 2020.04.08 - @GWBLOK
 Downloads BIOS Updates for Packages in CM (Requires specific Package Structure).. see here:https://github.com/gwblok/garytown/blob/master/hardware/CreateCMPackages_BIOS_Drivers.ps1
 Downloads the Dell SCUP Catalog Cab File, Extracts XML, Loads XML, finds BIOS downloads for corrisponding Models, downloads them if update is available (compared to the CM Package), then updates the CM Package
 
@@ -136,7 +136,7 @@ foreach ($Model in $DellModelsTable)
                 $TargetLink = $($CurrentMatch.InstallableItem.OriginFile.OriginUri)
                 $TargetFileName = $($CurrentMatch.InstallableItem.OriginFile.FileName)
                 $SourceSharePackageLocation = $model.PkgSourcePath
-                $TargetFilePathName = "$($SourceSharePackageLocation)\$($BIOSFileName)"
+                $TargetFilePathName = "$($SourceSharePackageLocation)\$($TargetFileName)"
                 if ($Version -eq $Model.Version){Write-Host " Package already Current with $Version" -ForegroundColor Green}
                 else {
                     Remove-Item -Path "$($SourceSharePackageLocation)\*.exe" -Force #Clear out old BIOS
