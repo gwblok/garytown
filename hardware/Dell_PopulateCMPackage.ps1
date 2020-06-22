@@ -75,11 +75,11 @@ if (test-path -path $CabPath)
 if (!(test-path -path $CabPath)-or $SkipDownload) 
     {
     Write-Host "Downloading Dell Cab" -ForegroundColor Yellow
-    Invoke-WebRequest -Uri "ftp://ftp.dell.com/catalog/DellSDPCatalogPC.cab" -OutFile $CabPath -UseBasicParsing -Verbose -Proxy $ProxyServer
+    Invoke-WebRequest -Uri "http://downloads.dell.com/catalog/DellSDPCatalogPC.cab" -OutFile $CabPath -UseBasicParsing -Verbose -Proxy $ProxyServer
     [int32]$n=1
     While(!(Test-Path $CabPath) -and $n -lt '3')
         {
-        Invoke-WebRequest -Uri "ftp://ftp.dell.com/catalog/DellSDPCatalogPC.cab" -OutFile $CabPath -UseBasicParsing -Verbose -Proxy $ProxyServer
+        Invoke-WebRequest -Uri "http://downloads.dell.com/catalog/DellSDPCatalogPC.cab" -OutFile $CabPath -UseBasicParsing -Verbose -Proxy $ProxyServer
         $n++
         }
     If(Test-Path "$PSScriptRoot\DellSDPCatalogPC.xml"){Remove-Item -Path "$PSScriptRoot\DellSDPCatalogPC.xml" -Force -Verbose}
