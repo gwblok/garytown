@@ -1,6 +1,6 @@
 
 <# 
-Version 2020.04.08 - @GWBLOK
+Version 2020.06.23 - @GWBLOK
 Downloads BIOS Updates for Packages in CM (Requires specific Package Structure).. see here:https://github.com/gwblok/garytown/blob/master/hardware/CreateCMPackages_BIOS_Drivers.ps1
 Downloads the Dell SCUP Catalog Cab File, Extracts XML, Loads XML, finds BIOS downloads for corrisponding Models, downloads them if update is available (compared to the CM Package), then updates the CM Package
 
@@ -10,6 +10,9 @@ Update the SITECODE
 
 Usage... Stage Prod or Pre-Prod.
 If you don't do Pre-Prod... just delete that Param section out and set $Stage = Prod or remove all Stage references complete, do whatever you want I guess.
+
+Change Log:
+2020.06.23: Large Rewrite after Dell changed their CAB file.
 
 #> 
 [CmdletBinding()]
@@ -105,6 +108,7 @@ foreach ($Model in $DellModelsTable)
     {
     Write-Host "----------------------------" -ForegroundColor DarkGray
     Write-Host "Starting to Process Model: $($Model.MifFileName)" -ForegroundColor Green
+    Write-Host " Current BIOS Version: $($Model.Version) from $($Model.MIFPublisher)" -ForegroundColor Green
     $DeviceMatches = @()
     $CurrentDeviceItem = $null
     $LastMatch = $null
@@ -120,65 +124,69 @@ foreach ($Model in $DellModelsTable)
     foreach ($Member in $CurrentDeviceItem.Members) #{write-host "$($Member.MifFileName)"}
         {
         $CurrentMatch = $XML.SystemsManagementCatalog.SoftwareDistributionPackage | Where-Object {$_.Properties.PackageID -eq $Member -and $_.Properties.PublicationState -match "Published" -and $_.Properties.ProductName -match "Bios"}
-        
         if ($CurrentMatch)
             {
-            Write-Host "Found Match in XML" -ForegroundColor Gray
+            Write-Host " Found BIOS in XML: $($CurrentMatch.LocalizedProperties.Title)" -ForegroundColor Gray
             $DeviceMatches += $CurrentMatch 
-            if ($CurrentMatch -ne $LastMatch){$RunStep = $true}
-            else {$RunStep = $false}
-            if ($RunStep)
-                {
-                $LastMatch = $CurrentMatch
-                $VersionArray = ($($CurrentMatch.LocalizedProperties.Title).split(","))
-                $Version = $VersionArray[-1]
-                $CreationDate =  $(Get-Date $CurrentMatch.InstallableItem.OriginFile.Modified -Format 'yyyy-MM-dd')
-                $TargetLink = $($CurrentMatch.InstallableItem.OriginFile.OriginUri)
-                $TargetFileName = $($CurrentMatch.InstallableItem.OriginFile.FileName)
-                $SourceSharePackageLocation = $model.PkgSourcePath
-                $TargetFilePathName = "$($SourceSharePackageLocation)\$($TargetFileName)"
-                if ($Version -eq $Model.Version){Write-Host " Package already Current with $Version" -ForegroundColor Green}
-                else {
-                    Remove-Item -Path "$($SourceSharePackageLocation)\*.exe" -Force #Clear out old BIOS
-                    Write-Host " New BIOS Update available: Package = $($Model.Version), Web = $version" -ForegroundColor Yellow 
-                    Write-Output " Title: $($CurrentMatch.LocalizedProperties.Title) | $Member"
-                    Write-Host " ----------------------------" -ForegroundColor Cyan
-                    Write-Output "  Title: $($CurrentMatch.LocalizedProperties.Title)"
-                    Write-Output "  CreationDate: $($CurrentMatch.Properties.CreationDate)"
-                    Write-Output "  ProductName: $($CurrentMatch.Properties.ProductName)"
-                    Write-Output "  Severity: $($CurrentMatch.UpdateSpecificData.MsrcSeverity)"
-                    Write-Output "  FileName: $TargetFileName"
-                    Write-Output "  CreationDate: $CreationDate"
-                    Write-Output "  KB: $($CurrentMatch.UpdateSpecificData.KBArticleID)"
-                    Write-Output "  Link: $TargetLink"
-                    Write-Output "  Info: $($CurrentMatch.Properties.MoreInfoUrl)"
-                    Write-Output "  BIOS Version: $Version "
-                    #Download BIOS
-                    Import-Module BitsTransfer
-                    $DownloadAttempts = 0
-                    if ($UseProxy -eq $true) 
-                        {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -ProxyUsage Override -ProxyList $BitsProxyList -DisplayName $TargetFileName -Asynchronous}
-                    else 
-                        {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Asynchronous}
-                    do
-                        {
-                        $DownloadAttempts++
-                        $GetBitsTransfer = Get-BitsTransfer -Name $TargetFileName | Resume-BitsTransfer
-                        }
-                    while
-                        ((test-path "$TargetFilePathName") -ne $true -and $DownloadAttempts -lt 15)
+            }
+        }    
+    if ($DeviceMatches)
+        {   
+        $latestrelease = $DeviceMatches.InstallableItem.OriginFile.Modified | Sort-Object | Select-Object -Last 1        
+        $CurrentMatchBios = $DeviceMatches | Where-Object {$_.InstallableItem.OriginFile.Modified -eq $latestrelease}
+        $CreationDate =  $(Get-Date $CurrentMatchBios.InstallableItem.OriginFile.Modified -Format 'yyyy-MM-dd')
+        Write-Host "Most Updated BIOS in XML: $($CurrentMatchBios.LocalizedProperties.Title) from $CreationDate" -ForegroundColor Yellow
+        if ($CreationDate -gt $($Model.MIFPublisher))
+            {
+            $VersionArray = ($($CurrentMatchBios.LocalizedProperties.Title).split(","))
+            $Version = $VersionArray[-1]      
+            $TargetLink = $($CurrentMatchBios.InstallableItem.OriginFile.OriginUri)
+            $TargetFileName = $($CurrentMatchBios.InstallableItem.OriginFile.FileName)
+            $SourceSharePackageLocation = $model.PkgSourcePath
+            $TargetFilePathName = "$($SourceSharePackageLocation)\$($TargetFileName)"
+            if ($Version -eq $Model.Version){Write-Host " Package already Current with $Version" -ForegroundColor Green}
+            else {
+                Remove-Item -Path "$($SourceSharePackageLocation)\*.exe" -Force #Clear out old BIOS
+                Write-Host " New BIOS Update available: Package = $($Model.Version), Web = $version" -ForegroundColor Yellow 
+                Write-Output " Title: $($CurrentMatchBios.LocalizedProperties.Title) | $Member"
+                Write-Host " ----------------------------" -ForegroundColor Cyan
+                Write-Output "  Title: $($CurrentMatchBios.LocalizedProperties.Title)"
+                Write-Output "  CreationDate: $($CurrentMatchBios.Properties.CreationDate)"
+                Write-Output "  ProductName: $($CurrentMatchBios.Properties.ProductName)"
+                Write-Output "  Severity: $($CurrentMatchBios.UpdateSpecificData.MsrcSeverity)"
+                Write-Output "  FileName: $TargetFileName"
+                Write-Output "  CreationDate: $CreationDate"
+                Write-Output "  KB: $($CurrentMatchBios.UpdateSpecificData.KBArticleID)"
+                Write-Output "  Link: $TargetLink"
+                Write-Output "  Info: $($CurrentMatchBios.Properties.MoreInfoUrl)"
+                Write-Output "  BIOS Version: $Version "
+                #Download BIOS
+                Import-Module BitsTransfer
+                $DownloadAttempts = 0
+                if ($UseProxy -eq $true) 
+                    {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -ProxyUsage Override -ProxyList $BitsProxyList -DisplayName $TargetFileName -Asynchronous}
+                else 
+                    {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Asynchronous}
+                do
+                    {
+                    $DownloadAttempts++
+                    $GetBitsTransfer = Get-BitsTransfer -Name $TargetFileName | Resume-BitsTransfer
                     }
-                #This will run if newer package available or not.  It updates info based on Dell XML
-                Write-Host " Confirming Package $($Model.Name) with updated Info" -ForegroundColor Yellow
-                Set-Location -Path "$($SiteCode):"
-                Set-CMPackage -Id $Model.PackageID -Version $Version
-                Set-CMPackage -Id $Model.PackageID -MifPublisher $CreationDate
-                Set-CMPackage -Id $Model.PackageID -Description $($CurrentMatch.Properties.MoreInfoUrl)
-                Update-CMDistributionPoint -PackageId $Model.PackageID
-                Write-Host " Completed Process for $($Model.MIFFilename) with updated BIOS $Version" -ForegroundColor Green
-                Set-Location -Path "C:" 
+                while
+                    ((test-path "$TargetFilePathName") -ne $true -and $DownloadAttempts -lt 15)
                 }
-            }           
+            #This will run if newer package available or not.  It updates info based on Dell XML
+            Write-Host " Confirming Package $($Model.Name) with updated Info" -ForegroundColor Yellow
+            Set-Location -Path "$($SiteCode):"
+            Set-CMPackage -Id $Model.PackageID -Version $Version
+            Set-CMPackage -Id $Model.PackageID -MifPublisher $CreationDate
+            Set-CMPackage -Id $Model.PackageID -Description $($CurrentMatchBios.Properties.MoreInfoUrl)
+            Update-CMDistributionPoint -PackageId $Model.PackageID
+            Write-Host " Completed Process for $($Model.MIFFilename) with updated BIOS $Version" -ForegroundColor Green
+            }
+        else
+            {Write-Host "BIOS in CM Already Current, Skipping import" -ForegroundColor Magenta}
+        Set-Location -Path "C:"    
         }
     if (!($DeviceMatches))
         {
@@ -188,4 +196,3 @@ foreach ($Model in $DellModelsTable)
         Set-Location -Path "C:" 
         }
     }
-
