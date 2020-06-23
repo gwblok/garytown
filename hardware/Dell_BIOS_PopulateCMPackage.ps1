@@ -1,6 +1,6 @@
 
 <# 
-Version 2020.06.23 - @GWBLOK
+Version 2020.04.08 - @GWBLOK
 Downloads BIOS Updates for Packages in CM (Requires specific Package Structure).. see here:https://github.com/gwblok/garytown/blob/master/hardware/CreateCMPackages_BIOS_Drivers.ps1
 Downloads the Dell SCUP Catalog Cab File, Extracts XML, Loads XML, finds BIOS downloads for corrisponding Models, downloads them if update is available (compared to the CM Package), then updates the CM Package
 
@@ -10,9 +10,6 @@ Update the SITECODE
 
 Usage... Stage Prod or Pre-Prod.
 If you don't do Pre-Prod... just delete that Param section out and set $Stage = Prod or remove all Stage references complete, do whatever you want I guess.
-
-Change Log:
-2020.06.23: Large Rewrite after Dell changed their CAB file.
 
 #> 
 [CmdletBinding()]
@@ -112,6 +109,7 @@ foreach ($Model in $DellModelsTable)
     $DeviceMatches = @()
     $CurrentDeviceItem = $null
     $LastMatch = $null
+    $CreationDate = $null
     $CurrentDeviceItem = $JsonData | ConvertFrom-Json | Where-Object {$_.DisplayName -eq "$($Model.MifFileName)"}
     if (!($CurrentDeviceItem))
         {
@@ -127,13 +125,16 @@ foreach ($Model in $DellModelsTable)
         if ($CurrentMatch)
             {
             Write-Host " Found BIOS in XML: $($CurrentMatch.LocalizedProperties.Title)" -ForegroundColor Gray
+            Write-Host "  XML Creation Date: $($CurrentMatch.Properties.CreationDate)" -ForegroundColor Gray
+            Write-Host "   Modified Date: $($CurrentMatch.InstallableItem.OriginFile.Modified)" -ForegroundColor Gray
             $DeviceMatches += $CurrentMatch 
             }
         }    
     if ($DeviceMatches)
         {   
-        $latestrelease = $DeviceMatches.InstallableItem.OriginFile.Modified | Sort-Object | Select-Object -Last 1        
-        $CurrentMatchBios = $DeviceMatches | Where-Object {$_.InstallableItem.OriginFile.Modified -eq $latestrelease}
+        $latestrelease = $DeviceMatches.Properties.CreationDate | Sort-Object | Select-Object -Last 1        
+        $CurrentMatchBios = $DeviceMatches | Where-Object {$_.Properties.CreationDate -eq $latestrelease}
+        if ($CurrentMatchBios.Count -gt 1){$CurrentMatchBios = $CurrentMatchBios[0]}
         $CreationDate =  $(Get-Date $CurrentMatchBios.InstallableItem.OriginFile.Modified -Format 'yyyy-MM-dd')
         Write-Host "Most Updated BIOS in XML: $($CurrentMatchBios.LocalizedProperties.Title) from $CreationDate" -ForegroundColor Yellow
         if ($CreationDate -gt $($Model.MIFPublisher))
@@ -151,7 +152,7 @@ foreach ($Model in $DellModelsTable)
                 Write-Output " Title: $($CurrentMatchBios.LocalizedProperties.Title) | $Member"
                 Write-Host " ----------------------------" -ForegroundColor Cyan
                 Write-Output "  Title: $($CurrentMatchBios.LocalizedProperties.Title)"
-                Write-Output "  CreationDate: $($CurrentMatchBios.Properties.CreationDate)"
+                #Write-Output "  CreationDate: $($CurrentMatchBios.Properties.CreationDate)"
                 Write-Output "  ProductName: $($CurrentMatchBios.Properties.ProductName)"
                 Write-Output "  Severity: $($CurrentMatchBios.UpdateSpecificData.MsrcSeverity)"
                 Write-Output "  FileName: $TargetFileName"
@@ -184,8 +185,7 @@ foreach ($Model in $DellModelsTable)
             Update-CMDistributionPoint -PackageId $Model.PackageID
             Write-Host " Completed Process for $($Model.MIFFilename) with updated BIOS $Version" -ForegroundColor Green
             }
-        else
-            {Write-Host "BIOS in CM Already Current, Skipping import" -ForegroundColor Magenta}
+        else{Write-Host "BIOS in CM Already Current, Skipping import" -ForegroundColor Magenta}
         Set-Location -Path "C:"    
         }
     if (!($DeviceMatches))
