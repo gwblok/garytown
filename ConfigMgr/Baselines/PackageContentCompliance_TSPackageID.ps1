@@ -8,11 +8,14 @@ This script will look up the task sequence references and check the cache for th
 If any packages that are referenced in the TS are NOT in the ccmcache, script will write out "Non-Compliant" with list of Packages
 Only if all packages are in cache, will it write "Compliant"
 #>
+
+<#Detection for CI
+$TSPackageID = 'PS200081'
+Get-CimInstance -Namespace root/ccm/Policy/Machine/ActualConfig -ClassName CCM_TaskSequence -Filter "PKG_PackageID='$TSPackageID'" -ErrorAction SilentlyContinue
+#>
+
 $TSPackageID = 'PS200081'
 
-
-
-#$ItemID = 'MEM00A07'
 $TSInfo = Get-CimInstance -Namespace root/ccm/Policy/Machine/ActualConfig -ClassName CCM_TaskSequence -Filter "PKG_PackageID='$TSPackageID'" -ErrorAction SilentlyContinue
 $ReferenceItems = $TSInfo.TS_References
 $TSDatabase = @()
