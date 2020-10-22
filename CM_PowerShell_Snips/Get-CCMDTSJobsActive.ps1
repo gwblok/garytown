@@ -3,8 +3,9 @@ Function Get-CCMDTSJobsActive {
     $ActiveTransfer = Get-BitsTransfer -AllUsers | Where-Object {$_.DisplayName -eq "CCMDTS Job" -and $_.JobState -eq "Transferring"}
     if ($ActiveTransfer)
         {
+        $sitecode = 'PS2' #Update for your environment
         Write-host "Currently Transferring BITS Job: $($ActiveTransfer.JobId)"-ForegroundColor Green
-        $PackageID = (($ActiveTransfer.FileList | Select-Object -First 1).RemoteName).split("/") | Where-Object {$_ -Match "MEM"}
+        $PackageID = (($ActiveTransfer.FileList | Select-Object -First 1).RemoteName).split("/") | Where-Object {$_ -Match $sitecode}
         $App = (($ActiveTransfer.FileList | Select-Object -First 1).RemoteName).split("/") | Where-Object {$_ -Match "content_"}
         $DownloadLocation = (($ActiveTransfer.FileList | Select-Object -First 1).LocalName).split("\")[3]
         #$ExampleFile = (($ActiveTransfer.FileList | Select-Object -First 1).RemoteName).split("/")
