@@ -1,3 +1,4 @@
+
 Function Start-TaskSequence {
 
 <#Triggers Task Sequence based on Package ID Parameter
@@ -5,7 +6,8 @@ Function Start-TaskSequence {
     
     Once Triggered, it will wait 2 minutes, then parse the execmgr log using a function from Jeff Scripter: ConvertFrom-Log
     Once Parsed, looks for if the Task Sequence Successfully Started and reports back (Only if the Time Stamp for Starting is After the time you run the script)
-
+    Requires function: ConvertFrom-Logs - https://github.com/gwblok/garytown/blob/master/CM_PowerShell_Snips/ConvertFrom-Logs.ps1
+    - Only required to do lookup of logs after you trigger TS to report back info from Execmgr.log. You can remove these reporting parts and still have this work.
 
 #>
 [CmdletBinding()]
