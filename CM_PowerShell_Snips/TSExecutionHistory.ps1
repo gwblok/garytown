@@ -1,6 +1,6 @@
 # 3 Functions
 
-#Delete Execution History
+#Remove Execution History
 Function Remove-TSExecutionHistory {
     [cmdletbinding()]
     param ([string] $TSPackageID)
