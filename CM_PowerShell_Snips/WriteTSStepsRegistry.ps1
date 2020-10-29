@@ -1,5 +1,9 @@
 # @gwblok & @theznerd 
 # 2020.10.26
+
+#Add to your TS at any place, I like near the beginning, but whatever, into a "Run PowerShell" Step. No Parameters Needed.
+
+
 $tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
 [xml]$tsxml = $tsenv.Value("_SMSTSTaskSequence")
 $sequence = $tsxml.SelectNodes("//sequence")
