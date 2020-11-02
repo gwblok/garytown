@@ -4,6 +4,12 @@ Sample Script during OSD For Launching Button
 This script you can use during OSD to leverage the native Message Box, MS DOCS:
 https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/core/clients/client-classes/iprogressui--showmessageex-method
 
+You need to provide:
+Type, Title, Message, and the Variable Name you want the Output to go to.
+Examples:
+
+-ButtonType '4' -Title 'Message Box' -Message 'You like this Message Box' -TSVarName 'UserLikeBox'
+
 Check out Samples online here: https://docs.recastsoftware.com/ConfigMgr-Docs/TaskSequence/TSComObject.html
 
 
@@ -39,9 +45,13 @@ Param(
 [ValidateNotNullOrEmpty()]
 [string]$Title,
 
-[Parameter(Mandatory=$true,Position=2,HelpMessage="Message")]
+[Parameter(Mandatory=$true,Position=3,HelpMessage="Message")]
 [ValidateNotNullOrEmpty()]
-[string]$Message
+[string]$Message,
+
+[Parameter(Mandatory=$true,Position=3,HelpMessage="TS Variable Output Name")]
+[ValidateNotNullOrEmpty()]
+[string]$TSVarName
 )
 
 $ButtonTypeValuesTable= @(
@@ -74,10 +84,12 @@ if (!($Title)){$Title = "Contoso IT"}
 $Type = $ButtonType
 $Output = 0
 
-$TaskSequenceProgressUi = New-Object -ComObject "Microsoft.SMS.TSProgressUI"
-$TaskSequenceProgressUi.ShowMessageEx($Message, $Title, $Type, [ref]$Output)
+$TaskSequenceProgressUi = New-Object -ComObject "Microsoft.SMS.TSProgressUI" #Connect to TS Progress UI
+$TaskSequenceProgressUi.CloseProgressDialog() #Close Progress Bar
 
-$TSEnv = New-Object -ComObject "Microsoft.SMS.TSEnvironment"
+$TaskSequenceProgressUi.ShowMessageEx($Message, $Title, $Type, [ref]$Output) #Trigger Message Dialog
+ 
+$TSEnv = New-Object -ComObject "Microsoft.SMS.TSEnvironment"  #Connect to TS Environment
 $FriendlyOutput = $ButtonValuesTable.$Output
 
 Write-Output ----------------------------------------
@@ -87,7 +99,8 @@ Write-Output "Button Type = $($ButtonTypeValuesTable.$ButtonType)"
 Write-Output "Title: $Title"
 Write-Output "Message: $Message"
 Write-Output "User Responce: $FriendlyOutput"
-Write-Output "Setting TS Var: TS-UserPressedButton"
+Write-Output "Setting TS Var $TSVarName to $FriendlyOutput"
 Write-Output ----------------------------------------
 
-$TSEnv.Value("TS-UserPressedButton") = $FriendlyOutput
+$TSEnv.Value("$TSVarName") = $FriendlyOutput
+
