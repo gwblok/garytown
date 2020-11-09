@@ -26,38 +26,33 @@ This script will...
 
 
 # REQUIRED INPUT VARIABLES:
-[int]$DesiredVMs = 5
-$VMPath = "I:\HyperV"
-$VMNamePreFix = "RECAST-"
-$BootISO = "D:\2006_2004.iso"
-$PreFix = "PC"
-$VirtualNameAdapterName = "192.168.1.X Lab Network"
-$RequiredDeploymentCollectionName = "OSD Required Deployment"
+[int]$DesiredVMs = 5  #The Number of VMs that are going to be created this run.
+$VMPath = "I:\HyperV" #The location on the Host you want the VMs to be created and stored
+$VMNamePreFix = "RECAST-"  #The VM will start with this name
+$BootISO = "D:\2006_2004.iso"  #If you're booting to an ISO, put the location here.
+$VirtualNameAdapterName = "192.168.1.X Lab Network" #The Actual Name of the Hyper-V Virtual Network you want to assign to the VM.
+$RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collection you deployed the Task Sequence too
 [int]$StartNumber = 01
 [int]$EndNumber = 90
-[int]$TimeBetweenKickoff = 300
-$SiteCode = "PS2"
-$ProviderMachineName = "cm.corp.viamonstra.com"
-Import-Module "C:\OSBuildRoot\CMConsole\ConfigurationManager.psd1"
-#Get SiteCode
-
+[int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
+$SiteCode = "PS2" #ConfigMgr Site Code
+$ProviderMachineName = "cm.corp.viamonstra.com" #ConfigMgr Provider Machine
+Import-Module "C:\OSBuildRoot\CMConsole\ConfigurationManager.psd1" #Where you have access to the CM Commandlets
 
 #SCRIPT FUNCTIONS BELOW
 $Usable = $null
 $NameTable = @()
-
 if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName -ErrorAction SilentlyContinue}
 if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue))
     {
     if (!($Creds)){$Creds = Get-Credential}
     New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName -Credential $Creds
     }
-
 if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){$CMConnected = $false}
 
 #Get Name of VMs Currently in HyperV
-$CurrentVMS = (Get-VM | Where-Object {$_.Name -match $VMNamePreFix})
-$VMSwitch = (Get-VMSwitch | Where-Object {$_.Name -match $VirtualNameAdapterName}).Name
+$CurrentVMS = (Get-VM | Where-Object {$_.Name -match $VMNamePreFix}) #Grab all VMs on host that match the PreFix
+$VMSwitch = (Get-VMSwitch | Where-Object {$_.Name -match $VirtualNameAdapterName}).Name  #Grab the VMSwitch that matches the name you specified above.
 
 #Makes sure you have a Virtual Switch and CM Connection or exit out.
 if (!($VMSwitch) -or ($CMConnected -eq $false))
@@ -67,8 +62,6 @@ if (!($VMSwitch) -or ($CMConnected -eq $false))
     }
 else
     {
-
-
     #Run this loop until it finds enough names to use to create the dsired amount of VMs you want ... UNLESS... you run out of available values (end number)
     do
         {
