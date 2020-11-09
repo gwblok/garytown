@@ -25,44 +25,45 @@ This script will...
 #>
 
 
-[int]$DesiredVMs = 1
+# REQUIRED INPUT VARIABLES:
+[int]$DesiredVMs = 5
 $VMPath = "I:\HyperV"
 $VMNamePreFix = "RECAST-"
 $BootISO = "D:\2006_2004.iso"
 $PreFix = "PC"
-$NameTable = @()
 $VirtualNameAdapterName = "192.168.1.X Lab Network"
-
 $RequiredDeploymentCollectionName = "OSD Required Deployment"
 [int]$StartNumber = 01
 [int]$EndNumber = 90
 [int]$TimeBetweenKickoff = 300
-
-
 $SiteCode = "PS2"
 $ProviderMachineName = "cm.corp.viamonstra.com"
 Import-Module "C:\OSBuildRoot\CMConsole\ConfigurationManager.psd1"
 #Get SiteCode
 
+
+#SCRIPT FUNCTIONS BELOW
 $Usable = $null
+$NameTable = @()
 
-
-if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){$NewDrive = New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName -ErrorAction SilentlyContinue}
+if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName -ErrorAction SilentlyContinue}
 if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue))
     {
     if (!($Creds)){$Creds = Get-Credential}
     New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName -Credential $Creds
     }
-Set-location $SiteCode":"
-Set-location c:
+
+if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){$CMConnected = $false}
 
 #Get Name of VMs Currently in HyperV
 $CurrentVMS = (Get-VM | Where-Object {$_.Name -match $VMNamePreFix})
 $VMSwitch = (Get-VMSwitch | Where-Object {$_.Name -match $VirtualNameAdapterName}).Name
 
-if (!($VMSwitch))
+#Makes sure you have a Virtual Switch and CM Connection or exit out.
+if (!($VMSwitch) -or ($CMConnected -eq $false))
     {
-    Write-Host "No Virtual Network Found, Check Name or VM Networks" -ForegroundColor Red
+    if (!($VMSwitch)){Write-Host "No Virtual Network Found, Check Name or VM Networks" -ForegroundColor Red}
+    if ($CMConnected -eq $alse){Write-Host "No Connection to ConfigMgr" -ForegroundColor Red}
     }
 else
     {
@@ -115,6 +116,8 @@ else
         #Create VM
         $VHDxFile = "$VMPath\$VMName\$VMName.vhdx"
         Write-Host "Creating VM $VMName" -ForegroundColor Cyan
+        
+        #If you want this to boot from ISO, change "NetworkAdapter to CD"
         $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch -Generation 2
         Write-Host "  Setting Memory to Dynamic, 512MB - 2048MB" -ForegroundColor Green
         set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2048MB
@@ -131,6 +134,8 @@ else
         Write-Host "  Setting Processors to Two" -ForegroundColor Green
         Set-VMProcessor -VMName $VMName -Count 2        
         Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
+        
+        #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
         #Set-VMDvdDrive -VMName $VMName -Path $BootISO
         Write-Host "  Setting CheckPoints to Standard" -ForegroundColor Green
         set-vm -Name $VMName -AutomaticCheckpointsEnabled $false
