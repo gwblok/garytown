@@ -1,6 +1,6 @@
 
 <# 
-Version 2020.04.08 - @GWBLOK
+Version 2020.06.22 - @GWBLOK
 Downloads BIOS Updates for Packages in CM (Requires specific Package Structure).. see here:https://github.com/gwblok/garytown/blob/master/hardware/CreateCMPackages_BIOS_Drivers.ps1
 Downloads the Dell SCUP Catalog Cab File, Extracts XML, Loads XML, finds BIOS downloads for corrisponding Models, downloads them if update is available (compared to the CM Package), then updates the CM Package
 
@@ -14,34 +14,32 @@ If you don't do Pre-Prod... just delete that Param section out and set $Stage = 
 #> 
 [CmdletBinding()]
     Param (
-		    [Parameter(Mandatory=$true,Position=1,HelpMessage="Stage")]
+		    [Parameter(Mandatory=$false,Position=1,HelpMessage="Stage")]
             [ValidateNotNullOrEmpty()]
             [ValidateSet("Pre-Prod", "Prod")]
-		    $Stage = "Pre-Prod"
+		    $Stage
  	    )
+
+
 
 
 $scriptName = $MyInvocation.MyCommand.Name
 $CabPath = "$PSScriptRoot\DriverBIOSCatalog.cab"
 $DellCabExtractPath = "$PSScriptRoot\DellCabExtract"
 $SiteCode = "PS2"
-<#
-function Get-ObjectMembers {
-    [CmdletBinding()]
-    Param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
-        [PSCustomObject]$obj
-    )
-    $obj | Get-Member -MemberType NoteProperty | ForEach-Object {
-        $key = $_.Name
-        [PSCustomObject]@{Key = $key; Value = $obj."$key"}
-    }
-}
-#>
+
 
 Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1)
 Set-Location -Path "$($SiteCode):"
-$DellModelsTable = Get-CMPackage -Fast -Name "BIOS*" | Where-Object {$_.Manufacturer -eq "Dell" -and $_.Mifname -eq $Stage}
+#$DellModelsTable = Get-CMPackage -Fast -Name "*BIOS*" | Where-Object {$_.Manufacturer -eq "Dell" -and $_.Mifname -eq $Stage}
+
+#Pick Stage
+if (!($Stage)){$Stage = "Prod", "Pre-Prod" | Out-GridView -Title "Select the Stage you want to update" -PassThru}
+
+#To Select
+$DellModelsSelectTable = Get-CMPackage -Fast -Name "BIOS*" | Where-Object {$_.Manufacturer -eq "Dell" -and $_.Mifname -eq $Stage} |Select-Object -Property "Name","MIFFilename","PackageID", "Version" | Sort-Object $_.MIFFilename | Out-GridView -Title "Select the Models you want to Update" -PassThru
+$DellModelsTable = Get-CMPackage -Fast -Name "BIOS*" | Where-Object {$_.PackageID -in $DellModelsSelectTable.PackageID}
+
 
 #Testing Specific Model
 #$DellModelsTable = Get-CMPackage -Fast -Id "PS20041A"
@@ -56,7 +54,7 @@ if (test-path -path $CabPath)
             {
             Write-Host "Found Dell Cab File Downloaded" -ForegroundColor Green
             $PreviousDownload = (Get-ChildItem -Path $CabPath).LastWriteTime
-            $15daysAgo = (get-date).AddDays(-15)
+            $15daysAgo = (get-date).AddDays(-1)
             if ($PreviousDownload -gt $15daysAgo)
                 {
                 Write-Host "Previous Cab from $PreviousDownload, will skip redownloading data"
@@ -91,108 +89,112 @@ else
     Write-Host "!!!!!!!...............................!!!!!!!" -ForegroundColor Cyan
     Write-Host "Expanding the Cab File..... takes FOREVER...." -ForegroundColor Yellow
     Write-Host "!!!!!!!...............................!!!!!!!" -ForegroundColor Cyan
-    $Expand = expand $CabPath -F:* $DellCabExtractPath
+    $Expand = expand $CabPath -F:DellSDPCatalogPC.xml $DellCabExtractPath
+    
     }
-
+<#Driver Cabs Only
+Invoke-WebRequest -Uri "http://downloads.dell.com/catalog/DriverPackCatalog.cab" -OutFile "$DellCabExtractPath\DriverPackCatalog.cab" -UseBasicParsing -Verbose -Proxy $ProxyServer
+$Expand = expand "$DellCabExtractPath\DriverPackCatalog.cab" -F:DriverPackCatalog.xml $DellCabExtractPath\DriverPackCatalog.xml
+[XML]$XML = Get-Content "$DellCabExtractPath\DriverPackCatalog.xml"
+$items = $XML.DriverPackManifest.DriverPackage
+#>
 
 write-host "Loading Dell Catalog XML.... can take awhile" -ForegroundColor Yellow
 [xml]$XML = Get-Content "$DellCabExtractPath\DellSDPCatalogPC.xml" -Verbose
-$JsonData = Get-Content -Path "$DellCabExtractPath\V3\*.json"
-$ListOfDevices = ($JsonData | ConvertFrom-Json).DisplayName | Sort-Object #This will be a list of supported devices in this JSON
+#$JsonData = Get-Content -Path "$DellCabExtractPath\V3\*.json"
+#$ListOfDevices = ($JsonData | ConvertFrom-Json).DisplayName | Sort-Object #This will be a list of supported devices in this JSON
 
-
-foreach ($Model in $DellModelsTable)
+foreach ($Model in $DellModelsTable)#{} #{Write-Host "Starting to Process Model: $($Model.MifFileName)" -ForegroundColor Green}
     {
     Write-Host "----------------------------" -ForegroundColor DarkGray
-    Write-Host "Starting to Process Model: $($Model.MifFileName)" -ForegroundColor Green
+    Write-Host "Starting to Package: $($Model.Name)" -ForegroundColor Green
     Write-Host " Current BIOS Version: $($Model.Version) from $($Model.MIFPublisher)" -ForegroundColor Green
-    $DeviceMatches = @()
-    $CurrentDeviceItem = $null
-    $LastMatch = $null
-    $CreationDate = $null
-    $CurrentDeviceItem = $JsonData | ConvertFrom-Json | Where-Object {$_.DisplayName -eq "$($Model.MifFileName)"}
-    if (!($CurrentDeviceItem))
+    $PackageVersion = $null
+    $LatestFileVersionFromName = $null
+    $CurrentMatchBiosVersionFromFileName = $null
+    $LatestVersionFromName = $null
+    $BIOSModifiedDate = $null
+    $TargetLink = $null
+    $TargetFileName = $null
+    $Version = $null
+    $SourceSharePackageLocation = $null
+    $TargetFilePathName = $null
+
+    
+    if ($Model.Version -match "A"){[String]$PackageVersion = $Model.Version}
+    if ($Model.Version -ne $null -and $Model.Version -ne "" -and $Model.Version -notmatch "A"){[System.Version]$PackageVersion = $Model.Version}
+    $PublishedBIOS = $XML.SystemsManagementCatalog.SoftwareDistributionPackage | Where-Object {$_.Properties.ProductName -match "Bios"-and $_.Properties.PublicationState -match "Published"}
+    
+    $DeviceMatches = $PublishedBIOS | Where-Object {$_.InstallableItem.ApplicabilityRules.IsInstallable.And.WmiQuery.WqlQuery -match $Model.Language}
+    $WQLQueries =  $DeviceMatches.InstallableItem.ApplicabilityRules.IsInstallable.and.WmiQuery.WqlQuery
+    $WQLQueries = $WQLQueries | Where-Object { $_ -match "VersionString"}
+    $WQLQueryVersion = @()
+    foreach ($WQLQuery in $WQLQueries)
         {
-        write-host "No Json Data for Model: $($Model.MifFileName)" -ForegroundColor Red
-        Set-Location -Path "$($SiteCode):"
-        Set-CMPackage -Id $Model.PackageID -Description "No Json Data for Model: $($Model.MifFileName)"
-        Set-Location -Path "C:" 
+        $Count = ((($WQLQuery).split("VersionString < ")).Count - 1)
+        $WQLQueryVersion += ((($WQLQuery).split("VersionString < "))[$Count]).replace("'","")
         }
-    #$DeviceItems += $JsonData
-    foreach ($Member in $CurrentDeviceItem.Members) #{write-host "$($Member.MifFileName)"}
+    $WQLQueryVersionLatestVersion = $WQLQueryVersion | Sort-Object | Select-Object -Last 1
+    Write-Host "Latest Version found in WQLQuery = $WQLQueryVersionLatestVersion" -ForegroundColor Green
+    $WQLBIOSMatch = $DeviceMatches | Where-Object {$_.InstallableItem.ApplicabilityRules.IsInstallable.and.WmiQuery.WqlQuery -match $WQLQueryVersionLatestVersion}
+    if ($WQLBIOSMatch.Count -gt 1){$WQLBIOSMatch = $WQLBIOSMatch | Where-Object {$_.LocalizedProperties.Title -match $model.MIFFilename}}
+
+    if ($WQLBIOSMatch)
         {
-        $CurrentMatch = $XML.SystemsManagementCatalog.SoftwareDistributionPackage | Where-Object {$_.Properties.PackageID -eq $Member -and $_.Properties.PublicationState -match "Published" -and $_.Properties.ProductName -match "Bios"}
-        if ($CurrentMatch)
+        $BIOSModifiedDate =  $(Get-Date $WQLBIOSMatch.InstallableItem.OriginFile.Modified -Format 'yyyy-MM-dd')
+        $TitleNames = $WQLBIOSMatch.LocalizedProperties.Title 
+        $FileNames = $WQLBIOSMatch.InstallableItem.OriginFile.FileName
+        
+        $TargetLink = $($WQLBIOSMatch.InstallableItem.OriginFile.OriginUri)
+        $TargetFileName = $($WQLBIOSMatch.InstallableItem.OriginFile.FileName)
+        if ($WQLQueryVersionLatestVersion -match "A")
             {
-            Write-Host " Found BIOS in XML: $($CurrentMatch.LocalizedProperties.Title)" -ForegroundColor Gray
-            Write-Host "  XML Creation Date: $($CurrentMatch.Properties.CreationDate)" -ForegroundColor Gray
-            Write-Host "   Modified Date: $($CurrentMatch.InstallableItem.OriginFile.Modified)" -ForegroundColor Gray
-            $DeviceMatches += $CurrentMatch 
+            $Version = $WQLQueryVersionLatestVersion
             }
-        }    
-    if ($DeviceMatches)
-        {   
-        $latestrelease = $DeviceMatches.Properties.CreationDate | Sort-Object | Select-Object -Last 1        
-        $CurrentMatchBios = $DeviceMatches | Where-Object {$_.Properties.CreationDate -eq $latestrelease}
-        if ($CurrentMatchBios.Count -gt 1){$CurrentMatchBios = $CurrentMatchBios[0]}
-        $CreationDate =  $(Get-Date $CurrentMatchBios.InstallableItem.OriginFile.Modified -Format 'yyyy-MM-dd')
-        Write-Host "Most Updated BIOS in XML: $($CurrentMatchBios.LocalizedProperties.Title) from $CreationDate" -ForegroundColor Yellow
-        if ($CreationDate -gt $($Model.MIFPublisher))
+        else
             {
-            $VersionArray = ($($CurrentMatchBios.LocalizedProperties.Title).split(","))
-            $Version = $VersionArray[-1]      
-            $TargetLink = $($CurrentMatchBios.InstallableItem.OriginFile.OriginUri)
-            $TargetFileName = $($CurrentMatchBios.InstallableItem.OriginFile.FileName)
-            $SourceSharePackageLocation = $model.PkgSourcePath
-            $TargetFilePathName = "$($SourceSharePackageLocation)\$($TargetFileName)"
-            if ($Version -eq $Model.Version){Write-Host " Package already Current with $Version" -ForegroundColor Green}
-            else {
-                Remove-Item -Path "$($SourceSharePackageLocation)\*.exe" -Force #Clear out old BIOS
-                Write-Host " New BIOS Update available: Package = $($Model.Version), Web = $version" -ForegroundColor Yellow 
-                Write-Output " Title: $($CurrentMatchBios.LocalizedProperties.Title) | $Member"
-                Write-Host " ----------------------------" -ForegroundColor Cyan
-                Write-Output "  Title: $($CurrentMatchBios.LocalizedProperties.Title)"
-                #Write-Output "  CreationDate: $($CurrentMatchBios.Properties.CreationDate)"
-                Write-Output "  ProductName: $($CurrentMatchBios.Properties.ProductName)"
-                Write-Output "  Severity: $($CurrentMatchBios.UpdateSpecificData.MsrcSeverity)"
-                Write-Output "  FileName: $TargetFileName"
-                Write-Output "  CreationDate: $CreationDate"
-                Write-Output "  KB: $($CurrentMatchBios.UpdateSpecificData.KBArticleID)"
-                Write-Output "  Link: $TargetLink"
-                Write-Output "  Info: $($CurrentMatchBios.Properties.MoreInfoUrl)"
-                Write-Output "  BIOS Version: $Version "
-                #Download BIOS
-                Import-Module BitsTransfer
-                $DownloadAttempts = 0
-                if ($UseProxy -eq $true) 
-                    {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -ProxyUsage Override -ProxyList $BitsProxyList -DisplayName $TargetFileName -Asynchronous}
-                else 
-                    {$BitsTransfer = Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Asynchronous}
-                do
-                    {
-                    $DownloadAttempts++
-                    $GetBitsTransfer = Get-BitsTransfer -Name $TargetFileName | Resume-BitsTransfer
-                    }
-                while
-                    ((test-path "$TargetFilePathName") -ne $true -and $DownloadAttempts -lt 15)
-                }
-            #This will run if newer package available or not.  It updates info based on Dell XML
+            $Version = [System.Version]$WQLQueryVersionLatestVersion
+            }
+        $SourceSharePackageLocation = $model.PkgSourcePath
+        $TargetFilePathName = "$($SourceSharePackageLocation)\$($TargetFileName)" 
+        Write-Host "Most Updated BIOS in XML: $TitleNames from $BIOSModifiedDate" -ForegroundColor Yellow
+        if ($WQLQueryVersionLatestVersion -gt $PackageVersion)
+            {
+            Set-Location -Path "C:" 
+            Remove-Item -Path "$($SourceSharePackageLocation)\*.exe" -Force -ErrorAction SilentlyContinue #Clear out old BIOS
+            Write-Host " New BIOS Update available: Package = $($Model.Version), Web = $version" -ForegroundColor Yellow 
+            Write-Output " Title: $($WQLBIOSMatch.LocalizedProperties.Title) | $Member"
+            Write-Host " ----------------------------" -ForegroundColor Cyan
+            Write-Output "  Title: $($WQLBIOSMatch.LocalizedProperties.Title)"
+            #Write-Output "  CreationDate: $($WQLBIOSMatch.Properties.CreationDate)"
+            Write-Output "  ProductName: $($WQLBIOSMatch.Properties.ProductName)"
+            Write-Output "  Severity: $($WQLBIOSMatch.UpdateSpecificData.MsrcSeverity)"
+            Write-Output "  FileName: $TargetFileName"
+            Write-Output "  BIOSModifiedDate: $BIOSModifiedDate"
+            Write-Output "  KB: $($WQLBIOSMatch.UpdateSpecificData.KBArticleID)"
+            Write-Output "  Link: $TargetLink"
+            Write-Output "  Info: $($WQLBIOSMatch.Properties.MoreInfoUrl)"
+            Write-Output "  BIOS Version: $Version "
+            #Download BIOS
+            Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose -Proxy $ProxyServer
             Write-Host " Confirming Package $($Model.Name) with updated Info" -ForegroundColor Yellow
             Set-Location -Path "$($SiteCode):"
             Set-CMPackage -Id $Model.PackageID -Version $Version
-            Set-CMPackage -Id $Model.PackageID -MifPublisher $CreationDate
-            Set-CMPackage -Id $Model.PackageID -Description $($CurrentMatchBios.Properties.MoreInfoUrl)
+            Set-CMPackage -Id $Model.PackageID -MifPublisher $BIOSModifiedDate
+            Set-CMPackage -Id $Model.PackageID -Description $($WQLBIOSMatch.Properties.MoreInfoUrl)
+            #Dump MIFVersion (WMI DATE) - This has to be done manually
+            Set-CMPackage -Id $Model.PackageID -MifVersion ""
             Update-CMDistributionPoint -PackageId $Model.PackageID
             Write-Host " Completed Process for $($Model.MIFFilename) with updated BIOS $Version" -ForegroundColor Green
             }
-        else{Write-Host "BIOS in CM Already Current, Skipping import" -ForegroundColor Magenta}
-        Set-Location -Path "C:"    
+        else
+            {
+            Write-Host "BIOS in CM the Same or Newer than Dell.com" -ForegroundColor Yellow
+            Write-Host " CM: $PackageVersion | Dell: $Version" -ForegroundColor Yellow
+            }
+        #This will run if newer package available or not.  It updates info based on Dell XML
+            
         }
-    if (!($DeviceMatches))
-        {
-        write-host "No Json Data for Model: $($Model.MifFileName)" -ForegroundColor Red
-        Set-Location -Path "$($SiteCode):"
-        Set-CMPackage -Id $Model.PackageID -Description "No Json Data for Model: $($Model.MifFileName)"
-        Set-Location -Path "C:" 
-        }
+    else
+        {Write-Host "XML did not have a match for $($Model.MIFFilename)" -ForegroundColor Red}
     }
