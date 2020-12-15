@@ -2,7 +2,7 @@
 Version 2020.04.08 - @GWBLOK
 Creates Packages for the Models you specify
 HP needs Product Codes
-Dell needs JSONModel, because if you use another script to download things, you'll find that they have different names in their JSON/XML than they use as their Model Name.
+Dell needs SystemTypeID for Enterprise Cab & SystemSKUNumber for DCU Cab
 
 Info provided in the table is used to create the Packages and populate differnet fields which the other scripts need to pull down BIOS & Drivers.
 StageTable... if you don't do "Piloting, or Pre-Prod Testing" of Packages using a different source, then you can remove this and write the script... or just comment out "Pre-Prod"
