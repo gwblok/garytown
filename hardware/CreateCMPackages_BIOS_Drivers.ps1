@@ -11,7 +11,7 @@ BIOS Download Scripts will be available here on my github.. eventually, likewise
 
 2020.07.08 - Updated Model List - Added Intel & Nexcom
 2020.12.13 - Switched Dells to use SystemTypeID, as it had better lock with the XML (Enterprise Catalog) they provide.
-
+2020.12.14 - Added SystemSKU, to leverage the Dell Command Update XML, which appears to be updated more frequently than their Enterprise Catalog
 #> 
 
 
@@ -67,7 +67,8 @@ $ModelsTable= @(
 @{ ProdCode = '860C'; Model = "HP ZBook 17 G6"; Man = "HP"}
 @{ ProdCode = '869D'; Model = "HP ProBook 440 G7"; Man = "HP"}
 @{ ProdCode = '8730'; Model = "HP ProBook 445 G7"; Man = "HP"}
-<# Old JSON Model
+
+<# Old JSON Model when using the JSON in the Dell v3 Enterprise cab to find updates for the model
 @{JSONModel = "Latitude 5290"; Model = "Latitude 5290"; Man = "Dell"}
 @{JSONModel = "Latitude 5300"; Model = "Latitude 5300"; Man = "Dell"}
 @{JSONModel = "Latitude 5400";Model = "Latitude 5400"; Man = "Dell"}
@@ -100,29 +101,30 @@ $ModelsTable= @(
 @{JSONModel = "Latitude 5511"; Model = "Latitude 5511"; Man = "Dell"}
 #>
 
-
+#SystemTypeID, used to find updates in their EnterpriseCab XML, skipping the need for JSON to determine Model.
 @{SystemTypeID = "2069"; Model = "Latitude 5290"; Man = "Dell"}
 @{SystemTypeID = "2231"; Model = "Latitude 5300"; Man = "Dell"}
-@{SystemTypeID = "2232";Model = "Latitude 5400"; Man = "Dell"}
-@{SystemTypeID = "2070";Model = "Latitude 5490"; Man = "Dell"}
-@{SystemTypeID = "2329";Model = "Latitude 5501"; Man = "Dell"}
-@{SystemTypeID = "2001";Model = "Latitude 5580"; Man = "Dell"}
-@{SystemTypeID = "2071";Model = "Latitude 5590"; Man = "Dell"}
-@{SystemTypeID = "1750";Model = "Latitude 7275"; Man = "Dell"}
-@{SystemTypeID = "1951";Model = "Latitude 7280"; Man = "Dell"}
-@{SystemTypeID = "1952";Model = "Latitude 7480"; Man = "Dell"}
-@{SystemTypeID = "1759";Model = "Latitude E5570"; Man = "Dell"}
-@{SystemTypeID = "1581";Model = "Latitude E7250"; Man = "Dell"}
-@{SystemTypeID = "1755";Model = "Latitude E7270"; Man = "Dell"}
-@{SystemTypeID = "1582";Model = "Latitude E7450"; Man = "Dell"}
-@{SystemTypeID = "1756";Model = "Latitude E7470"; Man = "Dell"}
-@{SystemTypeID = "1954";Model = "OptiPlex 5050"; Man = "Dell"}
-@{SystemTypeID = "2139";Model = "OptiPlex 5060"; Man = "Dell"}
-@{SystemTypeID = "2351";Model = "OptiPlex 5070"; Man = "Dell"}
-@{SystemTypeID = "2470";Model = "OptiPlex 5080"; Man = "Dell"}
-@{SystemTypeID = "1721";Model = "OptiPlex 7040"; Man = "Dell"}
-@{SystemTypeID = "1953";Model = "OptiPlex 7050"; Man = "Dell"}
-@{SystemTypeID = "1914";Model = "XPS 13 9365"; Man = "Dell"}
+@{SystemTypeID = "2232"; Model = "Latitude 5400"; Man = "Dell"}
+@{SystemTypeID = "2070"; Model = "Latitude 5490"; Man = "Dell"}
+@{SystemTypeID = "2329"; Model = "Latitude 5501"; Man = "Dell"}
+@{SystemTypeID = "2001"; Model = "Latitude 5580"; Man = "Dell"}
+@{SystemTypeID = "2071"; Model = "Latitude 5590"; Man = "Dell"}
+@{SystemTypeID = "1750"; Model = "Latitude 7275"; Man = "Dell"}
+@{SystemTypeID = "1951"; Model = "Latitude 7280"; Man = "Dell"}
+@{SystemTypeID = "1952"; Model = "Latitude 7480"; Man = "Dell"}
+@{SystemTypeID = "1759"; Model = "Latitude E5570"; Man = "Dell"}
+@{SystemTypeID = "1581"; Model = "Latitude E7250"; Man = "Dell"}
+@{SystemTypeID = "1755"; Model = "Latitude E7270"; Man = "Dell"}
+@{SystemTypeID = "1582"; Model = "Latitude E7450"; Man = "Dell"}
+@{SystemTypeID = "1756"; Model = "Latitude E7470"; Man = "Dell"}
+@{SystemTypeID = "1723"; Model = "OptiPlex 3040"; Man = "Dell"}
+@{SystemTypeID = "1954"; Model = "OptiPlex 5050"; Man = "Dell"}
+@{SystemTypeID = "2139"; Model = "OptiPlex 5060"; Man = "Dell"}
+@{SystemTypeID = "2351"; Model = "OptiPlex 5070"; Man = "Dell"}
+@{SystemTypeID = "2470"; Model = "OptiPlex 5080"; Man = "Dell"}
+@{SystemTypeID = "1721"; Model = "OptiPlex 7040"; Man = "Dell"}
+@{SystemTypeID = "1953"; Model = "OptiPlex 7050"; Man = "Dell"}
+@{SystemTypeID = "1914"; Model = "XPS 13 9365"; Man = "Dell"}
 @{SystemTypeID = "2463"; Model = "Latitude 5310"; Man = "Dell"}
 @{SystemTypeID = "2464"; Model = "Latitude 5410"; Man = "Dell"}
 @{SystemTypeID = "2497"; Model = "Latitude 5511"; Man = "Dell"}
