@@ -28,7 +28,7 @@
 ##*=============================================
 #region VariableDeclaration
 
-$ScriptVersion = "20.12.16.2"
+$ScriptVersion = "20.12.18.1"
 
 $RunOncePath = "$($env:windir)\System32\update\runonce"
 $RunPath = "$($env:windir)\System32\update\run"
@@ -156,9 +156,12 @@ ForEach ($RunScript in $RunScriptTable)
         Add-Content -Path $BatFilePath -Value $AdditionalContent.ToString()
         [String]$AdditionalContent2 = 'cmd.exe /c takeown /f C:\Windows\Web\4K\Wallpaper\Windows\*.* & cmd.exe /c icacls C:\Windows\Web\4K\Wallpaper\Windows\*.* /Grant System:(F) & cmd.exe /c del /q C:\Windows\Web\4K\Wallpaper\Windows\*.*'
         Add-Content -Path $BatFilePath -Value $AdditionalContent2.ToString()
-        #[String]$AdditionalContent3 = 'start /wait %SystemDrive%\Windows.old\$Windows.~bt\Sources\setupdiag.exe'
-        #Add-Content -Path $BatFilePath -Value $AdditionalContent3.ToString()
+        $CustomActionContent = New-Object system.text.stringbuilder
+        [void]$CustomActionContent.Append('start %windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File')
+        [void]$CustomActionContent.Append(" $($WaaSFolder)\$($RunScript.Type)\$($ScriptGUID)\SuccessSetupDiag.ps1")
+        Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
         }
+
     $CustomActionContent = New-Object system.text.stringbuilder
     [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File')
     [void]$CustomActionContent.Append(" $PSFilePath")
