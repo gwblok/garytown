@@ -1,11 +1,10 @@
-<#
+﻿<#
 .SYNOPSIS
     --.
 .DESCRIPTION
     Success.ps1, triggered by Success.cmd
-    Application Checking PreFlight script to confirm some applications are at specific levels, or the script will fail the upgrade out early, making reporting easier.
+    Updates Customizations
 
-    Update the $AppChecks variable to check for additional apps. Add as many versions as you want to "Approve" to be allowed
 .INPUTS
     None.
 .OUTPUTS

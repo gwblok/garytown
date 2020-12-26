@@ -95,6 +95,35 @@ $logfile = "$WaaSFolder\CustomActions.log"
 	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
 	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
+
+
+#https://adamtheautomator.com/powershell-logging-recording-and-auditing-all-the-things/
+function Enable-PSTranscriptionLogging {
+	param(
+		[Parameter(Mandatory)]
+		[string]$OutputDirectory
+	)
+
+     # Registry path
+     $basePath = 'HKLM:\SOFTWARE\WOW6432Node\Policies\Microsoft\Windows\PowerShell\Transcription'
+
+     # Create the key if it does not exist
+     if(-not (Test-Path $basePath))
+     {
+         $null = New-Item $basePath -Force
+
+         # Create the correct properties
+         New-ItemProperty $basePath -Name "EnableInvocationHeader" -PropertyType Dword
+         New-ItemProperty $basePath -Name "EnableTranscripting" -PropertyType Dword
+         New-ItemProperty $basePath -Name "OutputDirectory" -PropertyType String
+     }
+
+     # These can be enabled (1) or disabled (0) by changing the value
+     Set-ItemProperty $basePath -Name "EnableInvocationHeader" -Value "1"
+     Set-ItemProperty $basePath -Name "EnableTranscripting" -Value "1"
+     Set-ItemProperty $basePath -Name "OutputDirectory" -Value $OutputDirectory
+
+}
 ##*=============================================
 ##* END FUNCTION LISTINGS
 ##*=============================================
@@ -104,10 +133,19 @@ $logfile = "$WaaSFolder\CustomActions.log"
 ##*=============================================
 #region ScriptBody
 
+
 #Confirm LogFile Folder
 if (!(Test-Path $WaaSFolder)){$NewFolder = new-item -Path $WaaSFolder -ItemType Directory -Force}
 CMTraceLog -Message  "------------------------------" -Type 1 -LogFile $LogFile
 CMTraceLog -Message  "Starting $ScriptName" -Type 1 -LogFile $LogFile
+
+#Enable PowerShell Transcripts
+CMTraceLog -Message  "Enable PowerShell Transcripts" -Type 1 -LogFile $LogFile
+$PSTranscriptsFolder = "$WaaSFolder\PSTranscripts"
+if (!(Test-Path $PSTranscriptsFolder)){$NewFolder = new-item -Path $PSTranscriptsFolder -ItemType Directory -Force}
+Enable-PSTranscriptionLogging -OutputDirectory $PSTranscriptsFolder
+
+
 
 ForEach ($AppCheck in $AppChecks)
     {

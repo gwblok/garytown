@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     --.
 .DESCRIPTION
@@ -154,10 +154,8 @@ $ProgressBar = [Microsoft.Toolkit.Uwp.Notifications.AdaptiveProgressBar]@{
 
 $ToastContent = $ToastContentBuilder.AddText("Upgrading Windows 10...").
     AddVisualChild($ProgressBar).
-    AddText("This can take awhile, do not reboot until you're notified...").
-
+    AddText("Please do not reboot until you're notified...").
     GetToastContent()
-
 $Toast = [Windows.UI.Notifications.ToastNotification]::new($ToastContent.GetXml())
 $Toast.Tag = $ToastTag
 $Toast.Group = $ToastGroup
@@ -166,7 +164,7 @@ $dict = New-Object 'System.Collections.Generic.Dictionary[[string],[string]]'
 $dict.Add("progressValue","$SetupProgressNumber")
 $dict.Add("progressValueString","$SetupProgress% Complete")
 $dict.Add("progressStatus","Installing...")
-$dict.Add("progressTitle","Running Upgrade of Windows!")
+$dict.Add("progressTitle","Processing Feature Update of Windows to 20H2")
 
 $Toast.Data = [Windows.UI.Notifications.NotificationData]::new($dict, 0)
 
@@ -187,7 +185,7 @@ do
     $dict.Add("progressValue","$SetupProgressNumber")
     $dict.Add("progressValueString","$SetupProgress% Complete")
     $dict.Add("progressStatus","Installing...")
-    $dict.Add("progressTitle","Running Upgrade of Windows!")
+    $dict.Add("progressTitle","Processing Feature Update of Windows to 20H2")
     $NotificationData = [Windows.UI.Notifications.NotificationData]::new($dict, 0)
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Windows.SystemToast.SecurityAndMaintenance").Update($NotificationData, $ToastTag, $ToastGroup)
 
@@ -195,6 +193,17 @@ do
     }
 Until ($SetupProgress -eq "100")
 
+if ($SetupProgress -eq "100")
+    {
+    ### Update the Toast! (Run this separately to update)
+    $dict = New-Object 'System.Collections.Generic.Dictionary[[string],[string]]'
+    $dict.Add("progressValue","$SetupProgressNumber")
+    $dict.Add("progressValueString","$SetupProgress% Complete")
+    $dict.Add("progressStatus","Waiting for Restart")
+    $dict.Add("progressTitle","First Phase of  Feature Update of Windows to 20H2 Complete")
+    $NotificationData = [Windows.UI.Notifications.NotificationData]::new($dict, 0)
+    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Windows.SystemToast.SecurityAndMaintenance").Update($NotificationData, $ToastTag, $ToastGroup)
+    }
 
 $TimeStamp = Get-Date -f s
 New-ItemProperty -Path $registryPath -Name $keynameFinish -Value $TimeStamp -Force
