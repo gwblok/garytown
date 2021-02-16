@@ -194,7 +194,7 @@ if (!(Test-Path $IPUAppExtractPath))
         $NewFolder = New-Item -Path $IPUAppSourceLocation -ItemType directory -ErrorAction SilentlyContinue      
         Write-Host " Starting Copy of Content, App & Media" -ForegroundColor Green
         Copy-Item -Path "$IPUAppExtractPath\IPUApplication\*" -Destination $IPUAppSourceLocation -Recurse -Force
-        Copy-Item -Path "$UpgradeMediaPath\*" -Destination "$IPUAppSourceLocation\Media"
+        Copy-Item -Path "$UpgradeMediaPath\*" -Destination "$IPUAppSourceLocation\Media" -Recurse -Force
         }
     Set-Location -Path "$($SiteCode):"
     if (Get-CMDeploymentType -ApplicationName $IPUAppName -DeploymentTypeName $IPUAppName)
