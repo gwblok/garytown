@@ -173,11 +173,13 @@ if (!(Test-Path $IPUAppExtractPath))
     else
         {
         Write-Host "Creating Application: $IPUAppName" -ForegroundColor Green
-        $NewIPUApp = New-CMApplication -Name $IPUAppName -Publisher "OneVinn" -LocalizedName $IPUAppName -LocalizedDescription "Upgrades PC to $Release"
-        if (!($IPUAppUserCat = Get-CMCategory -Name "IPUApplication" -CategoryType UserCategories))
+        $NewIPUApp = New-CMApplication -Name $IPUAppName -Publisher "OneVinn" -LocalizedName $IPUAppName -LocalizedDescription "Upgrades PC to $Release.  There will be several reboots, but you will be prompted.  It is still recommended you save your work before installing."
+        if (!($IPUAppUserCat = Get-CMCategory -Name "IPUApplication" -CategoryType CatalogCategories))
             {
-            $IPUAppUserCat = New-CMCategory -CategoryType UserCategories -Name "IPUApplication"
+            $IPUAppUserCat = New-CMCategory -CategoryType CatalogCategories -Name "IPUApplication"
             }
+        Set-CMApplication -InputObject $NewIPUApp -AddUserCategory $IPUAppUserCat
+        Set-CMApplication -InputObject $NewIPUApp -SoftwareVersion $Release
         Write-Host " Completed" -ForegroundColor Gray
          #Set Icon for Software Center
         Set-Location "$($SiteCode):\"
