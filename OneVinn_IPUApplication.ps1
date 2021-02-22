@@ -231,6 +231,9 @@ IPU PendingReboot
 IPU Failed
 #>
 
+#Set Schedule to Evaluate Weekly (from the time you run the script)
+$Schedule = New-CMSchedule -Start (Get-Date).DateTime -RecurInterval Days -RecurCount 7
+
 #Create Test Collection and QUery, if Fails, Exit Script asking for Hardware Inv to be Extended
 New-CMDeviceCollection -Name "TestHWInvQuery" -Comment "Used to test if Hardware Inv Settings have been added yet, See Section 7 in PDF Doc" -LimitingCollectionName "All Systems" -RefreshSchedule $Schedule -RefreshType 2 |Out-Null
 $TestQuery = @" 
@@ -287,8 +290,7 @@ select SMS_R_System.Name from  SMS_R_System where SMS_R_System.OperatingSystemNa
     }
     else {Write-Host " Found All Workstations Collection ID: $($AllWorkstationCollection.CollectionID), which will be used as the limiting collections moving forward" -ForegroundColor Green}
 
-    #Set Schedule to Evaluate Weekly (from the time you run the script)
-    $Schedule = New-CMSchedule -Start (Get-Date).DateTime -RecurInterval Days -RecurCount 7
+   
 
     $CollectionName = "Windows 10 Build < $Release"
     Write-Host " Creating Collection $CollectionName" -ForegroundColor Green
