@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<UIpp Title="Recast Software" Icon="logo_mark_dark_icon.ico" Color="#1C252C" >
+	<Actions>
+    <Action Type="UserAuth" Title="User Authentication" Domain="corp.viamonstra.com" MaxRetryCount="5" Group="CM-OSD-UI" GetGroups="True"/>
+    <Action Type="DefaultValues" />
+    <Action Type="WMIRead" Variable="ComputerName" Namespace="root\cimv2" Class="Win32_ComputerSystem" Property="Name"/>
+    <Action Type="WMIRead" Variable="CurrentTier" Namespace="root\ITLocal" Class="Local_Config" Property="Tier"/>
+    <Action Type="RegRead" Hive="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Value="CurrentVersion" Variable="CurrentVersion" />
+    <Action Type="Info" Name="myInfo" Title="Welcome %XAuthenticatedUser%">
+      <![CDATA[<b>Recast Software - ConfigMgr Docs</b><br> <br>docs.recastsoftware.com<br><br>Demo of UI++, which includes:<br> - All of the power of UI++ 1.0 combined with UI App Tree!<br> - It's UI, <b>interactive </b>, evolved, and customized.<br> <br> Time Taken to Download, read documentation, customize and implement, about 4 hours.]]>
+    </Action>
+    <Action Type="Input" Name="ClientSetupInput" Title="Client Setup" ShowBack="True">
+      <TextInput Prompt="Computer Name" Hint="Enter the name for this system" RegEx="[^\&quot;/\\\[\]:;\|=,\+\*\?&gt;&lt;]{3,15}" Variable="ZZComputerName" Question="Name for this system" Default="%_SMSTSMachineName%"/>
+      <ChoiceInput Variable="ZZBuildType" Question="Please select the build type for this system" Required="True" Default="2009">
+        <Choice Option="Windows 10 1909" Value="1909" />
+        <Choice Option="Windows 10 20H2" Value="2009" />
+      </ChoiceInput>
+      <CheckboxInput Variable="ZZExtraLogging" Question="Enable extra logging" CheckedValue="True" UncheckedValue="False" Default="True"/>
+    </Action>
+    <Action Type="Input" Size="%UIppDeviceSettingsSize%" Name="DeviceSettingsInput" Title="Device Settings" ShowBack="True">
+      <ChoiceInput Variable="ZZBitLocker" Question="Enable Bitlocker" Required="True" Default="YES">
+        <Choice Option="Yes" Value="YES" />
+        <Choice Option="No" Value="NO" />
+      </ChoiceInput>
+      <ChoiceInput Variable="ZZUDA" Question="Use User Device Affinty (UDA)" Required="True" Default="False">
+        <Choice Option="Yes" Value="True" />
+        <Choice Option="No" Value="False" />
+      </ChoiceInput>
+      <ChoiceInput Variable="ZZDHCP" Question="Use a static IP Address or DHCP" Required="True" Default="DHCP">
+        <Choice Option="DHCP" Value="True" />
+        <Choice Option="Static IP" Value="False" />
+      </ChoiceInput>
+    </Action>
+    <Action Type="Input" Name="UDAInput" Title="User Device Affinity" ShowBack="True" Condition='"%ZZUDA%" = "True"'>
+      <TextInput Prompt="Users (comma separated)" Hint="Enter the primary users for this system (comma separated) ex: viamonstra\username" Variable="ZZUDAUsers" Question="Primary users for this system (viamonstra\username)" />
+    </Action>
+    <Action Type="Input" Name="StaticIPInput" Title="Static IP Information" ShowBack="True" Condition='"%ZZDHCP%" = "False"'>
+      <TextInput Prompt="IP Address" Hint="Enter the static IP Address for thissystem" Variable="ZZIPAddress" Question="Static IP Address" RegEx="((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"/>
+      <TextInput Prompt="Subnet Mask" Hint="Enter the subnet mask for this system" Variable="ZZIPSubnet" Question="IP Subnet Mask" RegEx="((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"/>
+      <TextInput Prompt="IP Address" Hint="Enter the gateway for this system" Variable="ZZIPGateway" Question="IP Gateway Address" RegEx="((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"/>
+    </Action>
+    <Action Type="TSVar" Name="OSDAdapter0IPAddressList" Condition='"%ZZDHCP%" = "False"'>"%ZZIPAddress%"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0SubnetMask" Condition='"%ZZDHCP%" = "False"'>"%ZZIPSubnet%"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0Gateways" Condition='"%ZZDHCP%" = "False"'>"%ZZIPGateway%"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0EnableDHCP" Condition='"%ZZDHCP%" = "False"'>"False"'</Action>
+    <Action Type="TSVar" Name="OSDAdapterCount" Condition='"%ZZDHCP%" = "False"'>"1"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0EnableWINS" Condition='"%ZZDHCP%" = "False"'>"True"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0WINSServerList" Condition='"%ZZDHCP%" = "False"'>"192.168.1.199"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0DNSServerList" Condition='"%ZZDHCP%" = "False"'>"192.168.1.199,192.168.1.1,8.8.8.8"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0EnableDNSRegistration" Condition='"%ZZDHCP%" = "False"'>"True"'</Action>
+    <Action Type="TSVar" Name="OSDAdapter0DNSDomain" Condition='"%ZZDHCP%" = "False"'>"corp.viamonstra.com"'</Action> 
+    <Action Type="Input" Name="LocationChoice" Title="System Location">
+      <ChoiceInput Variable="MyLocation" Question="Please choose a final location for this computer" Required="True" Default="Minneapolis" >
+        <Choice Option="Minneapolis" Value="Minneapolis"/>
+        <Choice Option="Ottawa" Value="Ottawa"/>
+        <Choice Option="Woodbury" Value="Woodbury"/>
+        <Choice Option="Grand Rapids" Value="GrandRapids" />
+        <Choice Option="Phoenix" Value="Phoenix" />
+      </ChoiceInput>
+    </Action>
+    <Action Type="TSVar" Name="OSDDomainOUName" Condition='"%MyLocation%" = "Minneapolis"'>"LDAP://OU=Minneapolis,OU=Workstations,OU=RECAST,DC=corp,DC=viamonstra,DC=com"'</Action> 
+    <Action Type="TSVar" Name="OSDDomainOUName" Condition='"%MyLocation%" = "Ottawa"'>"LDAP://OU=Ottawa,OU=Workstations,OU=RECAST,DC=corp,DC=viamonstra,DC=com"'</Action> 
+    <Action Type="TSVar" Name="OSDDomainOUName" Condition='"%MyLocation%" = "Woodbury"'>"LDAP://OU=Workstations,OU=RECAST,DC=corp,DC=viamonstra,DC=com"'</Action> 
+    <Action Type="TSVar" Name="OSDDomainOUName" Condition='"%MyLocation%" = "GrandRapids"'>"LDAP://OU=Workstations,OU=RECAST,DC=corp,DC=viamonstra,DC=com"'</Action> 
+    <Action Type="TSVar" Name="OSDDomainOUName" Condition='"%MyLocation%" = "Phoenix"'>"LDAP://OU=Workstations,OU=RECAST,DC=corp,DC=viamonstra,DC=com"'</Action> 
+    <Action Type="TSVar" Name="TestVariable"><![CDATA[Left("%XAuthenticatedUserDomain%",2) & Left("%XAuthenticatedUser%",2)]]></Action>
+    <Action Type="TSVar" Name="OSDComputerName" >"%ZZComputerName%"</Action>
+    <Action Type="TSVar" Name="MyLocation" >"%MyLocation%"</Action>
+    <Action Type="TSVar" Name="OSDBuildType" >"%ZZBuildType%"</Action>
+    <Action Type="TSVar" Name="SMSTSUdaUsers" >"%ZZUDAUsers%"</Action>
+    <Action Type="WMIWrite" Namespace="root\ITLocal" Class="Local_Config" >
+      <Property Name="ComputerName" Type="CIM_STRING" Value="%ComputerName%" Key="True"/>
+      <Property Name="Tier" Type="CIM_UINT8" Value="%Tier%" Key="False"/>
+    </Action>
+    <Action Type="RegWrite" Hive="HKLM" Key="Software\RECAST_IT\OSD" Value="%XAuthenticatedUserDomain%" ValueType="REG_SZ">%XAuthenticatedUser%</Action>
+  </Actions>
+</UIpp>
+
+
+OSDDomainOUName
