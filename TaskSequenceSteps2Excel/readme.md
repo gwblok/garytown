@@ -1,6 +1,6 @@
 # Task Sequence Steps to Excel
 
-This is basically just like it sounds, you run the script, provide a Task Sequnece Name and it builds and Excel document.
+This is basically just like it sounds, you run the script, provide a Task Sequence Name and it builds and Excel document.
 
 Requires the CM Console & Excel on the machine you're running the script.
 
