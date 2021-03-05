@@ -34,7 +34,7 @@
   #>
 
 
-Param (
+  Param (
 	[Parameter(Mandatory = $True, HelpMessage = "Please Enter Primary Server Site Server")]
 	$ProviderMachineName,
 	[Parameter(Mandatory = $True, HelpMessage = "Please Enter Primary Server Site code")]
@@ -97,6 +97,7 @@ function New-RowItem {
 
 }
 
+#used to know which components were added to boot images.  The boot Image provide a number, which requires a lookup.
 $LangTable= @(
 @{ Region = 'Arabic (Saudi Arabia)' ; Tag = 'ar-SA' ; DecimalID = '1025'}
 @{ Region = 'Bulgarian (Bulgaria)' ; Tag = 'bg-BG' ; DecimalID = '1026'}
@@ -248,4 +249,11 @@ foreach($BootImage in $BootImages)#{}
     $TSsheet.columns.Item('C').EntireColumn.Columnwidth = 30
     $TSsheet.columns.Item('D').EntireColumn.Columnwidth = 20
     $TSsheet.columns.Item('E').EntireColumn.Columnwidth = 130
+    
+    
+
+
     }
+#Cleanup originally openned Sheet
+$worksheet = $workbook.worksheets | where {$_.name -eq 'Sheet1'}
+$worksheet.Delete()

@@ -65,7 +65,7 @@
   #>
 
 
-Param (
+  Param (
 	[Parameter(Mandatory = $True, HelpMessage = "Please Enter Primary Server Site Server")]
 	$ProviderMachineName,
 	[Parameter(Mandatory = $True, HelpMessage = "Please Enter Primary Server Site code")]
@@ -514,7 +514,7 @@ Foreach ($PackageReference in $PackageReferences)
 
 
 # Format columns
-$TSsheet.columns.Item('A').EntireColumn.Columnwidth = 5
+$TSsheet.columns.Item('A').EntireColumn.Columnwidth = 8
 $TSsheet.columns.Item('B').EntireColumn.Columnwidth = 50
 $TSsheet.columns.Item('C').EntireColumn.Columnwidth = 20
 $TSsheet.columns.Item('D').EntireColumn.Columnwidth = 15
@@ -550,13 +550,13 @@ $range.VerticalAlignment = -4160
 Set-TitleCells -FontSize 20 -FontBold -FontAlignment Left
 
 #TS Info
-$TSDumpInfo = $CurrentWorkingTS | Select-Object -Property * -ExcludeProperty Sequence, References, Properties, NamedValueDictionary, ConnectionManager, PropertyList, MethodList, PropertyNames, ObjectClass, ManagedObject, EmbeddedProperties,EmbeddedPropertyLists,OverridingObjectClass, RegMultiStringLists,RetainObjectLock, SmsProviderObjectPath, SecuredScopeNames 
+$TSDumpInfo = $CurrentWorkingTS | Select-Object -Property * -ExcludeProperty Sequence, References, Properties, NamedValueDictionary, ConnectionManager, PropertyList, MethodList, PropertyNames, ObjectClass, ManagedObject, EmbeddedProperties,EmbeddedPropertyLists,OverridingObjectClass, RegMultiStringLists,RetainObjectLock, SmsProviderObjectPath, SecuredScopeNames, SupportedOperatingSystems, SecurityVerbs, Count, TraceProperties,ActionInProgress
 $TSDumpInfo.PSObject.Properties | ForEach-Object {
     if ($_.Value)
         {
         $row++
-        New-RowItem -row $row -Column 1 -FontAlignment Left -FontSize 12 -Content ($_.Name).trim()
-        New-RowItem -row $row -Column 2 -FontAlignment Left -FontSize 12 -Content ($_.Value)
+        New-RowItem -row $row -Column 1 -FontAlignment Left -FontSize 12 -Content ($_.Name).trim() -ErrorAction SilentlyContinue
+        New-RowItem -row $row -Column 2 -FontAlignment Left -FontSize 12 -Content ($_.Value) -ErrorAction SilentlyContinue
         }
 }
 # Format columns
