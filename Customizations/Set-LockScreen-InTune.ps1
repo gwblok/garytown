@@ -32,6 +32,7 @@
 $ScriptVersion = "21.3.8.1"
 $BrandingFiles = "https://docs.recastsoftware.com/ConfigMgr-Docs/Community-Tools/media/RecastBrandingFiles.zip"
 $whoami = (whoami).split("\") | Select-Object -Last 1
+$LogFile = "$env:ProgramData\Intune\Logs\LockScreen.log"
 #endregion
 ##*=============================================
 ##* END VARIABLE DECLARATION
@@ -58,7 +59,7 @@ $whoami = (whoami).split("\") | Select-Object -Last 1
 		    [int]$Type,
 		
 		    [Parameter(Mandatory=$true)]
-		    $LogFile = "$env:ProgramData\IntuneLogs\LockScreen.log"
+		    $LogFile = "$env:ProgramData\Intune\Logs\LockScreen.log"
 	    )
     <#
     Type: 1 = Normal, 2 = Warning (yellow), 3 = Error (red)
