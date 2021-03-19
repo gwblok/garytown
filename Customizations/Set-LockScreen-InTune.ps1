@@ -42,6 +42,38 @@ $whoami = (whoami).split("\") | Select-Object -Last 1
 ##*=============================================
 #region FunctionListings
 
+        function CMTraceLog {
+         [CmdletBinding()]
+    Param (
+		    [Parameter(Mandatory=$false)]
+		    $Message,
+ 
+		    [Parameter(Mandatory=$false)]
+		    $ErrorMessage,
+ 
+		    [Parameter(Mandatory=$false)]
+		    $Component = "Intune - LockScreen",
+ 
+		    [Parameter(Mandatory=$false)]
+		    [int]$Type,
+		
+		    [Parameter(Mandatory=$true)]
+		    $LogFile = "$env:ProgramData\IntuneLogs\LockScreen.log"
+	    )
+    <#
+    Type: 1 = Normal, 2 = Warning (yellow), 3 = Error (red)
+    #>
+	    $Time = Get-Date -Format "HH:mm:ss.ffffff"
+	    $Date = Get-Date -Format "MM-dd-yyyy"
+ 
+	    if ($ErrorMessage -ne $null) {$Type = 3}
+	    if ($Component -eq $null) {$Component = " "}
+	    if ($Type -eq $null) {$Type = 1}
+ 
+	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
+	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
+    }
+
 function enable-privilege {
  param(
   ## The privilege to adjust. This set is taken from
@@ -170,9 +202,14 @@ Set-Acl -Path $file.FullName -AclObject $NewAcl
 ##*=============================================
 #region ScriptBody
 
+CMTraceLog -Message  "---------------------------------" -Type 1 -LogFile $LogFile
+CMTraceLog -Message  "Starting LockScreen Script" -Type 1 -LogFile $LogFile
+CMTraceLog -Message  "Running as $whoami" -Type 1 -LogFile $LogFile
+
+
 if ($whoami -match "SYSTEM")
     {
-
+    CMTraceLog -Message  "Taking OwnerShip of Files" -Type 1 -LogFile $LogFile
     #Take OwnerShip
     enable-privilege SeTakeOwnershipPrivilege 
     #Set Permissions on Files
@@ -180,53 +217,74 @@ if ($whoami -match "SYSTEM")
     $identity = "BUILTIN\Administrators"
     foreach ($filechild in $files)
         {
+        CMTraceLog -Message  " Taking ownership of file: $($filechild.name)" -Type 1 -LogFile $LogFile
         Set-Owner -identity $identity -filepath $filechild.fullname
         }
 
     #Grant Rights to Admin & System
     # Set Adminstrators of Full Control of File
-
+    CMTraceLog -Message  "Grant Rights to Admin & System" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message  " Setting Full Control Rights for Administrators" -Type 1 -LogFile $LogFile
     $identity = "BUILTIN\Administrators"
     $FilesSystemRights = "FullControl"
     $type = "Allow"
     foreach ($filechild in $files)
         {
+        CMTraceLog -Message  "  Updating Control of file: $($filechild.name)" -Type 1 -LogFile $LogFile
         Set-Permission -identity $identity -type $type -FilesSystemRights $FilesSystemRights -filepath $filechild.fullname
         }
 
     # Set SYSTEM to Full Control of Registry Item
+    CMTraceLog -Message  " Setting Full Control Rights for Administrators" -Type 1 -LogFile $LogFile
     $identity = "NT AUTHORITY\SYSTEM"
     $FilesSystemRights = "FullControl"
     $type = "Allow"
     foreach ($filechild in $files)
         {
+        CMTraceLog -Message  "  Updating Control of file: $($filechild.name)" -Type 1 -LogFile $LogFile
         Set-Permission -identity $identity -type $type -FilesSystemRights $FilesSystemRights -filepath $filechild.fullname
         }
 
     #Download Branding Files:
 
-    $OutFilePath = "$env:ProgramData\Branding\"
-    $OutFile = "$OutFilePath\BrandingFiles.zip"
+    $OutFilePath = "$env:ProgramData\Intune\Branding\"
+    $OutFile = "$OutFilePath\Intune\BrandingFiles.zip"
     if (!(Test-Path -Path $OutFilePath)){$NewFolder = New-Item -Path $OutFilePath -ItemType Directory -Force}
     if (Test-Path -Path $OutFile){Remove-Item -Path $OutFile -Force}
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    CMTraceLog -Message  "Downloading File: $BrandingFiles to $OutFile" -Type 1 -LogFile $LogFile
     Invoke-WebRequest -UseBasicParsing -Uri $BrandingFiles -OutFile $OutFile
 
     if (!(Test-Path -Path $OutFile))
     {Write-Output "Failed to Download Branding Files"}
     else
         {
+        CMTraceLog -Message  "Expanding files to $OutFilePath" -Type 1 -LogFile $LogFile
         Expand-Archive -Path $OutFile -DestinationPath $OutFilePath -Force
         }
 
 
     #Copy the 2 files into place
+    CMTraceLog -Message  "Overwriting Files" -Type 1 -LogFile $LogFile
+    $LockScreenHash = Get-Filehash -Algorithm MD5 -Path $OutFilePath\WallPapersLockScreens\lockscreen.jpg 
     Copy-Item "$OutFilePath\WallPapersLockScreens\lockscreen.jpg" C:\windows\web\Screen\img100.jpg -Force -Verbose
     Copy-Item "$OutFilePath\WallPapersLockScreens\lockscreen.jpg" C:\windows\web\Screen\img105.jpg -Force -Verbose
+    $img100Hash = Get-Filehash -Algorithm MD5 -Path C:\windows\web\Screen\img100.jpg 
+    $img105Hash = Get-Filehash -Algorithm MD5 -Path C:\windows\web\Screen\img105.jpg
+
+    if ($img100Hash -eq $LockScreenHash -and $img105Hash -eq $LockScreenHash)
+        {
+        CMTraceLog -Message  "Successfully Overwrote LockScreen Images with Custom ones" -Type 1 -LogFile $LogFile
+        }
+    else
+        {
+        CMTraceLog -Message  "FAILED to overwrite LockScreen Images with Custom ones" -Type 3 -LogFile $LogFile
+        }
     }
 else
     {
     Write-output "Not running as system, running as $whoami, exiting Script"
+    CMTraceLog -Message  "Not running as system, running as $whoami, exiting Script" -Type 3 -LogFile $LogFile
     }
 
 exit $exitcode
