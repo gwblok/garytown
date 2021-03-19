@@ -31,7 +31,7 @@
 
 $ScriptVersion = "21.3.8.1"
 $BrandingFiles = "https://docs.recastsoftware.com/ConfigMgr-Docs/Community-Tools/media/RecastBrandingFiles.zip"
-
+$whoami = (whoami).split("\") | Select-Object -Last 1
 #endregion
 ##*=============================================
 ##* END VARIABLE DECLARATION
@@ -170,56 +170,64 @@ Set-Acl -Path $file.FullName -AclObject $NewAcl
 ##*=============================================
 #region ScriptBody
 
-#Take OwnerShip
-enable-privilege SeTakeOwnershipPrivilege 
-#Set Permissions on Files
-$files = Get-ChildItem -Path C:\Windows\Web\Screen
-$identity = "BUILTIN\Administrators"
-foreach ($filechild in $files)
+if ($whoami -match "SYSTEM")
     {
-    Set-Owner -identity $identity -filepath $filechild.fullname
+
+    #Take OwnerShip
+    enable-privilege SeTakeOwnershipPrivilege 
+    #Set Permissions on Files
+    $files = Get-ChildItem -Path C:\Windows\Web\Screen
+    $identity = "BUILTIN\Administrators"
+    foreach ($filechild in $files)
+        {
+        Set-Owner -identity $identity -filepath $filechild.fullname
+        }
+
+    #Grant Rights to Admin & System
+    # Set Adminstrators of Full Control of File
+
+    $identity = "BUILTIN\Administrators"
+    $FilesSystemRights = "FullControl"
+    $type = "Allow"
+    foreach ($filechild in $files)
+        {
+        Set-Permission -identity $identity -type $type -FilesSystemRights $FilesSystemRights -filepath $filechild.fullname
+        }
+
+    # Set SYSTEM to Full Control of Registry Item
+    $identity = "NT AUTHORITY\SYSTEM"
+    $FilesSystemRights = "FullControl"
+    $type = "Allow"
+    foreach ($filechild in $files)
+        {
+        Set-Permission -identity $identity -type $type -FilesSystemRights $FilesSystemRights -filepath $filechild.fullname
+        }
+
+    #Download Branding Files:
+
+    $OutFilePath = "$env:ProgramData\Branding\"
+    $OutFile = "$OutFilePath\BrandingFiles.zip"
+    if (!(Test-Path -Path $OutFilePath)){$NewFolder = New-Item -Path $OutFilePath -ItemType Directory -Force}
+    if (Test-Path -Path $OutFile){Remove-Item -Path $OutFile -Force}
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -UseBasicParsing -Uri $BrandingFiles -OutFile $OutFile
+
+    if (!(Test-Path -Path $OutFile))
+    {Write-Output "Failed to Download Branding Files"}
+    else
+        {
+        Expand-Archive -Path $OutFile -DestinationPath $OutFilePath -Force
+        }
+
+
+    #Copy the 2 files into place
+    Copy-Item "$OutFilePath\WallPapersLockScreens\lockscreen.jpg" C:\windows\web\Screen\img100.jpg -Force -Verbose
+    Copy-Item "$OutFilePath\WallPapersLockScreens\lockscreen.jpg" C:\windows\web\Screen\img105.jpg -Force -Verbose
     }
-
-#Grant Rights to Admin & System
-# Set Adminstrators of Full Control of File
-
-$identity = "BUILTIN\Administrators"
-$FilesSystemRights = "FullControl"
-$type = "Allow"
-foreach ($filechild in $files)
-    {
-    Set-Permission -identity $identity -type $type -FilesSystemRights $FilesSystemRights -filepath $filechild.fullname
-    }
-
-# Set SYSTEM to Full Control of Registry Item
-$identity = "NT AUTHORITY\SYSTEM"
-$FilesSystemRights = "FullControl"
-$type = "Allow"
-foreach ($filechild in $files)
-    {
-    Set-Permission -identity $identity -type $type -FilesSystemRights $FilesSystemRights -filepath $filechild.fullname
-    }
-
-#Download Branding Files:
-
-$OutFilePath = "$env:ProgramData\Branding\"
-$OutFile = "$OutFilePath\BrandingFiles.zip"
-if (!(Test-Path -Path $OutFilePath)){$NewFolder = New-Item -Path $OutFilePath -ItemType Directory -Force}
-if (Test-Path -Path $OutFile){Remove-Item -Path $OutFile -Force}
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest -UseBasicParsing -Uri $BrandingFiles -OutFile $OutFile
-
-if (!(Test-Path -Path $OutFile))
-{Write-Output "Failed to Download Branding Files"}
 else
     {
-    Expand-Archive -Path $OutFile -DestinationPath $OutFilePath -Force
+    Write-output "Not running as system, running as $whoami, exiting Script"
     }
-
-
-#Copy the 2 files into place
-Copy-Item "$OutFilePath\WallPapersLockScreens\lockscreen.jpg" C:\windows\web\Screen\img100.jpg -Force -Verbose
-Copy-Item "$OutFilePath\WallPapersLockScreens\lockscreen.jpg" C:\windows\web\Screen\img105.jpg -Force -Verbose
 
 exit $exitcode
 #endregion
