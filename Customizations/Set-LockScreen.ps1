@@ -200,7 +200,9 @@ foreach ($filechild in $files)
     }
 
 #Copy the 2 files into place
+Write-Output "Running Command: Copy-Item .\lockscreen.jpg C:\windows\web\Screen\img100.jpg -Force -Verbose"
 Copy-Item .\lockscreen.jpg C:\windows\web\Screen\img100.jpg -Force -Verbose
+Write-Output "Running Command: Copy-Item .\lockscreen.jpg C:\windows\web\Screen\img105.jpg -Force -Verbose"
 Copy-Item .\lockscreen.jpg C:\windows\web\Screen\img105.jpg -Force -Verbose
 
 exit $exitcode
