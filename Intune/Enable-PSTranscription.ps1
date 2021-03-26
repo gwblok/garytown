@@ -29,7 +29,6 @@
 #region VariableDeclaration
 
 $ScriptVersion = "21.3.25.1"
-$Compliance = $true
 $whoami = (whoami).split("\") | Select-Object -Last 1
 $RootLoggingPath = "$env:ProgramData\CustomLogging"
 $LogFile = "$RootLoggingPath\PSTranscriptionLoggingEnable.log"
