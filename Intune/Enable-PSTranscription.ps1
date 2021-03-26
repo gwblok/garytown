@@ -33,7 +33,7 @@ $whoami = (whoami).split("\") | Select-Object -Last 1
 $RootLoggingPath = "$env:ProgramData\CustomLogging"
 $LogFile = "$RootLoggingPath\PSTranscriptionLoggingEnable.log"
 $Component = "Intune"
-$PSTranscriptsFolder = "$ExtraLoggingPath\PSTranscripts"
+$PSTranscriptsFolder = "$RootLoggingPath\PSTranscripts"
 if (!(Test-Path -Path $RootLoggingPath)){$NewFolder = New-Item -Path $RootLoggingPath -ItemType Directory -Force}
 $Mode = "Enable"
 
@@ -152,6 +152,10 @@ function Get-PSTranscriptionLogging {
         {
         Return "Enabled"
         }
+    if ($OutputDirectory -ne $PSTranscriptsFolder)
+        {
+        Return "WrongPath"
+        }
 }
 
 #endregion
@@ -183,6 +187,19 @@ if ($PSTranscriptionStatus -eq "Disabled")
     Set-PSTranscriptionLogging -OutputDirectory $PSTranscriptsFolder -Mode $Mode
     CMTraceLog -Message  "Set PSTranscription to $Mode" -Type 1 -LogFile $LogFile
     }
+Elseif ($PSTranscriptionStatus -eq "WrongPath")
+    {
+    CMTraceLog -Message  "PowerShell Transcription is Enabled But set to different Logging Folder" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message  "Updating Logging Path from $(Get-ItemPropertyValue -Path $basePath -Name "OutputDirectory") to $PSTranscriptsFolder" -Type 1 -LogFile $LogFile
+    if (!(Test-Path $PSTranscriptsFolder))
+        {
+        CMTraceLog -Message  "Creating Transcriptions Log Folder: $PSTranscriptsFolder" -Type 1 -LogFile $LogFile
+        $NewFolder = new-item -Path $PSTranscriptsFolder -ItemType Directory -Force
+        }
+    Set-PSTranscriptionLogging -OutputDirectory $PSTranscriptsFolder -Mode $Mode
+    CMTraceLog -Message  "Updated Logging Path" -Type 1 -LogFile $LogFile
+    }
+
 Else
     {
     CMTraceLog -Message  "PowerShell Transcription is already Enabled, Exiting" -Type 1 -LogFile $LogFile
