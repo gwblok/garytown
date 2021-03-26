@@ -144,6 +144,10 @@ function Get-PSTranscriptionLogging {
         $EnableTranscripting = Get-ItemPropertyValue -Path $basePath -Name "EnableTranscripting" -ErrorAction SilentlyContinue
         $OutputDirectory = Get-ItemPropertyValue -Path $basePath -Name "OutputDirectory" -ErrorAction SilentlyContinue
         }
+    if ($OutputDirectory -ne $PSTranscriptsFolder)
+        {
+        Return "WrongPath"
+        }
     if ($EnableInvocationHeader -eq "1")
         {
         Return "Enabled"
@@ -152,10 +156,7 @@ function Get-PSTranscriptionLogging {
         {
         Return "Enabled"
         }
-    if ($OutputDirectory -ne $PSTranscriptsFolder)
-        {
-        Return "WrongPath"
-        }
+
 }
 
 #endregion
