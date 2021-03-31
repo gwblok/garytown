@@ -57,6 +57,7 @@
     2021.02.25 - Initial Release of TS Steps
     2021.03.01 - Added References Tab
     2021.03.02 - Changed everything, created functions.  Added General Info Tab
+    2021.03.30 - Added Check if you picked a Task Sequence name with more than one Task Sequence with that name in your CM
  
 
  .EXAMPLE 
@@ -65,7 +66,7 @@
   #>
 
 
-  Param (
+Param (
 	[Parameter(Mandatory = $True, HelpMessage = "Please Enter Primary Server Site Server")]
 	$ProviderMachineName,
 	[Parameter(Mandatory = $True, HelpMessage = "Please Enter Primary Server Site code")]
@@ -234,6 +235,11 @@ if((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue
 Set-Location "$($SiteCode):\" @initParams
 
 $CurrentWorkingTS = Get-CMTaskSequence -Name $TSName
+if ($CurrentWorkingTS.Count -gt 1){
+    Write-Host "You have more than 1 Task Sequence with that Name, please don't do that, once resolved, you can try again" -ForegroundColor Red
+    exit
+    }
+
 $SequenceXML = [XML]$CurrentWorkingTS.Sequence
 $parentnode = $SequenceXML.sequence
 
