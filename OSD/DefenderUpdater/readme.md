@@ -12,6 +12,8 @@ To use:
 - Scheduled task runs on machine with CM Console (So it has access to the PS Commandlets)
   - These requirements are NOT the same as Johan's script which doesn't leverage the CM PS Commandlets 
 
+Once you have this setup, you can add steps to your Task Sequence to leverage the updated Defender Defs.  Look to Jorgen's blog in the link above for more details about integration. 
+
 ## Scheduled Task:
 ```
 In my lab, I'm just using a user account, but in Production, I'm using a gSMA account.
