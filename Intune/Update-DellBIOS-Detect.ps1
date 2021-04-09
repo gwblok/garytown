@@ -2,7 +2,7 @@
 Gary Blok | @gwblok | recastsoftware.com
 Updates Bios on DELL machines by finding latest version avialble in Dell Command Update XML, Downloading and installing, then triggers a Restart
 Remediation & Detection Scripts are the same, just change the variable $Remediate. ($false = Detect | $true = Remediate)
-
+Requirements: Dell Command Monitor Installed (Unless this is a pretty new model, then it might not need it, however I don't have new ones to test on, so I can't confirm)
 #>
 
 
@@ -20,8 +20,8 @@ $CabPathIndexModel = "$env:temp\DellCabDownloads\CatalogIndexModel.cab"
 $DellCabExtractPath = "$env:temp\DellCabDownloads\DellCabExtract"
 $ProxyConnection = "proxy-recastsoftware.com"
 $ProxyConnectionPort = "8080"
-$Remediate = $true
-if ($Remediate -eq $false)
+$Remediate = $false
+if ($Remediate -eq $true)
     {$ComponentText = "Intune - Remediation"}
 else {$ComponentText = "Intune - Detection"}
 
