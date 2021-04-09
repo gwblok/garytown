@@ -9,7 +9,8 @@ To use:
 - Update the XML for the Scheduled task to where you store the script
 - Import the Scheduled Task, leverage a gSMA account or other service account with permissions to both CM & the Package Location
 - Account with access to file share & CM
-- Scheduled task runs on machine with CM Console (So it has access to the PS Commandlets
+- Scheduled task runs on machine with CM Console (So it has access to the PS Commandlets)
+  - These requirements are NOT the same as Johan's script which doesn't leverage the CM PS Commandlets 
 
 ## Scheduled Task:
 ```
