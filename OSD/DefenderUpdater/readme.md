@@ -10,3 +10,4 @@ To use:
 - Import the Scheduled Task, leverage a gSMA account or other service account with permissions to both CM & the Package Location
 
 
+[![Defender Updater 01](DefenderUpdate01.png)](DefenderUpdate01.png)
