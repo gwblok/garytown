@@ -10,7 +10,9 @@ To use:
 - Import the Scheduled Task, leverage a gSMA account or other service account with permissions to both CM & the Package Location
 
 ##Scheduled Task:
-[!NOTE] In my lab, I'm just using a user account, but in Production, I'm using a gSMA account.
+> [!NOTE]
+> In my lab, I'm just using a user account, but in Production, I'm using a gSMA account.
+
 [![Defender Updater 01](DefenderUpdate01.png)](DefenderUpdate01.png)
 
 ##Log File:
