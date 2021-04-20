@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest baseLocation="downloads.dell.com" dateTime="2021-04-20T02:47:48.6739967Z" releaseId="3b5045c2-d916-4488-a2d8-e37977403ab5" name="OptiPlex7050-Prod" description="" >
+<InventoryComponent inventoryCollectorType="COMPACT" schemaVersion="3.0" releaseID="HHG6M" releaseDate="March 19, 2021" vendorVersion="9.5.0.0" dellVersion="A00" osCode="WIN" path="FOLDER07142707M/1/InvColPC_9.5.0.0.exe" size="7075544" xmlns="openmanage/cm/dm">
+  <Cryptography>
+    <Hash algorithm="MD5">d89f894fb3c41ea114763ec1583b073f</Hash>
+    <Hash algorithm="SHA256">c6f979139deb11e25e93e9cfb6e037ce50f633fd69fed3b70bc2a60ec007dbf9</Hash>
+    <Hash algorithm="SHA1">e5fb9e49239b4255cfee5d64801ad2fb3e64eb5b</Hash>
+  </Cryptography>
+</InventoryComponent>
+<InventoryComponent inventoryCollectorType="COMPREHENSIVE" schemaVersion="3.0" releaseID="N86KH" releaseDate="March 19, 2021" vendorVersion="9.5.0.0" dellVersion="A00" osCode="WIN" path="FOLDER07163281M/1/InvColPC_9.5.0.0.exe" size="19961912" xmlns="openmanage/cm/dm">
+  <Cryptography>
+    <Hash algorithm="MD5">5ca4dec6e7b101122126301805dac91f</Hash>
+    <Hash algorithm="SHA256">3a27e4bcfd28468b5266cadcc169cbe0519739da3c6b38f3838fa801037e072f</Hash>
+    <Hash algorithm="SHA1">28c94259fb2c75a7b07442b438970fb1fdb30215</Hash>
+  </Cryptography>
+</InventoryComponent>
+<SoftwareComponent schemaVersion="3.0" releaseID="50V6H" releaseDate="January 07, 2021" vendorVersion="1115.0012" dellVersion="A00" packageType="LWXP" path="FOLDER06924984M/1/Western-Digital-Corp-SN730-PCIe-NVMe-Solid-State_50V6H_WIN_1115.0012_A00.EXE" packageID="50V6H" dateTime="2020-11-10T14:10:45+05:30" size="18484912" identifier="19ec6d77-3dba-4efc-9c87-3bb4db469b6a" xmlns="openmanage/cm/dm">
+  <Name>
+    <Display lang="en"><![CDATA[Western Digital Corp SN730 PCIe NVMe Solid-State Drive Firmware Update]]></Display>
+  </Name>
+  <ComponentType value="FRMW">
+    <Display lang="en"><![CDATA[Firmware]]></Display>
+  </ComponentType>
+  <Description>
+    <Display lang="en"><![CDATA[This package contains the firmware for the Western Digital Corp SN730 256 GB, 512 GB, and 1 TB, Revision 11150012. Storage firmware is a microcode that is embedded on storage devices such as hard drives or solid-state drives. The firmware manages the functionality of the devices. It is recommended that you update this firmware using Dell Update or Dell Command Update.]]></Display>
+  </Description>
+  <Category value="SA">
+    <Display lang="en"><![CDATA[Serial ATA]]></Display>
+  </Category>
+  <SupportedDevices>
+    <Device componentID="108613" embedded="false">
+      <Display><![CDATA[WESTERN DIGITAL SN730 1TB PCIE NVME 2280 SSD (CLASS 40)]]></Display>
+    </Device>
+  </SupportedDevices>
+  <SupportedSystems>
+    <Brand key="33" prefix="OP">
+      <Display lang="en"><![CDATA[Optiplex]]></Display>
+      <Model systemID="07A1">
+        <Display lang="en"><![CDATA[7050]]></Display>
+      </Model>
+    </Brand>
+  </SupportedSystems>
+  <SupportedOperatingSystems>
+    <OperatingSystem osCode="W10P4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+  </SupportedOperatingSystems>
+  <ImportantInfo URL="https://www.dell.com/support/home/us/en/19/Drivers/DriversDetails?driverId=50V6H">
+    <Display lang="en"><![CDATA[NA]]></Display>
+  </ImportantInfo>
+  <Criticality value="1">
+    <Display lang="en"><![CDATA[Recommended]]></Display>
+  </Criticality>
+  <Cryptography>
+    <Hash algorithm="MD5">94dc42a9444cbca384f36535ed40f732</Hash>
+    <Hash algorithm="SHA256">6d9f13487dd97843d421346e52110081789bcabbc2ca980907e2d2572cbe6493</Hash>
+    <Hash algorithm="SHA1">dfcbc6eee35964e0aeda236f9270bdeb54df7a40</Hash>
+  </Cryptography>
+</SoftwareComponent>
+<SoftwareComponent schemaVersion="3.0" releaseID="DF2DT" releaseDate="March 31, 2021" vendorVersion="4.1.0" dellVersion="A00" packageType="LWXP" path="FOLDER06986472M/1/Dell-Command-Update-Application-for-Windows-10_DF2DT_WIN_4.1.0_A00.EXE" packageID="DF2DT" dateTime="2020-11-19T13:42:38+05:30" size="25559240" identifier="28e58b75-5e8f-4b4a-85d3-1cb9467b5762" xmlns="openmanage/cm/dm">
+  <Name>
+    <Display lang="en"><![CDATA[Dell Command | Update Application for Windows 10]]></Display>
+  </Name>
+  <ComponentType value="APAC">
+    <Display lang="en"><![CDATA[Application]]></Display>
+  </ComponentType>
+  <Description>
+    <Display lang="en"><![CDATA[This Universal Windows Platform (UWP) package contains the Dell Command Update for systems running the Windows 10 build 14393 (Redstone 1) or later. Dell Command Update is a stand-alone application for client systems, that provides updates for system software that is released by Dell. This application simplifies the BIOS, firmware, driver, and application update experience for Dell client hardware.]]></Display>
+  </Description>
+  <Category value="SM">
+    <Display lang="en"><![CDATA[Systems Management]]></Display>
+  </Category>
+  <SupportedDevices>
+    <Device componentID="107174" embedded="false">
+      <Display><![CDATA[Dell Command | Update]]></Display>
+    </Device>
+  </SupportedDevices>
+  <SupportedSystems>
+    <Brand key="33" prefix="OP">
+      <Display lang="en"><![CDATA[Optiplex]]></Display>
+      <Model systemID="07A1">
+        <Display lang="en"><![CDATA[7050]]></Display>
+      </Model>
+    </Brand>
+  </SupportedSystems>
+  <SupportedOperatingSystems>
+    <OperatingSystem osCode="W10P4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10P2" osVendor="Microsoft" osArch="x86" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 32-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="IOTL3" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H2" osVendor="Microsoft" osArch="x86" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 32-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="WEL16" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+  </SupportedOperatingSystems>
+  <ImportantInfo URL="https://www.dell.com/support/home/us/en/19/Drivers/DriversDetails?driverId=DF2DT">
+    <Display lang="en"><![CDATA[NA]]></Display>
+  </ImportantInfo>
+  <Criticality value="1">
+    <Display lang="en"><![CDATA[Recommended]]></Display>
+  </Criticality>
+  <Cryptography>
+    <Hash algorithm="MD5">0bd97cc9aeb457ac499f025e29ada525</Hash>
+    <Hash algorithm="SHA256">a08efbbffc5439160dd87f29809b5d069b88fde3cfd2b35e225d5b2e177ce1a0</Hash>
+    <Hash algorithm="SHA1">6669ca47600d6800416080394b9ade5fa63e8965</Hash>
+  </Cryptography>
+  <SharedModules>
+    <SharedModule moduleID="107714" />
+  </SharedModules>
+</SoftwareComponent>
+<SoftwareComponent schemaVersion="3.0" releaseID="JKT52" releaseDate="January 22, 2021" vendorVersion="1.15.1" dellVersion="1.15.1" packageType="LWXP" path="FOLDER06912889M/1/OptiPlex_7050_1.15.1.exe" packageID="JKT52" dateTime="2020-10-07T13:58:27+05:30" size="18590392" identifier="2da1e53a-e78b-4d1f-bef2-a1d34a97641f" xmlns="openmanage/cm/dm">
+  <Name>
+    <Display lang="en"><![CDATA[Dell OptiPlex 7050 System BIOS]]></Display>
+  </Name>
+  <ComponentType value="BIOS">
+    <Display lang="en"><![CDATA[BIOS]]></Display>
+  </ComponentType>
+  <Description>
+    <Display lang="en"><![CDATA[This package contains the Dell system BIOS update. BIOS is a firmware package that is embedded on a small memory chip on the system board. It controls the keyboard, monitor, disk drives, and other devices. This update addresses the Intel Technical Advisory INTEL-TA-00391 and Intel Security Advisories INTEL-SA-00381, INTEL-SA-00389, INTEL-SA-00358. A security advisory is a statement when a security vulnerability impacts a product, and a remedy is available for the vulnerability.]]></Display>
+  </Description>
+  <Category value="BI">
+    <Display lang="en"><![CDATA[BIOS]]></Display>
+  </Category>
+  <SupportedDevices>
+    <Device componentID="159" embedded="false">
+      <Display><![CDATA[OptiPlex 7050 System BIOS]]></Display>
+    </Device>
+  </SupportedDevices>
+  <SupportedSystems>
+    <Brand key="33" prefix="OP">
+      <Display lang="en"><![CDATA[Optiplex]]></Display>
+      <Model systemID="07A1">
+        <Display lang="en"><![CDATA[7050]]></Display>
+      </Model>
+    </Brand>
+  </SupportedSystems>
+  <ImportantInfo URL="https://www.dell.com/support/home/us/en/19/Drivers/DriversDetails?driverId=JKT52">
+    <Display lang="en"><![CDATA[NA]]></Display>
+  </ImportantInfo>
+  <Criticality value="2">
+    <Display lang="en"><![CDATA[Urgent]]></Display>
+  </Criticality>
+  <Cryptography>
+    <Hash algorithm="MD5">2ce3e75a00793ca7e9fbc25d9d2977c1</Hash>
+    <Hash algorithm="SHA256">f7460dabcebf5fcfc5e734f8a52aa5b49eb24cafeef30c4ec4ba87750ecf7899</Hash>
+    <Hash algorithm="SHA1">65a8a94f3b76c7b777da88847c78ef13aee90847</Hash>
+  </Cryptography>
+</SoftwareComponent>
+<SoftwareComponent schemaVersion="3.0" releaseID="1C1H7" releaseDate="March 26, 2021" vendorVersion="4.0.70.0" dellVersion="A18" packageType="LWXP" path="FOLDER06983256M/1/Dell-Alienware-Digital-Delivery-Application_1C1H7_WIN_4.0.70.0_A18.EXE" packageID="1C1H7" dateTime="2021-01-19T22:32:03+05:30" size="86065936" identifier="41f1434e-3792-48cb-beca-1801272a501b" xmlns="openmanage/cm/dm">
+  <Name>
+    <Display lang="en"><![CDATA[Dell/Alienware Digital Delivery Application]]></Display>
+  </Name>
+  <ComponentType value="APAC">
+    <Display lang="en"><![CDATA[Application]]></Display>
+  </ComponentType>
+  <Description>
+    <Display lang="en"><![CDATA[This package contains the Dell Digital Delivery Application (or Alienware Digital Delivery Application). It is a service which enables you to purchase software at the time you order your system, then download and install it once you receive the system and connect to the Internet.]]></Display>
+  </Description>
+  <Category value="AP">
+    <Display lang="en"><![CDATA[Application]]></Display>
+  </Category>
+  <SupportedDevices>
+    <Device componentID="102287" embedded="false">
+      <Display><![CDATA[Dell Digital Delivery]]></Display>
+    </Device>
+  </SupportedDevices>
+  <SupportedSystems>
+    <Brand key="33" prefix="OP">
+      <Display lang="en"><![CDATA[Optiplex]]></Display>
+      <Model systemID="07A1">
+        <Display lang="en"><![CDATA[7050]]></Display>
+      </Model>
+    </Brand>
+  </SupportedSystems>
+  <SupportedOperatingSystems>
+    <OperatingSystem osCode="W10P4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10P2" osVendor="Microsoft" osArch="x86" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 32-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H2" osVendor="Microsoft" osArch="x86" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 32-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+  </SupportedOperatingSystems>
+  <ImportantInfo URL="https://www.dell.com/support/home/us/en/19/Drivers/DriversDetails?driverId=1C1H7">
+    <Display lang="en"><![CDATA[NA]]></Display>
+  </ImportantInfo>
+  <Criticality value="3">
+    <Display lang="en"><![CDATA[Optional]]></Display>
+  </Criticality>
+  <Cryptography>
+    <Hash algorithm="MD5">e7dd4b71f22c467d45aa6f1bbe353b93</Hash>
+    <Hash algorithm="SHA256">775cf1038fd64cbcee49e0a5a0780d0f4ffb03660ad7387c2f7eeb2b4421ee5f</Hash>
+    <Hash algorithm="SHA1">1c2375d5526041231e3b1ef5bce3e3888b961599</Hash>
+  </Cryptography>
+</SoftwareComponent>
+<SoftwareComponent schemaVersion="3.0" releaseID="PVYTW" releaseDate="February 25, 2021" vendorVersion="0.1003" dellVersion="A00" packageType="LW64" path="FOLDER07053241M/1/Seagate-ST2000DM008-Hard-Drive-Firmware-Update_PVYTW_WIN64_0.1003_A00.EXE" packageID="PVYTW" dateTime="2021-02-04T09:18:58+05:30" size="20461992" identifier="74892895-0b8f-49d6-8336-bdb0913e5674" xmlns="openmanage/cm/dm">
+  <Name>
+    <Display lang="en"><![CDATA[Seagate ST2000DM008 Hard Drive Firmware Update]]></Display>
+  </Name>
+  <ComponentType value="FRMW">
+    <Display lang="en"><![CDATA[Firmware]]></Display>
+  </ComponentType>
+  <Description>
+    <Display lang="en"><![CDATA[This package contains the firmware for Seagate ST2000DM008 2 TB hard drive, Revision 1003. Storage firmware is a microcode that is embedded on storage devices such as hard drives or solid-state drives. The firmware manages the functionality of the devices.]]></Display>
+  </Description>
+  <Category value="SA">
+    <Display lang="en"><![CDATA[Serial ATA]]></Display>
+  </Category>
+  <SupportedDevices>
+    <Device componentID="106893" embedded="false">
+      <Display><![CDATA[Seagate V11X 3.5" 2T 7200RPM SATA HDD]]></Display>
+    </Device>
+  </SupportedDevices>
+  <SupportedSystems>
+    <Brand key="33" prefix="OP">
+      <Display lang="en"><![CDATA[Optiplex]]></Display>
+      <Model systemID="07A1">
+        <Display lang="en"><![CDATA[7050]]></Display>
+      </Model>
+    </Brand>
+  </SupportedSystems>
+  <SupportedOperatingSystems>
+    <OperatingSystem osCode="W10P4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+  </SupportedOperatingSystems>
+  <ImportantInfo URL="https://www.dell.com/support/home/us/en/19/Drivers/DriversDetails?driverId=PVYTW">
+    <Display lang="en"><![CDATA[NA]]></Display>
+  </ImportantInfo>
+  <Criticality value="1">
+    <Display lang="en"><![CDATA[Recommended]]></Display>
+  </Criticality>
+  <Cryptography>
+    <Hash algorithm="MD5">3489d5b8fc8986772b314bb06b439f5c</Hash>
+    <Hash algorithm="SHA256">c6acf4650db929afd0e29c72d91791c1437dea8637892d957523c901cbc1eebc</Hash>
+    <Hash algorithm="SHA1">345899fe7e69684fac174f1b8e4a24c728503f6d</Hash>
+  </Cryptography>
+</SoftwareComponent>
+<SoftwareComponent schemaVersion="3.0" releaseID="P5R35" releaseDate="March 31, 2021" vendorVersion="4.1.0" dellVersion="A00" packageType="LWXP" path="FOLDER06986400M/1/Dell-Command-Update-Application_P5R35_WIN_4.1.0_A00.EXE" packageID="P5R35" dateTime="2020-11-19T13:45:05+05:30" size="23880448" identifier="b18fa252-eb8e-40c9-ad76-5dfd5cad7705" xmlns="openmanage/cm/dm">
+  <Name>
+    <Display lang="en"><![CDATA[Dell Command | Update Application]]></Display>
+  </Name>
+  <ComponentType value="APAC">
+    <Display lang="en"><![CDATA[Application]]></Display>
+  </ComponentType>
+  <Description>
+    <Display lang="en"><![CDATA[This package contains the Dell Command Update application that supports Win32. Dell Command Update is a stand-alone application for client systems, that provides updates for system software that is released by Dell. This application simplifies the BIOS, firmware, driver, and application update experience for Dell client hardware.]]></Display>
+  </Description>
+  <Category value="SM">
+    <Display lang="en"><![CDATA[Systems Management]]></Display>
+  </Category>
+  <SupportedDevices>
+    <Device componentID="23400" embedded="false">
+      <Display><![CDATA[Dell Command | Update]]></Display>
+    </Device>
+  </SupportedDevices>
+  <SupportedSystems>
+    <Brand key="33" prefix="OP">
+      <Display lang="en"><![CDATA[Optiplex]]></Display>
+      <Model systemID="07A1">
+        <Display lang="en"><![CDATA[7050]]></Display>
+      </Model>
+    </Brand>
+  </SupportedSystems>
+  <SupportedOperatingSystems>
+    <OperatingSystem osCode="W10P4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10P2" osVendor="Microsoft" osArch="x86" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 32-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="IOTL3" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H2" osVendor="Microsoft" osArch="x86" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 32-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="W10H4" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+    <OperatingSystem osCode="WEL16" osVendor="Microsoft" osArch="x64" majorVersion="10" minorVersion="0" spMajorVersion="0" spMinorVersion="0">
+      <Display lang="en"><![CDATA[Windows 10 64-Bit]]></Display>
+    </OperatingSystem>
+  </SupportedOperatingSystems>
+  <ImportantInfo URL="https://www.dell.com/support/home/us/en/19/Drivers/DriversDetails?driverId=P5R35">
+    <Display lang="en"><![CDATA[NA]]></Display>
+  </ImportantInfo>
+  <Criticality value="1">
+    <Display lang="en"><![CDATA[Recommended]]></Display>
+  </Criticality>
+  <Cryptography>
+    <Hash algorithm="MD5">c22eab1d1e4b45114eb4e89da85fa2d9</Hash>
+    <Hash algorithm="SHA256">351dec8e58272639d9a78e58f3a8a72ab189b635a946869848ee62986f85436a</Hash>
+    <Hash algorithm="SHA1">065d12effb740e912d728edebbbc039d1ea9d36a</Hash>
+  </Cryptography>
+  <SharedModules>
+    <SharedModule moduleID="107714" />
+  </SharedModules>
+</SoftwareComponent>
+</Manifest>
