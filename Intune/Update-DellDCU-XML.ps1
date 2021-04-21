@@ -26,11 +26,8 @@ $scriptName = "Dell DCU XML - From GitHub"
 $OrgName = "Recast_IT"
 $ITFolder = "$env:ProgramData\$OrgName"
 $ITRegPath = "HKLM:\SOFTWARE\$OrgName"
-
 $ProxyConnection = "proxy-recastsoftware.com"
 $ProxyConnectionPort = "8080"
-
-
 
 if (!(Test-Path -Path $LogFilePath)){$null = New-Item -Path $LogFilePath -ItemType Directory -Force}
 if (!(Test-Path -Path $ITFolder)){$null = New-Item -Path $ITFolder -ItemType Directory -Force}
@@ -209,7 +206,6 @@ function CMTraceLog {
 	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
 
-
 CMTraceLog -Message  "---------------------------------" -Type 1 -LogFile $LogFile
 CMTraceLog -Message  "Starting $ScriptName, $ScriptVersion | Remediation Mode $Remediate" -Type 1 -LogFile $LogFile
 CMTraceLog -Message  "Running as $whoami" -Type 1 -LogFile $LogFile
@@ -239,8 +235,6 @@ if ($Manufacturer -match "Dell")
             Write-Output "No Proxy Server Found, continuing without"
             }
 
-
-
         # Download our XML and compare against Current XML
         if (!(Test-Path $XMLTempFolder)){$newfolder = New-Item -Path $XMLTempFolder -ItemType Directory -Force}
         Write-Host "Downloading Dell $Model XML" -ForegroundColor Yellow
@@ -264,7 +258,7 @@ if ($Manufacturer -match "Dell")
             else
                 {
                 CMTraceLog -Message  "Need to Replace Current XML: $XMLCurrentDate with Downloaded: $XMLDownloadDate." -Type 1 -LogFile $LogFile
-                #exit 1
+                exit 1
                 }
             }
         else
@@ -294,13 +288,10 @@ if ($Manufacturer -match "Dell")
             else
                 {
                 CMTraceLog -Message  "Need to update DCU to point to our Custom XML." -Type 1 -LogFile $LogFile
-                #exit 1
+                exit 1
                 }
-
             }
-
         }
-
     else
         {
         CMTraceLog -Message  "Does not have DCU Installed." -Type 2 -LogFile $LogFile
