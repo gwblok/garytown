@@ -1,7 +1,7 @@
 <#
 Gary Blok | @gwblok | Recast Software
 
-Updates  on DELL machines by finding latest version available in Dell Command Update XML, Downloading and installing, then triggers a restart.. I'd recommend you look into this part of the script and edit if you need.
+Updates  on DELL machines by finding latest version avialble in Dell Command Update XML, Downloading and installing, then triggers a CM Reboot (typically 90 minute countdown)
 
 # Future enhancements
 
@@ -10,7 +10,7 @@ Use Toast to restart instead of CM (For use with InTune)
 #>
 
 
-$ScriptVersion = "21.4.8.1"
+$ScriptVersion = "21.4.20.1"
 $whoami = $env:USERNAME
 $IntuneFolder = "$env:ProgramData\Intune"
 $LogFilePath = "$IntuneFolder\Logs"
@@ -289,13 +289,10 @@ if ($Manufacturer -match "Dell")
             $DellItem = $AppDCU
             If ($InstalledDCU){[Version]$CurrentVersion = $InstalledDCU.Version}
             Else {$CurrentVersion = $null}
-
-
             [Version]$DCUVersion = $DellItem.vendorVersion
             $DCUReleaseDate = $(Get-Date $DellItem.releaseDate -Format 'yyyy-MM-dd')               
             $TargetLink = "http://downloads.dell.com/$($DellItem.path)"
             $TargetFileName = ($DellItem.path).Split("/") | Select-Object -Last 1
-
             if ($DCUVersion -gt $CurrentVersion)
                 {
                 if ($CurrentVersion -eq $null){[String]$CurrentVersion = "Not Installed"}
@@ -331,7 +328,6 @@ if ($Manufacturer -match "Dell")
                     if (Test-Path $TargetFilePathName)
                         {
                         CMTraceLog -Message  "   Download Complete " -Type 1 -LogFile $LogFile
-                                     
                         $LogFileName = $TargetFilePathName.replace(".exe",".log")
                         $Arguments = "/s /l=$LogFileName"
                         Write-Output "Starting Update"
@@ -340,11 +336,9 @@ if ($Manufacturer -match "Dell")
                         $Process = Start-Process "$TargetFilePathName" $Arguments -Wait -PassThru
                         CMTraceLog -Message  " Update Complete with Exitcode: $($Process.ExitCode)" -Type 1 -LogFile $LogFile
                         write-output "Update Complete with Exitcode: $($Process.ExitCode)"
-                    
                         If($Process -ne $null -and $Process.ExitCode -eq '2')
                             {
                             $RestartComputer = $true
-                            #Restart-ByPassComputer
                             }
                         }
                     else
@@ -451,9 +445,7 @@ if ($Manufacturer -match "Dell")
                 #Compliant
                 Write-Host " Update in DCU for $($DellItem.Name.Display.'#cdata-section') XML same as Installed Version: $CurrentVersion" -ForegroundColor Yellow
                 CMTraceLog -Message  " Update in DCU XML for $($DellItem.Name.Display.'#cdata-section') same as Installed Version: $CurrentVersion" -Type 1 -LogFile $LogFile
-                exit 0
                 }
-
             }
         else
             {
@@ -469,7 +461,11 @@ if ($Manufacturer -match "Dell")
         CMTraceLog -Message  "No Match in XML for $SystemSKUNumber" -Type 2 -LogFile $LogFile
         }
 
-    if ($Compliance -eq $false){exit 1}
+    if ($Compliance -eq $false)
+        {
+        CMTraceLog -Message  "Exit Script Non-Compliant" -Type 2 -LogFile $LogFile
+        exit 1
+        }
     if ($RestartComputer -eq $true) {Restart-ByPassComputer}
     }
 else
