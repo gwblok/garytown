@@ -1,7 +1,7 @@
 <#
 Gary Blok | @gwblok | Recast Software
 
-Updates  on DELL machines by finding latest version avialble in Dell Command Update XML, Downloading and installing, then triggers a CM Reboot (typically 90 minute countdown)
+Updates  on DELL machines by finding latest version available in Dell Command Update XML, Downloading and installing, then triggers a restart.. I'd recommend you look into this part of the script and edit if you need.
 
 # Future enhancements
 
