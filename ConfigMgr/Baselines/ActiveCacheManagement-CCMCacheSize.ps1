@@ -1,5 +1,6 @@
 <#
 Gary Blok | @gwblok | RecastSoftware.com
+Credit Keith Garner for most of the code
 
 .SYNOPSIS
 SCCM Cache Management script
