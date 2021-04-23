@@ -9,6 +9,11 @@ These scripts can be used to control and manage your CCMCache
 
 BranchCache Management coming in the future.
 
+
+## Package Content Compliance
+
+This will monitor a specific Task Sequence that is deployed to the device and confirm the Task Sequence Content is in the CCMCache
+
 ## Other Baselines
 
 There will be other items here, I'll try to update the page with some info as I add them... no promises.
