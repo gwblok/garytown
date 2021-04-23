@@ -4,6 +4,8 @@
 
 These scripts can be used to control and manage your CCMCache
 - Set Cache Size based on Drive Size
+  - This requires that you're not setting it via Client Settings, which will overwrite what this CI does
+  - You can set the CCMCache size initially when you install the CM Client, then leverage this baseline to dynamcially assign a size or %
 - Groom Cache based on Drive Free space, age and type of content.
 - Remove Duplicate packages (older versions of same content)
 
