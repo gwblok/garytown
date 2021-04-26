@@ -17,8 +17,6 @@ Non-persistent items one by one down to 30 days or CCMCache size drops below thr
 
 
 .NOTES
-For support questions, mailto:G=EUC-CCMPE@wellsfargo.com
-
 When running with a Configuration Item:
 
     [switch]$CIRemediate  # will run Detection
