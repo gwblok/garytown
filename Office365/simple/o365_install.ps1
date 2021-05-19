@@ -209,7 +209,7 @@ Remove-Item "$O365Cache\O365_Uninstall.ps1" -Force -ErrorAction SilentlyContinue
  <Property Name="DeviceBasedLicensing" Value="0" />
  <RemoveMSI />
  <AppSettings>
- <Setup Name="Company" Value="Wells Fargo" />
+ <Setup Name="Company" Value="Recast Software" />
  <User Key="software\microsoft\office\16.0\excel\options" Name="defaultformat" Value="51" Type="REG_DWORD" App="excel16" Id="L_SaveExcelfilesas" />
  <User Key="software\microsoft\office\16.0\powerpoint\options" Name="defaultformat" Value="27" Type="REG_DWORD" App="ppt16" Id="L_SavePowerPointfilesas" />
  <User Key="software\microsoft\office\16.0\word\options" Name="defaultformat" Value="" Type="REG_SZ" App="word16" Id="L_SaveWordfilesas" />

@@ -428,7 +428,7 @@ if ( -not ( Get-AppSettings -Name 'Exempt' | Where-Object { $_ -eq 'True' } ) ) 
         if ( -not $CIRemediate ) {break}
 
         $FreeSize = Get-VolumeEx c | foreach-object { $_.SizeRemaining }
-        $CCMCacheSize = get-childitem c:\windows\ccmcache -recurse -exclude skpswi.dat | measure-object -sum length | foreach-object { $_.Sum }
+        $CCMCacheSize = get-childitem $CCMCacheLocation -recurse -exclude skpswi.dat | measure-object -sum length | foreach-object { $_.Sum }
         CMTraceLog -Message  "CacheSize: $($CCMCacheSize/1GB) GB  FreeSize: $($FreeSIze/1GB) GB"-Type 1 -LogFile $LogFile
 
         if ( $Count -gt 200 ) 
@@ -447,8 +447,8 @@ if ( -not ( Get-AppSettings -Name 'Exempt' | Where-Object { $_ -eq 'True' } ) ) 
     write-verbose "Write Summary to Registry"
 
     Set-AppSettings -Name 'CCMTotalSize' -Value $CCMTotalSize
-    Set-AppSettings -Name 'CCMCacheSize'  -Value (get-childitem c:\windows\ccmcache -recurse -exclude skpswi.dat | measure-object -sum length | foreach-object { $_.Sum })
-    Set-AppSettings -Name 'CCMCacheItems' -Value (get-childitem c:\windows\ccmcache | Where-Object {  $_.PSISContainer } | measure-object | foreach-object { $_.Count })
+    Set-AppSettings -Name 'CCMCacheSize'  -Value (get-childitem $CCMCacheLocation -recurse -exclude skpswi.dat | measure-object -sum length | foreach-object { $_.Sum })
+    Set-AppSettings -Name 'CCMCacheItems' -Value (get-childitem $CCMCacheLocation | Where-Object {  $_.PSISContainer } | measure-object | foreach-object { $_.Count })
 
 }
 
