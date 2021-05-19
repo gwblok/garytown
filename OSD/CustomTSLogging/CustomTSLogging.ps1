@@ -2,6 +2,7 @@
 Used for Logging during the Task Sequence - Run PowerShell Step
 
 Function Stolen from: https://www.ephingadmin.com/powershell-cmtrace-log-function/
+Could this be cleaner, I'm sure... does it work, yes.
 
 -Message 'Running Software Updates' -Type 1 -Component 'Software Updates' -logfile %_SMSTSLogPath%\%LogFileName%
 -Message 'Failed Installing M365' -Type 3 -Component 'App Installations' -logfile 'C:\Windows\Temp\TSApps.log'
