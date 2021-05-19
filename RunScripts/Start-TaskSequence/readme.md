@@ -18,7 +18,7 @@ There is a switch in the script that checks the execution history for the task s
 
 ## CODE
 
-This is the heart of the code that triggers the task sequence, which makes up a small part of the larger script, but I've had requests for just the basics.
+This is the heart of the code that triggers the task sequence, which makes up a small part of the larger script, but I've had requests for just the basics. Thanks to Client Center for surfacing code when running commands, making it easy to grab useful code.
 
 ```PowerShell
 $TSPackageID = 'PS2007C7'  #This is your TS Package ID for the TS you want to Trigger
