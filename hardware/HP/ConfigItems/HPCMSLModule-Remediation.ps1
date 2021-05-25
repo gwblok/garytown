@@ -1,4 +1,5 @@
 #2020.04.20 - @gwblok - GARYTOWN.COM
+#Update 21.05.24 - added "-SkipPublisherCheck" due to certificate change on HP side.
 #Remediation Script
 $ModuleName = "HPCMSL"
 $LogFile = "$($env:Temp)\HP_Configuration Items.log"
@@ -46,7 +47,7 @@ if ($Status.Version -lt $RequiredVersion)
     if ($Status){Uninstall-Module $ModuleName -AllVersions -Force}
     Write-Output "Installing $ModuleName to Latest Version $RequiredVersion"
     CMTraceLog -Message "Installing $ModuleName to Latest Version $RequiredVersion" -Type 1 -LogFile $LogFile
-    Install-Module -Name $ModuleName -Force -AllowClobber -AcceptLicense
+    Install-Module -Name $ModuleName -Force -AllowClobber -AcceptLicense -SkipPublisherCheck
     
     #Confirm
     $InstalledVersion = [Version](Get-InstalledModule -Name $ModuleName -ErrorAction SilentlyContinue).Version
