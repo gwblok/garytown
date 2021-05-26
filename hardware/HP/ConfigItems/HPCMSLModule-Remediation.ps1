@@ -44,7 +44,15 @@ $status = $null
 $Status = Get-InstalledModule -Name $ModuleName -ErrorAction SilentlyContinue
 if ($Status.Version -lt $RequiredVersion)
     {
-    if ($Status){Uninstall-Module $ModuleName -AllVersions -Force}
+    if ($Status)
+        {
+        CMTraceLog -Message "Removing old Version $Status" -Type 1 -LogFile $LogFile
+        Uninstall-Module $ModuleName -AllVersions -Force
+        }
+    else
+        {
+        CMTraceLog -Message "$ModuleName was not detected" -Type 1 -LogFile $LogFile
+        }
     Write-Output "Installing $ModuleName to Latest Version $RequiredVersion"
     CMTraceLog -Message "Installing $ModuleName to Latest Version $RequiredVersion" -Type 1 -LogFile $LogFile
     Install-Module -Name $ModuleName -Force -AllowClobber -AcceptLicense -SkipPublisherCheck
@@ -59,7 +67,7 @@ if ($Status.Version -lt $RequiredVersion)
         CMTraceLog -Message "Failed to Upgrade Module $ModuleName to $RequiredVersion" -Type 3 -LogFile $LogFile
         CMTraceLog -Message "Currently on Version $InstalledVersion" -Type 3 -LogFile $LogFile
         }
-    elseif ($InstalledVersion -ne $RequiredVersion)
+    elseif ($InstalledVersion -eq $RequiredVersion)
         {
         Write-Output "Successfully Upgraded Module $ModuleName to $RequiredVersion"
         CMTraceLog -Message "Successfully Upgraded Module $ModuleName to $RequiredVersion" -Type 1 -LogFile $LogFile
