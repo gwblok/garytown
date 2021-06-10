@@ -7,10 +7,15 @@ Checks if it has HPCMSL installed via EXE installer, or via PowerShell Gallery.
 If via EXE, then it downloads the EXE installer from HP and installs
 If via Gallery, then runs "Install-Module" to update it
 
-
 Can be used for both Discovery & Remediation, change $Remediation to $true to remediate.
 
-Created 2021.06.09 - Posted on GitHub - No testing has been done yet. :-)  
+TO DO: Add Logging leveraging CMTraceLog Function.
+
+Created 2021.06.09 - Posted on GitHub - No testing has been done yet. :-) 
+Changes
+2021.06.10 - Updated Function that gets info from HP Website and merged it into 1
+2021.06.10 - Added logic to "exit 1" if running in discovery mode & non-compliant to trigger remediation
+2021.06.10 - Added URL that is bad, but it's nice as it grabs old version of the EXE (1.5.0) you can use to test updating 
 #>
 
 $Remediation = $false
@@ -19,8 +24,9 @@ $Remediation = $false
 $InstalledHPCMSLModuleVer = $null
 $InstalledHPCMSLInstallerVer  = $null
 $InstallHPCMSLInstaller = $null
+#$URL = https://ftp.hp.com/pub/caps-softpaq/cmit/release/cmsl/hp-cmsl-latest.exe # as of 2021.06.10 - This is a BAD link, grabs old version.
 
-function Get-HPCMSLVer {
+function Get-HPCMSLWebInfo {
 # HTML Scraping... this could break if HP changes their page layout.
 Set-Location C:\
  
@@ -36,37 +42,20 @@ $myarray = gc $filepath |
     # search for the CMSL tag and the next item is the version number
 for ($i = 0 ; $i -lt $myarray.Count; $i++ ) {
     if ( $myarray[$i] -match 'script library' ) { 
-        $CMSLversion = $myarray[$i+1] ; $CMSLURL = $myarray[$i+3] ; break 
-        }
-}
-$CMSLversion 
-
-}
-
-function Get-HPCMSLURL {
-# HTML Scraping... this could break if HP changes their page layout.
-Set-Location C:\
- 
-# Download html content file
-$filepath = 'Downloads.html'
- 
-#https://www8.hp.com/us/en/ads/clientmanagement/download.html
-Invoke-WebRequest -Uri https://www8.hp.com/us/en/ads/clientmanagement/download.html -OutFile $filepath
- 
-# find all <td> tags and put into an array
-$myarray = gc $filepath | 
-    % { [regex]::matches( $_ , '(?<=<td>)(.*?)(?=</td>)' ) } | select -expa value
-    # search for the CMSL tag and the next item is the version number
-for ($i = 0 ; $i -lt $myarray.Count; $i++ ) {
-    if ( $myarray[$i] -match 'script library' ) { 
+        $CMSLversion = $myarray[$i+1] ; $CMSLURL = $myarray[$i+3]
         $CMSLURL = ($myarray[$i+3]).Split("`"")[1]
-        
         break 
         }
 }
-$CMSLURL
+
+$CMSLInfo = New-Object -TypeName PSObject
+$Info = [ordered]@{Version="$CMSLversion";URL="$CMSLURL"}
+$CMSLInfo | Add-Member -NotePropertyMembers $Info
+
+$CMSLInfo
 
 }
+
 
 #Check for HP PS Module
 Import-Module -Name "HPCMSL" -ErrorAction SilentlyContinue
@@ -95,7 +84,7 @@ Foreach ($InstalledSoftware in $InstalledSoftwareRegistry)
     }
 
 
-$CurrentHPVer = Get-HPCMSLVer
+$CurrentHPVer = (Get-HPCMSLWebInfo).Version
 #IF Module installed via Installer, Update Via Installer
 if ($InstalledHPCMSLInstallerVer -and $InstalledHPCMSLModuleVer)
     {
@@ -139,14 +128,18 @@ if ($Remediation -eq $true)
         $WorkingDir = "$env:TEMP\HP"
         if (Test-Path -Path $WorkingDir){Remove-Item -Path $WorkingDir -Recurse -Force}
         $Null = New-Item -Path $WorkingDir -ItemType Directory -Force
-        $DownloadURL = Get-HPCMSLURL
+        $DownloadURL = (Get-HPCMSLWebInfo).URL
         $FileName = $DownloadURL.Split("/") | Select-Object -Last 1
         $Download = Invoke-WebRequest -Uri $DownloadURL -UseBasicParsing -OutFile "$WorkingDir\$Filename" -PassThru
         if (Test-Path -Path "$WorkingDir\$Filename"){
-            #$InstallProcess = Start-Process -FilePath "$WorkingDir\$Filename" -ArgumentList "/VERYSILENT /LOG" -Wait -PassThru
+            $InstallProcess = Start-Process -FilePath "$WorkingDir\$Filename" -ArgumentList "/VERYSILENT /LOG" -Wait -PassThru
             }
         else {
             Write-Output "Failed to download."
             }
         }
+    }
+else
+    {
+    if (!($InstallHPCMSLInstaller)){exit 1} #NonCompliant on Detection Script
     }
