@@ -7,19 +7,36 @@ Everything else is testing ideas, changing policies, setting reboots, etc.
 
 Change Log
 2020.05.29 - Initial Release of CM App Deployment Testing Script
+2021.06.09 - Set Exit code as a Parameter
+2021.06.09 - Set Logfile location as Parameter, defaults to %temp% if not specified.
+2021.06.09 - Added Function Restart-ComputerCMClient which will trigger the CM Client to restart the machine based on the Client Settings Polic
+
+Examples:
+Install Command: powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\FakeApp.ps1 -Method Install -ExitCode 0
+Install Command: powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\FakeApp.ps1 -Method Install -ExitCode 3010
+Uninstall Command: powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\FakeApp.ps1 -Method Uninstall
+
+
+Update the $CustomRegistryKeyName variable to match your needs.
+
+App Detection Method:
+Registry: HKLM\SOFTWARE\%CUSTOM% | Property: FakeApp | Value: True  #(Replace %CUSTOM% with what you set $CustomRegistryKeyName to)
 
 #>
 
 [CmdletBinding()] 
 param (
 
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Install", "Uninstall")][string]$Method
- 
+        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("Install", "Uninstall")][string]$Method,
+        [Parameter(Mandatory=$false)][int]$ExitCode,
+        [Parameter(Mandatory=$false)][int]$LogFile
     ) 
 
+$CustomRegistryKeyName = "Recast_IT" #Update this, then update your detection method to match
 $InstallAssignmentName = "FakeApp" #Used for finding the User Deployment Application Install Policy 
-$RegistryPath = "HKLM:\SOFTWARE\SWD"
-$LogFile = "C:\Windows\Temp\FakeApp_Install.log"
+$RegistryPath = "HKLM:\SOFTWARE\$CustomRegistryKeyName"
+if (!($LogFile)){$LogFile = "C:\Windows\Temp\FakeApp_Install.log"}
+if (!(Test-Path -Path $RegistryPath)){new-item -Path $RegistryPath -ItemType Directory -Force}
 
 #CMTraceLog Function formats logging in CMTrace style
 function CMTraceLog {
@@ -90,118 +107,18 @@ function TriggerRebootProgram
     else {CMTraceLog -Message  "Did not find Package / Program named: Restart Computer - Exit Force Restart" -Type 3 -LogFile $LogFile}
     }
 
-#Not used, but here for reference
-Function SetDeadline {
-#Enable the User Deployment Policy in Software Center 
-$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -notin ("DefaultMachine", "DefaultUser")}
-$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "_Default"}
-$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "S_1_1_0"}
-#$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -eq "S_1_5_21_1960408961_287218729_839522115_29201717"} 
-#$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -match "S_1_5_21_1123561945_1708537768_1801674531_6347474"}
-$Deadline = "20190528024500.000000+***"
-foreach ($Policy in $CMUserPolicyItems)
-    {
-    $Policy.Name
-    $namespace = "ROOT\ccm\Policy\$($Policy.name)\ActualConfig"
-    $classname = "CCM_ApplicationCIAssignment"
-    #Get-CimInstance -Namespace
-    $CIMClass = Get-CimClass -ClassName $classname -Namespace $namespace -ErrorAction SilentlyContinue
-    
-    
-    if ($CIMClass){$Assignments = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName} -ErrorAction SilentlyContinue}
-
-    if ($Assignments) 
-        {
-        foreach ($Assignment in $Assignments)
-            {
-            #Write-Output "Assignement Found!!"
-            $Assignment.AssignmentName
-            CMTraceLog -Message  "** Found Assignment $($Assignment.AssignmentName) ** " -Type 1 -LogFile $LogFile
-            CMTraceLog -Message  "** Current Policy: $($Policy.Name) ** " -Type 1 -LogFile $LogFile
-            CMTraceLog -Message  "* Modifing WMI for Deployment *" -Type 1 -LogFile $LogFile
-            #CMTraceLog -Message  " Changing UserUIExperience to TRUE" -Type 1 -LogFile $LogFile
-            CMTraceLog -Message  " Changing EnforcementDeadline to $deadline" -Type 1 -LogFile $LogFile
-            $AppDeployment = Get-WmiObject -Class $classname -Namespace $namespace | ? {$_.AssignmentID -eq $Assignment.AssignmentID}
-            #$AppDeployment.UserUIExperience
-            #$AppDeployment.UserUIExperience = $true
-            #$AppDeployment.EnforcementDeadline
-            if ($AppDeployment.EnforcementDeadline -ne $null)
-                {
-                $DeadlineInfo = $AppDeployment.EnforcementDeadline
-                CMTraceLog -Message  " Deadline for Deployment was $($AppDeployment.EnforcementDeadline)" -Type 1 -LogFile $LogFile
-                }
-            else {CMTraceLog -Message  " Deployment had no previous deadline" -Type 2 -LogFile $LogFile}
-
-            $AppDeployment.EnforcementDeadline = $deadline
-            $AppDeployment.Put()
-            
-            #Confirm
-            $AssignmentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName -and $_.AssignmentID -eq $Assignment.AssignmentID} -ErrorAction SilentlyContinue
-            $AppDeploymentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentID -eq $AssignmentConfirm.AssignmentID}
-            if ($AppDeploymentConfirm.EnforcementDeadline -ne $null)
-                {
-                $DeadlineInfo = $AppDeploymentConfirm.EnforcementDeadline
-                if ($DeadlineInfo -eq $Deadline){CMTraceLog -Message  " Deadline for Deployment is now $($AppDeploymentConfirm.EnforcementDeadline)" -Type 1 -LogFile $LogFile}
-                else{CMTraceLog -Message  " Deadline for Deployment failed to change, still: $($AppDeploymentConfirm.EnforcementDeadline)" -Type 3 -LogFile $LogFile}
-                }
-            else {CMTraceLog -Message  "Deployment Deadline failed to set, no deadline currently set" -Type 3 -LogFile $LogFile}
-            Write-Host "Confirm deadline: $($AppDeployment.EnforcementDeadline)"
-            [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000121}') #App Eval
-            }
-
-        }  
-         
+Function Restart-ComputerCMClient {
+    $time = [DateTimeOffset]::Now.ToUnixTimeSeconds()
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'RebootBy' -Value $time -PropertyType QWord -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'RebootValueInUTC' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'NotifyUI' -Value 1 -PropertyType DWord -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'HardReboot' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'OverrideRebootWindowTime' -Value 0 -PropertyType QWord -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'OverrideRebootWindow' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'PreferredRebootWindowTypes' -Value @("4") -PropertyType MultiString -Force -ea SilentlyContinue
+    New-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\SMS\Mobile Client\Reboot Management\RebootData' -Name 'GraceSeconds' -Value 0 -PropertyType DWord -Force -ea SilentlyContinue
+    $CcmRestart = Start-Process -FilePath c:\windows\ccm\CcmRestart.exe -PassThru -Wait -WindowStyle Hidden
     }
-} 
-
-#Not used, but here for reference
-Function ClearDeadline {
-#Enable the User Deployment Policy in Software Center 
-$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -notin ("DefaultMachine", "DefaultUser")}
-$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "_Default"}
-$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -notmatch "S_1_1_0"}
-#$CMUserPolicyItems = Get-CimInstance -Namespace root/ccm/Policy -ClassName __Namespace | Select-Object -Property Name | Where-Object {$_.Name -eq "S_1_5_21_1960408961_287218729_839522115_29201717"} 
-#$CMUserPolicyItems = $CMUserPolicyItems | Where-Object {$_.Name -match "S_1_5_21_1123561945_1708537768_1801674531_6347474"}
-foreach ($Policy in $CMUserPolicyItems)
-    {
-    #$Policy.Name
-    $namespace = "ROOT\ccm\Policy\$($Policy.name)\ActualConfig"
-    $classname = "CCM_ApplicationCIAssignment"
-    #Get-CimInstance -Namespace
-    $CIMClass = Get-CimClass -ClassName $classname -Namespace $namespace -ErrorAction SilentlyContinue
-    
-
-    if ($CIMClass){$Assignments = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName} -ErrorAction SilentlyContinue}
-
-    if ($Assignments) 
-        {
-        foreach ($Assignment in $Assignments)
-            {
-            #Write-Output "Assignement Found!!"
-            $Assignment.AssignmentName
-            CMTraceLog -Message  "** Found Assignment $($Assignment.AssignmentName) ** " -Type 1 -LogFile $LogFile
-            CMTraceLog -Message  "** Current Policy: $($Policy.Name) ** " -Type 1 -LogFile $LogFile
-            CMTraceLog -Message  "* Modifing WMI for Deployment *" -Type 1 -LogFile $LogFile
-            #CMTraceLog -Message  " Changing UserUIExperience to TRUE" -Type 1 -LogFile $LogFile
-            CMTraceLog -Message  " Changing EnforcementDeadline to NULL" -Type 1 -LogFile $LogFile
-            $AppDeployment = Get-WmiObject -Class $classname -Namespace $namespace | ? {$_.AssignmentID -eq $Assignment.AssignmentID}
-            $AppDeployment.UserUIExperience = $true
-            #$AppDeployment.UserUIExperience
-            #$AppDeployment.EnforcementDeadline
-            $AppDeployment.EnforcementDeadline = $null
-            $AppDeployment.Put()
-            #Confirm
-            $AssignmentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentName -match $InstallAssignmentName -and $_.AssignmentID -eq $Assignment.AssignmentID} -ErrorAction SilentlyContinue
-            #$AppDeploymentConfirm = Get-WmiObject -Class $classname -Namespace $namespace | Where-Object {$_.AssignmentID -eq $AssignmentConfirm.AssignmentID}
-            #if ($AssignmentConfirm.UserUIExperience -eq $true) {CMTraceLog -Message  " Confirmed UserUIExperience now $($AssignmentConfirm.UserUIExperience)" -Type 1 -LogFile $LogFile}
-            #Else {CMTraceLog -Message  " Confirmed UserUIExperience now $($AssignmentConfirm.UserUIExperience)" -Type 3 -LogFile $LogFile}
-            if (!$AssignmentConfirm.EnforcementDeadline){CMTraceLog -Message  " Confirmed EnforcementDeadline is NULL" -Type 1 -LogFile $LogFile}
-            Else {CMTraceLog -Message  " EnforcementDeadline is $($AssignmentConfirm.EnforcementDeadline)" -Type 3 -LogFile $LogFile}
-            [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000121}') #App Eval
-            }
-        } 
-    } 
-}
 
 #Not used, but here for reference
 Function TriggerAppEval
@@ -219,12 +136,14 @@ if ($Method -eq "Install")
     if (!(Test-Path $RegistryPath)){New-Item -Path $RegistryPath}
     #Set the Registry Key, used for Detection
     Set-ItemProperty -Path $RegistryPath -Name "FakeApp" -Value "True" -Force
-    
-    TriggerRebootProgram #Triggers the Package Program that tells CM to Restart Computer
-    
-    #SetDeadline  #No longer used, this Idea did not pan out
-    CMTraceLog -Message "Exit Script with code: 3010" -Type 1 -LogFile $LogFile
-    ExitWithCode -exitcode 3010 #Triggers Restart Dialog and sets the Software Center Status to "Restart"
+    CMTraceLog -Message "Set $RegistryPath Property FakeApp to True" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message "Exit Script with code: $ExitCode" -Type 1 -LogFile $LogFile
+    if ($ExitCode -eq 3010 -or $ExitCode -eq 1641)
+        {
+        #TriggerRebootProgram - Not using anymore
+        Restart-ComputerCMClient
+        }
+    ExitWithCode -exitcode $ExitCode #Triggers Restart Dialog and sets the Software Center Status to "Restart"
     }
 
 
@@ -232,5 +151,7 @@ if ($Method -eq "Uninstall")
     {
     #Switch the Value to False to make the detection think the "App" is not installed.
     Set-ItemProperty -Path $RegistryPath -Name "FakeApp" -Value "False" -Force
+    CMTraceLog -Message "Set $RegistryPath Property FakeApp to False" -Type 1 -LogFile $LogFile
+
     #ClearDeadline #No longer used, this Idea did not pan out
     }
