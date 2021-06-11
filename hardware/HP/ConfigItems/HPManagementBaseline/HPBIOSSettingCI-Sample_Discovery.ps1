@@ -1,4 +1,4 @@
-#Discovery Script
+#Discovery Script - Gary Blok | @gwblok | Recast Software
 $SettingName = "Wake On LAN"
 $DesiredValue = "Boot to Hard Drive"
 
