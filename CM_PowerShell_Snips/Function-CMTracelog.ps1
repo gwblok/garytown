@@ -27,5 +27,5 @@ function CMTraceLog {
 	    if ($Component -eq $null) {$Component = " "}
 	    if ($Type -eq $null) {$Type = 1}
 	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
-	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
+	    $LogMessage.Replace("`0","") | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
