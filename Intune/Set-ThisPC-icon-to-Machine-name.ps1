@@ -5,7 +5,6 @@
     This script takes ownership of the registry value HKEY_CLASSES_ROOT\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}
     It then updates the key name to $env:ComputerName & The LocalizedName as well
 
-    REQUIRES Reboot after running before change takes place
 .INPUTS
     None.
 .OUTPUTS
@@ -30,11 +29,16 @@
 ##*=============================================
 #region VariableDeclaration
 
-$ScriptVersion = "21.3.20.1"
+$ScriptName = "Set-ThisPC-to-name-of-Machine"
+$ScriptVersion = "21.4.9.1"
 $whoami = (whoami).split("\") | Select-Object -Last 1
 $IntuneFolder = "$env:ProgramData\Intune"
 $LogFilePath = "$IntuneFolder\Logs"
-$LogFile = "$LogFilePath\Set-ThisPC-to-name-of-Machine.log"
+$LogFile = "$LogFilePath\$ScriptName.log"
+$Remediate = $false
+if ($Remediate -eq $true){$ComponentText = "Intune - Remediation"}
+else {$ComponentText = "Intune - Detection"}
+
 if (!(Test-Path -Path $LogFilePath)){$NewFolder = New-Item -Path $LogFilePath -ItemType Directory -Force}
 
 
@@ -137,7 +141,7 @@ function CMTraceLog {
 		    $ErrorMessage,
  
 		    [Parameter(Mandatory=$false)]
-		    $Component = "Intune",
+		    $Component = $ComponentText,
  
 		    [Parameter(Mandatory=$false)]
 		    [int]$Type,
@@ -169,73 +173,92 @@ function CMTraceLog {
 #region ScriptBody
 
 CMTraceLog -Message  "---------------------------------" -Type 1 -LogFile $LogFile
-CMTraceLog -Message  "Starting CMTrace Install Script" -Type 1 -LogFile $LogFile
+CMTraceLog -Message  "Starting $ScriptName" -Type 1 -LogFile $LogFile
 CMTraceLog -Message  "Running as $whoami" -Type 1 -LogFile $LogFile
 
-#Take OwnerShip
-CMTraceLog -Message  "Taking OwnerShip of Required Reg Keys" -Type 1 -LogFile $LogFile
 
-enable-privilege SeTakeOwnershipPrivilege 
-$key = [Microsoft.Win32.Registry]::ClassesRoot.OpenSubKey("CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::takeownership)
-# You must get a blank acl for the key b/c you do not currently have access
-$acl = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
-$identity = "BUILTIN\Administrators"
-$me = [System.Security.Principal.NTAccount]$identity
-$acl.SetOwner($me)
-$key.SetAccessControl($acl)
-
-# After you have set owner you need to get the acl with the perms so you can modify it.
-$acl = $key.GetAccessControl()
-$rule = New-Object System.Security.AccessControl.RegistryAccessRule ($identity,"FullControl","Allow")
-$acl.SetAccessRule($rule)
-$key.SetAccessControl($acl)
-
-$key.Close()
-
-
-#Grant Rights to Admin & System
-
-CMTraceLog -Message  "Granting Rights to Local Admins" -Type 1 -LogFile $LogFile
-# Set Adminstrators of Full Control of Registry Item
 $RegistryPath = "Registry::HKEY_CLASSES_ROOT\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
 
-$identity = "BUILTIN\Administrators"
-$RegistrySystemRights = "FullControl"
-$type = "Allow"
-# Create new rule
-$RegistrySystemAccessRuleArgumentList = $identity, $RegistrySystemRights, $type
-$RegistrySystemAccessRule = New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList $RegistrySystemAccessRuleArgumentList
-# Apply new rule
-$NewAcl.SetAccessRule($RegistrySystemAccessRule)
-Set-Acl -Path $RegistryPath -AclObject $NewAcl
+$CurrentValue = Get-ItemPropertyValue -Path $RegistryPath -Name "LocalizedString" -ErrorAction SilentlyContinue
+if ($CurrentValue -match $env:COMPUTERNAME)
+    {
+    CMTraceLog -Message  "Value Already Set Correctly" -Type 1 -LogFile $LogFile
+    }
+else
+    {
+    CMTraceLog -Message  "Value not set, requires Remediation" -Type 1 -LogFile $LogFile
+    $Compliance = $false
+    }
 
-CMTraceLog -Message  "Granting Rights to SYSTEM" -Type 1 -LogFile $LogFile
-# Set SYSTEM to Full Control of Registry Item
-$identity = "NT AUTHORITY\SYSTEM"
-$RegistrySystemRights = "FullControl"
-$type = "Allow"
-# Create new rule
-$RegistrySystemAccessRuleArgumentList = $identity, $RegistrySystemRights, $type
-$RegistrySystemAccessRule = New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList $RegistrySystemAccessRuleArgumentList
-# Apply new rule
-$NewAcl.SetAccessRule($RegistrySystemAccessRule)
-Set-Acl -Path $RegistryPath -AclObject $NewAcl
+if ($Remediate -eq $true -and $Compliance -eq $false)
+    {
+    #Take OwnerShip
+    CMTraceLog -Message  "Taking OwnerShip of Required Reg Keys" -Type 1 -LogFile $LogFile
 
+    enable-privilege SeTakeOwnershipPrivilege 
+    $key = [Microsoft.Win32.Registry]::ClassesRoot.OpenSubKey("CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::takeownership)
+    # You must get a blank acl for the key b/c you do not currently have access
+    $acl = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
+    $identity = "BUILTIN\Administrators"
+    $me = [System.Security.Principal.NTAccount]$identity
+    $acl.SetOwner($me)
+    $key.SetAccessControl($acl)
 
-#Set the Values to actually make this work
-CMTraceLog -Message  "Updating Registry Values in $RegistryPath" -Type 1 -LogFile $LogFile
-Set-Item -Path $RegistryPath -Value $env:COMPUTERNAME -Force
-Set-ItemProperty -Path $RegistryPath -Name "LocalizedString" -Value  $env:COMPUTERNAME -Force
+    # After you have set owner you need to get the acl with the perms so you can modify it.
+    $acl = $key.GetAccessControl()
+    $rule = New-Object System.Security.AccessControl.RegistryAccessRule ($identity,"FullControl","Allow")
+    $acl.SetAccessRule($rule)
+    $key.SetAccessControl($acl)
 
-#Enable the "This PC" Icon to show on Desktop
-CMTraceLog -Message  "Enabling This PC Icon on Desktop" -Type 1 -LogFile $LogFile
-Set-ItemProperty -Path "HKLM:Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" -Value 0 -Force
-
-#Write Out the Value of the Key
-Get-Item -Path $RegistryPath
+    $key.Close()
 
 
-exit $exitcode
+    #Grant Rights to Admin & System
+
+    CMTraceLog -Message  "Granting Rights to Local Admins" -Type 1 -LogFile $LogFile
+    # Set Adminstrators of Full Control of Registry Item
+
+    $identity = "BUILTIN\Administrators"
+    $RegistrySystemRights = "FullControl"
+    $type = "Allow"
+    # Create new rule
+    $RegistrySystemAccessRuleArgumentList = $identity, $RegistrySystemRights, $type
+    $RegistrySystemAccessRule = New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList $RegistrySystemAccessRuleArgumentList
+    # Apply new rule
+    $NewAcl.SetAccessRule($RegistrySystemAccessRule)
+    Set-Acl -Path $RegistryPath -AclObject $NewAcl
+
+    CMTraceLog -Message  "Granting Rights to SYSTEM" -Type 1 -LogFile $LogFile
+    # Set SYSTEM to Full Control of Registry Item
+    $identity = "NT AUTHORITY\SYSTEM"
+    $RegistrySystemRights = "FullControl"
+    $type = "Allow"
+    # Create new rule
+    $RegistrySystemAccessRuleArgumentList = $identity, $RegistrySystemRights, $type
+    $RegistrySystemAccessRule = New-Object -TypeName System.Security.AccessControl.RegistryAccessRule -ArgumentList $RegistrySystemAccessRuleArgumentList
+    # Apply new rule
+    $NewAcl.SetAccessRule($RegistrySystemAccessRule)
+    Set-Acl -Path $RegistryPath -AclObject $NewAcl
+
+
+    #Set the Values to actually make this work
+    CMTraceLog -Message  "Updating Registry Values in $RegistryPath" -Type 1 -LogFile $LogFile
+    Set-Item -Path $RegistryPath -Value $env:COMPUTERNAME -Force
+    Set-ItemProperty -Path $RegistryPath -Name "LocalizedString" -Value  $env:COMPUTERNAME -Force
+
+    #Enable the "This PC" Icon to show on Desktop
+    CMTraceLog -Message  "Enabling This PC Icon on Desktop" -Type 1 -LogFile $LogFile
+    Set-ItemProperty -Path "HKLM:Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" -Value 0 -Force
+
+    #Write Out the Value of the Key
+    Get-Item -Path $RegistryPath
+    }
+else
+    {
+    if ($Compliance -eq $false){exit 1}
+    if ($Compliance -eq $true){exit 0}
+    }
+exit 0
 #endregion
 ##*=============================================
 ##* END SCRIPT BODY
