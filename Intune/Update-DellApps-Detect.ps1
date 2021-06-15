@@ -10,7 +10,7 @@ Use Toast to restart instead of CM (For use with InTune)
 #>
 
 
-$ScriptVersion = "21.4.20.1"
+$ScriptVersion = "21.6.14.1"
 $whoami = $env:USERNAME
 $IntuneFolder = "$env:ProgramData\Intune"
 $LogFilePath = "$IntuneFolder\Logs"
@@ -280,8 +280,12 @@ if ($Manufacturer -match "Dell")
             $DCUAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq ""}
             $DCUAppsAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "APAC"}
             $AppNames = $DCUAppsAvailable.name.display.'#cdata-section' | Select-Object -Unique
-            $AppDCU = $DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64"} | Sort-Object -Property vendorVersion | Select-Object -Last 1
-            $AppDCM = $DCUAppsAvailable | Where-Object {$_.path -match 'Command-Monitor' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64"} | Sort-Object -Property vendorVersion | Select-Object -Last 1
+            #This is using the x86 Windows version, not the UWP app.  You can change this if you like
+            $AppDCUVersion = ([Version[]]$Version = ($DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.Description.Display.'#cdata-section' -notmatch "UWP"}).vendorVersion) | Sort-Object | Select-Object -Last 1
+            $AppDCU = $DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.Description.Display.'#cdata-section' -notmatch "UWP" -and $_.vendorVersion -eq $AppDCUVersion}
+            $AppDCMVersion = ([Version[]]$Version = ($DCUAppsAvailable | Where-Object {$_.path -match 'Command-Monitor' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64"} | Select-Object -Property vendorVersion).vendorVersion) | Sort-Object | Select-Object -last 1
+            $AppDCM = $DCUAppsAvailable | Where-Object {$_.path -match 'Command-Monitor' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.vendorVersion -eq $AppDCMVersion }
+            
             $DCUDRIVERSAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "DRVR"}
             $DCUFIRMWAREAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "FRMW"}
 
@@ -434,7 +438,7 @@ if ($Manufacturer -match "Dell")
                 else
                     {
                     #Needs Remediation
-                    $DellItem.Name.Display.'#cdata-section'
+                    #$DellItem.Name.Display.'#cdata-section'
                     CMTraceLog -Message  "New Update available for $($DellItem.Name.Display.'#cdata-section'): Installed = $CurrentVersion | DCU = $DCUVersion | Remediation Required" -Type 1 -LogFile $LogFile
                     $Compliance = $false
                     }
@@ -443,7 +447,7 @@ if ($Manufacturer -match "Dell")
             else
                 {
                 #Compliant
-                Write-Host " Update in DCU for $($DellItem.Name.Display.'#cdata-section') XML same as Installed Version: $CurrentVersion" -ForegroundColor Yellow
+                #Write-Host " Update in DCU for $($DellItem.Name.Display.'#cdata-section') XML same as Installed Version: $CurrentVersion" -ForegroundColor Yellow
                 CMTraceLog -Message  " Update in DCU XML for $($DellItem.Name.Display.'#cdata-section') same as Installed Version: $CurrentVersion" -Type 1 -LogFile $LogFile
                 }
             }
