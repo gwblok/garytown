@@ -2,7 +2,7 @@
 #If you know the specific names of apps, I recommend you replace Get-CMApplication | Where-Object ... with Get-CMApplication -Name, otherwise it can take awhile to dig through your apps.
 
 
-#Simple - Now write out:
+#Simple - No write out:
 
 ########################################################################################################################
 #Finds all Apps with "Microsoft Office 365" in the name, and removes all of the revision history (besides the latest)
