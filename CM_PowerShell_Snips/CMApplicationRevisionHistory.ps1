@@ -1,3 +1,9 @@
+#Snips to cleanup App Revision History, Works nice with a scheduled task... 
+#If you know the specific names of apps, I recommend you replace Get-CMApplication | Where-Object ... with Get-CMApplication -Name, otherwise it can take awhile to dig through your apps.
+
+
+#Simple - Now write out:
+
 ########################################################################################################################
 #Finds all Apps with "Microsoft Office 365" in the name, and removes all of the revision history (besides the latest)
 $OfficeApps = Get-CMApplication | Where-Object {$_.LocalizedDisplayName -match "Microsoft Office 365"}
@@ -9,6 +15,7 @@ foreach ($OfficeApp in $OfficeApps)
     
 
 
+#Slightly more Complicated, just adds some Write-host if you're watching the process.
 ########################################################################################################################
 #Finds all Apps with "Edge" in the name, and removes all of the revision history (besides the latest)
 $Apps = Get-CMApplication | Where-Object {$_.LocalizedDisplayName -match "Edge"}
