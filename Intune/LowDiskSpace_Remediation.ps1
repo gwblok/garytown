@@ -1018,7 +1018,7 @@ CMTraceLog -Message "Connecting to Jira to create task" -Component "Disk Managem
 
     $Description = "Machine $env:COMPUTERNAME
     Current Free Disk Space: $([MATH]::Round(((Get-Freespace)/1GB),2))
-    Required: $MinFreeSpace
+    Required: $($MinFreeSpace / 1GB)
     Machine has attempted Proactive Remediation and still has low disk space, see attached logs for additional details
     "
     $Summary = "Low Disk Space: Machine $env:COMPUTERNAME"
