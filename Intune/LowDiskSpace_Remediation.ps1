@@ -1,13 +1,11 @@
+  
 <#GARYTOWN.COM @GWBLOK
 Low Disk Space Remediation Script & JIRA Task Creation
-
 This script will try several different disk cleanup items and checking in between section before continuing.
 You can add more cleanup items in if you like by replicating and modifying an  "if ((Get-FreeSpace) -lt $MinFreeSpace)" Section
 At the end, if it still doesn't have enough free space, it create a report of the large folders based on the diskhog script
 It then creates the Jira Task and attaches the logs.
-
 #>
-
 
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 $MinFreeSpace = 25GB #GB
@@ -1018,13 +1016,12 @@ CMTraceLog -Message "Connecting to Jira to create task" -Component "Disk Managem
     Get-JiraProject -Project $JiraProjectID
 
 
-    $JiraProject = "IPR"
     $Summary = "Machine $env:COMPUTERNAME
     Current Free Disk Space: $([MATH]::Round(((Get-Freespace)/1GB),2))
     Required: $MinFreeSpace
     "
     $Description = "Machine has attempted Proactive Remediation and still has low disk space, see attached logs for additional details"
-    $JiraIssue = New-JiraIssue -Project $JiraProject -IssueType "Task" -Summary $Summary -Description $Description
+    $JiraIssue = New-JiraIssue -Project $JiraProjectID -IssueType "Task" -Summary $Summary -Description $Description
     $Comment = $Results | Out-String
     Add-JiraIssueComment -Comment $Comment -Issue $JiraIssue.Key
     $Logs = Get-ChildItem -Path (Split-Path -Path $ScriptLogPath)
