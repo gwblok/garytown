@@ -15,11 +15,11 @@ $DiskHogLog = "$env:ProgramData\Intune\DiskManagement\DiskHog.XML"
 
 #Connection Creds to JIRA Cloud
 #https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
-$JiraName = "JIRAEmailAccount@emaildomain.com"
-$JiraToken = 'lkjasdlfha928239hedhs' | ConvertTo-SecureString -Force -AsPlainText 
+$JiraName = "jira@garytown.com"
+$JiraToken = 'kdjlkj2423jlk2j32lk3j' | ConvertTo-SecureString -Force -AsPlainText 
 if (!($Credential)){$Credential = New-Object System.Management.Automation.PsCredential("$JiraName",$JiraToken)}
-$JiraConfigServer = "https://YourJiraInstance.atlassian.net"
-$JiraProjectID = 'JiraProjectCode'
+$JiraConfigServer = "https://garytown.atlassian.net"
+$JiraProjectID = 'IPR'
 
 <#Functions 
 
@@ -1013,14 +1013,15 @@ CMTraceLog -Message "Connecting to Jira to create task" -Component "Disk Managem
         }
     Set-JiraConfigServer -Server $JiraConfigServer
     New-JiraSession -Credential $Credential
-    Get-JiraProject -Project $JiraProjectID
+    #Get-JiraProject -Project $JiraProjectID #Test to confirm Project is there.
 
 
-    $Summary = "Machine $env:COMPUTERNAME
+    $Description = "Machine $env:COMPUTERNAME
     Current Free Disk Space: $([MATH]::Round(((Get-Freespace)/1GB),2))
     Required: $MinFreeSpace
+    Machine has attempted Proactive Remediation and still has low disk space, see attached logs for additional details
     "
-    $Description = "Machine has attempted Proactive Remediation and still has low disk space, see attached logs for additional details"
+    $Summary = "Low Disk Space: Machine $env:COMPUTERNAME"
     $JiraIssue = New-JiraIssue -Project $JiraProjectID -IssueType "Task" -Summary $Summary -Description $Description
     $Comment = $Results | Out-String
     Add-JiraIssueComment -Comment $Comment -Issue $JiraIssue.Key
@@ -1030,9 +1031,8 @@ CMTraceLog -Message "Connecting to Jira to create task" -Component "Disk Managem
         Add-JiraIssueAttachment -Issue $JiraIssue.Key -FilePath $log.FullName
         }
     if ($JiraIssue){CMTraceLog -Message "Created Jira Task $($JiraIssue.Key)" -Component "Disk Management" -LogFile $ScriptLogPath}
-    else {CMTraceLog -Message "Failed to create Jira Task" -Component "Disk Management" -LogFile $ScriptLogPath
+    else {CMTraceLog -Message "Failed to create Jira Task" -Component "Disk Management" -LogFile $ScriptLogPath}
     }
-
 if ((Get-FreeSpace) -lt $MinFreeSpace){
     CMTraceLog -Message "Completed Disk Cleanup Remediation Script and machine Non-Compliant" -Type 2 -Component "Disk Management" -LogFile $ScriptLogPath
     exit 1
