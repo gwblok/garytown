@@ -15,11 +15,11 @@ $DiskHogLog = "$env:ProgramData\Intune\DiskManagement\DiskHog.XML"
 
 #Connection Creds to JIRA Cloud
 #https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
-$JiraName = "jira@garytown.com"
-$JiraToken = 'kdjlkj2423jlk2j32lk3j' | ConvertTo-SecureString -Force -AsPlainText 
+$JiraName = "jira@garytown.com" #Not Real Email, Just Example
+$JiraToken = 'kdjlkj2423jlk2j32lk3j' | ConvertTo-SecureString -Force -AsPlainText #Not real Token, just example
 if (!($Credential)){$Credential = New-Object System.Management.Automation.PsCredential("$JiraName",$JiraToken)}
-$JiraConfigServer = "https://garytown.atlassian.net"
-$JiraProjectID = 'IPR'
+$JiraConfigServer = "https://garytown.atlassian.net" #This is real... you'll want to replace with your own
+$JiraProjectID = 'IPR' #Replace with your Project ID in Jira
 
 <#Functions 
 
