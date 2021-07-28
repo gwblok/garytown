@@ -3,6 +3,8 @@ This script will get the VMs on a HyperV host based on critera then shut down th
 
 There is also a script block that can be set to run on the VM while it's still online to clear up space on the VM itself.  This only works if DNS is properly working, which in my lab it isn't, but this worked great at work.
 
+Watch on YouTube: https://www.youtube.com/watch?v=XNrcSqan_bg
+
 21.07.27
 #>
 
