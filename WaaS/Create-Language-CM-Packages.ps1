@@ -68,14 +68,11 @@ $FileTable= @(
 
 $Build = '2004'
 $LangPathSource = "\\SRC\SRC$\LanguageSupport"
-#$PackageNamePreFix = "ACME"
-Set-Location "c:\"
-#$LangSupport = Get-ChildItem -Path $LangPath\$Build | Where-Object {$_.Name -match "-"}
 Set-Location "$($SiteCode):\"
 $DPGroups = (Get-CMDistributionPointGroup).Name #Currently this is setup to Distribute to ALL DP Groups
 foreach ($Lang in $LangsTable) 
     {
-    Write-Host "Startign Process on Language Pack $($Lang.LangCode)" -ForegroundColor Cyan
+    Write-Host "Starting Process on Language Pack $($Lang.LangCode)" -ForegroundColor Cyan
     $LangPackagePath = "$LangPathSource\$Build\Packages\$($Lang.LangCode)"
     if ($TestPackage = Get-CMPackage -Name "$Build Language Pack $($Lang.LangCode)" -Fast)
         {
@@ -114,7 +111,7 @@ foreach ($Lang in $LangsTable)
         }
     else
         {
-        Write-Host " Creating: $PackageNamePreFix $Build Language Pack $($Lang.LangCode)"
+        Write-Host " Creating: $Build Language Pack $($Lang.LangCode)"
         
         #Create Package Content
         $Readme = {Offline Folder is called by the Setup Engine.  These files are used in conjunction with the /InstallLangPacks %LANG01%
@@ -133,7 +130,7 @@ Online Folder is used post upgrade to add additonal CAB files that fail in the o
         Set-Location "$($SiteCode):\"
 
         #Set Package Attributes
-        $NewPackage = New-CMPackage -Name "$PackageNamePreFix $Build Language Pack $($Lang.LangCode)" -Version $Build -Language $Lang.LangCode -Path $LangPackagePath -Description $Lang.KeyboardLocale
+        $NewPackage = New-CMPackage -Name "$Build Language Pack $($Lang.LangCode)" -Version $Build -Language $Lang.LangCode -Path $LangPackagePath -Description $Lang.KeyboardLocale
         Set-CMPackage -InputObject $NewPackage -MifName $Lang.Info_LocName
         Set-CMPackage -InputObject $NewPackage -MIFPublisher $Lang.GEOID
         foreach ($Group in $DPGroups) #Distribute Content
