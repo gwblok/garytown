@@ -196,7 +196,7 @@ if ((Test-Path $FODISO) -and (Test-Path $LangPackISO))
         {
         Write-Host "Starting Language $($Lang.LangCode) | $($Lang.Info_LocName)" -ForegroundColor Magenta
         Set-Location "$($SiteCode):\"
-        if ($TestPackage = Get-CMPackage -Name "$PackageNamePreFix $Build Language Pack $($Lang.LangCode)" -Fast)
+        if ($TestPackage = Get-CMPackage -Name "$Build Language Pack $($Lang.LangCode)" -Fast)
             {
             foreach ($File in $FileTable | Where-Object {$_.Type -eq "FoD"})
                 {
