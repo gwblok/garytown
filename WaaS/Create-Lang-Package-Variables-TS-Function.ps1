@@ -110,7 +110,7 @@ Function Update-TSDynamicVars {
 
 
 
-#Set Dell Driver Package Variables - Prod
+#Set Language Packages Variables
 Write-Host "Starting Update for Language Packs" -ForegroundColor Magenta
 Update-TSDynamicVars -Build $ReleaseID
 Write-Host "--------------------------------------" -ForegroundColor DarkMagenta
