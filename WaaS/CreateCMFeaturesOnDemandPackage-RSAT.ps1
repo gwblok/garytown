@@ -4,7 +4,7 @@
 This script will mount the Features on Demand ISO, copy the RSAT Required Files to your CM Source Share (You update the $PackageSource Variable),
 Then Creates the CM Package and Pre-cache Program (which is needed for dynamic downloads in a TS removing the need to have a direct reference)
 
-Grabbing Cabs from FoD ISO Script adapted from: https://www.moderndeployment.com/quick-start-guide-rsat-windows-10-1903-offline-fod-sccm-mdt-osd/
+Grabbing Cabs from FoD ISO Script adapted from: https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/rsat-on-windows-10-1809-in-disconnected-environments/ba-p/570833
 
 Feature On Demand Info: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/features-on-demand-non-language-fod
 
