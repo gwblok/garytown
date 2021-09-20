@@ -1,3 +1,4 @@
+#https://www.recastsoftware.com/resources/configmgr-docs/task-sequence-basics/task-sequence-com-object/
 #https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/core/clients/client-classes/iprogressui--showmessageex-method
 #https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox#return-value
 
