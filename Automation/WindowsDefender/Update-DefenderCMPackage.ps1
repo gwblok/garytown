@@ -315,14 +315,18 @@ Update-CMDistributionPoint -PackageId $PackageID
 Set-CMPackage -id $PackageID -Version $v2a
 #Set-CMPackage -id $PackageID -MifVersion $v2b
 Set-CMPackage -id $PackageID -Language $v2c
+$PackageInfo = Get-CMPackage -id $PackageID -Fast
 Set-Location "C:"
+
+
 
 Write-CMTraceLog -Message "mpam-fe.exe Updated from $v1a to $v2a " -Type 1
 #Write-CMTraceLog -Message "nis_full.exe Updated from $v1b to $v2b " -Type 1
 Write-CMTraceLog -Message "UpdatePlatform.exe Updated from $v1c to $v2c " -Type 1
-
+Write-CMTraceLog -Message "Updated Package: $($PackageInfo.Name), ID: $PackageID"
 Write-Output "mpam-fe.exe Updated from $v1a to $v2a "
 Write-Output "UpdatePlatform.exe Updated from $v1c to $v2c "
+Write-Output "Updated Package: $($PackageInfo.Name), ID: $PackageID"
 
 # Send MailTO ####################################################################
 
