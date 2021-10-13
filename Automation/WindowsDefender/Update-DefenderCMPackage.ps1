@@ -12,14 +12,22 @@ Updated 2018-04-09 (1.2): Author added intermidiate download folder, existing de
 
 Acknowledgement: Andre Picker - https://gallery.technet.microsoft.com/scriptcenter/SCEP-Definition-Updates-to-fde57ebf
 
+Modified by Gary Blok, Recast Software
+Updated 2021.04.21
+ - Modified to use native CM Commandlets
+ - Added Cmtrace Log function and logging
+ - Removed x86 Support
+ - Changed $Destination to be populated by getting the package source location of $PackageID
+
+ Updated 2021.10.12
+ - Added Defender Platform Updates (Thanks to MS just recently making a static URL to download them.)
+ 
 
  $Destination = Package Share Destination folder 'Root folder'
 
  |- Root folder
     |- x86
     |- x64
-
-
 
  Remember to update:
  The Location in the Write-CMTraceLog Function
@@ -29,19 +37,6 @@ Acknowledgement: Andre Picker - https://gallery.technet.microsoft.com/scriptcent
  $MailTo = List of Mail reciepients for notification
  $SentFrom = Mail Address of Sender, typícally Administrator
  $SmtpServer = FQDN of Smtp server
-
-
-
-Modified by Gary Blok, Recast Software
-Updated 2021.04.21
- - Modified to use native CM Commandlets
- - Added Cmtrace Log function and logging
- - Removed x86 Support
- - Changed $Destination to be populated by getting the package source location of $PackageID
-
- Updated 2021.10.12
- - Added Defender Platform Updates
-
 
 ##################################################################################>
 
