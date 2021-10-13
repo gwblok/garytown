@@ -1,4 +1,5 @@
 
+
 <#################################################################################
 
 Script name: WindowsDefenderDefs_PackageUpdater.ps1
@@ -18,7 +19,12 @@ Acknowledgement: Andre Picker - https://gallery.technet.microsoft.com/scriptcent
     |- x86
     |- x64
 
+
+
+ Remember to update:
+ The Location in the Write-CMTraceLog Function
  $PackageID = PackageID for downloaded definition files (Root folder)
+ $ProxyServer info
  
  $MailTo = List of Mail reciepients for notification
  $SentFrom = Mail Address of Sender, typícally Administrator
@@ -75,8 +81,8 @@ Function Write-CMTraceLog {
 # Configuration ##################################################################
 
 #$Destination = "D:\PkgSource\Defender Definitions" #This will be grabbed from the Package Source Info
-$ScriptVer = "2021.04.05.1"
-$PackageID = "PS2006F5"
+$ScriptVer = "2021.10.12.1"
+$PackageID = "PS2009DC"
 $MailTo = ""
 $SentFrom = ""
 $SmtpServer = ""
@@ -86,9 +92,6 @@ $SmtpServer = ""
 # Site configuration
 $SiteCode = "PS2" # Site code 
 $ProviderMachineName = "cm.corp.viamonstra.com" # SMS Provider machine name
-
-
-
 
 # Source Addresses - Defender for Windows 10, 8.1 ################################
 
@@ -100,7 +103,6 @@ $sourceNISx64 = "http://go.microsoft.com/fwlink/?LinkID=187316&arch=x64&nri=true
 $sourcePlatformx64 = "https://go.microsoft.com/fwlink/?LinkID=870379&clcid=0x409&arch=x64"
 
 # Web client #####################################################################
-
 
 
 Write-CMTraceLog -Message "=====================================================" -Type 1
@@ -189,10 +191,15 @@ Write-CMTraceLog -Message " Source Path:  $($DefenderCMPackage.PkgSourcePath)" -
 Write-CMTraceLog -Message " Source Version:  $($DefenderCMPackage.SourceVersion) (Before we update it below)" -Type 1
 Write-CMTraceLog -Message " Source Last Refresh:  $($DefenderCMPackage.LastRefreshTime)" -Type 1
 
+$ProxyServer = 'http://proxy.recastsoftware.com:8080'
+$TestProxy = Test-NetConnection -ComputerName $ProxyServer -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 $wc = New-Object System.Net.WebClient
-$wc.Proxy = [System.Net.WebRequest]::DefaultWebProxy = new-object system.net.webproxy('http://proxy.recastsoftware.com:8080')
-$wc.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+
+if ($TestProxy.PingSucceeded -eq $true){
+    $wc.Proxy = [System.Net.WebRequest]::DefaultWebProxy = new-object system.net.webproxy($ProxyServer)
+    $wc.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    }
 
 
 # Create MailTable
