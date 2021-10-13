@@ -21,6 +21,7 @@ Updated 2021.04.21
 
  Updated 2021.10.12
  - Added Defender Platform Updates (Thanks to MS just recently making a static URL to download them.)
+ - Disabled NIS Download, which hasn't updated in forever anyway, and I'm pretty sure the MPAM defs cover the NIS stuff too.
  
 
  $Destination = Package Share Destination folder 'Root folder'
@@ -104,6 +105,7 @@ Write-CMTraceLog -Message "=====================================================
 Write-CMTraceLog -Message "UPDATE Defender Package Script version $ScriptVer..." -Type 1
 Write-CMTraceLog -Message "=====================================================" -Type 1
 Write-CMTraceLog -Message "Running Script as $env:USERNAME" -Type 1
+Write-Output "UPDATE Defender Package Script version $ScriptVer..."
 try {
 # Import the ConfigurationManager.psd1 module 
 if((Get-Module ConfigurationManager) -eq $null) {
@@ -192,6 +194,7 @@ $TestProxy = Test-NetConnection -ComputerName $ProxyServer -ErrorAction Silently
 $wc = New-Object System.Net.WebClient
 
 if ($TestProxy.PingSucceeded -eq $true){
+    Write-Output "setting proxy to $ProxyServer"
     $wc.Proxy = [System.Net.WebRequest]::DefaultWebProxy = new-object system.net.webproxy($ProxyServer)
     $wc.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
     }
@@ -232,7 +235,7 @@ $Dest = "$Intermediate\x64\" + 'mpam-fe.exe'
 $wc.DownloadFile($sourceAVx64, $Dest)
 
 if(Test-Path -Path $Dest) {
-
+    Write-Output "Starting MPAM-FE Download"
     $FinalDest = "$Destination\x64\" + 'mpam-fe.exe'
 
     if(Test-Path -Path $FinalDest) {
@@ -250,10 +253,11 @@ if(Test-Path -Path $Dest) {
     $table.Rows.Add($row)
 
     Copy-Item -Path $Dest -Destination $FinalDest -Force -EA SilentlyContinue
+    Write-Output "Finished MPAM-FE Download"
 }
 
 # x64 NIS ########################################################################
-
+<#
 $Dest = "$Intermediate\x64\" + 'nis_full.exe'
 $wc.DownloadFile($sourceNISx64, $Dest)
 
@@ -277,14 +281,14 @@ if(Test-Path -Path $Dest) {
 
     Copy-Item -Path $Dest -Destination $FinalDest -Force -EA SilentlyContinue
 }
-
+#>
 # x64 AV #########################################################################
 
 $Dest = "$Intermediate\x64\" + 'UpdatePlatform.exe'
 $wc.DownloadFile($sourcePlatformx64, $Dest)
 
 if(Test-Path -Path $Dest) {
-
+    Write-Output "Starting UpdatePlatform Download"
     $FinalDest = "$Destination\x64\" + 'UpdatePlatform.exe'
 
     if(Test-Path -Path $FinalDest) {
@@ -302,19 +306,24 @@ if(Test-Path -Path $Dest) {
     $table.Rows.Add($row)
 
     Copy-Item -Path $Dest -Destination $FinalDest -Force -EA SilentlyContinue
+    Write-Output "Finished UpdatePlatform Download"
 }
 
 # Update Content on DP ###########################################################
 Set-Location "$($SiteCode):\"
 Update-CMDistributionPoint -PackageId $PackageID
 Set-CMPackage -id $PackageID -Version $v2a
-Set-CMPackage -id $PackageID -Language $v2b
-Set-CMPackage -id $PackageID -MifVersion $v2c
+#Set-CMPackage -id $PackageID -MifVersion $v2b
+Set-CMPackage -id $PackageID -Language $v2c
 Set-Location "C:"
 
 Write-CMTraceLog -Message "mpam-fe.exe Updated from $v1a to $v2a " -Type 1
-Write-CMTraceLog -Message "nis_full.exe Updated from $v1b to $v2b " -Type 1
+#Write-CMTraceLog -Message "nis_full.exe Updated from $v1b to $v2b " -Type 1
 Write-CMTraceLog -Message "UpdatePlatform.exe Updated from $v1c to $v2c " -Type 1
+
+Write-Output "mpam-fe.exe Updated from $v1a to $v2a "
+Write-Output "UpdatePlatform.exe Updated from $v1c to $v2c "
+
 # Send MailTO ####################################################################
 
 if(![string]::IsNullOrEmpty($MailTo) -and ![string]::IsNullOrEmpty($SentFrom)) {
