@@ -1,9 +1,26 @@
 <#
-This script creates two functions, the main one I use is Get-CMLogContent, which relies on the other function.
+This script creates three functions, the main one I use is Get-CMLogContent, which relies on the other function.
+Function: Format-Color from:  https://www.bgreco.net/powershell/format-color/
 Function: ConvertFrom-Logs created by Jeff Scripter
 Function: Get-CMLogContent created by Gary Blok (@gwblok)
 
 #>
+
+Function Format-Color([hashtable] $Colors = @{}, [switch] $SimpleMatch) {
+  $lines = ($input | Out-String) -replace "`r", "" -split "`n"
+  foreach($line in $lines) {
+    $color = ''
+    foreach($pattern in $Colors.Keys){
+      if(!$SimpleMatch -and $line -match $pattern) { $color = $Colors[$pattern] }
+      elseif ($SimpleMatch -and $line -like $pattern) { $color = $Colors[$pattern] }
+    }
+    if($color) {
+      Write-Host -ForegroundColor $color $line -BackgroundColor Black
+    } else {
+      Write-Host $line
+    }
+  }
+}
 
 Function ConvertFrom-Logs {
     [OutputType([PSObject[]])]
@@ -196,7 +213,9 @@ function Get-CMLogContent
   param
     (
     [Parameter( Mandatory = $false )]
-    [int]       $Tail
+    [int]       $Tail,
+    [String] $Highlight1 = 'Gray',
+    [String] $Highlight2 = 'White'
     )
   DynamicParam
       {          
@@ -220,11 +239,20 @@ function Get-CMLogContent
       $File = Get-ChildItem  -Path $configFileFolder -Recurse -Filter "$($PSBoundParameters.FileName)"
       if ($tail){
         $CMLOG = ConvertFrom-Logs -LogPath $File.FullName -Tail $tail
-        $CMLOG | Where-Object {$_.Message -ne $null} | Select-Object -Last $tail | Select-Object -Property time, message
+        $CMLOG | Where-Object {$_.Message -ne $null} | Select-Object -Last $tail | Select-Object -Property time, message | Format-Color @{$Highlight1 = 'Yellow'; $Highlight2 = 'cyan'}
         }
       else{
         $CMLOG = ConvertFrom-Logs -LogPath $File.FullName
-        $CMLOG | Where-Object {$_.Message -ne $null} | Select-Object -Property time, message
+        $CMLOG | Where-Object {$_.Message -ne $null} | Select-Object -Property time, message | Format-Color @{$Highlight1 = 'Yellow'; $Highlight2 = 'cyan'}
         }
       }
   }
+
+## Examples 
+<#
+
+Get-CMLogContent -Tail 50 -FileName WUAHandler.log -Highlight1 'Missing'
+
+Get-CMLogContent -Tail 100 -FileName SMSTS.log -Highlight1 'The Action' -Highlight2 'exit code 0'
+
+#>
