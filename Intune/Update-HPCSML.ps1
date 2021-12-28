@@ -212,7 +212,7 @@ if ($Remediate -eq $true)
     }
 else
     {
-    if (!($InstallHPCMSLInstaller)){$Compliance = $false} #NonCompliant on Detection Script
+    if ($InstallHPCMSLInstaller){$Compliance = $false} #NonCompliant on Detection Script
     }
 
 if ($Compliance -eq $false){exit 1}
