@@ -1,6 +1,7 @@
 #@gwblok @theznerd @recastsoftware
 #Grabs Info from MS Website and makes into PSOBject
 
+Function Get-MSKBData {
 $KB = Invoke-WebRequest -Uri https://support.microsoft.com/en-us/help/5008339
 $KBs = $KB.Links.innerText | Where-Object {$_ -match "KB\d{7,}"}
 
@@ -17,3 +18,7 @@ ForEach ($KBInfo in $KBs)
         }
     }
 }  
+return $KBData
+}
+
+$KBs = Get-MSKBData
