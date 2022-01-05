@@ -79,7 +79,19 @@ CHANGE LOG:
 2020.05.16 - Had issues using the new channel names, added code to set Channel to Broad if SemiAnnual and Targeted if SemiAnnualPreview.
  - I'll have to come back in a month and remove those 6 lines of code. 2 sets of 3 lines, each set starts with: #Temporary until the Channel names are all figured out
 2020.05.18 - Added Broad & Targeted back into the Script
-2020.05.19 - Fixed Typo in Logging
+2020.07.30 - Added SharedComputerLicensing / SCLCacheOverrideDirectoryoptions
+2020.08.05 - Added Support for Access Runtime
+2020.08.07 - Modified Access XML Modification to after all other options, so it adds the "ExcludeApp" property to each Application in the XML.
+2021.02.01 - Adding 2 Parameters to support skipping Publisher and setting SharedComputerLicensing to TRUE
+2021.03.04 - Removing Wave Items per John Forth - They no longer want SCLCacheOverride stuff set, they only want to use SharedComputerLicensing.
+2021.03.05 - Changed AUTOACTIVATE from 1 to 0
+2021.03.05 - Made parameters for AUTOACTIVATE, PinIconsToTaskbar, DeviceBasedLicensing - So they default to 0 or False, and if you use the param, it enables them
+2021.05.17 - Added ability to exclude OneNote | Request from Retail
+2021.05.21 - Added ability to exclude SKYPE | Request from Retail
+2021.11.09 - Fixed Bug with Access 365 Installs, and not having it get wiped out if adding Visio or Project after the fact.
+2021.11.17 - Added ability to exclude Outlook, Bing, PowerPoint, etc | Request from Citrix Team
+2021.12.22 - Added "Update" Switch to run different XML with the intent to only update what is already installed
+2021.12.27 - Added Verbose Logging Switch
 #>
 [CmdletBinding(DefaultParameterSetName="Office Options")] 
 param (
@@ -90,6 +102,19 @@ param (
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioPro,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ProjectStd,
         [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VisioStd,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $AccessRuntime,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ExcludePublisher,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ExcludeOneNote,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ExcludeSkype,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ExcludeOutlook,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ExcludePowerPoint,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $ExcludeBing,        
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $SharedComputerLicensing,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $AUTOACTIVATE,  
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $PinIconsToTaskbar,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $DeviceBasedLicensing,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $Update,
+        [Parameter(Mandatory=$false, ParameterSetName='Office Options')][switch] $VerboseLogging,
         [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][ValidateSet("BetaChannel", "CurrentPreview", "Current", "MonthlyEnterprise", "SemiAnnualPreview", "SemiAnnual", "Broad", "Targeted")][string]$Channel,
         [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()][ValidateSet("en-us", "fr-fr", "zh-cn", "zh-tw", "de-de", "it-it")][string]$Language,
         [Parameter(Mandatory=$false)][switch]$SetLanguageDefault,
@@ -115,7 +140,9 @@ exit $lastexitcode
 $SourceDir = Get-Location
 $O365Cache = "C:\ProgramData\O365_Cache"
 $RegistryPath = "HKLM:\SOFTWARE\SWD\O365" #Sets Registry Location used for Toast Notification
-$ScriptVer = "2020.05.19.1"
+$ScriptVer = "22.01.04.01"
+$ComputerModel = (Get-WmiObject -Class:Win32_ComputerSystem).Model
+$LicenseShare = '\\src\src$\Office365_Shared_license'
 
 #region: CMTraceLog Function formats logging in CMTrace style
         function Write-CMTraceLog {
@@ -168,28 +195,56 @@ Write-CMTraceLog -Message "=====================================================
 Write-CMTraceLog -Message "Starting Script version $ScriptVer..." -Type 1 -Component "o365script"
 Write-CMTraceLog -Message "=====================================================" -Type 1 -Component "o365script"
 
+<# - Disabled 2021.03.04 - Per John Forth
+if ($ComputerModel -match "VMWare")
+    {
+    #Setup TS Environment
+    try
+        {
+        $tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
+        if ($tsenv)
+            {
+            $Wave = $true
+            $CacheOverrideDirectory = $tsenv.Value('M365SCLCacheOverrideDirectory')
+            Write-Output "Running in Task Sequence"
+            Write-CMTraceLog -Message "Running in Task Sequence" -Type 1 -Component "o365script"
+            }
+        }
+    catch
+        {
+	    Write-Verbose "Not running in a task sequence."
+        }
+    }
 
+#>
 
 #Get Currently Installed Office Apps
 If (-not $Precache) {
     Write-CMTraceLog -Message "Running Script in Install Mode" -Type 1 -Component "o365script"
     #$Edge = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Edge%'"
     $2016 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office Professional Plus 2016'"
-    $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%' or ARPDisplayName like 'Microsoft 365 for enterprise%'"
+    $O365 = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Office 365 ProPlus%' or ARPDisplayName like 'Microsoft 365 Apps for enterprise%'"
     $A = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Access 20%'"
     If (-not $ProjectStd) {$PP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Professional%'"}
     If (-not $ProjectPro) {$PS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Project Standard%'"}
     If (-not $VisioStd) {$VP = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Professional%'"}
     If (-not $VisioPro) {$VS = Get-WmiObject -Namespace 'root\cimv2\sms' -Query "SELECT ProductName,ProductVersion FROM SMS_InstalledSoftware where ARPDisplayName like 'Microsoft Visio Standard%'"}
 
+
     #If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
 #If Office 365 is already installed, grab the Channel it is using to apply to the additional installs.
-    if ($O365)
+    if ($O365 -and $Update)
+        {
+        Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "o365script"
+        Write-CMTraceLog -Message "Update Request - Running with Current Content" -Type 1 -Component "o365script"
+        }
+    elseif($O365)
         {
         Write-CMTraceLog -Message "Detected Office 365 Already Installed" -Type 1 -Component "o365script"
         $Configuration = "HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration"
         $CurrentCDNBaseUrlValue = (Get-ItemProperty $Configuration).CDNBaseUrl
         $CurrentUpdateChannelValue = (Get-ItemProperty $Configuration).UpdateChannel
+        $ExcludedApps = (Get-ItemProperty $Configuration).'O365ProPlusRetail.ExcludedApps'
         $CurrentPreview = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
         $Current = "http://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60"
         $MonthlyEnterprise = "http://officecdn.microsoft.com/pr/55336b82-a18d-4dd6-b5f6-9e5095c314a6"
@@ -201,10 +256,19 @@ If (-not $Precache) {
         if ($CurrentCDNBaseUrlValue -eq $SemiAnnualPreview){$CurrentCDNBaseUrlName = "SemiAnnualPreview"}
         if ($CurrentCDNBaseUrlValue -eq $SemiAnnual){$CurrentCDNBaseUrlName = "SemiAnnual"}
 
-        #If adding additional items to Office 365, it will autoatmically use the current channel office 365 is using and ignore the parameter in the install program
-        if (($ProjectStd) -or ($ProjectPro) -or ($VisioStd) -or ($VisioPro) -or ($Access))
+        if ($ExcludedApps -match "Access") #Exclude Access from Installing
             {
-            Write-CMTraceLog -Message "Adding M365 add-on Componet, ignoring Channel Parameter and matching current Channel" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Detected Access 365 Excluded Previously" -Type 1 -Component "o365script"
+            }
+        else # Ensure Access Gets Installed (or stays installed)
+            {
+            Write-CMTraceLog -Message "Detected Access 365 Not Excluded (Is Installed)" -Type 1 -Component "o365script"
+            $Access = $true
+            }
+        #If adding additional items to Office 365, it will autoatmically use the current channel office 365 is using and ignore the parameter in the install program
+        if (($ProjectStd) -or ($ProjectPro) -or ($VisioStd) -or ($VisioPro) -or ($Access) -or ($AccessRuntime))
+            {
+            Write-CMTraceLog -Message "Adding add-on Application, ignoring Channel Parameter and matching current Channel" -Type 1 -Component "o365script"
             Write-CMTraceLog -Message "Using current Office 365 Channel = $CurrentCDNBaseUrlName" -Type 1 -Component "o365script"
             $Channel = $CurrentCDNBaseUrlName
             }
@@ -318,7 +382,7 @@ If ($Precache) {
 #Create XML (Configuration.XML) if Install Mode (Not PreCache Mode)
 If (-not $Precache) {
     [XML]$XML = @"
-<Configuration ID="83d58100-fefb-4cb2-802c-cbbdf19f61f9" Host="cm">
+<Configuration Host="cm">
     <Info Description="Customized Office 365" />
     <Add OfficeClientEdition="64" Channel="SemiAnnual" OfficeMgmtCOM="TRUE" ForceUpgrade="TRUE">
     <Product ID="O365ProPlusRetail">
@@ -329,7 +393,7 @@ If (-not $Precache) {
     </Product>
     </Add>
     <Property Name="SharedComputerLicensing" Value="0" />
-    <Property Name="PinIconsToTaskbar" Value="TRUE" />
+    <Property Name="PinIconsToTaskbar" Value="FALSE" />
     <Property Name="SCLCacheOverride" Value="0" />
     <Property Name="AUTOACTIVATE" Value="1" />
     <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
@@ -346,191 +410,356 @@ If (-not $Precache) {
 "@
 
 
+#Still flushing this "Update" option out.
+if ($Update){
+    [XML]$XML = @"
+<Configuration Host="cm">
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+  <Display Level="Full" AcceptEULA="TRUE" />
+  <Updates Enabled="TRUE" UpdatePath="c:\programdata\o365_cache" Deadline="12/22/2021 20:00" />
+</Configuration>
+"@
+}
+
     #Temporary until the Channel names are all figured out
     if ($Channel -eq "SemiAnnual"){$Channel = "Broad"}
     if ($Channel -eq "SemiAnnualPreview"){$Channel = "Targeted"} 
 
-    #Change Channel
-    $xml.Configuration.Add.SetAttribute("Channel","$Channel")
-    Write-CMTraceLog -Message "Setting Office Channel to $Channel" -Type 1 -Component "o365script"
+    if (!($Update)){
+        #Change Channel
+        $xml.Configuration.Add.SetAttribute("Channel","$Channel")
+        Write-CMTraceLog -Message "Setting Office Channel to $Channel" -Type 1 -Component "o365script"
 
-    $XML.Configuration.AppSettings.Setup.SetAttribute("Value", "$CompanyValue")
-    Write-CMTraceLog -Message "Setting Setup Company name to $CompanyValue" -Type 1 -Component "o365script"
-
-    #Don't Remove Access from XML if Previously Installed or Called from Param
-    if (!($A) -and !($Access))
-        {
-        $newExcludeElement = $xml.CreateElement("ExcludeApp")
-        $newExcludeApp = $xml.Configuration.Add.Product.AppendChild($newExcludeElement)
-        $newExcludeApp.SetAttribute("ID","Access")
-        Write-CMTraceLog -Message "Removing Access from Install XML" -Type 1 -Component "o365script"
-        }
-    else{Write-CMTraceLog -Message "Adding Access To Install XML" -Type 1 -Component "o365script"}
-
-
-    #Add Project Pro to XML if Previously Installed or Called from Param
-    if ($PP -or $ProjectPro)
-        {
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-        $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
-        $newProductApp.SetAttribute("PIDKEY","B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","Groove")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","OneDrive")    
-        Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "o365script"
-        }  
-
-    #Add Visio Pro to XML if Previously Installed or Called from Param
-    if ($VP -or $VisioPro)
-        {
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-        $newProductApp.SetAttribute("ID","VisioPro2019Volume")
-        $newProductApp.SetAttribute("PIDKEY","9BGNQ-K37YR-RQHF2-38RQ3-7VCBB")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","Groove")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","OneDrive")     
-        Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "o365script"
-        }
-    #Add Project Standard to XML if Previously Installed or Called from Param
-    if ($PS -or $ProjectStd)
-        {
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-        $newProductApp.SetAttribute("ID","ProjectStd2019Volume")
-        $newProductApp.SetAttribute("PIDKEY","C4F7P-NCP8C-6CQPT-MQHV9-JXD2M")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","Groove")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","OneDrive")   
-        Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "o365script"
-        }  
-
-    #Add Visio Standard to XML if Previously Installed or Called from Param
-    if ($VS -or $VisioStd)
-        {
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
-        $newProductApp.SetAttribute("ID","VisioStd2019Volume")
-        $newProductApp.SetAttribute("PIDKEY","7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","Groove")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
-        $newXmlNameElement.SetAttribute("ID","OneDrive")   
-        Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "o365script"
-        }
-
-
-    
-    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
-    if ($ProjectStd) #If Choosing to Install Project Standard, Added XML to Remove Project Pro
-        {
-        $XMLRemove=$XML.CreateElement("Remove")
-        $XML.Configuration.appendChild($XMLRemove)
-        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
-        $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
-        #$newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
-        }  
-
-    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
-    if ($VisioStd) #If Choosing to Install Visio Standard, Added XML to Remove Visio Pro
-        {
-        $XMLRemove=$XML.CreateElement("Remove")
-        $XML.Configuration.appendChild($XMLRemove)
-        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
-        $newProductApp.SetAttribute("ID","VisioPro2019Volume")
-        #$newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
-        }
-
-    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
-    if ($ProjectPro) #If Choosing to Install Project Pro, Added XML to Remove Project Standard
-        {
-        $XMLRemove=$XML.CreateElement("Remove")
-        $XML.Configuration.appendChild($XMLRemove)
-        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
-        $newProductApp.SetAttribute("ID","ProjectStd2019Volume")
-        #$newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
-        }  
-
-    #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
-    if ($VisioPro) #If Choosing to Install Visio Pro, Added XML to Remove Visio 
-        {
-        $XMLRemove=$XML.CreateElement("Remove")
-        $XML.Configuration.appendChild($XMLRemove)
-        $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
-        $newProductElement = $xml.CreateElement("Product")
-        $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
-        $newProductApp.SetAttribute("ID","VisioStd2019Volume")
-        #$newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
-        $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
-        $newXmlNameElement.SetAttribute("ID","en-us")  
-        }
-
-    
-    <#add additional languages to download
-    In the install command, if you leave out -Language, it will default to en-us
-    If you pick a different language like fr-fr, it will set that as default, but still include en-us
-    #>
-    if ($Language)
-        {
-        Write-CMTraceLog -Message "Language Param detected, added $Language to XML" -Type 1 -Component "o365script"
-        if ($SetLanguageDefault)#Set Default language to the Language Specified
+        $XML.Configuration.AppSettings.Setup.SetAttribute("Value", "$CompanyValue")
+        Write-CMTraceLog -Message "Setting Setup Company name to $CompanyValue" -Type 1 -Component "o365script"
+        
+        if ($SharedComputerLicensing)
             {
-            Write-CMTraceLog -Message " LanguageDefault Param detected, set $Language to Default" -Type 1 -Component "o365script"
-            $CurrentProductAttributeLang = $xml.Configuration.Add.Product
-            foreach ($currentproduct in $CurrentProductAttributeLang)
-                {
-                $newXmlNameElement = $currentproduct.Language
-                $newXmlNameElement.SetAttribute("ID","$Language")
-                }
-            #Include English in the install if you picked a different language as your default
-            if (!($Language -eq "en-us"))
-                {
-                Write-CMTraceLog -Message " LanguageDefault Param detected, appending en-us to XML" -Type 1 -Component "o365script"
-                $newProductAttributeLang = $xml.Configuration.Add.Product
-                foreach ($newproduct in $newProductAttributeLang)
-                    {
-                    $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
-                    $newXmlNameElement.SetAttribute("ID","en-us")
-                    }
-                 }
+            #Change SharedComputerLicensing to 1
+            ($xml.Configuration.Property | Where-Object {$_.Name -eq "SharedComputerLicensing"}).SetAttribute("Value","1")
             }
-        else #Append Language, leaving English as Default
+    
+        if ($AUTOACTIVATE)
             {
-            Write-CMTraceLog -Message " LanguageDefault Param NOT detected, appending $Language to XML" -Type 1 -Component "o365script"
-            $newProductAttributeLang = $xml.Configuration.Add.Product
-                foreach ($newproduct in $newProductAttributeLang)
+            #Change AUTOACTIVATE to 1
+            ($xml.Configuration.Property | Where-Object {$_.Name -eq "AUTOACTIVATE"}).SetAttribute("Value","1")
+            }
+    
+        if ($PinIconsToTaskbar)
+            {
+            #Change PinIconsToTaskbar to TRUE
+            ($xml.Configuration.Property | Where-Object {$_.Name -eq "PinIconsToTaskbar"}).SetAttribute("Value","TRUE")
+            }
+
+        if ($DeviceBasedLicensing)
+            {
+            #Change DeviceBasedLicensing to 1
+            ($xml.Configuration.Property | Where-Object {$_.Name -eq "DeviceBasedLicensing"}).SetAttribute("Value","1")
+            }
+
+        #Add Project Pro to XML if Previously Installed or Called from Param
+        if ($PP -or $ProjectPro)
+            {
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+            $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
+            $newProductApp.SetAttribute("PIDKEY","B4NPR-3FKK7-T2MBV-FRQ4W-PKD2B")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Groove")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","OneDrive")    
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Teams")  
+            Write-CMTraceLog -Message "Adding Project Pro to Install XML" -Type 1 -Component "o365script"
+            }  
+
+        #Add Visio Pro to XML if Previously Installed or Called from Param
+        if ($VP -or $VisioPro)
+            {
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+            $newProductApp.SetAttribute("ID","VisioPro2019Volume")
+            $newProductApp.SetAttribute("PIDKEY","9BGNQ-K37YR-RQHF2-38RQ3-7VCBB")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Groove")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","OneDrive")     
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Teams")  
+            Write-CMTraceLog -Message "Adding Visio Pro to Install XML" -Type 1 -Component "o365script"
+            }
+        #Add Project Standard to XML if Previously Installed or Called from Param
+        if ($PS -or $ProjectStd)
+            {
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+            $newProductApp.SetAttribute("ID","ProjectStd2019Volume")
+            $newProductApp.SetAttribute("PIDKEY","C4F7P-NCP8C-6CQPT-MQHV9-JXD2M")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")  
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Groove")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","OneDrive")   
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Teams")  
+            Write-CMTraceLog -Message "Adding Project Standard to Install XML" -Type 1 -Component "o365script"
+            }  
+
+        #Add Visio Standard to XML if Previously Installed or Called from Param
+        if ($VS -or $VisioStd)
+            {
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+            $newProductApp.SetAttribute("ID","VisioStd2019Volume")
+            $newProductApp.SetAttribute("PIDKEY","7TQNQ-K3YQQ-3PFH7-CCPPM-X4VQ2")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")  
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Groove")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","OneDrive")   
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Teams")  
+            Write-CMTraceLog -Message "Adding Visio Standard to Install XML" -Type 1 -Component "o365script"
+            }
+
+        #Add Access Runtime if Called from Param - Changed to ALWAYS append this.
+        if ($AccessRuntime)
+            {
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Add.AppendChild($newProductElement)
+            $newProductApp.SetAttribute("ID","AccessRuntimeRetail")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Groove")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","OneDrive")    
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("ExcludeApp"))
+            $newXmlNameElement.SetAttribute("ID","Teams")    
+            Write-CMTraceLog -Message "Adding Access Runtime to Install XML" -Type 1 -Component "o365script"
+            }  
+    
+        #Don't Remove Access from XML if Previously Installed or Called from Param
+        if (!($A) -and !($Access))
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","Access")
+                }
+            Write-CMTraceLog -Message "Removing Access from Install XML" -Type 1 -Component "o365script"
+            }
+        else{Write-CMTraceLog -Message "Adding Access To Install XML" -Type 1 -Component "o365script"}
+
+        #If Exclude OneNote
+        if ($ExcludeOneNote)
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","OneNote")
+                }
+            Write-CMTraceLog -Message "Removing OneNote from Install XML" -Type 1 -Component "o365script"
+            }
+
+        #If Exclude Skype
+        if ($ExcludeSkype)
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","lync")
+                }
+            Write-CMTraceLog -Message "Removing Skype from Install XML" -Type 1 -Component "o365script"
+            }
+        #If Exclude Publisher
+        if ($ExcludePublisher)
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","Publisher")
+                }
+            Write-CMTraceLog -Message "Removing Publisher from Install XML" -Type 1 -Component "o365script"
+            }
+
+         #If Exclude Outlook
+        if ($ExcludeOutlook)
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","Outlook")
+                }
+            Write-CMTraceLog -Message "Removing Outlook from Install XML" -Type 1 -Component "o365script"
+            }
+        #If Exclude PowerPoint
+        if ($ExcludePowerPoint)
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","PowerPoint")
+                }
+            Write-CMTraceLog -Message "Removing PowerPoint from Install XML" -Type 1 -Component "o365script"
+            }
+        #If Exclude Bing
+        if ($ExcludeBing)
+            {
+            $newProductAttributes = $xml.Configuration.Add.Product
+            foreach ($newproduct in $newProductAttributes)
+                {
+                $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("ExcludeApp"))
+                $newXmlNameElement.SetAttribute("ID","Bing")
+                }
+            Write-CMTraceLog -Message "Removing BIng from Install XML" -Type 1 -Component "o365script"
+            }          
+        #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+        if ($ProjectStd) #If Choosing to Install Project Standard, Added XML to Remove Project Pro
+            {
+            $XMLRemove=$XML.CreateElement("Remove")
+            $XML.Configuration.appendChild($XMLRemove)
+            $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+            $newProductApp.SetAttribute("ID","ProjectPro2019Volume")
+            #$newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")  
+            }  
+
+        #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+        if ($VisioStd) #If Choosing to Install Visio Standard, Added XML to Remove Visio Pro
+            {
+            $XMLRemove=$XML.CreateElement("Remove")
+            $XML.Configuration.appendChild($XMLRemove)
+            $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+            $newProductApp.SetAttribute("ID","VisioPro2019Volume")
+            #$newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")  
+            }
+
+        #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+        if ($ProjectPro) #If Choosing to Install Project Pro, Added XML to Remove Project Standard
+            {
+            $XMLRemove=$XML.CreateElement("Remove")
+            $XML.Configuration.appendChild($XMLRemove)
+            $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+            $newProductApp.SetAttribute("ID","ProjectStd2019Volume")
+            #$newProductApp.SetAttribute("PIDKEY","WGT24-HCNMF-FQ7XH-6M8K7-DRTW9")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")  
+            }  
+
+        #Adds Uninstall for other Versions of Visio & Project if triggering Visio / Project
+        if ($VisioPro) #If Choosing to Install Visio Pro, Added XML to Remove Visio 
+            {
+            $XMLRemove=$XML.CreateElement("Remove")
+            $XML.Configuration.appendChild($XMLRemove)
+            $XMLProduct=$XMLRemove.appendChild($XML.CreateElement("Product"))
+            $newProductElement = $xml.CreateElement("Product")
+            $newProductApp = $xml.Configuration.Remove.AppendChild($XMLProduct)
+            $newProductApp.SetAttribute("ID","VisioStd2019Volume")
+            #$newProductApp.SetAttribute("PIDKEY","69WXN-MBYV6-22PQG-3WGHK-RM6XC")
+            $newXmlNameElement = $newProductElement.AppendChild($xml.CreateElement("Language"))
+            $newXmlNameElement.SetAttribute("ID","en-us")  
+            }
+
+    
+        <#add additional languages to download
+        In the install command, if you leave out -Language, it will default to en-us
+        If you pick a different language like fr-fr, it will set that as default, but still include en-us
+        #>
+        if ($Language)
+            {
+            Write-CMTraceLog -Message "Language Param detected, added $Language to XML" -Type 1 -Component "o365script"
+            if ($SetLanguageDefault)#Set Default language to the Language Specified
+                {
+                Write-CMTraceLog -Message " LanguageDefault Param detected, set $Language to Default" -Type 1 -Component "o365script"
+                $CurrentProductAttributeLang = $xml.Configuration.Add.Product
+                foreach ($currentproduct in $CurrentProductAttributeLang)
                     {
-                    $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
+                    $newXmlNameElement = $currentproduct.Language
                     $newXmlNameElement.SetAttribute("ID","$Language")
                     }
+                #Include English in the install if you picked a different language as your default
+                if (!($Language -eq "en-us"))
+                    {
+                    Write-CMTraceLog -Message " LanguageDefault Param detected, appending en-us to XML" -Type 1 -Component "o365script"
+                    $newProductAttributeLang = $xml.Configuration.Add.Product
+                    foreach ($newproduct in $newProductAttributeLang)
+                        {
+                        $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
+                        $newXmlNameElement.SetAttribute("ID","en-us")
+                        }
+                     }
                 }
-            }
-        
+            else #Append Language, leaving English as Default
+                {
+                Write-CMTraceLog -Message " LanguageDefault Param NOT detected, appending $Language to XML" -Type 1 -Component "o365script"
+                $newProductAttributeLang = $xml.Configuration.Add.Product
+                    foreach ($newproduct in $newProductAttributeLang)
+                        {
+                        $newXmlNameElement = $newproduct.AppendChild($xml.CreateElement("Language"))
+                        $newXmlNameElement.SetAttribute("ID","$Language")
+                        }
+                    }
+                }
+    }    
 
+    $ClickToRunOverRideKeyPath = "HKLM:\SOFTWARE\Microsoft\ClickToRun\OverRide"
+    if ($VerboseLogging)
+        {
+        Write-CMTraceLog -Message "Enabling ClickToRun Verbose Logging" -Type 1 -Component "o365script"
+        Write-CMTraceLog -Message "Modifying Registry Values in $ClickToRunOverRideKeyPath " -Type 1 -Component "o365script"
+        $ClickToRunOverRideKey = get-item -Path $ClickToRunOverRideKeyPath
+        if ($ClickToRunOverRideKey.GetValue("LogLevel") -ne "3")
+            {
+            Write-CMTraceLog -Message " Setting LogLevel to 3" -Type 1 -Component "o365script"
+            New-ItemProperty -Path $ClickToRunOverRideKeyPath -Name "LogLevel" -PropertyType DWORD -Value 3 -Force
+            }
+        if ($ClickToRunOverRideKey.GetValue("PipelineLogging") -ne "1")
+            {
+            Write-CMTraceLog -Message " Setting PipelineLogging to 1" -Type 1 -Component "o365script"
+            New-ItemProperty -Path $ClickToRunOverRideKeyPath -Name "PipelineLogging" -PropertyType DWORD -Value 1 -Force
+            }
+        }
+    else
+        {
+        $ClickToRunOverRideKey = get-item -Path $ClickToRunOverRideKeyPath
+        if (($ClickToRunOverRideKey.GetValue("LogLevel") -eq "3") -or ($ClickToRunOverRideKey.GetValue("PipelineLogging") -eq "1"))
+            {
+            Write-CMTraceLog -Message "Disabling ClickToRun Verbose Logging" -Type 1 -Component "o365script"
+            Write-CMTraceLog -Message "Modifying Registry Values in $ClickToRunOverRideKeyPath " -Type 1 -Component "o365script"
+            }
+        if ($ClickToRunOverRideKey.GetValue("LogLevel") -eq "3")
+            {
+            Write-CMTraceLog -Message "Removing LogLevel Value" -Type 1 -Component "o365script"
+            Remove-ItemProperty -Path $ClickToRunOverRideKeyPath -Name "LogLevel" -Force
+            }
+        if ($ClickToRunOverRideKey.GetValue("PipelineLogging") -eq "1")
+            {
+            Write-CMTraceLog -Message "Removing PipelineLogging Value" -Type 1 -Component "o365script"
+            Remove-ItemProperty -Path $ClickToRunOverRideKeyPath -Name "PipelineLogging" -Force
+            }
+        }
     
     Write-CMTraceLog -Message "Creating XML file: $("$O365Cache\configuration.xml")" -Type 1 -Component "o365script"
     $xml.Save("$O365Cache\configuration.xml")
