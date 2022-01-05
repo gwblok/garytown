@@ -1,27 +1,42 @@
-#Builds the Apps in CM - Middle of Development
+<#Builds the Apps in CM - Middle of Development
+#22.01.04 - Still in Dev
+ - Script now creates Folder Stucture based on variables at start of script then downloads some required files from GitHub
+
+#>
 
 $SC_Description = "***********************************************************************************
 Save your work and close any Office applications before running this install
 ***********************************************************************************
 This will automatically reinstall Visio, Project, or Access if previously installed."
 
-$PreFix = "ACME "
-$Stage = "Prod"
-$ContentSourceParent = "\\src\apps$\SDE\Microsoft\Microsoft 365"
+$ContentSourceParent = "\\src\src$\apps\Microsoft\Microsoft 365"
 
 $ContentAppSourceContent = "Microsoft 365 Content"
 $ContentAppSourceInstallers = "Microsoft 365 Installers"
 $ContentAppSourceIcons = "Microsoft 365 Icons"
-$CompanyName = 'Wells Fargo'
+$CompanyName = 'Recast Software'
 $O365Cache = "C:\ProgramData\O365_Cache"
 
 
 
 #Load CM PowerShell
 $SiteCode = "MEM"
-$ProviderMachineName = "SCCMC1.ent.wfb.bank.corp" # SMS Provider machine name
-Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1)
+$ProviderMachineName = "memcm.dev.recastsoftware.dev" # SMS Provider machine name
+if ((Get-PSDrive -PSProvider CMSite) -eq $Null){
+Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1)}
 Set-Location -Path "$($SiteCode):"
+
+
+
+#GitHub Files
+$M365IconURL = "https://github.com/gwblok/garytown/raw/master/Office365/Icons/M365.png"
+$AccessIconURL = "https://github.com/gwblok/garytown/raw/master/Office365/Icons/Access.png"
+$VisioIconURL = "https://github.com/gwblok/garytown/raw/master/Office365/Icons/Visio.png"
+$ProjectIconURL = "https://github.com/gwblok/garytown/raw/master/Office365/Icons/Project.png"
+
+$o365_installURL = "https://raw.githubusercontent.com/gwblok/garytown/master/Office365/o365_install.ps1"
+$o365_prepURL = "https://raw.githubusercontent.com/gwblok/garytown/master/Office365/o365_prep.ps1"
+$o365_uninstallURL = "https://raw.githubusercontent.com/gwblok/garytown/master/Office365/o365_uninstall.ps1"
 
 #Update Channel Info
 $CurrentPreviewChannel = "http://officecdn.microsoft.com/pr/64256afe-f5d9-4f86-8936-8840a6a4f5be"
@@ -53,33 +68,51 @@ $ProjectStdApp = "Microsoft 365 Project Standard 2019"
 
 
 $LanguageTable= @(
-@{ Language = 'French - France'; Number = "1036"; Code = "fr-fr"; GC = "fr"; AppName = "$($PreFix)$ContentAppSourceNameFrench"; AppNameDT =$ContentAppSourceNameFrench}
-#@{ Language = 'Chinese - China'; Number = "2052"; Code = "zh-cn"; GC = "zh-cn";AppName = "$($PreFix)$ContentAppSourceNameChina"; AppNameDT =$ContentAppSourceNameChina}
-#@{ Language = 'Chinese - Taiwan'; Number = "1028"; Code = "zh-tw"; GC = "zh-tw";AppName = "$($PreFix)$ContentAppSourceNameTaiwan"; AppNameDT =$ContentAppSourceNameTaiwan}
-#@{ Language = 'German - Germany'; Number = "1031"; Code = "de-de"; GC = "de";AppName = "$($PreFix)$ContentAppSourceNameGermany"; AppNameDT =$ContentAppSourceNameGermany}
-#@{ Language = 'Italian - Italy'; Number = "1040"; Code = "it-it"; GC = "it";AppName = "$($PreFix)$ContentAppSourceNameItaly"; AppNameDT ="$ContentAppSourceNameItaly"}
+@{ Language = 'French - France'; Number = "1036"; Code = "fr-fr"; GC = "fr"; AppName = "$ContentAppSourceNameFrench"; AppNameDT =$ContentAppSourceNameFrench}
+#@{ Language = 'Chinese - China'; Number = "2052"; Code = "zh-cn"; GC = "zh-cn";AppName = "$ContentAppSourceNameChina"; AppNameDT =$ContentAppSourceNameChina}
+#@{ Language = 'Chinese - Taiwan'; Number = "1028"; Code = "zh-tw"; GC = "zh-tw";AppName = "$ContentAppSourceNameTaiwan"; AppNameDT =$ContentAppSourceNameTaiwan}
+#@{ Language = 'German - Germany'; Number = "1031"; Code = "de-de"; GC = "de";AppName = "$ContentAppSourceNameGermany"; AppNameDT =$ContentAppSourceNameGermany}
+#@{ Language = 'Italian - Italy'; Number = "1040"; Code = "it-it"; GC = "it";AppName = "$ContentAppSourceNameItaly"; AppNameDT ="$ContentAppSourceNameItaly"}
 )
 
 $M365Table= @(
 #Content App
-@{ Type = "Content"; LangCode = "base";Name = "$($PreFix)$ContentAppSourceName"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceName; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceName; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\$stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"}
-@{ Type = "Content"; LangCode = "fr-fr"; Name = "$($PreFix)$ContentAppSourceNameFrench"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceNameFrench; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceNameFrench; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\$stage"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName' -language fr-fr"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"; AppDT1_Dependancy = "Content"}
+@{ Type = "Content"; LangCode = "base";Name = "$ContentAppSourceName"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceName; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceName; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"}
+@{ Type = "Content"; LangCode = "fr-fr"; Name = "$ContentAppSourceNameFrench"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceNameFrench; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceNameFrench; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName' -language fr-fr"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"; AppDT1_Dependancy = "Content"}
 
 
 #M365 Main Installs
-@{ Type = "App"; Name = "$($PreFix)$MonthlyEnterpriseApp"; Publisher = "Microsoft"; SC_AppName = "$MonthlyEnterpriseApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png"; AppDT1_Name = "$MonthlyEnterpriseApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Channel MonthlyEnterprise -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM1_EqualsValue = $MonthlyEnterpriseChannel; AppDT1_Dependancy = "Content" }
-@{ Type = "App"; Name = "$($PreFix)$SemiAnnualPreviewApp"; Publisher = "Microsoft"; SC_AppName = "$SemiAnnualPreviewApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png"; AppDT1_Name = "$SemiAnnualPreviewApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Channel SemiAnnualPreview -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM1_EqualsValue = $SemiAnnualPreviewChannel; AppDT1_Dependancy = "Content" }
-@{ Type = "App"; Name = "$($PreFix)$SemiAnnualApp"; Publisher = "Microsoft"; SC_AppName = "$SemiAnnualApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png"; AppDT1_Name = "$SemiAnnualApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM1_EqualsValue = $SemiAnnualChannel; AppDT1_Dependancy = "Content" }
+@{ Type = "App"; Name = "$MonthlyEnterpriseApp"; Publisher = "Microsoft"; SC_AppName = "$MonthlyEnterpriseApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png"; AppDT1_Name = "$MonthlyEnterpriseApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Channel MonthlyEnterprise -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM1_EqualsValue = $MonthlyEnterpriseChannel; AppDT1_Dependancy = "Content" }
+@{ Type = "App"; Name = "$SemiAnnualPreviewApp"; Publisher = "Microsoft"; SC_AppName = "$SemiAnnualPreviewApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png"; AppDT1_Name = "$SemiAnnualPreviewApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Channel SemiAnnualPreview -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM1_EqualsValue = $SemiAnnualPreviewChannel; AppDT1_Dependancy = "Content" }
+@{ Type = "App"; Name = "$SemiAnnualApp"; Publisher = "Microsoft"; SC_AppName = "$SemiAnnualApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png"; AppDT1_Name = "$SemiAnnualApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM1_EqualsValue = $SemiAnnualChannel; AppDT1_Dependancy = "Content" }
 
 #M365 Addons
-@{ Type = "Addon"; Name = "$($PreFix)$AccessApp"; Publisher = "Microsoft"; SC_AppName = "$AccessApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Access.png"; AppDT1_Name = "$AccessApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Access -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_FileLocation = "%ProgramFiles%\Microsoft Office\root\Office16"; AppDT1_DM2_FileName = "ACCESS.EXE"; AppDT1_Dependancy = "Content" }
-@{ Type = "Addon"; Name = "$($PreFix)$VisioProApp"; Publisher = "Microsoft"; SC_AppName = "$VisioProApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Visio.png"; AppDT1_Name = "$VisioProApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -VisioPro -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioPro2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
-@{ Type = "Addon"; Name = "$($PreFix)$VisioStdApp"; Publisher = "Microsoft"; SC_AppName = "$VisioStdApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Visio.png"; AppDT1_Name = "$VisioStdApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -VisioStd -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioStd2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
-@{ Type = "Addon"; Name = "$($PreFix)$ProjectProApp"; Publisher = "Microsoft"; SC_AppName = "$ProjectProApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Project.png"; AppDT1_Name = "$ProjectProApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -ProjectPro -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectPro2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
-@{ Type = "Addon"; Name = "$($PreFix)$ProjectStdApp"; Publisher = "Microsoft"; SC_AppName = "$ProjectStdApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Project.png"; AppDT1_Name = "$ProjectStdApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\$Stage\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -ProjectStd -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectStd2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
+@{ Type = "Addon"; Name = "$AccessApp"; Publisher = "Microsoft"; SC_AppName = "$AccessApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Access.png"; AppDT1_Name = "$AccessApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -Access -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_FileLocation = "%ProgramFiles%\Microsoft Office\root\Office16"; AppDT1_DM2_FileName = "ACCESS.EXE"; AppDT1_Dependancy = "Content" }
+@{ Type = "Addon"; Name = "$VisioProApp"; Publisher = "Microsoft"; SC_AppName = "$VisioProApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Visio.png"; AppDT1_Name = "$VisioProApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -VisioPro -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioPro2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
+@{ Type = "Addon"; Name = "$VisioStdApp"; Publisher = "Microsoft"; SC_AppName = "$VisioStdApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Visio.png"; AppDT1_Name = "$VisioStdApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -VisioStd -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VisioStd2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
+@{ Type = "Addon"; Name = "$ProjectProApp"; Publisher = "Microsoft"; SC_AppName = "$ProjectProApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Project.png"; AppDT1_Name = "$ProjectProApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -ProjectPro -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectPro2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
+@{ Type = "Addon"; Name = "$ProjectStdApp"; Publisher = "Microsoft"; SC_AppName = "$ProjectStdApp"; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\Project.png"; AppDT1_Name = "$ProjectStdApp"; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceInstallers\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\O365_Install.ps1 -ProjectStd -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1" ; AppDT1_DM1_Type = "Registry"; AppDT1_DM1_HIVE = "HKLM"; AppDT1_DM1_Key = "Software\Microsoft\Office\ClickToRun\Configuration"; AppDT1_DM1_Value = "CDNBaseUrl"; AppDT1_DM2_Key = "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ProjectStd2019Volume - en-us"; AppDT1_DM2_Value = "DisplayName"; AppDT1_Dependancy = "Content" }
 
 
 )
+
+write-host "Creating Folders & Download Icons"
+
+#Create Folders
+if (!(Test-path -path $ContentSourceParent)){$NewFolder = New-Item -itemtype Directory -path $ContentSourceParent -force}
+if (!(Test-path -path $ContentSourceParent)){$NewFolder = New-Item -itemtype Directory -path "$ContentSourceParent\$ContentAppSourceIcons" -force}
+if (!(Test-path -path $ContentSourceParent)){$NewFolder = New-Item -itemtype Directory -path "$ContentSourceParent\$ContentAppSourceInstallers" -force}
+
+#Download Icons
+if (!(Test-path -path "$ContentSourceParent\$ContentAppSourceIcons\M365.png")){Invoke-WebRequest -UseBasicParsing -Uri $M365IconURL -OutFile "$ContentSourceParent\$ContentAppSourceIcons\M365.png"}
+if (!(Test-path -path "$ContentSourceParent\$ContentAppSourceIcons\Access.png")){Invoke-WebRequest -UseBasicParsing -Uri $AccessIconURL -OutFile "$ContentSourceParent\$ContentAppSourceIcons\Access.png"}
+if (!(Test-path -path "$ContentSourceParent\$ContentAppSourceIcons\Visio.png")){Invoke-WebRequest -UseBasicParsing -Uri $VisioIconURL -OutFile "$ContentSourceParent\$ContentAppSourceIcons\Visio.png"}
+if (!(Test-path -path "$ContentSourceParent\$ContentAppSourceIcons\Project.png")){Invoke-WebRequest -UseBasicParsing -Uri $ProjectIconURL -OutFile "$ContentSourceParent\$ContentAppSourceIcons\Project.png"}
+
+#Download Scripts
+Invoke-WebRequest -UseBasicParsing -Uri $o365_installURL -OutFile "$ContentSourceParent\$ContentAppSourceInstallers\o365_install.ps1"
+Invoke-WebRequest -UseBasicParsing -Uri $o365_prepURL -OutFile "$ContentSourceParent\$ContentAppSourceInstallers\o365_prep.ps1"
+Invoke-WebRequest -UseBasicParsing -Uri $o365_uninstallURL -OutFile "$ContentSourceParent\$ContentAppSourceInstallers\o365_uninstall.ps1"
 
 $ContentBaseInfo = $M365Table | Where-Object {$_.Type -eq "Content" -and $_.LangCode -eq "base"} #Used to create the dependancy on each App
 foreach ($M365 in $M365Table)#{Write-Host $M365.Name}
@@ -110,9 +143,9 @@ foreach ($M365 in $M365Table)#{Write-Host $M365.Name}
             Write-Host "  Starting to Create Detection Method for AppDT" -ForegroundColor Green
             Set-Location -Path "C:"
             #Get the Cab File from the source (assuming you've setup the source already)
-            if (Test-Path "$ContentSourceParent\$ContentAppSourceContent\$Stage\Office\Data")
+            if (Test-Path "$ContentSourceParent\$ContentAppSourceContent\Office\Data")
                 {
-                $ContentApp_AppDT_DetectFile = (Get-ChildItem -Path "$ContentSourceParent\$ContentAppSourceContent\$Stage\Office\Data\v64_*.cab").Name
+                $ContentApp_AppDT_DetectFile = (Get-ChildItem -Path "$ContentSourceParent\$ContentAppSourceContent\Office\Data\v64_*.cab").Name
                 }
             else 
                 {
@@ -152,7 +185,7 @@ foreach ($M365 in $M365Table)#{Write-Host $M365.Name}
             else
                 {
                 $NewFolder = New-Item -Path "$AppContentLocation" -ItemType directory -ErrorAction SilentlyContinue
-                $NewFile = New-Item -Path "$AppContentLocation\PlaceHolder.txt" -ItemType file
+                $NewFile = New-Item -Path "$AppContentLocation\PlaceHolder.txt" -ItemType file -force
                 Write-Host "  Created Folder:$AppContentLocation" -ForegroundColor yellow
                 }
             Set-Location -Path "$($SiteCode):"
@@ -317,16 +350,16 @@ foreach ($M365 in $M365Table)#{Write-Host $M365.Name}
         if ($AppScopes.CategoryName -ccontains "Default")
             {
             $DefaultScope = $AppScopes | Where-Object {$_.CategoryName -eq "default"} 
-            if (!($AppScopes.CategoryName -contains "SDE"))
+            if (!($AppScopes.CategoryName -contains "Devs"))
                 {
-                $SDEScope = Get-CMSecurityScope | Where-Object {$_.CategoryName -eq "SDE"}
+                $SDEScope = Get-CMSecurityScope | Where-Object {$_.CategoryName -eq "Devs"}
                 $AddSDEScope = Add-CMObjectSecurityScope -InputObject $ConfirmApp -Scope $SDEScope
                 Write-Host  "   Adding Scope $($SDEScope.CategoryName) to $($M365.Name)" -ForegroundColor Green
                 }
             $RemovedDefaultAppScope = Remove-CMObjectSecurityScope -InputObject $ConfirmApp -Scope $DefaultScope -Force
             Write-Host  "   Removing Default Scope from $($M365.Name)" -ForegroundColor Green
             } 
-        $NonACMEScope = $AppScopes | Where-Object {$_.CategoryName -ne "SDE" -and $_.CategoryDescription -notmatch "A built-in security scope"} 
+        $NonACMEScope = $AppScopes | Where-Object {$_.CategoryName -ne "Devs" -and $_.CategoryDescription -notmatch "A built-in security scope"} 
         foreach ($Scope in $NonACMEScope)
             {
             Write-Host  "   Removing Scope $($Scope.CategoryName) from $($M365.Name)" -ForegroundColor Green
