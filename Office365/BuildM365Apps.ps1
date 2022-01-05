@@ -24,9 +24,9 @@ $SiteCode = "MEM"
 $ProviderMachineName = "memcm.dev.recastsoftware.dev" # SMS Provider machine name
 if ((Get-PSDrive -PSProvider CMSite) -eq $Null){
 Import-Module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1)}
-Set-Location -Path "$($SiteCode):"
 
 
+Set-Location -Path "C:"
 
 #GitHub Files
 $M365IconURL = "https://github.com/gwblok/garytown/raw/master/Office365/Icons/M365.png"
@@ -77,8 +77,8 @@ $LanguageTable= @(
 
 $M365Table= @(
 #Content App
-@{ Type = "Content"; LangCode = "base";Name = "$ContentAppSourceName"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceName; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceName; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"}
-@{ Type = "Content"; LangCode = "fr-fr"; Name = "$ContentAppSourceNameFrench"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceNameFrench; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceNameFrench; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName' -language fr-fr"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"; AppDT1_Dependancy = "Content"}
+@{ Type = "Content"; LangCode = "base";Name = "$ContentAppSourceName"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceName; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceName; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\Source"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName'"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"}
+@{ Type = "Content"; LangCode = "fr-fr"; Name = "$ContentAppSourceNameFrench"; Publisher = "Microsoft"; SC_AppName = $ContentAppSourceNameFrench; SC_AppIcon = "$ContentSourceParent\$ContentAppSourceIcons\M365.png";AppDT1_Name = $ContentAppSourceNameFrench; AppDT1_CL = "$ContentSourceParent\$ContentAppSourceContent\Source"; AppDT1_ProgramInstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\o365_Install.ps1 -PreCache -Channel SemiAnnual -CompanyValue '$CompanyName' -language fr-fr"; AppDT1_ProgramUninstall = "powershell.exe -ExecutionPolicy ByPass -WindowStyle Hidden .\uninstall.ps1 -PreCache"; AppDT1_DM1_Type = "FileSystem"; AppDT1_DM1_Path = "$O365Cache\Office\Data"; AppDT1_Dependancy = "Content"}
 
 
 #M365 Main Installs
@@ -100,8 +100,8 @@ write-host "Creating Folders & Download Icons"
 
 #Create Folders
 if (!(Test-path -path $ContentSourceParent)){$NewFolder = New-Item -itemtype Directory -path $ContentSourceParent -force}
-if (!(Test-path -path $ContentSourceParent)){$NewFolder = New-Item -itemtype Directory -path "$ContentSourceParent\$ContentAppSourceIcons" -force}
-if (!(Test-path -path $ContentSourceParent)){$NewFolder = New-Item -itemtype Directory -path "$ContentSourceParent\$ContentAppSourceInstallers" -force}
+if (!(Test-path -path $ContentSourceParent\$ContentAppSourceIcons)){$NewFolder = New-Item -itemtype Directory -path "$ContentSourceParent\$ContentAppSourceIcons" -force}
+if (!(Test-path -path $ContentSourceParent\$ContentAppSourceInstallers)){$NewFolder = New-Item -itemtype Directory -path "$ContentSourceParent\$ContentAppSourceInstallers" -force}
 
 #Download Icons
 if (!(Test-path -path "$ContentSourceParent\$ContentAppSourceIcons\M365.png")){Invoke-WebRequest -UseBasicParsing -Uri $M365IconURL -OutFile "$ContentSourceParent\$ContentAppSourceIcons\M365.png"}
@@ -114,6 +114,7 @@ Invoke-WebRequest -UseBasicParsing -Uri $o365_installURL -OutFile "$ContentSourc
 Invoke-WebRequest -UseBasicParsing -Uri $o365_prepURL -OutFile "$ContentSourceParent\$ContentAppSourceInstallers\o365_prep.ps1"
 Invoke-WebRequest -UseBasicParsing -Uri $o365_uninstallURL -OutFile "$ContentSourceParent\$ContentAppSourceInstallers\o365_uninstall.ps1"
 
+Set-Location -Path "$($SiteCode):"
 $ContentBaseInfo = $M365Table | Where-Object {$_.Type -eq "Content" -and $_.LangCode -eq "base"} #Used to create the dependancy on each App
 foreach ($M365 in $M365Table)#{Write-Host $M365.Name}
     {
