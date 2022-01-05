@@ -246,7 +246,7 @@ else
                             {
                             Move-Item -Path $File.Fullname -Destination ($File.FullName).Replace($ContentTempDownloadLocation, $ContentLangLocation) -Force -Verbose
                             }
-                        Copy-Item -Path "$($ContentLangLocation)_Backup\o365_Install.ps1" -Destination $ContentLangLocation -Force
+                        Copy-Item -Path "$InstallerScripts\o365_Install.ps1" -Destination $ContentLangLocation -Force
                         #Used for Detection Method
                         $ConfirmedLangFile = (Get-ChildItem -Path $FolderPath\* -Recurse)[0]
                         if ($ConfirmedLangFile)
@@ -256,6 +256,8 @@ else
                             #Create the new Detection Method (File -> Cache Folder \ OfficeFile.Cab -> exist)
                             $DetectionFilePathLang = ($ConfirmedLangFile.DirectoryName).Replace($ContentLangLocation, "")
                             $DetectionTypeUpdateLang = New-CMDetectionClauseFile -FileName $ConfirmedLangFile.Name -Path "$O365Cache$DetectionFilePathLang" -Existence
+                            $ContentVersion = $DetectionFilePathLang.Split("\") | select -Last 1
+                            Set-CMApplication -Name $LangInfo.AppName -SoftwareVersion $ContentVersion
     
                             #Add New Detection Method to App
                             Get-CMDeploymentType -ApplicationName $LangInfo.AppName -DeploymentTypeName $LangInfo.AppNameDT | Set-CMScriptDeploymentType -AddDetectionClause $DetectionTypeUpdateLang
