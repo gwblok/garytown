@@ -35,6 +35,8 @@ Change Log
  - ContentOverRideLocation: This lets you pick the location you want the content to download to.
 2020.05.18 -Add Language Support.  Still Rough, just downloads to content, and supports 1 language at a time.
 
+2022.01.04 - Added portion for it to download updated Setup.exe file.
+
 
 #>
 
@@ -52,10 +54,39 @@ $OfficeContentAppName = "Microsoft 365 Content"
 $OfficeContentAppDTName = "Microsoft 365 Content"
 #Set Cache Location on local host - Used for Detection Method when updating the app
 $O365Cache = "C:\ProgramData\O365_Cache"
+$SetupPath = "\\src\src$\Apps\Microsoft\Microsoft 365\Microsoft 365 Downloader Script\Setup.exe"
+$InstallerScripts = "\\src\src$\Apps\Microsoft\Microsoft 365\Microsoft 365 Installers" #This will be the same folder as the M365 App's Content folder. (just the 3 scripts)
 
 # Site configuration
-$SiteCode = "PS2" # Site code 
-$ProviderMachineName = "cm.corp.viamonstra.com" # SMS Provider machine name
+$SiteCode = "MEM" # Site code 
+$ProviderMachineName = "MEMCM.dev.recastsoftware.dev" # SMS Provider machine name
+
+$ODTURL = "https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117"
+$ODTURLInfo = Invoke-WebRequest -UseBasicParsing -Uri $ODTURL
+$ODTDownloadURL = ($ODTURLInfo.Links | Where-Object {$_.'data-bi-cN' -match "click here"}).href
+
+$ODTDownloadFile = "$env:temp\ODT.exe"
+$ODTExtractPath = "$env:temp\ODTExtract"
+if (Test-Path $ODTExtractPath){Remove-Item -Path $ODTExtractPath -Force -Recurse}
+$NewFolder = New-Item -Path $OSDExtractPath -ItemType Directory -Force
+
+Invoke-WebRequest -UseBasicParsing -Uri $ODTDownloadURL -OutFile $ODTDownloadFile
+Start-Process -FilePath $ODTDownloadFile -ArgumentList "/extract:$ODTExtractPath /log:$env:temp\ODT.log /quiet" -wait
+
+$SetupEXEVersion = (Get-Item -Path "$ODTExtractPath\setup.exe").VersionInfo.FileVersion
+
+if (Test-Path $SetupPath){
+    $CurrentSetupEXEVersion = (Get-Item -Path $SetupPath).VersionInfo.FileVersion
+    if ($CurrentSetupEXEVersion -lt $SetupEXEVersion){
+        Set-Location -Path "c:"
+        Copy-Item "$ODTExtractPath\setup.exe" -Destination $SetupPath -Force
+        }
+    }
+else
+    {
+    Set-Location -Path "c:"
+    Copy-Item "$ODTExtractPath\setup.exe" -Destination $SetupPath -Force
+    }
 
 
 $LanguageTable= @(
@@ -157,6 +188,7 @@ else
             $ContentLocation = 	$AppXML.AppMgmtDigest.DeploymentType.Installer.Contents.Content.Location 
             $ContentLocation = $ContentLocation.Substring(0,$ContentLocation.Length-1)
             $ContentLocationParent = $ContentLocation.Replace("$(($ContentLocation.Split("\"))[$ContentLocation.Split("\").Count –1])","")
+
             }
         else
             {
@@ -250,7 +282,7 @@ else
                 New-Item -Path $ContentLocation -ItemType Directory -Force
                 Write-Host "Copying Content to Source Location" -ForegroundColor Green
                 Copy-Item -Path "$ContentTempDownloadLocation\Office" -Destination $ContentLocation -Force -Recurse
-                Copy-Item -Path "$($ContentLocation)_Backup\o365_Install.ps1" -Destination $ContentLocation -Force
+                Copy-Item -Path "$InstallerScripts\o365_Install.ps1" -Destination $ContentLocation -Force
                 Copy-Item -Path $SetupProcess -Destination $ContentLocation -Force
                 Write-Host "  Completed Copying Content to Source Location" -ForegroundColor Green
             #Get the Cab Name of the updated download and use it for the Detection Method.
@@ -261,6 +293,11 @@ else
                 $DetectionFilePath = "$O365Cache\Office\Data"
                 $DetectionTypeUpdate = New-CMDetectionClauseFile -FileName $NewCabName -Path $DetectionFilePath -Existence
                 Write-Host "Setting Detection Method to $NewCabName"
+                
+                #Update CM Application Version
+                $VersionNumber = (($NewCabName).replace("v64_","")).replace(".cab","")
+                Set-CMApplication -InputObject $CMApplication -SoftwareVersion $VersionNumber
+
                 #Add New Detection Method to AppDT
                 Get-CMDeploymentType -ApplicationName $OfficeContentAppName -DeploymentTypeName $OfficeContentAppDTName | Set-CMScriptDeploymentType -AddDetectionClause $DetectionTypeUpdate
     
@@ -278,4 +315,3 @@ else
             }
         }
 Set-Location -Path "c:"
-
