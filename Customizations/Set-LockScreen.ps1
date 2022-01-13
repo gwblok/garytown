@@ -149,6 +149,7 @@ Param (
     [Parameter(Mandatory=$true)][string] $FilesSystemRights,
     [Parameter(Mandatory=$true)][String] $type
       )
+$file = get-item $filepath
 $newacl = $file.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
 
 # Create new rule
