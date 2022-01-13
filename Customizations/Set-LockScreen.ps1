@@ -127,7 +127,7 @@ Param (
     [Parameter(Mandatory=$true)][String] $filepath
       )
 
-$file = Get-Item -Path $filepath
+$file = Get-Item -Path $filepath -force
 $acl = $file.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
 $me = [System.Security.Principal.NTAccount]$identity
 $acl.SetOwner($me)
@@ -149,7 +149,7 @@ Param (
     [Parameter(Mandatory=$true)][string] $FilesSystemRights,
     [Parameter(Mandatory=$true)][String] $type
       )
-$file = get-item $filepath
+$file = get-item $filepath -force
 $newacl = $file.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
 
 # Create new rule
