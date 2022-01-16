@@ -26,18 +26,43 @@ This script will...
 
 
 # REQUIRED INPUT VARIABLES:
-[int]$DesiredVMs = 5  #The Number of VMs that are going to be created this run.
-$VMPath = "I:\HyperV" #The location on the Host you want the VMs to be created and stored
+[int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
+
+
+$VMPath = "E:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
 $VMNamePreFix = "RECAST-"  #The VM will start with this name
-$BootISO = "D:\2006_2004.iso"  #If you're booting to an ISO, put the location here.
-$VirtualNameAdapterName = "192.168.1.X Lab Network" #The Actual Name of the Hyper-V Virtual Network you want to assign to the VM.
+$BootISO = "D:\HyperVLab\x64.iso"  #If you're booting to an ISO, put the location here.
+#$VirtualNameAdapterName = "192.168.1.X Lab Network" #The Actual Name of the Hyper-V Virtual Network you want to assign to the VM.
 $RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collection you deployed the Task Sequence too
-[int]$StartNumber = 01
-[int]$EndNumber = 90
+[int]$StartNumber = 10
+[int]$EndNumber = 20
 [int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
-$SiteCode = "PS2" #ConfigMgr Site Code
-$ProviderMachineName = "cm.corp.viamonstra.com" #ConfigMgr Provider Machine
-Import-Module "C:\OSBuildRoot\CMConsole\ConfigurationManager.psd1" #Where you have access to the CM Commandlets
+$SiteCode = "MEM" #ConfigMgr Site Code
+$ProviderMachineName = "memcm.dev.recastsoftware.dev" #ConfigMgr Provider Machine
+$CMModulePath = "D:\HyperVLab\CMConsolePosh\ConfigurationManager.psd1"
+$CMConnected = $null
+
+if (!(Test-Path -Path $VMPath))
+    {
+    Write-Host "HyperV Path not Set correctly!" -ForegroundColor Red
+    }
+
+elseif (!(Test-Path -Path $BootISO))
+    {
+    Write-Host "Boot ISO Path not Set correctly!"  -ForegroundColor Red
+    }
+
+elseif (!(Test-Path -Path $CMModulePath))
+    {
+    Write-Host "CM Module Path not Set correctly!"  -ForegroundColor Red
+    }
+
+else
+    {
+    Write-Host "All Pre-Req Paths are Set to something that appears ok"  -ForegroundColor Green
+    Import-Module $CMModulePath  #Where you have access to the CM Commandlets
+
+    }
 
 #SCRIPT FUNCTIONS BELOW
 $Usable = $null
@@ -50,15 +75,36 @@ if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue))
     }
 if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){$CMConnected = $false}
 
+Set-location $SiteCode":"
+if (!(Get-CMCollection -Name $RequiredDeploymentCollectionName))
+    {
+    Write-Host "No Collection Named $RequiredDeploymentCollectionName" -ForegroundColor Red
+    $RequiredDeploymentCollection = Get-CMCollection -Name "OSD*" | Select-Object -Property Name, CollectionID| Out-GridView -PassThru -Title "Select the OSD Collection"
+    $RequiredDeploymentCollectionName = $RequiredDeploymentCollection.name
+    }
+  
+Set-location "c:"     
+
 #Get Name of VMs Currently in HyperV
 $CurrentVMS = (Get-VM | Where-Object {$_.Name -match $VMNamePreFix}) #Grab all VMs on host that match the PreFix
-$VMSwitch = (Get-VMSwitch | Where-Object {$_.Name -match $VirtualNameAdapterName}).Name  #Grab the VMSwitch that matches the name you specified above.
+$VMSwitchs = Get-VMSwitch | Where-Object {$_.SwitchType -eq "External"}
+if ($VMSwitchs.Count -gt 1)
+    {
+    Write-Host "More than 1 Virtual Switch matches External, Prompting for correct one"
+    $VMSwitch = $VMSwitchs | Out-GridView -PassThru
+    }
+else
+    {
+    $VMSwitch = $VMSwitchs
+    }
+
+#$VMSwitch = (Get-VMSwitch | Where-Object {$_.Name -match $VirtualNameAdapterName}).Name  #Grab the VMSwitch that matches the name you specified above.
 
 #Makes sure you have a Virtual Switch and CM Connection or exit out.
 if (!($VMSwitch) -or ($CMConnected -eq $false))
     {
     if (!($VMSwitch)){Write-Host "No Virtual Network Found, Check Name or VM Networks" -ForegroundColor Red}
-    if ($CMConnected -eq $alse){Write-Host "No Connection to ConfigMgr" -ForegroundColor Red}
+    if ($CMConnected -eq $false){Write-Host "No Connection to ConfigMgr" -ForegroundColor Red}
     }
 else
     {
@@ -111,7 +157,8 @@ else
         Write-Host "Creating VM $VMName" -ForegroundColor Cyan
         
         #If you want this to boot from ISO, change "NetworkAdapter to CD"
-        $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch -Generation 2
+        #$NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch.Name -Generation 2
+        $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
         Write-Host "  Setting Memory to Dynamic, 512MB - 2048MB" -ForegroundColor Green
         set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2048MB
         Write-Host "  Setting VHDx to Dynamic, 100GB located here: $VHDxFile" -ForegroundColor Green
@@ -127,9 +174,11 @@ else
         Write-Host "  Setting Processors to Two" -ForegroundColor Green
         Set-VMProcessor -VMName $VMName -Count 2        
         Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
-        
+        Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1280 -VerticalResolution 800
+
+
         #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
-        #Set-VMDvdDrive -VMName $VMName -Path $BootISO
+        Set-VMDvdDrive -VMName $VMName -Path $BootISO
         Write-Host "  Setting CheckPoints to Standard" -ForegroundColor Green
         set-vm -Name $VMName -AutomaticCheckpointsEnabled $false
         set-vm -Name $VMName -CheckpointType Standard
@@ -151,6 +200,7 @@ else
             }
         Else
             {
+            
             $ImportDevice = Import-CMComputerInformation -ComputerName $VMName -CollectionName $RequiredDeploymentCollectionName -MacAddress $MAC
             $CMDevice = Get-CMDevice -Name $VMName -Resource
 
