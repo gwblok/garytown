@@ -8,8 +8,8 @@ This script will...
   - Check if available names are available in CM
   - Find the numbers of Names you want based on your Desired VMs, leveraging the Starting Number & EndNumber
   - Create VMs in $VMPath
-    - Starting RAM = 1024
-    - Dynamic Memory, 512 - 2048
+    - Starting RAM = 2048 - Changed from 1024 after Memory issues during OSD
+    - Dynamic Memory, 1024 - 2048
     - Two Logical Processors
     - Adds Network of $VMSwitch
     - Adds Boot ISO
@@ -28,6 +28,10 @@ This script will...
 # REQUIRED INPUT VARIABLES:
 [int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
 
+$StartingMemory = "2048MB"
+$DynamicMemoryLow = "1024MB"
+$DynamicMemoryHigh = "2048MB"
+$DriveSize = "100GB"
 
 $VMPath = "E:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
 $VMNamePreFix = "RECAST-"  #The VM will start with this name
@@ -158,11 +162,11 @@ else
         
         #If you want this to boot from ISO, change "NetworkAdapter to CD"
         #$NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch.Name -Generation 2
-        $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
-        Write-Host "  Setting Memory to Dynamic, 512MB - 2048MB" -ForegroundColor Green
-        set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes 512MB -MemoryMaximumBytes 2048MB
-        Write-Host "  Setting VHDx to Dynamic, 100GB located here: $VHDxFile" -ForegroundColor Green
-        $NewVHD = New-VHD -Path $VHDxFile  -SizeBytes 100GB -Dynamic
+        $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes $StartingMemory  -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
+        Write-Host "  Setting Memory to Dynamic, $DynamicMemoryLow - $DynamicMemoryHigh" -ForegroundColor Green
+        set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes $DynamicMemoryLow -MemoryMaximumBytes $DynamicMemoryHigh
+        Write-Host "  Setting VHDx to Dynamic, $DriveSize located here: $VHDxFile" -ForegroundColor Green
+        $NewVHD = New-VHD -Path $VHDxFile  -SizeBytes $DriveSize -Dynamic
         Add-VMHardDiskDrive -VMName $VMName -Path $VHDxFile
 
         #If Host is able, then set TPM on VM
