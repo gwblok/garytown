@@ -28,10 +28,10 @@ This script will...
 # REQUIRED INPUT VARIABLES:
 [int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
 
-[int64]$StartingMemory = 2048 * 1024 * 1024
-[int64]$DynamicMemoryLow = 1024 * 1024 * 1024
-[int64]$DynamicMemoryHigh = 2048 * 1024 * 1024
-[int64]$DriveSize = 100 * 1024 * 1024 * 1024
+[int64]$StartingMemory = 2 * 1024 * 1024 * 1024  #2GB
+[int64]$DynamicMemoryLow = 1 * 1024 * 1024 * 1024 #1GB
+[int64]$DynamicMemoryHigh = 2 * 1024 * 1024 * 1024 #2GB
+[int64]$DriveSize = 100 * 1024 * 1024 * 1024 #100GB
 
 $VMPath = "E:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
 $VMNamePreFix = "RECAST-"  #The VM will start with this name
