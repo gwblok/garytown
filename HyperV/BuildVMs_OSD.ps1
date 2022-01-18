@@ -28,10 +28,10 @@ This script will...
 # REQUIRED INPUT VARIABLES:
 [int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
 
-$StartingMemory = "2048MB"
-$DynamicMemoryLow = "1024MB"
-$DynamicMemoryHigh = "2048MB"
-$DriveSize = "100GB"
+[int64]$StartingMemory = 2048 * 1024 * 1024
+[int64]$DynamicMemoryLow = 1024 * 1024 * 1024
+[int64]$DynamicMemoryHigh = 2048 * 1024 * 1024
+[int64]$DriveSize = 100 * 1024 * 1024 * 1024
 
 $VMPath = "E:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
 $VMNamePreFix = "RECAST-"  #The VM will start with this name
@@ -162,7 +162,7 @@ else
         
         #If you want this to boot from ISO, change "NetworkAdapter to CD"
         #$NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch.Name -Generation 2
-        $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes $StartingMemory  -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
+        $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes $StartingMemory   -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
         Write-Host "  Setting Memory to Dynamic, $DynamicMemoryLow - $DynamicMemoryHigh" -ForegroundColor Green
         set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes $DynamicMemoryLow -MemoryMaximumBytes $DynamicMemoryHigh
         Write-Host "  Setting VHDx to Dynamic, $DriveSize located here: $VHDxFile" -ForegroundColor Green
