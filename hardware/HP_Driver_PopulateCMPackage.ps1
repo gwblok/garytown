@@ -10,6 +10,10 @@
     If you don't do Pre-Prod... just delete that Param section out and set $Stage = Prod or remove all Stage references complete, do whatever you want I guess.
 
     If you have a Proxy, you'll have to modify for that.
+
+
+    Updates 
+    2022.01.28 - Changed to Support Download and Create WIM files from Driver Packs.
 #>
 [CmdletBinding()]
     Param (
@@ -142,7 +146,7 @@ foreach ($Model in $HPModelsTable) #{Write-Host "$($Model.Name)"}
         [int]$DriverExtractSize = "{0:N2}" -f ((Get-ChildItem $CapturePath -Recurse | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB)
 
         Write-Host " Finished Expand & WIM Process, WIM size: $DriverWIMSize vs Expaneded: $DriverExtractSize" -ForegroundColor Green
-        Write-Host " WIM Savings: $($DriverExtractSize - $DriverWIMSize) MB | $([MATH]::Round($($DriverWIMSize / $DriverExtractSize)*100)) %" -ForegroundColor Green
+        Write-Host " WIM Savings: $($DriverExtractSize - $DriverWIMSize) MB | $(100 - $([MATH]::Round($($DriverWIMSize / $DriverExtractSize)*100))) %" -ForegroundColor Green
 
         Remove-Item -Path $CapturePath -Force -Recurse
         }
