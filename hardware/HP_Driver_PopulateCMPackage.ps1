@@ -13,7 +13,13 @@
 
 
     Updates 
-    2022.01.28 - Changed to Support Download and Create WIM files from Driver Packs.
+    2022.01.28
+     - Changed to Support Download and Create WIM files from Driver Packs.
+     - Added loop to find the latest driver package available
+
+    Future enhancements planed DBA:
+     - Intergrate with HPIA to create "Online" section of drivers to update drivers once in Full OS
+
 #>
 [CmdletBinding()]
     Param (
