@@ -16,6 +16,11 @@ BranchCache Management coming in the future.
 
 This will monitor a specific Task Sequence that is deployed to the device and confirm the Task Sequence Content is in the CCMCache
 
+## Sysinternals Suite
+
+This will download and expand the Suite to "$env:ProgramFiles\SysInternalsSuite\"
+Keeps the Suite Updated by downloading and comparing several EXE's verisons against the versions 
+
 ## Other Baselines
 
 There will be other items here, I'll try to update the page with some info as I add them... no promises.
