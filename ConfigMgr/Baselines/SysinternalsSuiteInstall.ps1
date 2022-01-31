@@ -66,7 +66,7 @@ function CMTraceLog {
 	    $LogMessage.Replace("`0","") | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
 
-
+if (!(Test-Path -Path $logpath)){$Null = New-Item -Path $logpath -ItemType Directory -Force}
 CMTraceLog -Message  "Running Script: $ScriptName | Version: $ScriptVersion" -Type 1 -LogFile $LogFile
 
 #If Sysinternal Suite was never installed... skip checking previous version and install right to program files.
