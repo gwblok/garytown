@@ -11,6 +11,11 @@ Shortcut Variable based on $_.VersionInfo.InternalName of the exe file for the o
 For Discovery Script, set $Remediate = $false
 For Remediation Script, set $Remediate = $true
 
+Had issues with timeout in baseline due to download time, puts Baseline into "error" state.
+Changed invoke-webrequest to start-bitstransfer, which helped
+Added logic that if downloaded in last 14 days, don't redownload.. This should still make sure that if it does need to be updated, it will update within 30 days of release.
+Recommend having Baseline run every 7 days.
+
 #>
 
 $Compliant = $true
@@ -19,7 +24,7 @@ if ($Remediate -eq $true)
     {$ComponentText = "App - Remediation"}
 else {$ComponentText = "App - Detection"}
 
-$ScriptVersion = "22.01.31.01"
+$ScriptVersion = "22.01.31.02"
 $ScriptName = "Sysinternals-Suite"
 $logpath = "$env:ProgramData\CMBaselines\Logs"
 $logfile = "$logpath\$($ScriptName).log"
@@ -67,6 +72,7 @@ function CMTraceLog {
     }
 
 if (!(Test-Path -Path $logpath)){$Null = New-Item -Path $logpath -ItemType Directory -Force}
+
 CMTraceLog -Message  "Running Script: $ScriptName | Version: $ScriptVersion" -Type 1 -LogFile $LogFile
 
 #If Sysinternal Suite was never installed... skip checking previous version and install right to program files.
@@ -74,8 +80,21 @@ if (!(Test-Path $InstallPath)){$Compliant = $false}
 
 $URL = "https://download.sysinternals.com/files/$FileName"
 $DownloadTempFile = "$env:TEMP\$FileName"
-CMTraceLog -Message  "Downloading $URL to $DownloadTempFile" -Type 1 -LogFile $LogFile
-Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $DownloadTempFile
+if (Test-Path -Path $DownloadTempFile){
+    $ZipFile = get-item $DownloadTempFile
+    if (!($ZipFile.LastAccessTime -gt ((Get-Date).AddDays(-14))))
+        {
+        CMTraceLog -Message  "Downloading $URL to $DownloadTempFile" -Type 1 -LogFile $LogFile
+        #Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $DownloadTempFile
+        $Download = Start-BitsTransfer -Source $URL -Destination $DownloadTempFile -DisplayName $FileName
+        }
+    }
+else
+    {
+    CMTraceLog -Message  "Downloading $URL to $DownloadTempFile" -Type 1 -LogFile $LogFile
+    $Download = Start-BitsTransfer -Source $URL -Destination $DownloadTempFile -DisplayName $FileName
+    }
+
 CMTraceLog -Message  "Expanding to $ExpandPath" -Type 1 -LogFile $LogFile
 Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
 
