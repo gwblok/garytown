@@ -19,7 +19,7 @@ if ($Remediate -eq $true)
     {$ComponentText = "App - Remediation"}
 else {$ComponentText = "App - Detection"}
 
-[version]$ScriptVersion = 22.01.31.01
+$ScriptVersion = "22.01.31.01"
 $ScriptName = "Sysinternals-Suite"
 $logpath = "$env:ProgramData\CMBaselines\Logs"
 $logfile = "$logpath\$($ScriptName).log"
