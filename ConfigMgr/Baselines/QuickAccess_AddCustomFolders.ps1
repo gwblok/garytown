@@ -1,7 +1,9 @@
 <# Gary Blok @gwblok Recast SOftware
 Add Folders Specific Quick Access Folders
 
-
+!!!This MUST be run in user context!!! - Set the CI to: Run scripts by using the logged on user credentials
+ (CI Settings -> Edit -> General Tab)
+ 
 Place the folders you want into the $Folders variable.
 I've set folders that I use all the time in my lab, like my CM Source location as example & CM Logs
 
