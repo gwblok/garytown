@@ -21,7 +21,7 @@ $Namespace = "shell:::{679f85cb-0220-4080-b29b-5540cc05aab6}"
 $QuickAccess = New-Object -ComObject shell.application
 $RecentFiles = $QuickAccess.Namespace($Namespace).Items()
 
-$Folders = @("\\src\src$","\\nas","C:\Windows\CCM\Logs")
+$Folders = @("\\src\src$","C:\Windows\CCM\Logs")
 
 
 foreach ($Folder in $Folders)
