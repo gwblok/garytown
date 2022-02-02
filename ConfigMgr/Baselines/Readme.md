@@ -31,9 +31,9 @@ In my Lab I modify it Quick Access like so:
    - Music
    - Pictures
  - Add
-   - CM Source Server Path | Ex: \\CMSource\Source$
+   - CM Source Server Path | Ex: `\\CMSource\Source$
    - CM Logs | c:\windows\ccm\logs
-   - Generic File Server | Ex: \\NAS
+   - Generic File Server | Ex: `\\NAS
 
 ## Other Baselines
 
