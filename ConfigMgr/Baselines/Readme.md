@@ -19,7 +19,21 @@ This will monitor a specific Task Sequence that is deployed to the device and co
 ## Sysinternals Suite
 
 This will download and expand the Suite to "$env:ProgramFiles\SysInternalsSuite\"
-Keeps the Suite Updated by downloading and comparing several EXE's verisons against the versions 
+Keeps the Suite Updated by downloading and comparing several EXE's verisons against the versions
+
+## Quick Access
+
+This will allow you to modify the Quick Access areas in Explorer.
+Not saying you should, but in my lab this is really nice.
+In my Lab I modify it Quick Access like so: 
+ - Remove
+   - Videos
+   - Music
+   - Pictures
+ - Add
+   - CM Source Server Path | Ex: \\CMSource\Source$
+   - CM Logs | c:\windows\ccm\logs
+   - Generic File Server | Ex: \\NAS
 
 ## Other Baselines
 
