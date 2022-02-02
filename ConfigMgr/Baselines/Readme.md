@@ -33,7 +33,6 @@ In my Lab I modify it Quick Access like so:
  - Add
    - CM Source Server Path | Ex: \\\\CMSource\Source$
    - CM Logs | c:\windows\ccm\logs
-   - Generic File Server | Ex: \\\\NAS
 
 ## Other Baselines
 
