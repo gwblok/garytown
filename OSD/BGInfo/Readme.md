@@ -1,9 +1,9 @@
-#BGInfo for ConfigMgr OSD - Prestart Command
+# BGInfo for ConfigMgr OSD - Prestart Command
 
-##Prestart Commands
+# #Prestart Commands
 cmd.exe /c powershell.exe -executionpolicy bypass .\BGInfoRegBuilder.ps1
 
-##Folder
+## Folder
 - Bginfo64.exe
 - WinPE-PreStart.bgi
 - BGInfoRegBuilder.ps1
