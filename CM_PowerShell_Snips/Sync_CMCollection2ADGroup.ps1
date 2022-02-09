@@ -5,6 +5,8 @@ Using Script to Sync CM Collection of Machines to an AD Group.
 
 Set the Collecton you want to get devices from, and the AD Group you want to place them in.
 
+
+Not tested in Scale
 #>
 
 $CollectionID = "MEM000A9" #Physical Machines
@@ -28,8 +30,20 @@ Set-Location "$($SiteCode):\"
 
 $ADComputerObject = @()
 
+#Add Devices from CM Collection to AD Group
 $CMDevices = Get-CMDevice -Fast -CollectionId $CollectionID
 ForEach ($CMDevice in $CMDevices){
     $ADComputerObject += Get-ADComputer -Identity $CMDevice.name
     }
 Add-ADGroupMember -Identity $ADGroup -Members $ADComputerObject
+
+
+#Remove any Devices in AD Group that aren't in CM Collection
+$ADGroupMembers = Get-ADGroupMember -Identity $ADGroup
+foreach ($ADGroupMember in $ADGroupMembers)
+    {
+    if ($ADGroupMember.name -notin $ADComputerObject.name)
+        {
+        Remove-ADGroupMember -Identity $ADGroup -Members $ADGroupMember -Confirm:$false
+        }
+    }
