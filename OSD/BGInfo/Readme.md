@@ -8,3 +8,4 @@ cmd.exe /c powershell.exe -executionpolicy bypass .\BGInfoRegBuilder.ps1
 - WinPE-PreStart.bgi
 - BGInfoRegBuilder.ps1
 
+[Image](https://raw.githubusercontent.com/gwblok/garytown/master/OSD/BGInfo/BGInfoFolder.png)
