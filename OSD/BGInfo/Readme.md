@@ -9,4 +9,4 @@ cmd.exe /c powershell.exe -executionpolicy bypass .\BGInfoRegBuilder.ps1
 - BGInfoRegBuilder.ps1
 
 [![Folder](BGInfoFolder.png)](BGInfoFolder.png)
-
+[![CMBootImage](BGInfoBootMediaPreStart.png)](BGInfoBootMediaPreStart.png)
