@@ -13,9 +13,9 @@ I don't claim this is pretty, but it works for me.
 #>
 
 
-# Import the ConfigurationManager.psd1 module 
-if((Get-Module ConfigurationManager) -eq $null) {
-    Import-Module "$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams 
+# Import the ConfigurationManager.psd1 module
+if ($null -eq (Get-Module ConfigurationManager)) {
+    Import-Module "$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams
 }
 
 #Get SiteCode
@@ -24,7 +24,7 @@ $ProviderMachineName = (Get-PSDrive -PSProvider CMSITE).Root
 
 
 # Connect to the site's drive if it is not already present
-if((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue) -eq $null) {
+if ($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
     New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $ProviderMachineName @initParams
 }
 
@@ -34,7 +34,7 @@ $Comment = "Exported from GARYTOWN.COM"
 $TimeStamp = Get-Date -Format yyyy.MM.dd
 $ExportFolderParent ="\\src\src$\OSD\TSExports"
 $ExportLocation = "$($ExportFolderParent)\$($TimeStamp)"
-$LastExportLocation = "$($ExportFolderParent)\LastExport" 
+$LastExportLocation = "$($ExportFolderParent)\LastExport"
 $Logfile = "$($ExportLocation)\WaaS_TS_Export.log"
 $CompareExportLog = "$($ExportLocation)\WaaS_TS_CompareExportLog.log"
 $ChangeLog = "$($ExportLocation)\WaaS_TS_ChangeLog.log"
@@ -45,7 +45,7 @@ $ContentObjectLastRun = $null
 $WaaSBaselineLastRun = $null
 $FolderDate = get-date -Format "yyyyMMdd"
 $FolderName = "WaaS_Export_$($FolderDate)"
-$NewFolderPath = "PS2:\TaskSequence\$($FolderName)"
+$NewFolderPath = "$($SiteCode):\TaskSequence\$($FolderName)"
 
 
 if (!(Test-path -Path $NewFolderPath))
@@ -61,16 +61,16 @@ if (!(Test-path -Path $NewFolderPath))
     Param (
 		    [Parameter(Mandatory=$false)]
 		    $Message,
- 
+
 		    [Parameter(Mandatory=$false)]
 		    $ErrorMessage,
- 
+
 		    [Parameter(Mandatory=$false)]
 		    $Component = "WaaS Exporter",
- 
+
 		    [Parameter(Mandatory=$false)]
 		    [int]$Type,
-		
+
 		    [Parameter(Mandatory=$true)]
 		    $LogFile
 	    )
@@ -79,11 +79,11 @@ if (!(Test-path -Path $NewFolderPath))
     #>
 	    $Time = Get-Date -Format "HH:mm:ss.ffffff"
 	    $Date = Get-Date -Format "MM-dd-yyyy"
- 
-	    if ($ErrorMessage -ne $null) {$Type = 3}
-	    if ($Component -eq $null) {$Component = " "}
-	    if ($Type -eq $null) {$Type = 1}
- 
+
+    if ($null -ne $ErrorMessage) {$Type = 3}
+    if ($null -eq $Component) {$Component = " "}
+    if ($null -eq $Type) {$Type = 1}
+
 	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
 	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
@@ -121,13 +121,13 @@ $TSInfoDatabase = @()
 $RunTSInfoDatabase = @()
 $ExportedTSDatabase = @()
 
-Set-Location -Path "$($SiteCode):"    
+Set-Location -Path "$($SiteCode):"
 foreach ($TaskSequence in $TaskSequenceTable)
     {
     Write-Host "Gathering Sub Task Sequences and adding to Export Database for $($TaskSequence.TSName)" -ForegroundColor Green
     $CurrentWorkingTS = Get-CMTaskSequence -TaskSequencePackageId $TaskSequence.TSPackageID
     $RUnTSSteps = Get-CMTaskSequenceStepRunTaskSequence -InputObject $CurrentWorkingTS
-    $RUnTSSteps = $RUnTSSteps | Select Name, TsPackageID -Unique
+    $RUnTSSteps = $RUnTSSteps | Select-Object Name, TsPackageID -Unique
     $RunTSInfoDatabase += $RUnTSSteps
     Write-Host "Copying TS $($CurrentWorkingTS.Name)" -ForegroundColor Green
     $ExportTS = Copy-CMTaskSequence -InputObject $CurrentWorkingTS
@@ -138,7 +138,7 @@ foreach ($TaskSequence in $TaskSequenceTable)
         NewExportName    = $ExportTSName
         NewExportPackageId     = $ExportTS.PackageID
         NewExportComment = $TaskSequence.Comment
-        Folder = $TaskSequence.Folder 
+        Folder = $TaskSequence.Folder
         OldTSPackageID = $TaskSequence.TSPackageID
         }
     $ExportedTSDatabase += $ExportTSObject
@@ -149,16 +149,16 @@ foreach ($TaskSequence in $TaskSequenceTable)
 
 
     #Build Database of Sub TS Steps
-    $RunTSInfoDatabase = $RunTSInfoDatabase | Select Name, TsPackageID -Unique
+    $RunTSInfoDatabase = $RunTSInfoDatabase | Select-Object Name, TsPackageID -Unique
     foreach ($RunTS in $RunTSInfoDatabase)
         {
         #$CurrentTS = Get-CMTaskSequence -TaskSequencePackageId $RunTS.TsPackageID
         Write-Host "Copying Sub-TS $($RunTS.Name)" -ForegroundColor Green
         $NewTS = Copy-CMTaskSequence -Id $RunTS.TsPackageID
-        $NewTSName = ($NewTS.Name).Replace("-$($NewTS.PackageID)","-$FolderDate")  
+        $NewTSName = ($NewTS.Name).Replace("-$($NewTS.PackageID)","-$FolderDate")
         Start-Sleep -Seconds 2
         Set-CMTaskSequence -TaskSequenceId $NewTS.PackageID -NewName $NewTSName -Description "Exported from GARYTOWN.COM on $FolderDate"
-        Start-Sleep -Seconds 1 
+        Start-Sleep -Seconds 1
         #Added this section because sometimes it wasn't renaming properly, so I'm just doing a check and name update if it didn't rename properly
         $NewTSTest = Get-CMTaskSequence -TaskSequencePackageId $NewTS.PackageID
         if (!($NewTSTest.Name -eq $NewTSName)){Set-CMTaskSequence -TaskSequenceId $NewTS.PackageID -NewName $NewTSName -Description "Exported from GARYTOWN.COM on $FolderDate"}
@@ -204,7 +204,7 @@ foreach ($TaskSequence in $TaskSequenceTable)
     if (Test-Path "$($LastExportLocation)\$($TSObject.Name).xml"){$TSObjectLastRun = Import-Clixml -Path "$($LastExportLocation)\$($TSObject.Name).xml"}
     #Export the TS as XML Data into the Last Export Folder for Reference the next time you run script
     Export-Clixml -InputObject $TSObject -Path "$($LastExportLocation)\$($TSObject.Name).xml" -Force
-    if (-not($TSObjectLastRun -eq $null))
+    if (-not($null -eq $TSObjectLastRun))
         {
         if ($TSObject.LastRefreshTime -eq $TSObjectLastRun.LastRefreshTime)
             {
@@ -213,11 +213,11 @@ foreach ($TaskSequence in $TaskSequenceTable)
             }
         Else
             {
-            
-            #Lots happening here... 
+
+            #Lots happening here...
             #This goes through and compares the TS(s) with the last time the export was done (XML Files in the Last Export location Folder)
-            #It will list a few basics of each steps, and you'll have to pull out the change visually.  
-            #For Exmaple, if you don't see 2 instances of a step (Current & Previous), then it was an Add or Remove
+            #It will list a few basics of each steps, and you'll have to pull out the change visually.
+            #For Example, if you don't see 2 instances of a step (Current & Previous), then it was an Add or Remove
                 #Current = Added
                 #Previous = Removed
             #If you see both Current & Previous listed, but don't see a change to the step in the log, then it's one of the things I don't log (Continue on Error, Disabled, Conditions, etc)
@@ -229,7 +229,7 @@ foreach ($TaskSequence in $TaskSequenceTable)
             Export-Clixml -InputObject $TSObjectLastRun.Sequence -Path "\\src\src$\OSD\TSExports\ExportLastRun.XML"
             Export-Clixml -InputObject $TSObject.Sequence -Path "\\src\src$\OSD\TSExports\ExportCurrentRun.XML"
 
-            
+
             [xml]$XML1 = $TSObjectLastRun.Sequence
             [xml]$XML2 = $TSObject.Sequence
 
@@ -239,7 +239,7 @@ foreach ($TaskSequence in $TaskSequenceTable)
             #Grabs all groups from All TS
             $groups1 = $XML1.GetElementsByTagName('group')
             $groups2 = $XML2.GetElementsByTagName('group')
-            
+
             #Gets the Differences in the Steps / Groups
             $diffStep = Compare-Object -ReferenceObject $steps1.outerxml -DifferenceObject $steps2.outerxml
             $diffgroup = Compare-Object -ReferenceObject $groups1.name -DifferenceObject $groups2.name
@@ -247,7 +247,7 @@ foreach ($TaskSequence in $TaskSequenceTable)
             CMTraceLog -Message "   ---- Starting Details of Step Differences Since last Export ----" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
             CMTraceLog -Message "   ---- Starting Details of Step Differences Since last Export ----" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
             #Build more "Friendly" Array of the Data in XML to make logging easier
-            if ($diffStep -ne $null)
+            if ($null -ne $diffStep)
                 {
 
                 $stepobject = @()
@@ -262,14 +262,14 @@ foreach ($TaskSequence in $TaskSequenceTable)
                     $obj | Add-Member -MemberType NoteProperty -Name 'StepAction' -Value $stepXML.step.action
                     $obj | Add-Member -MemberType NoteProperty -Name 'StepDescription' -Value $stepXML.step.description
                     $stepobject += $obj}
-            
+
                 #Sort the Data by Step Name
                 $stepobject = $stepobject | Sort-Object -Property "StepName"
-            
+
                 #Create the Logs for Changes in Steps
                 foreach ($step in $stepobject)
                     {
-                    
+
                     CMTraceLog -Message "        ---- ---- ---- ----" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
                     CMTraceLog -Message "        ---- ---- ---- ----" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
                     if ($step.Indicator -eq "=>")
@@ -305,9 +305,9 @@ foreach ($TaskSequence in $TaskSequenceTable)
                     }
                 CMTraceLog -Message "        ---- ---- Step Changes End---- ----" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
                 CMTraceLog -Message "        ---- ---- Step Changes End---- ----" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
-                }        
+                }
             #Create the Logs for Changes in groups
-            if ($diffgroup -ne $null)
+            if ($null -ne $diffgroup)
                 {
                 CMTraceLog -Message "         ---- ---- Group Changes Start - Group Name Only ---- ----" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
                 CMTraceLog -Message "         ---- ---- Group Changes Start - Group Name Only ---- ----" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
@@ -320,7 +320,7 @@ foreach ($TaskSequence in $TaskSequenceTable)
                         CMTraceLog -Message "        Current Export Group Name: $($group.InputObject)" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
                         CMTraceLog -Message "        Current Export Group Name: $($group.InputObject)" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
                         }
-                    
+
                     if ($group.SideIndicator -eq "<=")
                         {
                         CMTraceLog -Message "        Previous Export Group Name: $($group.InputObject)" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
@@ -332,13 +332,13 @@ foreach ($TaskSequence in $TaskSequenceTable)
                 CMTraceLog -Message "   ---- Finished Details of Differences Since last Export ----" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
                 CMTraceLog -Message "   ---- Finished Details of Differences Since last Export ----" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
                 }
-            
+
             }
         }
     $TSSourceDate = $TSObject.LastRefreshTime.ToString("yyyyMMdd")
     $TSExportDir = "$($ExportLocation)\TaskSequences\$($TaskSequence.Folder)"
     $TSExportName = "$($TaskSequence.Folder)_GARYTOWN_$($TSSourceDate).zip"
-    
+
     if (-Not(Test-Path -Path $TSExportDir)){New-Item -ItemType directory -Path $TSExportDir}
     CMTraceLog -Message "----- Exporting TS: $($TSObject.Name) ------" -Type 1 -LogFile $LogFile -Component "WaaS TS Export"
     Set-Location -Path "$($SiteCode):"
@@ -351,17 +351,17 @@ foreach ($TaskSequence in $TaskSequenceTable)
     CMTraceLog -Message "Exported TS: $($TaskSequence.Folder) on $($TimeStamp) with a Last Modified Date of: $($TSSourceDate)" -Type 2 -LogFile $LogFile -Component "WaaS TS Export"
     Write-Output "Exported TS: $($CopiedExportTSObject.Name) on $($TimeStamp) with a Last Modified Date of: $($TSSourceDate)"
     Set-Location -Path "$($SiteCode):"
-    
+
     #List & Log References for each TS
     if (($TSObject.References).count -ge 1)
-       { 
+       {
         Set-Location -Path "C:"
         CMTraceLog -Message "----- Listing References ------" -Type 1 -LogFile $LogFile -Component "WaaS TS Reference"
         Set-Location -Path "$($SiteCode):"
         foreach ($Reference in $TSObject.References)
             {
             $TSReferenceObject = Get-CMTaskSequence -TaskSequencePackageId $Reference.Package -ErrorAction SilentlyContinue
-            if ($TSReferenceObject -ne $null) 
+            if ($null -ne $TSReferenceObject)
                 {
                 $TSReferenceSourceDate = $TSReferenceObject.LastRefreshTime.ToString("yyyyMMdd")
                 Set-Location -Path "C:"
@@ -371,9 +371,9 @@ foreach ($TaskSequence in $TaskSequenceTable)
                 }
             }
         foreach ($Reference in $TSObject.References)
-            {    
+            {
             $TSReferencePackageObject = Get-CMPackage -Id $Reference.Package -fast -ErrorAction SilentlyContinue
-            if ($TSReferencePackageObject -ne $null) 
+            if ($null -ne $TSReferencePackageObject)
                 {
                 $TSReferencePackageSourceDate = $TSReferencePackageObject.LastRefreshTime.ToString("yyyyMMdd")
                 Set-Location -Path "C:"
@@ -382,12 +382,12 @@ foreach ($TaskSequence in $TaskSequenceTable)
                 Set-Location -Path "$($SiteCode):"
                 }
 
-            }    
+            }
         Set-Location -Path "C:"
         CMTraceLog -Message "----- Finished Listing References ------" -Type 1 -LogFile $LogFile -Component "WaaS TS Reference"
         Set-Location -Path "$($SiteCode):"
         }
-    
+
     }
 
 
@@ -405,7 +405,7 @@ foreach ($Content in $ContentPackageTable)
     Set-Location -Path "C:"
     if (Test-Path "$($LastExportLocation)\$($ContentObject.Name).xml"){$ContentObjectLastRun = Import-Clixml -Path "$($LastExportLocation)\$($ContentObject.Name).xml"}
     Export-Clixml -InputObject $ContentObject -Path "$($LastExportLocation)\$($ContentObject.Name).xml" -Force
-    if (-not($ContentObjectLastRun -eq $null))
+    if (-not($null -eq $ContentObjectLastRun))
         {
         if ($ContentObject.LastRefreshTime -eq $ContentObjectLastRun.LastRefreshTime)
             {
@@ -423,13 +423,13 @@ foreach ($Content in $ContentPackageTable)
     $ContentExportDir = "$($ExportLocation)\Packages\$($Content.Folder)"
     $ContentExportName = "$($Content.Folder)_GARYTOWN_$($ContentSourceDate).zip"
     Set-Location -Path "C:"
-    
+
     if (-Not(Test-Path -Path $ContentExportDir)){New-Item -ItemType directory -Path $ContentExportDir}
-    
+
     #Export CM Package For Upload
     Set-Location -Path "$($SiteCode):"
     Export-CMPackage -InputObject $ContentObject -FileName "$($ContentExportDir)\$($ContentExportName)" -Comment $Comment.Comment -WithContent $true -Force
-    
+
     Set-Location -Path  "C:"
     if (Test-Path -Path "$($LastExportLocation)\Packages\$($Content.Folder)")
         {
@@ -437,24 +437,24 @@ foreach ($Content in $ContentPackageTable)
         New-Item -ItemType directory -Path "$($LastExportLocation)\Packages\$($Content.Folder)"
         }
     Copy-Item -Path "$($ContentExportDir)\$($Content.Folder)_GARYTOWN_$($ContentSourceDate)_files\*" -Recurse -Destination "$($LastExportLocation)\Packages\$($Content.Folder)" -Force
-    
-    
+
+
     #Export cm package for Compare
     #Export-CMPackage -InputObject $ContentObject -FileName "$($LastExportLocation)\Packages\$($Content.Folder).zip" -Comment $Comment.Comment -WithContent $true -Force
     #Remove-Item -Path "$($LastExportLocation)\Packages$($Content.Folder)_GARYTOWN_$($ContentSourceDate)_Files\*"($Content.Folder).zip" -Force
-    
+
     #CMTraceLog -Message "Exported Package: $($Content.Folder) on $($TimeStamp) with a Last Modified Date of: $($ContentSourceDate)" -Type 1 -LogFile $LogFile -Component "WaaS Package Export"
     #Write-Host "$($TestDiff[0].name) Time Stamp Changed from Date $($testdiff[0].LastWriteTime) to $($testdiff[1].LastWriteTime)"
     #Write-Output "Exported Package: $($Content.Folder) on $($TimeStamp) with a Last Modified Date of: $($ContentSourceDate)"
     #Set-Location -Path "$($SiteCode):"
-    
-    } 
+
+    }
     Set-Location -Path "C:"
     #Grabs Info from The Current Export of packages to be able to create the Differences
     $PackageContentsNew = Get-ChildItem -Path "$($LastExportLocation)\Packages" -Recurse
     $PackageDiff = Compare-Object $PackageContentsold $PackageContentsnew -Property Name, LastWriteTime, Length | Where-Object {$_.Length -ge "1"}
-    
-    if ($PackageDiff -ne $null)
+
+    if ($null -ne $PackageDiff)
         {
         Write-Host "Package Changes Start Here" -ForegroundColor Cyan
         CMTraceLog -Message "         ---- ---- Package Changes Start ---- ----" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
@@ -473,7 +473,7 @@ foreach ($Content in $ContentPackageTable)
                 CMTraceLog -Message "        Current Package File Size: $($PackDiff.Length)" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
                 CMTraceLog -Message "        Current Package File Size: $($PackDiff.Length)" -Type 1 -LogFile $ChangeLogCombine -Component "WaaS TS Export Changes"
                 }
-                    
+
             if ($PackDiff.SideIndicator -eq "<=")
                 {
                 Write-Host "Previous Package File Name: $($PackDiff.Name)" -ForegroundColor Cyan
@@ -493,13 +493,13 @@ foreach ($Content in $ContentPackageTable)
         }
 
 CMTraceLog -Message "----- Exporting WaaS Packages WITH CONTENT Complete ------" -Type 3 -LogFile $LogFile -Component "WaaS Package Export"
-#Export Waas Baseline
+#Export WaaS Baseline
 Set-Location -Path "$($SiteCode):"
 $WaaSBaseline = Get-CMBaseline -Name "WaaS*"
 Set-Location -Path "C:"
 if (Test-Path "$($LastExportLocation)\$($WaaSBaseline.LocalizedDisplayName).xml"){$WaaSBaselineLastRun = Import-Clixml -Path "$($LastExportLocation)\$($WaaSBaseline.LocalizedDisplayName).xml"}
 Export-Clixml -InputObject $WaaSBaseline -Path "$($LastExportLocation)\$($WaaSBaseline.LocalizedDisplayName).xml" -Force
-if (-Not($WaaSBaselineLastRun -eq $null))
+if (-Not($null -eq $WaaSBaselineLastRun))
     {
     if ($WaaSBaseline.CIVersion -eq $WaaSBaselineLastRun.CIVersion)
         {
@@ -518,7 +518,7 @@ $WaaSBaselineModDate = $WaaSBaseline.DateLastModified.ToString("yyyyMMdd")
 $WaaSBaselineExportDir = "$($ExportLocation)\Baseline"
 Set-Location -Path "C:"
 if (-Not(Test-Path -Path $WaaSBaselineExportDir)){New-Item -ItemType directory -Path $WaaSBaselineExportDir}
-Write-Output "Exporting Baseline: $($WaaSBaseline.LocalizedDisplayName) version: $($WaaSBaseline.CIVersion) with a Last Modified Date of: $($WaaSBaselineModDate)"    
+Write-Output "Exporting Baseline: $($WaaSBaseline.LocalizedDisplayName) version: $($WaaSBaseline.CIVersion) with a Last Modified Date of: $($WaaSBaselineModDate)"
 CMTraceLog -Message "Started Export of $($WaaSBaseline.LocalizedDisplayName)" -Type 1 -LogFile $LogFile -Component "WaaS Baseline Export"
 Set-Location -Path "$($SiteCode):"
 Export-CMBaseline -InputObject $WaaSBaseline -Path "$($WaaSBaselineExportDir)\WaaS_PreAssessment_v$($WaaSBaseline.CIVersion)_$($WaaSBaselineModDate).cab"
@@ -560,5 +560,4 @@ $ThisSession = New-SFTPSession -ComputerName $sftphost -Credential $Credential
 Set-SFTPFile -SessionId ($ThisSession).SessionId -LocalFile $FilePath -RemotePath $SftpPath
 
 #Disconnect all SFTP Sessions
-Get-SFTPSession | % { Remove-SFTPSession -SessionId ($_.SessionId) }
-
+Get-SFTPSession | ForEach-Object { Remove-SFTPSession -SessionId ($_.SessionId) }
