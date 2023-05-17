@@ -1,0 +1,15 @@
+#pragma namespace ("\\\\.\\root\\cimv2\\SMS")
+#pragma deleteclass("HP_Docks", NOFAIL)
+[SMS_Report(TRUE),SMS_Group_Name("HP_Docks"),SMS_Class_ID("HP_Docks")]
+Class HP_Docks: SMS_Class_Template
+{
+[SMS_Report(TRUE),key] string KeyName;
+[SMS_Report(TRUE)] String AvailablePackageVersion;
+[SMS_Report(TRUE)] String InstalledPackageVersion;
+[SMS_Report(TRUE)] Uint32 ErrorCode;
+[SMS_Report(TRUE)] String LastInstalled;
+[SMS_Report(TRUE)] String MACAddress;
+[SMS_Report(TRUE)] String LastUpdateRun;
+[SMS_Report(TRUE)] String LastUpdateStatus;
+[SMS_Report(TRUE)] String LastChecked;
+};

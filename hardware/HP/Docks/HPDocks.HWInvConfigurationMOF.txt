@@ -1,0 +1,15 @@
+#pragma namespace ("\\\\.\\root\\cimv2")
+#pragma deleteclass("HP_Docks", NOFAIL)
+[dynamic, provider("RegProv"), ClassContext("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\HP\\HP Firmware Installer")]
+Class HP_Docks
+{
+[key] string KeyName;
+[PropertyContext("AvailablePackageVersion")] String AvailablePackageVersion;
+[PropertyContext("InstalledPackageVersion")] String InstalledPackageVersion;
+[PropertyContext("ErrorCode")] Uint32 ErrorCode;
+[PropertyContext("LastInstalled")] String LastInstalled;
+[PropertyContext("MACAddress")] String MACAddress;
+[PropertyContext("LastUpdateRun")] String LastUpdateRun;
+[PropertyContext("LastUpdateStatus")] String LastUpdateStatus;
+[PropertyContext("LastChecked")] String LastChecked;
+};

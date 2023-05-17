@@ -1,0 +1,15 @@
+{
+    "CloudAssignedDomainJoinMethod":  0,
+    "CloudAssignedDeviceName":  "Recast-%RAND:5%",
+    "CloudAssignedAutopilotUpdateTimeout":  1800000,
+    "CloudAssignedForcedEnrollment":  1,
+    "Version":  2049,
+    "CloudAssignedTenantId":  "f0f531dc-d350-4bc5-9e7e-e219e4bb351b",
+    "CloudAssignedAutopilotUpdateDisabled":  1,
+    "ZtdCorrelationId":  "4337dddf-b2c2-46d5-a377-2db4d4d426a4",
+    "Comment_File":  "Profile Recast Software Auto Pilot Profile",
+    "CloudAssignedAadServerData":  "{\"ZeroTouchConfig\":{\"CloudAssignedTenantUpn\":\"\",\"ForcedEnrollment\":1,\"CloudAssignedTenantDomain\":\"recastsoftwareblog.onmicrosoft.com\"}}",
+    "CloudAssignedOobeConfig":  1310,
+    "CloudAssignedTenantDomain":  "recastsoftwareblog.onmicrosoft.com",
+    "CloudAssignedLanguage":  "os-default"
+}

@@ -1,0 +1,12 @@
+[
+    {
+        "ComputerName": "HP-PD-600-G4",
+	"SerialNumber": "MXL9082PF7",
+        "Apps": ["Visual Studio Code", "WMI Explorer", "VLC"]
+    },
+    {
+	"ComputerName": "HP-ED-800-G6",
+        "SerialNumber": "MXL2521TYG",
+        "Apps": ["HP TechPulse", "Visual Studio Code", "WMI Explorer", "VLC"]
+    }
+]

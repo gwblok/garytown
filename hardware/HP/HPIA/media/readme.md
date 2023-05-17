@@ -1,0 +1,1 @@
+Just placeholder for images

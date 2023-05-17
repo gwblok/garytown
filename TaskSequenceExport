@@ -1,0 +1,233 @@
+# Site configuration
+$SiteCode = "PS2" # Site code 
+$ProviderMachineName = "CM.corp.viamonstra.com" # SMS Provider machine name
+
+# Customizations
+$initParams = @{}
+#$initParams.Add("Verbose", $true) # Uncomment this line to enable verbose logging
+#$initParams.Add("ErrorAction", "Stop") # Uncomment this line to stop the script on any errors
+
+# Do not change anything below this line
+
+# Import the ConfigurationManager.psd1 module 
+if((Get-Module ConfigurationManager) -eq $null) {
+    Import-Module "$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams 
+}
+
+# Connect to the site's drive if it is not already present
+if((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue) -eq $null) {
+    New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $ProviderMachineName @initParams
+}
+
+# Set the current location to be the site code.
+Set-Location "$($SiteCode):\" @initParams
+$Comment = "Exported from GARYTOWN.COM"
+$TimeStamp = Get-Date -Format yyyy.MM.dd
+$ExportFolderParent ="\\src\src$\OSD\TSExports"
+$ExportLocation = "$($ExportFolderParent)\$($TimeStamp)"
+$LastExportLocation = "$($ExportFolderParent)\LastExport" 
+$Logfile = "$($ExportLocation)\WaaS_TS_Export.log"
+$CompareExportLog = "$($ExportLocation).WaaS_TS_CompareExportLog.log"
+$ChangeLog = "$($ExportLocation).WaaS_TS_ChangeLog.log"
+#Reset Vars
+$TSObjectLastRun = $null
+$ContentObjectLastRun = $null
+$WaaSBaselineLastRun = $null
+
+
+#region: CMTraceLog Function formats logging in CMTrace style
+        function CMTraceLog {
+         [CmdletBinding()]
+    Param (
+		    [Parameter(Mandatory=$false)]
+		    $Message,
+ 
+		    [Parameter(Mandatory=$false)]
+		    $ErrorMessage,
+ 
+		    [Parameter(Mandatory=$false)]
+		    $Component = "WaaS Exporter",
+ 
+		    [Parameter(Mandatory=$false)]
+		    [int]$Type,
+		
+		    [Parameter(Mandatory=$true)]
+		    $LogFile
+	    )
+    <#
+    Type: 1 = Normal, 2 = Warning (yellow), 3 = Error (red)
+    #>
+	    $Time = Get-Date -Format "HH:mm:ss.ffffff"
+	    $Date = Get-Date -Format "MM-dd-yyyy"
+ 
+	    if ($ErrorMessage -ne $null) {$Type = 3}
+	    if ($Component -eq $null) {$Component = " "}
+	    if ($Type -eq $null) {$Type = 1}
+ 
+	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
+	    $LogMessage | Out-File -Append -Encoding UTF8 -FilePath $LogFile
+    }
+
+#Set-Location -Path "$($SiteCode):"
+
+        $TaskSequenceTable= @(
+        @{ TSName = 'DebugMode'; Folder = "DebugModeTS"; TSPackageID = "PS200038"; Comment = "GARYTOWN.COM - This Task Sequence is useful for Debugging"}
+        @{ TSName = 'PreCache'; Folder = "WaaS_PreCacheTS"; TSPackageID = "PS200072"; Comment = "GARYTOWN.COM - This is the PreCache / CompatScan TS"}
+        @{ TSName = 'OSUninstall'; Folder = "WaaS_OSUninstall"; TSPackageID = "PS200084"; Comment = "GARYTOWN.COM - This is the OSUninstall TS"}
+        @{ TSName = 'Upgrade'; Folder = "WaaS_UpgradeTS"; TSPackageID = "PS200081"; Comment = "GARYTOWN.COM - This is the Upgrade TS"}
+        )
+
+        $ContentPackageTable=@(
+        @{ ContentName = 'OSD TS Scripts & Tools'; Folder = "TSScriptsTools"; PackageID = "PS20006A"; Comment = "GARYTOWN.COM - Main Package for Scripts & Tools Used in IPU"}
+        @{ ContentName = 'WaaS_Scripts'; Folder = "WaaSScripts"; PackageID = "PS1000B2"; Comment = "GARYTOWN.COM - Package from Previous IPU, Basically just Branding Now"}
+        @{ ContentName = 'Custom Splash Screen'; Folder = "SplashScreen"; PackageID = "PS20003E"; Comment = "GARYTOWN.COM - Fancy Splash Screen Replacement"}
+        @{ ContentName = 'DebugMode'; Folder = "DebugMode"; PackageID = "PS200071"; Comment = "GARYTOWN.COM - Debug Tools"}
+        @{ ContentName = 'LockScreen'; Folder = "LockScreen"; PackageID = "PS200070"; Comment = "GARYTOWN.COM - LockScreen Images"}
+        )
+Set-Location -Path "C:"
+if (-Not(Test-Path -Path $ExportLocation)){New-Item -ItemType directory -Path $ExportLocation}
+if (-Not(Test-Path -Path $LastExportLocation)){New-Item -ItemType directory -Path $LastExportLocation}
+if (Test-Path -Path $LogFile){Remove-Item -Path $LogFile}
+if (Test-Path -Path $CompareExportLog){Remove-Item -Path $CompareExportLog}
+
+CMTraceLog -Message "----- Exporting WaaS Task Sequences FOR THE WIN ------" -Type 3 -LogFile $LogFile -Component "WaaS TS Export"
+    
+foreach ($TaskSequence in $TaskSequenceTable)
+    {
+    Set-Location -Path "$($SiteCode):"
+    $TSObject = Get-CMTaskSequence -TaskSequencePackageId $TaskSequence.TSPackageID
+    Set-Location -Path "C:"
+    if (Test-Path "$($LastExportLocation)\$($TSObject.Name).xml"){$TSObjectLastRun = Import-Clixml -Path "$($LastExportLocation)\$($TSObject.Name).xml"}
+    Export-Clixml -InputObject $TSObject -Path "$($LastExportLocation)\$($TSObject.Name).xml" -Force
+    if (-not($TSObjectLastRun -eq $null))
+        {
+        if ($TSObject.LastRefreshTime -eq $TSObjectLastRun.LastRefreshTime)
+            {
+            CMTraceLog -Message "TS: $($TSObject.Name) - No Changes since last Export" -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            CMTraceLog -Message "    TS: $($TSObject.Name) - Last Refresh: $($TSObject.LastRefreshTime.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            }
+        Else
+            {
+            CMTraceLog -Message "TS: $($TSObject.Name) - New Changes since last Export" -Type 3 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            CMTraceLog -Message "    TS: $($TSObject.Name) - New Refresh: $($TSObject.LastRefreshTime.ToString("yyyy-MM-dd")) from :$($TSObjectLastRun.LastRefreshTime.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            CMTraceLog -Message "TS: $($TSObject.Name) - New Refresh: $($TSObject.LastRefreshTime.ToString("yyyy-MM-dd")) from :$($TSObjectLastRun.LastRefreshTime.ToString("yyyy-MM-dd"))" -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
+            }
+        }
+    $TSSourceDate = $TSObject.LastRefreshTime.ToString("yyyyMMdd")
+    $TSExportDir = "$($ExportLocation)\TaskSequences\$($TaskSequence.Folder)"
+    $TSExportName = "$($TaskSequence.Folder)_GARYTOWN_$($TSSourceDate).zip"
+    
+    if (-Not(Test-Path -Path $TSExportDir)){New-Item -ItemType directory -Path $TSExportDir}
+    CMTraceLog -Message "----- Exporting TS: $($TSObject.Name) ------" -Type 1 -LogFile $LogFile -Component "WaaS TS Export"
+    Set-Location -Path "$($SiteCode):"
+    Export-CMTaskSequence -InputObject $TSObject -ExportFilePath "$($TSExportDir)\$($TSExportName)" -Comment $TaskSequence.Comment -WithDependence $true -WithContent $false -Force
+    Set-Location -Path "C:"
+    CMTraceLog -Message "Exported TS: $($TaskSequence.Folder) on $($TimeStamp) with a Last Modified Date of: $($TSSourceDate)" -Type 2 -LogFile $LogFile -Component "WaaS TS Export"
+    Write-Output "Exported TS: $($TSObject.Name) on $($TimeStamp) with a Last Modified Date of: $($TSSourceDate)"
+    Set-Location -Path "$($SiteCode):"
+    
+    if (($TSObject.References).count -ge 1)
+       { 
+        Set-Location -Path "C:"
+        CMTraceLog -Message "----- Listing References ------" -Type 1 -LogFile $LogFile -Component "WaaS TS Reference"
+        Set-Location -Path "$($SiteCode):"
+        foreach ($Reference in $TSObject.References)
+            {
+            $TSReferenceObject = Get-CMTaskSequence -TaskSequencePackageId $Reference.Package -ErrorAction SilentlyContinue
+            if ($TSReferenceObject -ne $null) 
+                {
+                $TSReferenceSourceDate = $TSReferenceObject.LastRefreshTime.ToString("yyyyMMdd")
+                Set-Location -Path "C:"
+                CMTraceLog -Message "     Exported Reference TS: $($TSReferenceObject.Name) with a Last Modified Date of: $($TSReferenceSourceDate)" -Type 1 -LogFile $LogFile -Component "WaaS TS Reference"
+                Write-Output "Exported Reference TS: $($TSReferenceObject.Name) with a Last Modified Date of: $($TSReferenceSourceDate)"
+                Set-Location -Path "$($SiteCode):"
+                }
+            }
+        foreach ($Reference in $TSObject.References)
+            {    
+            $TSReferencePackageObject = Get-CMPackage -Id $Reference.Package -fast -ErrorAction SilentlyContinue
+            if ($TSReferencePackageObject -ne $null) 
+                {
+                $TSReferencePackageSourceDate = $TSReferencePackageObject.LastRefreshTime.ToString("yyyyMMdd")
+                Set-Location -Path "C:"
+                CMTraceLog -Message "     Exported Reference Package: $($TSReferencePackageObject.Name) with a Last Modified Date of: $($TSReferencePackageSourceDate) - NO CONTENT" -Type 1 -LogFile $LogFile -Component "WaaS TS Reference"
+                Write-Output "Exported Reference Package: $($TSReferencePackageObject.Name) with a Last Modified Date of: $($TSReferencePackageSourceDate) - NO CONTENT"
+                Set-Location -Path "$($SiteCode):"
+                }
+
+            }    
+        Set-Location -Path "C:"
+        CMTraceLog -Message "----- Finished Listing References ------" -Type 1 -LogFile $LogFile -Component "WaaS TS Reference"
+        Set-Location -Path "$($SiteCode):"
+        }
+    
+    }
+
+Set-Location -Path "C:"
+CMTraceLog -Message "----- Exporting WaaS Packages WITH CONTENT ------" -Type 3 -LogFile $LogFile -Component "WaaS Package Export"
+foreach ($Content in $ContentPackageTable)
+    {
+    Set-Location -Path "$($SiteCode):"
+    $ContentObject = Get-CMPackage -Id $Content.PackageID -fast
+    Set-Location -Path "C:"
+    if (Test-Path "$($LastExportLocation)\$($ContentObject.Name).xml"){$ContentObjectLastRun = Import-Clixml -Path "$($LastExportLocation)\$($ContentObject.Name).xml"}
+    Export-Clixml -InputObject $ContentObject -Path "$($LastExportLocation)\$($ContentObject.Name).xml" -Force
+    if (-not($ContentObjectLastRun -eq $null))
+        {
+        if ($ContentObject.LastRefreshTime -eq $ContentObjectLastRun.LastRefreshTime)
+            {
+            CMTraceLog -Message "Package: $($ContentObject.Name) - No Changes since last Export" -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            CMTraceLog -Message "    Package: $($ContentObject.Name) - Last Refresh: $($ContentObject.LastRefreshTime.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            }
+        Else
+            {
+            CMTraceLog -Message "Package: $($ContentObject.Name) - New Changes since last Export" -Type 3 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            CMTraceLog -Message "    Package: $($ContentObject.Name) - New Refresh: $($ContentObject.LastRefreshTime.ToString("yyyy-MM-dd")) from :$($ContentObjectLastRun.LastRefreshTime.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+            CMTraceLog -Message "Package: $($ContentObject.Name) - New Refresh: $($ContentObject.LastRefreshTime.ToString("yyyy-MM-dd")) from :$($ContentObjectLastRun.LastRefreshTime.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
+            }
+        }
+    $ContentSourceDate = $ContentObject.LastRefreshTime.ToString("yyyyMMdd")
+    $ContentExportDir = "$($ExportLocation)\Packages\$($Content.Folder)"
+    $ContentExportName = "$($Content.Folder)_GARYTOWN_$($ContentSourceDate).zip"
+    Set-Location -Path "C:"
+    if (-Not(Test-Path -Path $ContentExportDir)){New-Item -ItemType directory -Path $ContentExportDir}
+    Set-Location -Path "$($SiteCode):"
+    Export-CMPackage -InputObject $ContentObject -FileName "$($ContentExportDir)\$($ContentExportName)" -Comment $Comment.Comment -WithContent $true -Force
+    Set-Location -Path "C:"
+    CMTraceLog -Message "Exported Package: $($Content.Folder) on $($TimeStamp) with a Last Modified Date of: $($ContentSourceDate)" -Type 1 -LogFile $LogFile -Component "WaaS Package Export"
+    Write-Output "Exported Package: $($Content.Folder) on $($TimeStamp) with a Last Modified Date of: $($ContentSourceDate)"
+    Set-Location -Path "$($SiteCode):"
+    
+    } 
+
+#Export Waas Baseline
+$WaaSBaseline = Get-CMBaseline -Name "WaaS*"
+Set-Location -Path "C:"
+if (Test-Path "$($LastExportLocation)\$($WaaSBaseline.LocalizedDisplayName).xml"){$WaaSBaselineLastRun = Import-Clixml -Path "$($LastExportLocation)\$($WaaSBaseline.LocalizedDisplayName).xml"}
+Export-Clixml -InputObject $WaaSBaseline -Path "$($LastExportLocation)\$($WaaSBaseline.LocalizedDisplayName).xml" -Force
+if (-Not($WaaSBaselineLastRun -eq $null))
+    {
+    if ($WaaSBaseline.CIVersion -eq $WaaSBaselineLastRun.CIVersion)
+        {
+        CMTraceLog -Message "Baseline: $($WaaSBaseline.LocalizedDisplayName) - No Changes since last Export" -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+        CMTraceLog -Message "    Baseline: $($WaaSBaseline.LocalizedDisplayName) - Version: $($WaaSBaselineLastRun.CIVersion) Last Refresh: $($WaaSBaseline.DateLastModified.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+        }
+    Else
+        {
+        CMTraceLog -Message "Baseline: $($WaaSBaseline.LocalizedDisplayName) - New Changes since last Export" -Type 3 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+        CMTraceLog -Message "    Baseline: $($WaaSBaseline.LocalizedDisplayName) - New Version: $($WaaSBaselineLastRun.CIVersion) from: $($WaaSBaselineLastRun.CIVersion) on $($WaaSBaseline.DateLastModified.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $CompareExportLog -Component "WaaS TS Export Changes"
+        CMTraceLog -Message "Baseline: $($WaaSBaseline.LocalizedDisplayName) - New Version: $($WaaSBaselineLastRun.CIVersion) from: $($WaaSBaselineLastRun.CIVersion) on $($WaaSBaseline.DateLastModified.ToString("yyyy-MM-dd")) " -Type 1 -LogFile $ChangeLog -Component "WaaS TS Export Changes"
+        }
+    }
+
+$WaaSBaselineModDate = $WaaSBaseline.DateLastModified.ToString("yyyyMMdd")
+$WaaSBaselineExportDir = "$($ExportLocation)\Baseline"
+Set-Location -Path "C:"
+if (-Not(Test-Path -Path $WaaSBaselineExportDir)){New-Item -ItemType directory -Path $WaaSBaselineExportDir}
+Write-Output "Exporting Baseline: $($WaaSBaseline.LocalizedDisplayName) version: $($WaaSBaseline.CIVersion) with a Last Modified Date of: $($WaaSBaselineModDate)"    
+CMTraceLog -Message "Started Export of $($WaaSBaseline.LocalizedDisplayName)" -Type 1 -LogFile $LogFile -Component "WaaS Baseline Export"
+Set-Location -Path "$($SiteCode):"
+Export-CMBaseline -InputObject $WaaSBaseline -Path "$($WaaSBaselineExportDir)\WaaS_PreAssessment_v$($WaaSBaseline.CIVersion)_$($WaaSBaselineModDate).cab"
+Set-Location -Path "C:"
+CMTraceLog -Message "Exported Baseline: $($WaaSBaseline.LocalizedDisplayName) version: $($WaaSBaseline.CIVersion) with a Last Modified Date of: $($WaaSBaselineModDate)" -Type 2 -LogFile $LogFile -Component "WaaS Baseline Export"
+CMTraceLog -Message "----- WaaS Export Process Complete ------" -Type 3 -LogFile $LogFile -Component "WaaS Package Export"

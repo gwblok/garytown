@@ -1,0 +1,322 @@
+[
+    {
+        "Windows Release":  "Windows 11",
+        "Version":  "22H2",
+        "StartDate":  "2022 September 19",
+        "EndDate":  "2024 October 07",
+        "SupportPeriodInDays":  749,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  676,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 11",
+        "Version":  "22H2",
+        "StartDate":  "2022 September 19",
+        "EndDate":  "2025 October 13",
+        "SupportPeriodInDays":  1120,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  1047,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 11",
+        "Version":  "21H2",
+        "StartDate":  "2021 October 03",
+        "EndDate":  "2023 October 09",
+        "SupportPeriodInDays":  736,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  312,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 11",
+        "Version":  "21H2",
+        "StartDate":  "2021 October 03",
+        "EndDate":  "2024 October 07",
+        "SupportPeriodInDays":  1100,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  676,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "22H2",
+        "StartDate":  "2022 October 17",
+        "EndDate":  "2024 May 13",
+        "SupportPeriodInDays":  574,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  529,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "22H2",
+        "StartDate":  "2022 October 17",
+        "EndDate":  "2025 May 12",
+        "SupportPeriodInDays":  938,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  893,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "21H2",
+        "StartDate":  "2021 November 15",
+        "EndDate":  "2023 June 12",
+        "SupportPeriodInDays":  574,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  193,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "21H2",
+        "StartDate":  "2021 November 15",
+        "EndDate":  "2024 June 10",
+        "SupportPeriodInDays":  938,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  557,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "21H1",
+        "StartDate":  "2021 May 17",
+        "EndDate":  "2022 December 12",
+        "SupportPeriodInDays":  573,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  11,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "21H1",
+        "StartDate":  "2021 May 17",
+        "EndDate":  "2022 December 12",
+        "SupportPeriodInDays":  573,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  11,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "20H2",
+        "StartDate":  "2020 October 20",
+        "EndDate":  "End of servicing",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "20H2",
+        "StartDate":  "2020 October 19",
+        "EndDate":  "2023 May 08",
+        "SupportPeriodInDays":  931,
+        "InSupport":  "True",
+        "SupportDaysRemaining":  158,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "2004",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "2004",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1909",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1909",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1903",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1903",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1809",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1809",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1803",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1803",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1709",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1709",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1703",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1703",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1607",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1607",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1511",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1511",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1507",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Home, Pro, Pro Education and Pro for Workstations"
+    },
+    {
+        "Windows Release":  "Windows 10",
+        "Version":  "1507",
+        "StartDate":  "End of service",
+        "EndDate":  "End of service",
+        "SupportPeriodInDays":  0,
+        "InSupport":  "False",
+        "SupportDaysRemaining":  0,
+        "EditionFamily":  "Enterprise, Education and IoT Enterprise"
+    }
+]

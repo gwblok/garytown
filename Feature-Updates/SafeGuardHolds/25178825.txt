@@ -1,0 +1,3 @@
+ZBook 15 G5 - 842A = sp132815
+EliteBook 840 G3 - 8079 = sp111438
+HP EliteBook 840 G5 - 83B2 = sp119373

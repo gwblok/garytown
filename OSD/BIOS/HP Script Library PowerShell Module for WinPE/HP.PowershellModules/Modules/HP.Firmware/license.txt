@@ -1,0 +1,248 @@
+End-User License Agreement
+
+READ CAREFULLY BEFORE USING THIS SOFTWARE
+
+This End-User license Agreement ("EULA") is a legal agreement 
+between (a) you (either an individual or a single entity) and (b) HP Inc. 
+("HP") that governs your use of any Software Product, installed on or 
+made available by HP for use with your HP product ("HP Product"), that 
+is not otherwise subject to a separate license agreement between you 
+and HP or its suppliers. Other software may contain a EULA in its online 
+documentation. The term "Software Product" means computer software 
+and may include associated media, printed materials and "online" or 
+electronic documentation. 
+
+An amendment or addendum to this EULA may accompany the HP 
+Product.
+
+RIGHTS IN THE SOFTWARE PRODUCT ARE OFFERED ONLY ON THE 
+CONDITION THAT YOU AGREE TO ALL TERMS AND CONDITIONS OF 
+THIS EULA. BY INSTALLING, COPYING, DOWNLOADING, OR 
+OTHERWISE USING THE SOFTWARE PRODUCT, YOU AGREE TO BE 
+BOUND BY THE TERMS OF THIS EULA. IF YOU DO NOT ACCEPT THESE 
+LICENSE TERMS, YOUR SOLE REMEDY IS TO RETURN THE ENTIRE 
+UNUSED PRODUCT (HARDWARE AND SOFTWARE) WITHIN 14 DAYS 
+FOR A REFUND SUBJECT TO THE REFUND POLICY OF YOUR PLACE OF 
+PURCHASE. 
+
+1. GRANT OF LICENSE.  HP grants you the following rights provided 
+you comply with all terms and conditions of this EULA:
+
+a. Use.  You may use the Software Product on a single computer ("Your 
+Computer"). If the Software Product is provided to you via the internet 
+and was originally licensed for use on more than one computer, you 
+may install and use the Software Product only on those computers. You 
+may not separate component parts of the Software Product for use on 
+more than one computer. You do not have the right to distribute the 
+Software Product. You may load the Software Product into Your 
+Computer's temporary memory (RAM) for purposes of using the 
+Software Product.
+
+b. Storage.  You may copy the Software Product into the local memory 
+or storage device of the HP Product.
+
+c. Copying.  You may make archival or back-up copies of the Software 
+Product, provided the copy contains all of the original Software 
+Product's proprietary notices and that it is used only for back-up 
+purposes.
+
+d. Reservation of Rights.  HP and its suppliers reserve all rights not 
+expressly granted to you in this EULA.
+
+e. Freeware.  Notwithstanding the terms and conditions of this EULA, all 
+or any portion of the Software Product which constitutes non-
+proprietary HP software or software provided under public license by 
+third parties ("Freeware"), is licensed to you subject to the terms and 
+conditions of the software license agreement accompanying such 
+Freeware whether in the form of a discrete agreement, shrink wrap 
+license or electronic license terms accepted at time of download. Use of 
+the Freeware by you shall be governed entirely by the terms and 
+conditions of such license.
+
+f. Recovery Solution.  Any software recovery solution provided with/for 
+your HP Product, whether in the form of a hard disk drive-based 
+solution, an external media-based recovery solution (e.g. floppy disk, 
+CD or DVD) or an equivalent solution delivered in any other form, may 
+only be used for restoring the hard disk of the HP Product with/for 
+which the recovery solution was originally purchased. The use of any 
+Microsoft operating system software contained in such recovery 
+solution shall be governed by the Microsoft License Agreement.
+
+2. UPGRADES.  To use a Software Product identified as an upgrade, 
+you must first be licensed for the original Software Product identified 
+by HP as eligible for the upgrade. After upgrading, you may no longer 
+use the original Software Product that formed the basis for your 
+upgrade eligibility. By using the Software Product, you also agree that 
+HP may automatically access your HP Product when connected to the 
+internet to check the version or status of certain Software Products and 
+may automatically download and install upgrades or updates to such 
+Software Products on to your HP Product to provide new versions or 
+updates required to maintain the functionality, performance, or security 
+of the HP Software and your HP Product and facilitate the provision of 
+support or other services provided to you. In certain cases, and 
+depending on the type of upgrade or update, notifications will be 
+provided to you (via pop-up or other means), which may require you to 
+initiate the upgrade or update.
+
+3. ADDITIONAL SOFTWARE. This EULA applies to updates or 
+supplements to the original Software Product provided by HP unless 
+HP provides other terms along with the update or supplement. In case 
+of a conflict between such terms, the other terms will prevail.
+
+4. TRANSFER.
+
+a. Third Party.  The initial user of the Software Product may make a 
+one-time transfer of the Software Product to another end user. Any 
+transfer must include all component parts, media, printed materials, 
+this EULA, and if applicable, the Certificate of Authenticity. The transfer 
+may not be an indirect transfer, such as a consignment. Prior to the 
+transfer, the end user receiving the transferred product must agree to 
+all the EULA terms. Upon transfer of the Software Product, your license 
+is automatically terminated.
+
+b. Restrictions.  You may not rent, lease or lend the Software Product or 
+use the Software Product for commercial timesharing or bureau use. 
+You may not sublicense, assign or transfer the license or Software 
+Product except as expressly provided in this EULA.
+
+5. PROPRIETARY RIGHTS.  All intellectual property rights in the 
+Software Product and user documentation are owned by HP or its 
+suppliers and are protected by law, including but not limited to United 
+States copyright, trade secret, and trademark law, as well as other 
+applicable laws and international treaty provisions. You shall not 
+remove any product identification, copyright notices or proprietary 
+restrictions from the Software Product.
+
+6. LIMITATION ON REVERSE ENGINEERING.  You may not reverse 
+engineer, decompile, or disassemble the Software Product, except and 
+only to the extent that the right to do so is mandated under applicable 
+law notwithstanding this limitation or it is expressly provided for in this 
+EULA.
+
+7. TERM.  This EULA is effective unless terminated or rejected. This 
+EULA will also terminate upon conditions set forth elsewhere in this 
+EULA or if you fail to comply with any term or condition of this EULA.
+
+8. CONSENT TO COLLECTION/USE OF DATA.
+
+a. HP will use cookies and other web technology tools to collect 
+anonymous technical information related to HP Software and your HP 
+Product. This data will be used to provide the upgrades and related 
+support or other services described in Section 2. HP will also collect 
+personal information including your Internet Protocol address or other 
+unique identifier information associated with your HP Product and data 
+provided by you on registration of your HP Product. As well as 
+providing the upgrades and related support or other services, this data 
+will be used for sending marketing communications to you (in each 
+case with your express consent where required by applicable law).
+To the extent permitted by applicable law, by accepting these terms 
+and conditions you consent to the collection and use of anonymous 
+and personal data by HP, its subsidiaries, and affiliates as described in 
+this EULA and as further described in HP�s privacy policy 
+www.hp.com/go/privacy
+
+b. Collection/Use by Third Parties.  Certain software programs included 
+in your HP Product are provided and separately licensed to you by third 
+party providers (�Third Party Software�). Third Party Software may be 
+installed and operational on your HP Product even if you choose not to 
+activate/purchase such software. Third Party Software may collect and 
+transmit technical information about your system (i.e., IP address, 
+unique device identifier, software version installed, etc.) and other 
+system data. This information is used by the third party to identify 
+technical system attributes and ensure that the most current version of 
+the software has been installed on your system. If you do not want the 
+Third Party Software to collect this technical information or 
+automatically send you version updates, you should uninstall the 
+software prior to connecting to the Internet.
+
+9. DISCLAIMER OF WARRANTIES.  TO THE MAXIMUM EXTENT 
+PERMITTED BY APPLICABLE LAW, HP AND ITS SUPPLIERS PROVIDE THE 
+SOFTWARE PRODUCT �AS IS� AND WITH ALL FAULTS, AND HEREBY 
+DISCLAIM ALL OTHER WARRANTIES, GUARANTEES, AND CONDITIONS, 
+EITHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING, BUT NOT 
+LIMITED TO, WARRANTIES OF TITLE AND NON-INFRINGEMENT, ANY 
+IMPLIED WARRANTIES, DUTIES, GUARANTEES, OR CONDITIONS OF 
+MERCHANTABILITY, OF SATISFACTORY QUALITY, OF FITNESS FOR A 
+PARTICULAR PURPOSE, AND OF LACK OF VIRUSES ALL WITH REGARD 
+TO THE SOFTWARE PRODUCT. Some states/jurisdictions do not allow 
+exclusion of implied warranties or limitations on the duration of implied 
+warranties, so the above disclaimer may not apply to you in its entirety.
+IN AUSTRALIA AND NEW ZEALAND, THE SOFTWARE COMES WITH 
+GUARANTEES THAT CANNOT BE EXCLUDED UNDER AUSTRALIAN AND 
+NEW ZEALAND CONSUMER LAWS. AUSTRALIAN CONSUMERS ARE 
+ENTITLED TO A REPLACEMENT OR A REFUND FOR A MAJOR FAILURE 
+AND COMPENSATION FOR OTHER REASONABLY FORESEEABLE LOSS 
+OR DAMAGE. AUSTRALIAN CONSUMERS ARE ALSO ENTITLED TO 
+HAVE THE SOFTWARE REPAIRED OR REPLACED IF IT FAILS TO BE OF 
+ACCEPTABLE QUALITY AND THE FAILURE DOES NOT AMOUNT TO A 
+MAJOR FAILURE. NEW ZEALAND CONSUMERS WHO ARE PURCHASING 
+GOODS FOR PERSONAL, DOMESTIC OR HOUSEHOLD USE OR 
+CONSUMPTION AND NOT FOR THE PURPOSE OF A BUSINESS (�NEW 
+ZEALAND CONSUMERS�) ARE ENTITLED TO REPAIR, REPLACEMENT OR 
+REFUND FOR A FAILURE AND COMPENSATION FOR OTHER 
+REASONABLY FORESEEABLE LOSS OR DAMAGE.
+
+10. LIMITATION OF LIABILITY.  Subject to local law, notwithstanding 
+any damages that you might incur, the entire liability of HP and any of 
+its suppliers under any provision of this EULA and your exclusive 
+remedy for all of the foregoing shall be limited to the greater of the 
+amount actually paid by you separately for the Software Product or U.S. 
+$5.00. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN 
+NO EVENT SHALL HP OR ITS SUPPLIERS BE LIABLE FOR ANY SPECIAL, 
+INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES 
+WHATSOEVER, INCLUDING, BUT NOT LIMITED TO, DAMAGES FOR 
+LOSS OF PROFITS OR CONFIDENTIAL OR OTHER INFORMATION, FOR 
+BUSINESS INTERRUPTION, FOR PERSONAL INJURY, FOR LOSS OF 
+PRIVACY ARISING OUT OF OR IN ANY WAY RELATED TO THE USE OF 
+OR INABILITY TO USE THE SOFTWARE PRODUCT, OR OTHERWISE IN 
+CONNECTION WITH ANY PROVISION OF THIS EULA, EVEN IF HP OR 
+ANY SUPPLIER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
+DAMAGES AND EVEN IF THE REMEDY FAILS OF ITS ESSENTIAL 
+PURPOSE. Some states/jurisdictions do not allow the exclusion or 
+limitation of incidental or consequential damages, so the above 
+limitation or exclusion may not apply to you.
+
+11. U.S. GOVERNMENT CUSTOMERS.  Consistent with FAR 12.211 
+and 12.212, Commercial Computer Software, Computer Software 
+Documentation, and Technical Data for Commercial Items are licensed 
+to the U.S. Government under HP's standard commercial license.
+
+12. COMPLIANCE WITH EXPORT LAWS.  You shall comply with all 
+laws and regulations of the United States and other countries ("Export 
+Laws") to assure that the Software Product is not (1) exported, directly 
+or indirectly, in violation of Export Laws, or (2) used for any purpose 
+prohibited by Export Laws, including, without limitation, nuclear, 
+chemical, or biological weapons proliferation.
+
+13. CAPACITY AND AUTHORITY TO CONTRACT.  You represent that 
+you are of the legal age of majority in your state of residence and, if 
+applicable, you are duly authorized by your employer to enter into this 
+contract.
+
+14. APPLICABLE LAW.  This EULA is governed by the laws of the 
+country in which the equipment was purchased.
+
+15. ENTIRE AGREEMENT.  This EULA (including any addendum or 
+amendment to this EULA which is included with the HP Product) is the 
+entire agreement between you and HP relating to the Software Product 
+and it supersedes all prior or contemporaneous oral or written 
+communications, proposals and representations with respect to the 
+Software Product or any other subject matter covered by this EULA. To 
+the extent the terms of any HP policies or programs for support 
+services conflict with the terms of this EULA, the terms of this EULA 
+shall control.
+
+�Copyright 2018-2021 HP Development Company, L.P.. 
+
+The information contained herein is subject to change without notice. 
+All other product names mentioned herein may be trademarks of their 
+respective companies. To the extent permitted by applicable law, the 
+only warranties for HP products and services are set forth in the express 
+warranty statements accompanying such products and services. 
+Nothing herein should be construed as constituting an additional 
+warranty. To the extent permitted by applicable law, HP shall not be 
+liable for technical or editorial errors or omissions contained herein. 
+
+First Edition: August 2015
+817678-001
+
