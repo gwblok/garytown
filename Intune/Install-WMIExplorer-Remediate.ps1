@@ -1,5 +1,4 @@
 <#
-<#
 Gary Blok - @gwblok - GARYTOWN.COM
 .Synopsis
   Proactive Remediation for WMIExplorer to be on endpoint
@@ -9,18 +8,6 @@ Gary Blok - @gwblok - GARYTOWN.COM
 #>
 
 
-#><#
-<#
-Gary Blok - @gwblok - GARYTOWN.COM
-.Synopsis
-  Proactive Remediation for WMIExplorer to be on endpoint
-
- .Description
-  Downloads WMIExplorer from GitHub, Copies to System32 if it's not already there
-#>
-
-
-#>
 $AppName = "WMIExplorer"
 $FileName = "WMIExplorer.zip"
 $ExpandPath = "$env:windir\system32"
