@@ -51,6 +51,7 @@ function Get-HPDockUpdateDetails {
       23.04.18.03 - Added CM Package Support.  You can now keep the Softpaqs in a CM Package for use with TASK SEQUENCE
       23.04.19.01 - Added Registry Values for the Essential G5 Dock to match the other docks, so it can be more easily inventory via CM
       23.04.19.02 - Lots of minor bug fixes for the Thunderbolt G2 Dock and other Registry Based Docks
+      23.05.22.01 - Added -stage parameter which supports USB-C Dock G5 & HP USB-C Universal Dock G2 & HP Thunderbolt Dock G4
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -102,6 +103,7 @@ function Get-HPDockUpdateDetails {
         [switch]$BypassHPCMSL,
         [switch]$Transcript,
         [switch]$Update,
+        [switch]$Stage,
         [switch]$DebugOut
         
     ) # param
@@ -448,8 +450,15 @@ function Get-HPDockUpdateDetails {
                             else {
                                 $script:UpdateRequired = $true
                                 if ( $Update ) {          
+                                    $FirmwareArgList = "$Mode"
+                                    if (($Dock.Dock_ProductName -eq "HP Thunderbolt Dock G4") -or ($Dock.Dock_ProductName -eq "HP USB-C Dock G5") -or ($Dock.Dock_ProductName -eq "HP USB-C Universal Dock G2")){
+                                         if ($stage){
+                                            $FirmwareArgList = "$Mode -stage"
+                                         }
+                                    }
                                     if (($DebugOut) -or ($Transcript)) {Write-Host " Starting Dock Firmware Update" -ForegroundColor Magenta}
-                                    $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$mode" -PassThru -Wait -NoNewWindow
+                                    
+                                    $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
                                     $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
                                     if ($ExitInfo.Code -eq "0"){
                                         if (($DebugOut) -or ($Transcript)) {Write-Host " Update Successful!" -ForegroundColor Green}
