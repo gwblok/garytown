@@ -1,3 +1,25 @@
+<#
+GARY BLOK | @gwblok | GARYTOWN.COM
+
+.SYNOPSIS
+	Sets information for HP Dock Connection History
+   
+.DESCRIPTION 
+    This script will record HP Dock connections into WMI
+   
+.Requirements
+    Requires that you have the HP WMI Provider Installed to get information from the currently installed HP Dock
+
+
+.LINK
+	https://www.hp.com/us-en/solutions/client-management-solutions/download.html
+
+.NOTES
+   Releases
+   23.05.22 - Origial Release
+
+	
+#>
 
 # Set Vars for WMI Info
 [String]$Namespace = "HP\InstrumentedServices\v1"
@@ -51,13 +73,20 @@ if ($ConnectedDock){
     $ProductName = $ProductName.Replace(" ","")
     $ID = "$($ProductName)_$($ConnectedDock.SerialNumber)"
 
+    #Get Time for CIM Format
+    $time = (Get-Date)
+    $objScriptTime = New-Object -ComObject WbemScripting.SWbemDateTime
+    $objScriptTime.SetVarDate($time)
+    $cimTime = $objScriptTime.Value
+
+    #Create Instance in WMI Class
     $wmipath = 'root\'+$Namespace+':'+$class
     $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
     $WMIInstance.SerialNumber = $ConnectedDock.SerialNumber
     $WMIInstance.FirmwarePackageVersion = $ConnectedDock.FirmwarePackageVersion
     $WMIInstance.ProductName = $ConnectedDock.ProductName
     $WMIInstance.MACAddress = $ConnectedDock.MACAddress
-    $WMIInstance.LastDateTime = (Get-Date -Format s)
+    $WMIInstance.LastDateTime = ($cimTime)
     $WMIInstance.ID = $ID
     $WMIInstance.Put()
     Clear-Variable -Name WMIInstance
