@@ -2,7 +2,7 @@
 .Synopsis
    Office 365 Prep Utility
 .DESCRIPTION
-   Utility script for Wells Fargo to remove previous Office Versions and related Office packages
+   Utility script to remove previous Office Versions and related Office packages
 .EXAMPLE
    #Deploy and run with ConfigMgr preceding an Office 365 Install
    #Log file will be made at "C:\Windows\Temp\Office365_Prep.log"
