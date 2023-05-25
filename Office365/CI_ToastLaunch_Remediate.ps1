@@ -162,7 +162,7 @@ If ($Deadline)
     <visual>
     <binding template="ToastGeneric">
         <image placement="appLogoOverride" src="$ImageLogo" />
-        <text>Wells Fargo</text>
+        <text>GARYTOWN</text>
         <text placement="attribution"></text>        
         <group>
             <subgroup>
