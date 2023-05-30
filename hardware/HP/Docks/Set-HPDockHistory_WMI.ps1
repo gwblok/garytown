@@ -23,18 +23,7 @@ GARY BLOK | @gwblok | GARYTOWN.COM
 	
 #>
 
-# Set Vars for WMI Info
-[String]$Namespace = "HP\InstrumentedServices\v1"
-[String]$Class = "HP_DockHistory"
-
-# Does Namespace Already Exist?
-Write-Verbose "Getting WMI namespace $Namespace"
-$Root = $Namespace | Split-Path
-$filterNameSpace = $Namespace.Replace("$Root\","")
-$NSfilter = "Name = '$filterNameSpace'"
-$NSExist = Get-WmiObject -Namespace "Root\$Root" -Class "__namespace" -filter $NSfilter
-
-
+#region Functions
 function Get-HPDockInfo {
     <#
         Dock f/w checker
@@ -119,12 +108,26 @@ function Get-HPDockInfo {
 
 }
 
+# Set Vars for WMI Info
+[String]$Namespace = "HP\InstrumentedServices\v1"
+[String]$Class = "HP_DockHistory"
+
+# Does Namespace Already Exist?
+Write-Verbose "Getting WMI namespace $Namespace"
+$Root = $Namespace | Split-Path
+$filterNameSpace = $Namespace.Replace("$Root\","")
+$NSfilter = "Name = '$filterNameSpace'"
+$NSExist = Get-WmiObject -Namespace "Root\$Root" -Class "__namespace" -filter $NSfilter
 
 # Namespace Does Not Exist
 If(!($NSExist)){
     Write-Host "Namespace $namespace does not exist, Make sure the 'HP Accessory WMI Provider' is already installed"
     Write-Host "Download from: https://www.hp.com/us-en/solutions/client-management-solutions/download.html"
     }
+
+
+
+#endregion functions
 
 # START SCRIPT
 $classname = "HP_DockAccessory"
