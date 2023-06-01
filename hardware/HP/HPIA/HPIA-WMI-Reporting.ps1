@@ -1,7 +1,20 @@
 <# GARY BLOK - GARYTOWN.COM - @GWBLOK
 
-BUGS = If no recommendations, XML file doesn't have data for stuff in the Compliance Class..> Fix
+This script will download & Run HP Image Assistant (HPIA) in List mode, which just scans the devices for recommended updates.
+It is currently set to scan for Drivers & BIOS, you can modify this by changing the "Desired Catigories" Variable.  Most used would be "All"
 
+Based on the Desired Categories, it will write complaince information to WMI.
+
+WMI Namespace = Root/HP/HPIA
+WMI Classes 
+  - HPIA_Compliance: Gives overall highlevel of devices
+  - HPIA_Recommendations: Gives a list of softpaqs HPIA recommends that you install
+
+Data is captured in WMI to make reporting via ConfigMgr easier.
+
+This is still a work in progress.
+
+    Intial Release: 2023.06.01
 #>
 
 
@@ -49,8 +62,8 @@ Function Get-HPIALatestVersion{
     @{HPIAVersion = "$($HPIAVersion)"; HPIADownloadURL = $HPIADownloadURL ; HPIAFileName = $HPIAFileName}
     )
     return $Return
-    } 
-    Function Install-HPIA{
+} 
+Function Install-HPIA{
     [CmdletBinding()]
     Param (
        [Parameter(Mandatory=$false)]
@@ -159,8 +172,8 @@ Function Get-HPIALatestVersion{
            throw
        }
     }
-    }
-    Function Run-HPIA {
+}
+Function Run-HPIA {
     
     [CmdletBinding()]
     Param (
@@ -288,10 +301,8 @@ Function Get-HPIALatestVersion{
        Stop-Transcript
        throw
     }
-    
-    
-    }
-    Function Get-HPIAXMLResult {
+}
+Function Get-HPIAXMLResult {
     <#  
     Grabs the output from a recent run of HPIA and parses the XML to find recommendations.
     #>
@@ -439,308 +450,308 @@ Function Get-HPIALatestVersion{
     {
        Write-Host "Failed to find an XML report: $($_.Exception.Message)"
     }
+}
+Function New-WMIHPCompliance {
+    Param (
+        [Parameter(Mandatory=$false)]
+        [String]$Namespace = "HP\HPIA",
+        [Parameter(Mandatory=$false)]
+        [String]$Class = "HPIA_Compliance"
+        )
+
+
+    # Does Namespace Already Exist?
+    Write-Verbose "Getting WMI namespace $Namespace"
+    $Root = $Namespace | Split-Path
+    $filterNameSpace = $Namespace.Replace("$Root\","")
+    $NSfilter = "Name = '$filterNameSpace'"
+    $NSExist = Get-WmiObject -Namespace "Root\$Root" -Class "__namespace" -filter $NSfilter
+
+    # Namespace Does Not Exist
+    If(!($NSExist)){
+        Write-Verbose "$Namespace namespace does not exist. Creating new namespace . . ."
+        # Create Namespace
+        $rootNamespace = [wmiclass]'root/HP:__namespace'
+        $NewNamespace = $rootNamespace.CreateInstance()
+        $NewNamespace.Name = $filterNameSpace
+        $NewNamespace.Put()
     }
-    Function New-WMIHPCompliance {
-        Param (
-           [Parameter(Mandatory=$false)]
-           [String]$Namespace = "HP\HPIA",
-           [Parameter(Mandatory=$false)]
-           [String]$Class = "HPIA_Compliance"
-           )
+    Write-Verbose "Getting $Class Class"
+    $ClassExist = Get-CimClass -Namespace root/$Namespace -ClassName $Class -ErrorAction SilentlyContinue    
+    If(!($ClassExist)){
+        Write-Verbose "$Class class does not exist. Creating new class . . ."
+        # Create Class
+        $NewClass = New-Object System.Management.ManagementClass("root\$namespace", [string]::Empty, $null)
+        $NewClass.name = $Class
+        $NewClass.Qualifiers.Add("Static",$true)
+        $NewClass.Qualifiers.Add("Description","HPIA Compliance Info")
+        $NewClass.Properties.Add("Compliance",[System.Management.CimType]::Boolean, $false)
+        $NewClass.Properties.Add("ReferenceFileDate",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("ReferencePlatform",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("ReferenceOS",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("RecommendedDrivers",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("RecommendedSoftware",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("RecommendedFirmware",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("RecommendedBIOS",[System.Management.CimType]::Boolean, $false)
+        $NewClass.Properties.Add("RecommendedBIOSTargetVer",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("RecommendedBIOSCurrentVer",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("DateTime",[System.Management.CimType]::DateTime, $false)
+        $NewClass.Properties.Add("ID",[System.Management.CimType]::String, $false)
+        $NewClass.Properties["ID"].Qualifiers.Add("Key",$true)
+        $NewClass.Put()
+    } 
+
+}
+Function New-WMIHPRecommendations {
+    Param (
+        [Parameter(Mandatory=$false)]
+        [String]$Namespace = "HP\HPIA",
+        [Parameter(Mandatory=$false)]
+        [String]$Class = "HPIA_Recommendations"
+        )
     
-    
-        # Does Namespace Already Exist?
-        Write-Verbose "Getting WMI namespace $Namespace"
-        $Root = $Namespace | Split-Path
-        $filterNameSpace = $Namespace.Replace("$Root\","")
-        $NSfilter = "Name = '$filterNameSpace'"
-        $NSExist = Get-WmiObject -Namespace "Root\$Root" -Class "__namespace" -filter $NSfilter
-    
-        # Namespace Does Not Exist
-        If(!($NSExist)){
-            Write-Verbose "$Namespace namespace does not exist. Creating new namespace . . ."
-            # Create Namespace
-            $rootNamespace = [wmiclass]'root/HP:__namespace'
-            $NewNamespace = $rootNamespace.CreateInstance()
-            $NewNamespace.Name = $filterNameSpace
-            $NewNamespace.Put()
-        }
-        Write-Verbose "Getting $Class Class"
-        $ClassExist = Get-CimClass -Namespace root/$Namespace -ClassName $Class -ErrorAction SilentlyContinue    
-        If(!($ClassExist)){
-            Write-Verbose "$Class class does not exist. Creating new class . . ."
-            # Create Class
-            $NewClass = New-Object System.Management.ManagementClass("root\$namespace", [string]::Empty, $null)
-            $NewClass.name = $Class
-            $NewClass.Qualifiers.Add("Static",$true)
-            $NewClass.Qualifiers.Add("Description","HPIA Compliance Info")
-            $NewClass.Properties.Add("Compliance",[System.Management.CimType]::Boolean, $false)
-            $NewClass.Properties.Add("ReferenceFileDate",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("ReferencePlatform",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("ReferenceOS",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("RecommendedDrivers",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("RecommendedSoftware",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("RecommendedFirmware",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("RecommendedBIOS",[System.Management.CimType]::Boolean, $false)
-            $NewClass.Properties.Add("RecommendedBIOSTargetVer",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("RecommendedBIOSCurrentVer",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("DateTime",[System.Management.CimType]::DateTime, $false)
-            $NewClass.Properties.Add("ID",[System.Management.CimType]::String, $false)
-            $NewClass.Properties["ID"].Qualifiers.Add("Key",$true)
-            $NewClass.Put()
-        } 
-    
+    # Does Namespace Already Exist?
+    Write-Verbose "Getting WMI namespace $Namespace"
+    $Root = $Namespace | Split-Path
+    $filterNameSpace = $Namespace.Replace("$Root\","")
+    $NSfilter = "Name = '$filterNameSpace'"
+    $NSExist = Get-WmiObject -Namespace "Root\$Root" -Class "__namespace" -filter $NSfilter
+
+    # Namespace Does Not Exist
+    If(!($NSExist)){
+        Write-Verbose "$Namespace namespace does not exist. Creating new namespace . . ."
+        # Create Namespace
+        $rootNamespace = [wmiclass]'root/HP:__namespace'
+        $NewNamespace = $rootNamespace.CreateInstance()
+        $NewNamespace.Name = $filterNameSpace
+        $NewNamespace.Put()
     }
-    Function New-WMIHPRecommendations {
-        Param (
-           [Parameter(Mandatory=$false)]
-           [String]$Namespace = "HP\HPIA",
-           [Parameter(Mandatory=$false)]
-           [String]$Class = "HPIA_Recommendations"
-           )
-        
-        # Does Namespace Already Exist?
-        Write-Verbose "Getting WMI namespace $Namespace"
-        $Root = $Namespace | Split-Path
-        $filterNameSpace = $Namespace.Replace("$Root\","")
-        $NSfilter = "Name = '$filterNameSpace'"
-        $NSExist = Get-WmiObject -Namespace "Root\$Root" -Class "__namespace" -filter $NSfilter
+    Write-Verbose "Getting $Class Class"
+    $ClassExist = Get-CimClass -Namespace root/$Namespace -ClassName $Class -ErrorAction SilentlyContinue    
+    If(!($ClassExist)){
+        Write-Verbose "$Class class does not exist. Creating new class . . ."
+        # Create Class
+        $NewClass = New-Object System.Management.ManagementClass("root\$namespace", [string]::Empty, $null)
+        $NewClass.name = $Class
+        $NewClass.Qualifiers.Add("Static",$true)
+        $NewClass.Qualifiers.Add("Description","HPIA Softpaq Recommendations")
+        $NewClass.Properties.Add("Softpaq_ID",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("Softpaq_Name",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("Softpaq_Version",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("Softpaq_Url",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("TargetComponent",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("TargetVersion",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("ReferenceVersion",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("Comments",[System.Management.CimType]::String, $false)
+        $NewClass.Properties.Add("ID",[System.Management.CimType]::String, $false)
+        $NewClass.Properties["ID"].Qualifiers.Add("Key",$true)
+        $NewClass.Put()
+    } 
+
+}
     
-        # Namespace Does Not Exist
-        If(!($NSExist)){
-            Write-Verbose "$Namespace namespace does not exist. Creating new namespace . . ."
-            # Create Namespace
-            $rootNamespace = [wmiclass]'root/HP:__namespace'
-            $NewNamespace = $rootNamespace.CreateInstance()
-            $NewNamespace.Name = $filterNameSpace
-            $NewNamespace.Put()
-        }
-        Write-Verbose "Getting $Class Class"
-        $ClassExist = Get-CimClass -Namespace root/$Namespace -ClassName $Class -ErrorAction SilentlyContinue    
-        If(!($ClassExist)){
-            Write-Verbose "$Class class does not exist. Creating new class . . ."
-            # Create Class
-            $NewClass = New-Object System.Management.ManagementClass("root\$namespace", [string]::Empty, $null)
-            $NewClass.name = $Class
-            $NewClass.Qualifiers.Add("Static",$true)
-            $NewClass.Qualifiers.Add("Description","HPIA Softpaq Recommendations")
-            $NewClass.Properties.Add("Softpaq_ID",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("Softpaq_Name",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("Softpaq_Version",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("Softpaq_Url",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("TargetComponent",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("TargetVersion",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("ReferenceVersion",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("Comments",[System.Management.CimType]::String, $false)
-            $NewClass.Properties.Add("ID",[System.Management.CimType]::String, $false)
-            $NewClass.Properties["ID"].Qualifiers.Add("Key",$true)
-            $NewClass.Put()
-        } 
-    
-    }
-    
-    #endregion Functions
-    
-    
-    #Start Script
-    
-    [String[]]$DesiredCategories = @("Drivers","BIOS")
-    
-    #Confirm WMI Namespace & Class Setup:
-    # Set Vars for WMI Info
-    [String]$Namespace = "HP\HPIA"
-    [String]$Class = "HPIA_Compliance"
-    New-WMIHPCompliance -Namespace $Namespace -Class $Class
-    
-    [String]$Namespace = "HP\HPIA"
-    [String]$Class = "HPIA_Recommendations"
-    New-WMIHPRecommendations -Namespace $Namespace -Class $Class
-    
-    
-    #File Locations:
-    $HPIAStagingFolder = "$env:ProgramData\HP\HPIAUpdateService"
-    $HPIAStagingLogFiles = "$HPIAStagingFolder\LogFiles"
-    $HPIAStagingReports = "$HPIAStagingFolder\Reports"
-    $HPIAStagingProgram = "$env:ProgramFiles\HPIA"
-    try {
-        [void][System.IO.Directory]::CreateDirectory($HPIAStagingFolder)
-        [void][System.IO.Directory]::CreateDirectory($HPIAStagingLogFiles)
-        [void][System.IO.Directory]::CreateDirectory($HPIAStagingReports)
-        [void][System.IO.Directory]::CreateDirectory($HPIAStagingProgram)
-    }
-    catch {throw}
-    
-    Run-HPIA -Operation Analyze -Category $DesiredCategories -Selection All -Action List -LogFolder $HPIAStagingLogFiles -ReportsFolder $HPIAStagingReports -Debug
-    
-    #Get HPIA XML Results from Last Run
-    Get-HPIAXMLResult -ReportsFolder $HPIAStagingReports  -Category $DesiredCategories
-    
-    
-    #region Populate WMI Compliance Class
-    #Get Reference File Information
-    if (Test-Path -Path $XMLReportPath){
-        [XML]$XML = Get-Content -Path $XMLReportPath
-        $Platform = $XML.hpia.SystemInfo.System.SystemID
-        $OSBuildNumber = $XML.hpia.SystemInfo.System.OSVersion
-        $RefDate = $XML.hpia.ReferenceImageLastModified
-        $RecommendedDrivers = ([int]$XML.hpia.Summary.Drivers.OutOfDate) + ([int]$XML.hpia.Summary.Drivers.Recommended)
-        $RecommendedSoftware = ([int]$XML.hpia.Summary.Software.OutOfDate) + ([int]$XML.hpia.Summary.Software.Recommended)
-        $RecommendedFirmware = ([int]$XML.hpia.Summary.Firmware.OutOfDate) + ([int]$XML.hpia.Summary.Firmware.Recommended)
-        if ($HPIABIOSUpdateAvailable -eq $true){
-            $RecommendedBIOS = $true
-            $RecommendedBIOSTargetVer = $ReferenceBIOSVersion
-            $RecommendedBIOSCurrentVer = $CurrentBIOSVersion
-        }
-        else {
-            $RecommendedBIOS = $false
-            $RecommendedBIOSTargetVer = $XML.hpia.SystemInfo.System.BIOSVersion
-            $RecommendedBIOSCurrentVer = $XML.hpia.SystemInfo.System.BIOSVersion
-        }
+#endregion Functions
+
+
+#Start Script
+
+[String[]]$DesiredCategories = @("Drivers","BIOS")
+
+#Confirm WMI Namespace & Class Setup:
+# Set Vars for WMI Info
+[String]$Namespace = "HP\HPIA"
+[String]$Class = "HPIA_Compliance"
+New-WMIHPCompliance -Namespace $Namespace -Class $Class
+
+[String]$Namespace = "HP\HPIA"
+[String]$Class = "HPIA_Recommendations"
+New-WMIHPRecommendations -Namespace $Namespace -Class $Class
+
+
+#File Locations:
+$HPIAStagingFolder = "$env:ProgramData\HP\HPIAUpdateService"
+$HPIAStagingLogFiles = "$HPIAStagingFolder\LogFiles"
+$HPIAStagingReports = "$HPIAStagingFolder\Reports"
+$HPIAStagingProgram = "$env:ProgramFiles\HPIA"
+try {
+    [void][System.IO.Directory]::CreateDirectory($HPIAStagingFolder)
+    [void][System.IO.Directory]::CreateDirectory($HPIAStagingLogFiles)
+    [void][System.IO.Directory]::CreateDirectory($HPIAStagingReports)
+    [void][System.IO.Directory]::CreateDirectory($HPIAStagingProgram)
+}
+catch {throw}
+
+Run-HPIA -Operation Analyze -Category $DesiredCategories -Selection All -Action List -LogFolder $HPIAStagingLogFiles -ReportsFolder $HPIAStagingReports -Debug
+
+#Get HPIA XML Results from Last Run
+Get-HPIAXMLResult -ReportsFolder $HPIAStagingReports  -Category $DesiredCategories
+
+
+#region Populate WMI Compliance Class
+#Get Reference File Information
+if (Test-Path -Path $XMLReportPath){
+    [XML]$XML = Get-Content -Path $XMLReportPath
+    $Platform = $XML.hpia.SystemInfo.System.SystemID
+    $OSBuildNumber = $XML.hpia.SystemInfo.System.OSVersion
+    $RefDate = $XML.hpia.ReferenceImageLastModified
+    $RecommendedDrivers = ([int]$XML.hpia.Summary.Drivers.OutOfDate) + ([int]$XML.hpia.Summary.Drivers.Recommended)
+    $RecommendedSoftware = ([int]$XML.hpia.Summary.Software.OutOfDate) + ([int]$XML.hpia.Summary.Software.Recommended)
+    $RecommendedFirmware = ([int]$XML.hpia.Summary.Firmware.OutOfDate) + ([int]$XML.hpia.Summary.Firmware.Recommended)
+    if ($HPIABIOSUpdateAvailable -eq $true){
+        $RecommendedBIOS = $true
+        $RecommendedBIOSTargetVer = $ReferenceBIOSVersion
+        $RecommendedBIOSCurrentVer = $CurrentBIOSVersion
     }
     else {
-        Write-Output "Failed to find Reference File"
+        $RecommendedBIOS = $false
+        $RecommendedBIOSTargetVer = $XML.hpia.SystemInfo.System.BIOSVersion
+        $RecommendedBIOSCurrentVer = $XML.hpia.SystemInfo.System.BIOSVersion
     }
+}
+else {
+    Write-Output "Failed to find Reference File"
+}
+
+if ($HPIAUpdatesAvailable -eq $true){
+    $HPIACompliance = $false
+
+}
+else {
+    $HPIACompliance = $true
+
+}
+
+#HP Compliance WMI Class
+[String]$Class = "HPIA_Compliance"
+[String]$ID = "HPIA_ComplianceData"
     
-    if ($HPIAUpdatesAvailable -eq $true){
-        $HPIACompliance = $false
-    
-    }
-    else {
-        $HPIACompliance = $true
-    
-    }
-    
+#Get Time for CIM Format
+$time = (Get-Date)
+$objScriptTime = New-Object -ComObject WbemScripting.SWbemDateTime
+$objScriptTime.SetVarDate($time)
+$cimTime = $objScriptTime.Value
+
+#Create Instance in WMI Class
+$wmipath = 'root\'+$Namespace+':'+$class
+$WMIInstance = ([wmiclass]$wmipath).CreateInstance()
+$WMIInstance.Compliance = $HPIACompliance
+$WMIInstance.ReferenceFileDate = $RefDate
+$WMIInstance.ReferencePlatform = $Platform
+$WMIInstance.ReferenceOS = $OSBuildNumber
+$WMIInstance.RecommendedDrivers = $RecommendedDrivers
+$WMIInstance.RecommendedSoftware = $RecommendedSoftware
+$WMIInstance.RecommendedFirmware = $RecommendedFirmware
+$WMIInstance.RecommendedBIOS = $RecommendedBIOS
+$WMIInstance.RecommendedBIOSTargetVer = $RecommendedBIOSTargetVer
+$WMIInstance.RecommendedBIOSCurrentVer = $RecommendedBIOSCurrentVer
+$WMIInstance.DateTime = ($cimTime)
+$WMIInstance.ID = $ID
+$WMIInstance.Put()
+Clear-Variable -Name WMIInstance
+
+#endregion 
+
+#HP Softpaq Recommendation WMI Class
+
+#Clear Previous Instances
+$PreviousInstances = Get-CimInstance -Namespace root/HP/HPIA -ClassName HPIA_Recommendations
+if ($PreviousInstances){
+    Get-CimInstance -Namespace root/HP/HPIA -ClassName HPIA_Recommendations | Remove-CimInstance
+}
+
+if ($BIOSRecommendation){
+
     #HP Compliance WMI Class
-    [String]$Class = "HPIA_Compliance"
-    [String]$ID = "HPIA_ComplianceData"
-        
-    #Get Time for CIM Format
-    $time = (Get-Date)
-    $objScriptTime = New-Object -ComObject WbemScripting.SWbemDateTime
-    $objScriptTime.SetVarDate($time)
-    $cimTime = $objScriptTime.Value
+    [String]$Class = "HPIA_Recommendations"
+    [String]$ID = "HPIA_$($BIOSRecommendation.Solution.Softpaq.id)"
     
     #Create Instance in WMI Class
     $wmipath = 'root\'+$Namespace+':'+$class
     $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
-    $WMIInstance.Compliance = $HPIACompliance
-    $WMIInstance.ReferenceFileDate = $RefDate
-    $WMIInstance.ReferencePlatform = $Platform
-    $WMIInstance.ReferenceOS = $OSBuildNumber
-    $WMIInstance.RecommendedDrivers = $RecommendedDrivers
-    $WMIInstance.RecommendedSoftware = $RecommendedSoftware
-    $WMIInstance.RecommendedFirmware = $RecommendedFirmware
-    $WMIInstance.RecommendedBIOS = $RecommendedBIOS
-    $WMIInstance.RecommendedBIOSTargetVer = $RecommendedBIOSTargetVer
-    $WMIInstance.RecommendedBIOSCurrentVer = $RecommendedBIOSCurrentVer
-    $WMIInstance.DateTime = ($cimTime)
+    $WMIInstance.Softpaq_ID = $BIOSRecommendation.Solution.Softpaq.id
+    $WMIInstance.Softpaq_Name = $BIOSRecommendation.Solution.Softpaq.Name
+    $WMIInstance.Softpaq_Version = $BIOSRecommendation.Solution.Softpaq.Version
+    $WMIInstance.Softpaq_Url = $BIOSRecommendation.Solution.Softpaq.Url
+    $WMIInstance.TargetComponent = $BIOSRecommendation.TargetComponent
+    $WMIInstance.TargetVersion = $BIOSRecommendation.TargetVersion
+    $WMIInstance.ReferenceVersion = $BIOSRecommendation.ReferenceVersion
+    $WMIInstance.Comments = $BIOSRecommendation.Comments
     $WMIInstance.ID = $ID
     $WMIInstance.Put()
     Clear-Variable -Name WMIInstance
-    
-    #endregion 
-    
-    #HP Softpaq Recommendation WMI Class
-    
-    #Clear Previous Instances
-    $PreviousInstances = Get-CimInstance -Namespace root/HP/HPIA -ClassName HPIA_Recommendations
-    if ($PreviousInstances){
-        Get-CimInstance -Namespace root/HP/HPIA -ClassName HPIA_Recommendations | Remove-CimInstance
-    }
-    
-    if ($BIOSRecommendation){
-    
+}
+
+if ($DriverRecommendation){
+    foreach ($item in $DriverRecommendation){
         #HP Compliance WMI Class
         [String]$Class = "HPIA_Recommendations"
-        [String]$ID = "HPIA_$($BIOSRecommendation.Solution.Softpaq.id)"
-        
+        [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
+    
         #Create Instance in WMI Class
         $wmipath = 'root\'+$Namespace+':'+$class
         $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
-        $WMIInstance.Softpaq_ID = $BIOSRecommendation.Solution.Softpaq.id
-        $WMIInstance.Softpaq_Name = $BIOSRecommendation.Solution.Softpaq.Name
-        $WMIInstance.Softpaq_Version = $BIOSRecommendation.Solution.Softpaq.Version
-        $WMIInstance.Softpaq_Url = $BIOSRecommendation.Solution.Softpaq.Url
-        $WMIInstance.TargetComponent = $BIOSRecommendation.TargetComponent
-        $WMIInstance.TargetVersion = $BIOSRecommendation.TargetVersion
-        $WMIInstance.ReferenceVersion = $BIOSRecommendation.ReferenceVersion
-        $WMIInstance.Comments = $BIOSRecommendation.Comments
+        $WMIInstance.Softpaq_ID = $item.Solution.Softpaq.id
+        $WMIInstance.Softpaq_Name = $item.Solution.Softpaq.Name
+        $WMIInstance.Softpaq_Version = $item.Solution.Softpaq.Version
+        $WMIInstance.Softpaq_Url = $item.Solution.Softpaq.Url
+        $WMIInstance.TargetComponent = $item.TargetComponent
+        $WMIInstance.TargetVersion = $item.TargetVersion
+        $WMIInstance.ReferenceVersion = $item.ReferenceVersion
+        $WMIInstance.Comments = $item.Comments
+        $WMIInstance.ID = $ID
+        $WMIInstance.Put()
+        Clear-Variable -Name WMIInstance
+
+    }
+}
+
+if ($SoftwareRecommendation){
+    foreach ($item in $SoftwareRecommendation){
+        #HP Compliance WMI Class
+        [String]$Class = "HPIA_Recommendations"
+        [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
+    
+        #Create Instance in WMI Class
+        $wmipath = 'root\'+$Namespace+':'+$class
+        $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
+        $WMIInstance.Softpaq_ID = $item.Solution.Softpaq.id
+        $WMIInstance.Softpaq_Name = $item.Solution.Softpaq.Name
+        $WMIInstance.Softpaq_Version = $item.Solution.Softpaq.Version
+        $WMIInstance.Softpaq_Url = $item.Solution.Softpaq.Url
+        $WMIInstance.TargetComponent = $item.TargetComponent
+        $WMIInstance.TargetVersion = $item.TargetVersion
+        $WMIInstance.ReferenceVersion = $item.ReferenceVersion
+        $WMIInstance.Comments = $item.Comments
         $WMIInstance.ID = $ID
         $WMIInstance.Put()
         Clear-Variable -Name WMIInstance
     }
+}
+
+if ($FirmwareRecommendation){
+    foreach ($item in $FirmwareRecommendation){
+        #HP Compliance WMI Class
+        [String]$Class = "HPIA_Recommendations"
+        [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
     
-    if ($DriverRecommendation){
-        foreach ($item in $DriverRecommendation){
-            #HP Compliance WMI Class
-            [String]$Class = "HPIA_Recommendations"
-            [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
-        
-            #Create Instance in WMI Class
-            $wmipath = 'root\'+$Namespace+':'+$class
-            $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
-            $WMIInstance.Softpaq_ID = $item.Solution.Softpaq.id
-            $WMIInstance.Softpaq_Name = $item.Solution.Softpaq.Name
-            $WMIInstance.Softpaq_Version = $item.Solution.Softpaq.Version
-            $WMIInstance.Softpaq_Url = $item.Solution.Softpaq.Url
-            $WMIInstance.TargetComponent = $item.TargetComponent
-            $WMIInstance.TargetVersion = $item.TargetVersion
-            $WMIInstance.ReferenceVersion = $item.ReferenceVersion
-            $WMIInstance.Comments = $item.Comments
-            $WMIInstance.ID = $ID
-            $WMIInstance.Put()
-            Clear-Variable -Name WMIInstance
-    
-        }
+        #Create Instance in WMI Class
+        $wmipath = 'root\'+$Namespace+':'+$class
+        $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
+        $WMIInstance.Softpaq_ID = $item.Solution.Softpaq.id
+        $WMIInstance.Softpaq_Name = $item.Solution.Softpaq.Name
+        $WMIInstance.Softpaq_Version = $item.Solution.Softpaq.Version
+        $WMIInstance.Softpaq_Url = $item.Solution.Softpaq.Url
+        $WMIInstance.TargetComponent = $item.TargetComponent
+        $WMIInstance.TargetVersion = $item.TargetVersion
+        $WMIInstance.ReferenceVersion = $item.ReferenceVersion
+        $WMIInstance.Comments = $item.Comments
+        $WMIInstance.ID = $ID
+        $WMIInstance.Put()
+        Clear-Variable -Name WMIInstance
     }
-    
-    if ($SoftwareRecommendation){
-        foreach ($item in $SoftwareRecommendation){
-            #HP Compliance WMI Class
-            [String]$Class = "HPIA_Recommendations"
-            [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
-        
-            #Create Instance in WMI Class
-            $wmipath = 'root\'+$Namespace+':'+$class
-            $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
-            $WMIInstance.Softpaq_ID = $item.Solution.Softpaq.id
-            $WMIInstance.Softpaq_Name = $item.Solution.Softpaq.Name
-            $WMIInstance.Softpaq_Version = $item.Solution.Softpaq.Version
-            $WMIInstance.Softpaq_Url = $item.Solution.Softpaq.Url
-            $WMIInstance.TargetComponent = $item.TargetComponent
-            $WMIInstance.TargetVersion = $item.TargetVersion
-            $WMIInstance.ReferenceVersion = $item.ReferenceVersion
-            $WMIInstance.Comments = $item.Comments
-            $WMIInstance.ID = $ID
-            $WMIInstance.Put()
-            Clear-Variable -Name WMIInstance
-        }
-    }
-    
-    if ($FirmwareRecommendation){
-        foreach ($item in $FirmwareRecommendation){
-            #HP Compliance WMI Class
-            [String]$Class = "HPIA_Recommendations"
-            [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
-        
-            #Create Instance in WMI Class
-            $wmipath = 'root\'+$Namespace+':'+$class
-            $WMIInstance = ([wmiclass]$wmipath).CreateInstance()
-            $WMIInstance.Softpaq_ID = $item.Solution.Softpaq.id
-            $WMIInstance.Softpaq_Name = $item.Solution.Softpaq.Name
-            $WMIInstance.Softpaq_Version = $item.Solution.Softpaq.Version
-            $WMIInstance.Softpaq_Url = $item.Solution.Softpaq.Url
-            $WMIInstance.TargetComponent = $item.TargetComponent
-            $WMIInstance.TargetVersion = $item.TargetVersion
-            $WMIInstance.ReferenceVersion = $item.ReferenceVersion
-            $WMIInstance.Comments = $item.Comments
-            $WMIInstance.ID = $ID
-            $WMIInstance.Put()
-            Clear-Variable -Name WMIInstance
-        }
-    }
-    
-    #$ItemName = $item.TargetComponent
-    #$CurrentVersion = $item.TargetVersion
-    #$ReferenceVersion = $item.ReferenceVersion
-    #$DownloadURL = "https://" + $item.Solution.Softpaq.Url
+}
+
+#$ItemName = $item.TargetComponent
+#$CurrentVersion = $item.TargetVersion
+#$ReferenceVersion = $item.ReferenceVersion
+#$DownloadURL = "https://" + $item.Solution.Softpaq.Url
