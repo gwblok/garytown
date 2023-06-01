@@ -1,5 +1,6 @@
 <# GARY BLOK - GARYTOWN.COM - @GWBLOK
 
+BUGS = If no recommendations, XML file doesn't have data for stuff in the Compliance Class..> Fix
 
 #>
 
@@ -673,7 +674,7 @@ Function Get-HPIALatestVersion{
         foreach ($item in $DriverRecommendation){
             #HP Compliance WMI Class
             [String]$Class = "HPIA_Recommendations"
-            [String]$ID = "HPIA_$($Driver.Solution.Softpaq.id)"
+            [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
         
             #Create Instance in WMI Class
             $wmipath = 'root\'+$Namespace+':'+$class
@@ -697,7 +698,7 @@ Function Get-HPIALatestVersion{
         foreach ($item in $SoftwareRecommendation){
             #HP Compliance WMI Class
             [String]$Class = "HPIA_Recommendations"
-            [String]$ID = "HPIA_$($Driver.Solution.Softpaq.id)"
+            [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
         
             #Create Instance in WMI Class
             $wmipath = 'root\'+$Namespace+':'+$class
@@ -720,7 +721,7 @@ Function Get-HPIALatestVersion{
         foreach ($item in $FirmwareRecommendation){
             #HP Compliance WMI Class
             [String]$Class = "HPIA_Recommendations"
-            [String]$ID = "HPIA_$($Driver.Solution.Softpaq.id)"
+            [String]$ID = "HPIA_$($item.Solution.Softpaq.id)"
         
             #Create Instance in WMI Class
             $wmipath = 'root\'+$Namespace+':'+$class
