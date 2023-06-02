@@ -42,7 +42,7 @@ Function New-AppShortcut {
     #Create Shortcut
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
-    $Shortcut.IconLocation = "$SourceExePath, 0"
+    $Shortcut.IconLocation = "$SourceExePath, 0" #uses the first icon it finds in the EXE itself
     $Shortcut.TargetPath = $SourceExePath
     if ($ArgumentsToSourceExe){$Shortcut.Arguments = $ArgumentsToSourceExe}
     $Shortcut.Save()
