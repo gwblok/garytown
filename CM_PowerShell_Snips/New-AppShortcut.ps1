@@ -11,14 +11,16 @@ Function New-AppShortcut {
     That will create a shortcut for C:\Windows\system32\wmiexplorer.exe named WMIExplorer and place it in the Start Menu
 
     #>
-    
+    [CmdletBinding()]
     param(
-    [string]$SourceExePath = "$env:windir\system32\control.exe",
-    [string]$ArgumentsToSourceExe,
-    [string]$ShortCutName = "AppName",
-    [switch]$Desktop
+        [Parameter(Position=0,mandatory=$true)]
+        [string]$SourceExePath,
+        [Parameter(Position=1,mandatory=$true)]
+        [string]$ShortCutName = "AppName",
+        [string]$ArgumentsToSourceExe,
+        [switch]$Desktop
+        )
 
-    )
     #Build ShortCut Information
     if ($Desktop){
         $ShortCutFolderPath = "$env:Public\Desktop" 
