@@ -13,6 +13,8 @@ if((Get-Module ConfigurationManager) -eq $null) {
 $SiteCode = Get-PSDrive -PSProvider CMSITE
 $ProviderMachineName = (Get-PSDrive -PSProvider CMSITE).Root
 Set-location $SiteCode":"
+#$CollectionFolderName = "Test Collections"
+#$CreateCollectionFolder = $true
 
 #Start Custom Script Vars
 $LimitingCollection = "All Workstations"  #Creates this later if does not exist
