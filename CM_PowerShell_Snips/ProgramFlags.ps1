@@ -50,3 +50,17 @@ $Program = Get-CMProgram -PackageId $PackageID
 #https://learn.microsoft.com/en-us/mem/configmgr/develop/core/servers/configure/how-to-modify-the-supported-platforms-for-a-program
 ([ProgramFlags]($Program.ProgramFlags) -band [ProgramFlags]::ANY_PLATFORM) -eq [ProgramFlags]::ANY_PLATFORM
 
+
+#Test All CM Packages:
+$AllCMPackages = Get-CMPackage -Fast
+ForEach ($Package in $AllCMPackages){
+    if ($Package.NumOfPrograms -gt 0){
+        $Programs = Get-CMProgram -PackageId $Package.PackageID
+        foreach ($Program in $Programs){
+            if (!([ProgramFlags]($Program.ProgramFlags) -band [ProgramFlags]::ANY_PLATFORM) -eq [ProgramFlags]::ANY_PLATFORM){
+                Write-Output "$($Program.PackageName) | Is not set to Any Platform"
+            }
+        }
+    }
+}
+
