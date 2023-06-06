@@ -52,6 +52,7 @@ function Get-HPDockUpdateDetails {
       23.04.19.01 - Added Registry Values for the Essential G5 Dock to match the other docks, so it can be more easily inventory via CM
       23.04.19.02 - Lots of minor bug fixes for the Thunderbolt G2 Dock and other Registry Based Docks
       23.05.22.01 - Added -stage parameter which supports USB-C Dock G5 & HP USB-C Universal Dock G2 & HP Thunderbolt Dock G4
+      23.06.06.01 - Updated SoftPaq for USB-C Dock G5 from sp143343 (1.0.16.0) to sp146273 (1.0.18.0)
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
