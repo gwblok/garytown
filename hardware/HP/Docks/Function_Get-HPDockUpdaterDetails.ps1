@@ -110,7 +110,7 @@ function Get-HPDockUpdateDetails {
         
     ) # param
 
-    $ScriptVersion = '23.04.19.02'
+    $ScriptVersion = '23.06.06.02'
 
     # check for CMSL
     if ($CMPackage -ne $true){
