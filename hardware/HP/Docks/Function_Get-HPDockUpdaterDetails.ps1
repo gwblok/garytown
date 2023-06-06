@@ -129,7 +129,7 @@ function Get-HPDockUpdateDetails {
         $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  (as of apr 6, 2023)
         $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143669.exe'   #  (as of apr 6, 2023)
         $Url_UniG2 = 'ftp.hp.com/pub/softpaq/sp143001-143500/sp143451.exe'  #  (as of apr 6, 2023)
-        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp143001-143500/sp143343.exe'  #  (as of apr 6, 2023)
+        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146273.exe'  #  (as of june 6, 2023)
         $Url_UsbG4 = 'ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  (as of apr 6, 2023)
         $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp144501-145000/sp144502.exe'  #  (as of apr 6, 2023)
 
