@@ -99,7 +99,7 @@ if ($WaaSBaseline -ne $null)
     Else
         {
         $BaselineStatus = "No Status"
-        Write-Host "WaaS Content Baseline: $BaselineStatus" -ForegroundColor Red
+        Write-Host "Baseline: $BaselineStatus" -ForegroundColor Red
         [VOID]$DCM.TriggerEvaluation($WaaSBaseline.Name, $WaaSBaseline.Version)
         }
     }
@@ -107,7 +107,7 @@ else
     {
     [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000021}')
     [Void]([wmiclass]'ROOT\ccm:SMS_Client').TriggerSchedule('{00000000-0000-0000-0000-000000000022}')
-    Write-Host "Baseline $BaselineName no found in policy" -ForegroundColor Red
+    Write-Host "Baseline $BaselineName not found in policy" -ForegroundColor Red
     }
 
 
