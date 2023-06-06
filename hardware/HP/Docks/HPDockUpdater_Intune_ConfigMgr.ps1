@@ -36,6 +36,9 @@ $Compliance = "Compliant"
 ### Grab Function Get-HPDockUpdateDetails and Paste Here: https://github.com/gwblok/garytown/edit/master/hardware/HP/Docks/Function_Get-HPDockUpdaterDetails.ps1
 
 
+iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdaterDetails.ps1")
+
+
 ### Function Ends
 
 $DockInfo = Get-HPDockUpdateDetails
@@ -49,7 +52,7 @@ if ($DockInfo.UpdateRequired -eq $true){ #Update Required
     } #End NO Remediation ($false)
     if ($Remediate -eq $true){ #Run Update Process for Firmware
        #Run Function with Paramters to Update the Firmware showing a non-interactive UI and creating a Transcript file of the process.
-       Get-HPDockUpdateDetails -UIExperience NonInteractive -Update -Transcript 
+       Get-HPDockUpdateDetails -UIExperience NonInteractive -Update -Transcript -Stage
     }
 }
 else{ #NO Dock Update Available / Needed
