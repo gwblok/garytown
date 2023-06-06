@@ -399,7 +399,7 @@ Function Get-InstalledApplication {
 
 #Test if MIK is installed
 if (Test-Path -Path $MIKPath ){
-    #Write-Host "MIK already Installed, Checking Version" -ForegroundColor Green
+    #Get Version of MIK Client based on Softpaq ID in Variable above
     $MIKMeta = Get-SoftpaqMetadata -Number $MIKSoftpaqID
     if ($MIKMeta){
         [Version]$MIKLatestVersion = $MIKMeta.General.Version
@@ -408,42 +408,38 @@ if (Test-Path -Path $MIKPath ){
         Write-Host "Failed to Get MIK Metadata for Softpaq $MIKSoftpaqID"
         Exit 5 #Exit with Error as script was unable to detect version properly
     }
+    #Get Version of installed MIK Client from Registry
     $InstalledApps = Get-InstalledApplication
     $InstalledMIK = $InstalledApps | Where-Object {$_.Name -eq 'HP MIK Client'}
     if ($InstalledMIK){
         [Version]$MIKInstalledVersion = $InstalledMIK.Version
     }
-    if ($MIKInstalledVersion -and $MIKLatestVersion){
-        if ($MIKInstalledVersion -eq $MIKLatestVersion){
-            #Write-Host "MIK already Current: $MIKInstalledVersion" -ForegroundColor Green
+    #Compare versions
+    if ($MIKInstalledVersion -and $MIKLatestVersion){ #Confirm both Variables are created
+        if ($MIKInstalledVersion -eq $MIKLatestVersion){ #Compare Versions
         }
         else {
-            #Write-Host "MIK installed is out of date: $MIKInstalledVersion | New Version: $MIKLatestVersion" -ForegroundColor Yellow
-            #Write-Host "Updating MIK Client" -ForegroundColor Green
-            #Get-Softpaq -Number $MIKSoftpaqID -Action silentinstall
             $Compliance = "Non-Compliant"
         }
     }
 }
 else {
-    #Write-Host "Installing MIK Client" -ForegroundColor Green
-    #Get-Softpaq -Number $MIKSoftpaqID -Action silentinstall
     $Compliance = "Non-Compliant"
 }
 
-
+#Get HPIA Latest Version
 $HPIALatest = Get-HPIALatestVersion
 $HPIAVersion = $HPIALatest.HPIAVersion
 $HPIAInstallPath = "$MIKPath\HPIA"
+#Get HPIA Installed Version
 if (Test-Path -Path $HPIAInstallPath){
     $HPIA = get-item -Path $HPIAInstallPath\HPImageAssistant.exe
     $HPIAExtractedVersion = $HPIA.VersionInfo.FileVersion
+    #Compare Versions
     if ($HPIAExtractedVersion -match $HPIAVersion){
-
     }
     else{
         $Compliance = "Non-Compliant"
         }
 }
-
 $Compliance
