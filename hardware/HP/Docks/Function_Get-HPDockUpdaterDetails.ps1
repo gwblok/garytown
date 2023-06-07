@@ -38,6 +38,10 @@ function Get-HPDockUpdateDetails {
       by default, the script does a Check of the installed firmware. The -Update switch enables the script to execute
       a firmware update if one is needed
 
+     .Parameter stage [Switch]
+      when the dock supports the staging option, if you choose this parameter, the Update will be staged to install on disconnect instead of running immediately.
+      If the dock doesn't support -stage, it will ignore this switch and install immediately
+
      .ChangeLog
       23.04.06.01 - First Release as DockUpdater.ps1
       23.04.07.01 - change -C so scripts defaults to Check, added -Update option to enable firmware update.
@@ -96,6 +100,9 @@ function Get-HPDockUpdateDetails {
        # Use Script with Task Sequence
        Get-HPDockUpdateDetails -CMPackage -Update - This will look for a Package that was downloaded and stored in Varaible HPDOCK
 
+     .Example
+       # Update the Dock's firmware to the latest version HPCMSL (if installed) will find completely silent to end user - Stage the content on the dock to install at disconnect
+       Get-HPDockUpdateDetails -Update -stage -UIExperience Silent
     #>
     [CmdletBinding()]
     param(
