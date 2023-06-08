@@ -186,7 +186,7 @@ if ($ConnectedDock){
 else {
     Write-Host "No WMI Supported Dock Connected"
     $GenericDockInfo = Get-HPDockInfo
-    if ($GenericDockInfo){
+    if ($GenericDockInfo.Dock_Attached -ne 0){
         Write-Host "$($GenericDockInfo.Dock_ProductName) attached, but does not support WMI Provider"
     }
 }
