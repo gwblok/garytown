@@ -33,10 +33,10 @@ $Purpose = "IntunePR"
 $Remediate = $true #Use for Detect if $false | Remedaite if $true
 $Compliance = "Compliant"
 
-### Grab Function Get-HPDockUpdateDetails and Paste Here: https://github.com/gwblok/garytown/edit/master/hardware/HP/Docks/Function_Get-HPDockUpdaterDetails.ps1
+### Grab Function Get-HPDockUpdateDetails and Paste Here: https://github.com/gwblok/garytown/edit/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1
 
 #Replace this next line with the content of the actual function when running in production.  Right now it pulls the function from Github directly when running.
-iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdaterDetails.ps1")
+iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1")
 
 
 ### Function Ends
