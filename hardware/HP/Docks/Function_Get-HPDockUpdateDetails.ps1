@@ -58,6 +58,7 @@ function Get-HPDockUpdateDetails {
       23.05.22.01 - Added -stage parameter which supports USB-C Dock G5 & HP USB-C Universal Dock G2 & HP Thunderbolt Dock G4
       23.06.06.01 - Updated SoftPaq for USB-C Dock G5 from sp143343 (1.0.16.0) to sp146273 (1.0.18.0)
       23.06.06.02 - Updated SoftPaq for USB-C/A Universal Dock G2 from sp143343 (1.1.16.0) to sp146273 (1.1.18.0)
+      23.06.08.01 - Fixed issue with Thunderbolt Dock detection if another Dock had been connected and updated on device in past, leaving Registry Info Behind.
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -186,8 +187,10 @@ function Get-HPDockUpdateDetails {
             if (Test-Path -Path $TBDockPath) {
                 $TBDockKeyChildren = Get-ChildItem -Path $TBDockPath -Recurse
                 foreach ($Children in $TBDockKeyChildren){
-                    $InstalledPackageVersion = $Children.GetValue('InstalledPackageVersion')    
-                    if ($InstalledPackageVersion){$InstalledVersion = $InstalledPackageVersion}
+                    if ($Children.Name -match "Thunder"){
+                        $InstalledPackageVersion = $Children.GetValue('InstalledPackageVersion')    
+                        if ($InstalledPackageVersion){$InstalledVersion = $InstalledPackageVersion}
+                    }
                 }
             }
         }
@@ -359,6 +362,7 @@ function Get-HPDockUpdateDetails {
         [string]$MACAddress = (Get-WmiObject win32_networkadapterconfiguration | Where-Object {$_.Description -match "Realtek USB GbE Family Controller"}).MACAddress
         $MACAddress = $MACAddress.Trim()
         if (Test-Path "$OutFilePath\$SPNumber\$FirmwareInstallerName") { # Run Test only - Check if Update Required
+            Set-Location -Path "$OutFilePath\$SPNumber"
             if (($DebugOut) -or ($Transcript)) {Write-Host " Running HP Firmware Check... please, wait" -ForegroundColor Magenta}
             # HP USB-C Dock G4 Special Process
             if ($Dock.Dock_ProductName -eq "HP USB-C Dock G4"){
@@ -562,3 +566,4 @@ function Get-HPDockUpdateDetails {
         }   
     }
 }
+
