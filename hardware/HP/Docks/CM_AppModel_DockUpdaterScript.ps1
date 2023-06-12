@@ -13,14 +13,14 @@
     Related Posts: https://garytown.com/hp-dock-configmgr-global-condition
     Related Posts: 
 
-.Parameter 
-    UIExpereince. choose silent to have completely hidden or NonInterative to show dialog of progress
+.Parameter UIExpereince
+    choose silent to have completely hidden or NonInterative to show dialog of progress
 
-.Parameter 
-    Stage, if option to stage firmware is available for the dock model, it will stage the firmware for install on disconnect instead of installing imediately
+.Parameter Stage
+    option to stage firmware is available for the dock model, it will stage the firmware for install on disconnect instead of installing imediately
 
-.Parameter 
-    Notifications, if HPCMSL is detected, this switch will display notifiations after the staging or installing of the firmware to alert the user of the status.
+.Parameter Notifications
+    If HPCMSL is detected, this switch will display notifiations after the staging or installing of the firmware to alert the user of the status.
 
 
 .EXAMPLE
