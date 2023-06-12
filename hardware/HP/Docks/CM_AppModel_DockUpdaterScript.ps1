@@ -168,11 +168,8 @@ if ($HPFirmwareCheck.ExitCode -eq 105){ #Firmware requires Update
     #Run the FIrmware Update
     $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
 
-    #Get Exit Code Info
-    $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
-
     #Create Notifications if HPCMSL is on device & Notications enabled via Parameters
-    if ($ExitInfo.Code -eq "0" -and $HPCMSL -eq $true -and $Notifications -eq $true){
+    if ($HPFirmwareUpdate.ExitCode -eq "0" -and $HPCMSL -eq $true -and $Notifications -eq $true){
         if ($StageEnabled){
             Invoke-RebootNotification -Title 'HP Dock Disconnect Required' -Message "The Dock Firmware has been staged for update, please DISCONNECT your dock at the end of the day"
         }
@@ -181,7 +178,7 @@ if ($HPFirmwareCheck.ExitCode -eq 105){ #Firmware requires Update
         }
     } 
 
-    Exit $ExitInfo.Code
+    Exit $HPFirmwareUpdate.ExitCode
 }
 else {
     Exit $HPFirmwareCheck.ExitCode
