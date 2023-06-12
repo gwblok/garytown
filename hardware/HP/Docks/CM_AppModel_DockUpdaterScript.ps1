@@ -1,3 +1,25 @@
+<# Gary Blok | @gwblok | GARYTOWN.COM
+.SYNOPSIS
+    HP Dock Updater Script for use with ConfigMgr App Model
+.DESCRIPTION
+    Detects which dock is detected and will update the Firmware for the Dock.
+    IF scripts detects HPCMSL, it will also create a notification for the end user after update is staged / completed.
+.NOTES
+    File Name      : CM_AppModel_DockUpdaterScript.ps1
+    
+.LINK
+    Related Posts: https://garytown.com/hp-dock-configmgr-global-condition
+    Related Posts: 
+.EXAMPLE
+    powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -WindowStyle Hidden -File CM_AppModel_DockUpdaterScript.ps1
+    This will run the script with the defaults of staging the firmware on docks that support that function, and updating the docks real time on the rest.
+.EXAMPLE
+    powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -WindowStyle Hidden -File CM_AppModel_DockUpdaterScript.ps1 -UIExperience NonInteractive -Stage:$false
+    This will set the Updates to run real time for all dock upgrades, even if they support staging.
+    
+#>
+
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false, HelpMessage="Only matters when used with -Update, determine if user will see dialog or not")][ValidateSet('NonInteractive', 'Silent')][String]$UIExperience,
