@@ -4,25 +4,40 @@
 .DESCRIPTION
     Detects which dock is detected and will update the Firmware for the Dock.
     IF scripts detects HPCMSL, it will also create a notification for the end user after update is staged / completed.
+
+    Script will first do a check to confirm update is required.
 .NOTES
     File Name      : CM_AppModel_DockUpdaterScript.ps1
     
 .LINK
     Related Posts: https://garytown.com/hp-dock-configmgr-global-condition
     Related Posts: 
+
+.Parameter UIExpereince. choose silent to have completely hidden or NonInterative to show dialog of progress
+
+.Parameter Stage, if option to stage firmware is available for the dock model, it will stage the firmware for install on disconnect instead of installing imediately
+
+.Parameter Notifications, if HPCMSL is detected, this switch will display notifiations after the staging or installing of the firmware to alert the user of the status.
+
+
 .EXAMPLE
     powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -WindowStyle Hidden -File CM_AppModel_DockUpdaterScript.ps1
     This will run the script with the defaults of staging the firmware on docks that support that function, and updating the docks real time on the rest.
+
 .EXAMPLE
     powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -WindowStyle Hidden -File CM_AppModel_DockUpdaterScript.ps1 -UIExperience NonInteractive -Stage:$false
     This will set the Updates to run real time for all dock upgrades, even if they support staging.
-    
+
+.EXAMPLE
+    powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile -WindowStyle Hidden -File CM_AppModel_DockUpdaterScript.ps1 -UIExperience NonInteractive -Stage:$false
+    This will set the Updates to run real time for all dock upgrades, even if they support staging.
+      
 #>
 
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false, HelpMessage="Only matters when used with -Update, determine if user will see dialog or not")][ValidateSet('NonInteractive', 'Silent')][String]$UIExperience,
+    [Parameter(Mandatory = $false)][ValidateSet('NonInteractive', 'Silent')][String]$UIExperience,
     [switch]$Stage = $true, #Set by default to True for Models that support Stage.  If you want to not stage updates but trigger it ASAP, set to false
     [switch]$Notifications    
 ) # param
@@ -147,24 +162,27 @@ else {
 
 #Run Firmware Check
 $HPFirmwareCheck = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "-c" -PassThru -Wait -NoNewWindow
-if ($HPFirmwareCheck.ExitCode -eq 0){ #Firmware already Current
-    exit $HPFirmwareCheck.ExitCode
+
+if ($HPFirmwareCheck.ExitCode -eq 105){ #Firmware requires Update
+
+    #Run the FIrmware Update
+    $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
+
+    #Get Exit Code Info
+    $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
+
+    #Create Notifications if HPCMSL is on device & Notications enabled via Parameters
+    if ($ExitInfo.Code -eq "0" -and $HPCMSL -eq $true -and $Notifications -eq $true){
+        if ($StageEnabled){
+            Invoke-RebootNotification -Title 'HP Dock Disconnect Required' -Message "The Dock Firmware has been staged for update, please DISCONNECT your dock at the end of the day"
+        }
+        else {
+            Invoke-RebootNotification -Title 'HP Dock Updated' -Message "The Dock Firmware has been Updated, recommend rebooting at the end of the day"
+        }
+    } 
+
+    Exit $ExitInfo.Code
 }
-
-#Run the FIrmware Update
-$HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
-
-#Get Exit Code Info
-$ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
-
-#Create Notifications if HPCMSL is on device & Notications enabled via Parameters
-if ($ExitInfo.Code -eq "0" -and $HPCMSL -eq $true -and $Notifications -eq $true){
-    if ($StageEnabled){
-        Invoke-RebootNotification -Title 'HP Dock Disconnect Required' -Message "The Dock Firmware has been staged for update, please DISCONNECT your dock at the end of the day"
-    }
-    else {
-        Invoke-RebootNotification -Title 'HP Dock Updated' -Message "The Dock Firmware has been Updated, recommend rebooting at the end of the day"
-    }
-} 
-
-Exit $ExitInfo.Code
+else {
+    Exit $HPFirmwareCheck.ExitCode
+}
