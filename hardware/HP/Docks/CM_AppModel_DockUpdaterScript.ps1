@@ -23,8 +23,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false, HelpMessage="Only matters when used with -Update, determine if user will see dialog or not")][ValidateSet('NonInteractive', 'Silent')][String]$UIExperience,
-    [switch]$Stage = $true #Set by default to True for Models that support Stage.  If you want to not stage updates but trigger it ASAP, set to false
-        
+    [switch]$Stage = $true, #Set by default to True for Models that support Stage.  If you want to not stage updates but trigger it ASAP, set to false
+    [switch]$Notifications    
 ) # param
 
 function Get-HPDockInfo {
@@ -135,6 +135,7 @@ if ($Stage){
     if ($DockInfo.Dock_Attached -in (1, 4, 6)){#supports USB-C Dock G5 & HP USB-C Universal Dock G2 & HP Thunderbolt Dock G4
         $FirmwareArgList = "-s -stage"
         $StageEnabled = $true
+        $Notifications = $true  #Enable notifications automatically when Firmware has been staged
     }
     else {
         $FirmwareArgList = "$Mode"
@@ -144,14 +145,20 @@ else {
     $FirmwareArgList = "$Mode"
 }
 
+#Run Firmware Check
+$HPFirmwareCheck = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "-c" -PassThru -Wait -NoNewWindow
+if ($HPFirmwareCheck.ExitCode -eq 0){ #Firmware already Current
+    exit $HPFirmwareCheck.ExitCode
+}
+
 #Run the FIrmware Update
 $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
 
 #Get Exit Code Info
 $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
 
-#Create Notifications if HPCMSL is on device
-if ($ExitInfo.Code -eq "0" -and $HPCMSL -eq $true){
+#Create Notifications if HPCMSL is on device & Notications enabled via Parameters
+if ($ExitInfo.Code -eq "0" -and $HPCMSL -eq $true -and $Notifications -eq $true){
     if ($StageEnabled){
         Invoke-RebootNotification -Title 'HP Dock Disconnect Required' -Message "The Dock Firmware has been staged for update, please DISCONNECT your dock at the end of the day"
     }
