@@ -5,7 +5,8 @@ Blog Posts: <br>
 [HP Dock WMI Provider Deployment & Inventory with ConfigMgr](https://garytown.com/hp-dock-wmi-provider-deployment-inventory-with-configmgr) <br>
 [Updating HP Docks with Intune or ConfigMgr using PowerShell](https://garytown.com/updating-hp-docks-with-intune-or-configmgr-using-powershell) <br>
 
-
+[HP Dock ConfigMgr Global Condition](https://garytown.com/hp-dock-configmgr-global-condition)<br>
+[HP Docks Update via ConfigMgr App Model](https://garytown.com/hp-docks-update-via-configmgr-app-model) <br>
 Main function that is used by all of the processes: Function_Get-HPDockUpdaterDetails.ps1 <br>
 
 To check for newer firmware: HPDock_FirmwareLookup.ps1 <br>
