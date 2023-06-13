@@ -1,5 +1,5 @@
 #This is just a group of snips used for the detection methods:
-
+# https://garytown.com/hp-docks-update-via-configmgr-app-model
 
 ########################################################################################
 #Thunderbolt G2
