@@ -1,6 +1,9 @@
 <#Used as a global condition to detect if a Dock is attached.
 Used for Application Model when deploying Firmware to Devices with Dock.
 Can set the global condition on the device to ensure a specific dock is attached to device.
+
+https://garytown.com/hp-docks-update-via-configmgr-app-model
+https://garytown.com/hp-dock-configmgr-global-condition
 #>
 function Get-HPDockInfo {
     <#
