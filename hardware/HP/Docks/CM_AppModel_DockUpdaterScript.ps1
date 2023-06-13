@@ -11,7 +11,7 @@
     
 .LINK
     Related Posts: https://garytown.com/hp-dock-configmgr-global-condition
-    Related Posts: 
+    Related Posts: https://garytown.com/hp-docks-update-via-configmgr-app-model
 
 .Parameter UIExpereince
     choose silent to have completely hidden or NonInterative to show dialog of progress
