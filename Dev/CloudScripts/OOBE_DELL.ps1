@@ -1,4 +1,3 @@
-
 $ScriptName = 'dell.garytown.com'
 $ScriptVersion = '23.06.25.01'
 
@@ -8,6 +7,37 @@ $null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -E
 
 
 iex (irm functions.osdcloud.com)
+
+
+$Manufacturer = (Get-CimInstance -Class:Win32_ComputerSystem).Manufacturer
+$Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model
+$SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+if ($Manufacturer -match "Dell"){
+    $Manufacturer = "Dell"
+    $DellEnterprise = Test-DCUSupport
+}
+else {
+    Write-Host -ForegroundColor Red "[!] System is not supported a Dell, exiting in 5 seconds"
+    Write-Host -ForegroundColor DarkGray " Manufacturer    = $Manufacturer"
+    Write-Host -ForegroundColor DarkGray " Model           = $Model"
+    Write-Host -ForegroundColor DarkGray " SystemSKUNumber = $SystemSKUNumber"
+    Start-Sleep -Seconds 5
+    exit
+}
+
+if ($DellEnterprise -eq $true) {
+    Write-Host -ForegroundColor Green "Dell System Supports Dell Command Update"
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1')
+}
+else {
+    Write-Host -ForegroundColor Red "[!] System is not supported by Dell Command Update, exiting in 5 seconds"
+    Write-Host -ForegroundColor DarkGray " Manufacturer    = $Manufacturer"
+    Write-Host -ForegroundColor DarkGray " Model           = $Model"
+    Write-Host -ForegroundColor DarkGray " SystemSKUNumber = $SystemSKUNumber"
+    Start-Sleep -Seconds 5
+    exit
+}
+
 
 if ($env:SystemDrive -eq 'X:') {
     $WindowsPhase = 'WinPE'
@@ -49,6 +79,7 @@ if ($WindowsPhase -eq 'AuditMode') {
 #region OOBE
 if ($WindowsPhase -eq 'OOBE') {
     #Load everything needed to run AutoPilot and Azure KeyVault
+    Write-Host -ForegroundColor Green "[+] Running in"
     Write-Host -ForegroundColor Green "[+] Installing Dell Command Update"
     osdcloud-InstallDCU
     Write-Host -ForegroundColor Green "[+] Running Dell Command Update (Clean Image)"
