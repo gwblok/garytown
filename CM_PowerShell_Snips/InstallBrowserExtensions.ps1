@@ -13,6 +13,10 @@ $Extensions = @(
 @{ Name = 'PorNo'; GUID = "fnfchnplgejcfmphhboehhlpcjnjkomp"; Browser = "Chrome"; UpdateURL = $GoogleUpdateURL}
 @{ Name = 'NSFW Filter'; GUID = "kmgagnlkckiamnenbpigfaljmanlbbhh"; Browser = "Edge"; UpdateURL = $GoogleUpdateURL}
 @{ Name = 'NSFW Filter'; GUID = "kmgagnlkckiamnenbpigfaljmanlbbhh"; Browser = "Chrome"; UpdateURL = $GoogleUpdateURL}
+@{ Name = 'Defender'; GUID = "bkbeeeffjjeopflfhgeknacdieedcoml"; Browser = "Chrome"; UpdateURL = $GoogleUpdateURL}
+@{ Name = 'Microsoft Editor: Spelling & Grammar Checker'; GUID = "gpaiobkfhnonedkhhfjpmhdalgeoebfa"; Browser = "Chrome"; UpdateURL = $GoogleUpdateURL}
+@{ Name = 'Microsoft Editor: Spelling & Grammar Checker'; GUID = "hokifickgkhplphjiodbggjmoafhignh"; Browser = "Edge"; UpdateURL = $EdgeUpdateURL}
+
 )
 
 
