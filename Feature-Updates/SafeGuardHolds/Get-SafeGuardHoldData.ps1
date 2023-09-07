@@ -93,9 +93,22 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_01_19_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2553'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_02_21_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2554'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_03_01_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2555'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2568'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_10_27_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2614'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_10_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2616'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2653'}
 
+#Other:
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_03_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '11030302'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_10_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '11100402'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_22_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '11220302'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_12_01_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '12010402'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_12_14_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '12140302'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_02_21_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '02210302'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_03_01_01_02_AMD64.cab'; ALTERNATEDATAVERSION = '03010102'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_03_AMD64.cab'; ALTERNATEDATAVERSION = '08300303'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_05_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
 )
 
 $Path = "C:\Temp"
