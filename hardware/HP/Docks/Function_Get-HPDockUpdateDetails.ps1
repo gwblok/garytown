@@ -59,6 +59,7 @@ function Get-HPDockUpdateDetails {
       23.06.06.01 - Updated SoftPaq for USB-C Dock G5 from sp143343 (1.0.16.0) to sp146273 (1.0.18.0)
       23.06.06.02 - Updated SoftPaq for USB-C/A Universal Dock G2 from sp143343 (1.1.16.0) to sp146273 (1.1.18.0)
       23.06.08.01 - Fixed issue with Thunderbolt Dock detection if another Dock had been connected and updated on device in past, leaving Registry Info Behind.
+      23.09.07.01 - Added fallback if current HP Device doesn't have softpaq list, falls back to pre-determined model.(Get-SoftpaqList -Category Dock -Platform 8870 )
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -246,7 +247,12 @@ function Get-HPDockUpdateDetails {
             $URL = $Dock.Dock_Url
             if ( $DebugOut ) { Write-Host "--Dock detected Url - hardcoded:"$Dock.Dock_Url }
         } else {
-            $URL = (Get-SoftpaqList -Category Dock | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
+            try {
+                $URL = (Get-SoftpaqList -Category Dock -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
+            }
+            catch {
+                $URL = (Get-SoftpaqList -Category Dock -Platform 8870 -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
+            }
             if ((!($URL))-or ($URL -eq "")){ #Fall back
                 $URL = $Dock.Dock_Url
                 if ( $DebugOut ) { Write-Host "--Dock detected Url - hardcoded:"$Dock.Dock_Url }
@@ -566,4 +572,3 @@ function Get-HPDockUpdateDetails {
         }   
     }
 }
-
