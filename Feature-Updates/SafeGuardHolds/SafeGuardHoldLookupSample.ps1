@@ -9,3 +9,12 @@ $SafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Fe
 $SafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
 
 $SafeGuardData | Where-Object {$_.SafeguardID -eq $ID}
+
+
+
+# This is for the combined database, a lot of duplicate IDs, but the context of the ID can be slightly different.
+# The change is typically in the "DEST_OS_GTE / LT" properties & EXE_ID
+$SafeGuardCombinedJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldCombinedDataBase.json'
+$SafeGuardCombinedData = (Invoke-WebRequest -URI $SafeGuardCombinedJSONURL).content | ConvertFrom-Json
+
+$SafeGuardCombinedData | Where-Object {$_.SafeguardID -eq $ID}
