@@ -60,6 +60,8 @@ function Get-HPDockUpdateDetails {
       23.06.06.02 - Updated SoftPaq for USB-C/A Universal Dock G2 from sp143343 (1.1.16.0) to sp146273 (1.1.18.0)
       23.06.08.01 - Fixed issue with Thunderbolt Dock detection if another Dock had been connected and updated on device in past, leaving Registry Info Behind.
       23.09.07.01 - Added fallback if current HP Device doesn't have softpaq list, falls back to pre-determined model.(Get-SoftpaqList -Category Dock -Platform 8870 )
+      23.09.07.02 - Added additional support for HP E24d G4 Docking Monitor
+      23.09.07.03 - updated firmware for Docks: TB G4 & USB-C G5 Essential
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -119,7 +121,7 @@ function Get-HPDockUpdateDetails {
         
     ) # param
 
-    $ScriptVersion = '23.06.06.02'
+    $ScriptVersion = '23.09.07.03'
 
     # check for CMSL
     if ($CMPackage -ne $true){
@@ -137,12 +139,12 @@ function Get-HPDockUpdateDetails {
         param($pPnpSignedDrivers)
 
         # **** Hardcode URLs in case of no CMSL installed: ****
-        $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  (as of apr 6, 2023)
-        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143669.exe'   #  (as of apr 6, 2023)
-        $Url_UniG2 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146291.exe'  #  (as of june 6, 2023)
-        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146273.exe'  #  (as of june 6, 2023)
+        $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  (as of sept 9 2023)
+        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp147001-147500/sp147372.exe'   #  (as of sept 9, 2023)
+        $Url_UniG2 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146291.exe'  #  (as of sept 9, 2023)
+        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146273.exe'  #  (as of sept 9, 2023)
         $Url_UsbG4 = 'ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  (as of apr 6, 2023)
-        $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp144501-145000/sp144502.exe'  #  (as of apr 6, 2023)
+        $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp148501-149000/sp148858.exe'  #  (as of sept 9, 2023)
         $Url_E24D = 'ftp.hp.com/pub/softpaq/sp145501-146000/sp145577.exe'   #  (as of sept 9, 2023)
 
         #######################################################################################
@@ -527,6 +529,16 @@ function Get-HPDockUpdateDetails {
                 }
 
             } #HP USB-C G5 Essential Dock
+
+            #HP E24d G4 FHD Docking Monitor
+            if ($Dock.Dock_ProductName -eq "HP E24d G4 FHD Docking Monitor"){
+                 [version]$Installed = $script:InstalledFirmwareVersion
+                 [version]$Available = $script:SoftPaqVersion
+                 if ($Available -gt $Installed){
+                    $script:UpdateRequired = $true
+                 }
+            } #HP E24d G4 FHD Docking Monitor
+
             # HP Thunderbolt Dock G2 Registry Items
             if ($Dock.Dock_ProductName -eq "HP Thunderbolt Dock G2"){
             $DockTB2RegPath = "$DockRegPath\HP Thunderbolt Dock G2"
