@@ -190,11 +190,11 @@ if ($CollectHPDockInventory){
 	    $DockInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceID" -Value "$ManagedDeviceID" -Force
 	    $DockInventory | Add-Member -MemberType NoteProperty -Name "AzureADDeviceID" -Value "$AzureADDeviceID" -Force
         $DockInventory | Add-Member -MemberType NoteProperty -Name "ProductName" -Value $ProductName -Force	
-        $DockInventory | Add-Member -MemberType NoteProperty -Name "FirmwareVersion" -Value $FirmwareVersion -Force	
+        $DockInventory | Add-Member -MemberType NoteProperty -Name "InstalledFirmware" -Value $FirmwareVersion -Force	
         $DockInventory | Add-Member -MemberType NoteProperty -Name "SerialNumber" -Value $SerialNumber -Force	
-        $DockInventory | Add-Member -MemberType NoteProperty -Name "UpdateRequired" -Value $UpdateRequired -Force	
-        $DockInventory | Add-Member -MemberType NoteProperty -Name "SoftpaqNumber" -Value $SoftpaqNumber -Force	
-        $DockInventory | Add-Member -MemberType NoteProperty -Name "SoftpaqFimware" -Value $SoftpaqFimware -Force
+        $DockInventory | Add-Member -MemberType NoteProperty -Name "UpdateAvailable" -Value $UpdateRequired -Force	
+        $DockInventory | Add-Member -MemberType NoteProperty -Name "LatestSoftpaq" -Value $SoftpaqNumber -Force	
+        $DockInventory | Add-Member -MemberType NoteProperty -Name "SoftpaqFirmware" -Value $SoftpaqFimware -Force
     }	
 }
 
