@@ -1,7 +1,23 @@
 <#  Addon Enhancement for HP Devices using MSEndpointMgr's Enhanced Inventory
 https://msendpointmgr.com/2022/01/17/securing-intune-enhanced-inventory-with-azure-function/
 
+I ASSUME you already set that up and have it working, if not, this will not work.  Once you have that setup, you can implement this ADD ON.
+
 Call this script from theirs to add additional inventory into Log Analytics for HP devices.
+There Script: (https://github.com/MSEndpointMgr/IntuneEnhancedInventory/blob/main/Proactive%20Remediation/Invoke-CustomInventoryAzureFunction.ps1)
+
+create this line below just before line 551 (<# *SAMPLE*) in the script above.
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Intune/EndMgrEnhancedInventoryAddon.ps1)
+
+That will call this script and add the HP items.
+
+This script also calls this script for HP Docks:
+https://github.com/gwblok/garytown/blob/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1
+
+It will install the HP WMI Provider for HP Docks
+
+.Requirements
+HPCMSL must be installed on the endpoint for all of the inventory to work properly.
 
 .ChangeLog
       23.09.07.01 - First Release as Addon for HP Devices | HP Basic BIOS Settings Inventory & HP Dock Inventory
@@ -14,13 +30,6 @@ $CollectHPDockInventory = $true #HP Dock Inventory
 $CollectHPSecurePlatformInventory = $true #Secure Platform Stuff
 $CollectHPSureRecoverInventory = $true #Secure Platform Stuff
 
-<#
-Others to add:
-
-Sure Recover
-Secure Platform
-
-#>
 
 $HPBIOSSettingLogName = "HPBIOSSettingInventory"
 $HPBIOSStringLogName = "HPBIOSStringInventory"
@@ -37,7 +46,10 @@ if ($CollectHPSureRecoverInventory){
     $SR = $BIOSSetting | Where-Object {$_.Path -match "HP Sure Recover"}
     if ($SR){
         $SRInventory = New-Object -TypeName PSObject
-	
+	    $SRInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
+	    $SRInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceName" -Value "$ManagedDeviceName" -Force
+	    $SRInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceID" -Value "$ManagedDeviceID" -Force
+	    $SRInventory | Add-Member -MemberType NoteProperty -Name "AzureADDeviceID" -Value "$AzureADDeviceID" -Force	
         #Create Variables for Each Setting & Build Array
         ForEach ($Setting in $SR){
             if ($Setting.CurrentValue){
@@ -64,7 +76,10 @@ if ($CollectHPSecurePlatformInventory){
     #Get Secure Platform Settings
     $SP = $BIOSSetting | Where-Object {$_.Path -match "Secure Platform"}
     $SPInventory = New-Object -TypeName PSObject
-	
+	$SPInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
+	$SPInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceName" -Value "$ManagedDeviceName" -Force
+	$SPInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceID" -Value "$ManagedDeviceID" -Force
+	$SPInventory | Add-Member -MemberType NoteProperty -Name "AzureADDeviceID" -Value "$AzureADDeviceID" -Force		
     #Create Variables for Each Setting & Build Array
     ForEach ($Setting in $SP | Where-Object {$_.name -notmatch "Set Once"}){
         if ($Setting.CurrentValue){
