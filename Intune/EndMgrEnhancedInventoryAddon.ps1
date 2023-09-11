@@ -104,7 +104,7 @@ if ($CollectHPBIOSSettingInventory) {
     }
 
     if (($BIOSSetting | Where-Object {$_.Name -eq "Virtualization Technology (VTx)"}).CurrentValue){
-        $VirtualTech = "Intel $(($BIOSSetting | Where-Object {$_.Name -eq "Virtualization Technology (VTx)"}).CurrentValue) Intel VTx)"
+        $VirtualTech = "$(($BIOSSetting | Where-Object {$_.Name -eq "Virtualization Technology (VTx)"}).CurrentValue) (Intel VTx)"
         $VTd = "$(($BIOSSetting | Where-Object {$_.Name -eq "Virtualization Technology for Directed I/O (VTd)"}).CurrentValue) (Intel VTd)"
     }
     elseif (($BIOSSetting | Where-Object {$_.Name -eq "SVM CPU Virtualization"}).CurrentValue){
