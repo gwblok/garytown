@@ -17,11 +17,12 @@ https://github.com/gwblok/garytown/blob/master/hardware/HP/Docks/Function_Get-HP
 It will install the HP WMI Provider for HP Docks
 
 .Requirements
-HPCMSL must be installed on the endpoint for all of the inventory to work properly.
+HPCMSL must be installed on the endpoint for all of the inventory to work properly. (for the dock reporting)
 
 .ChangeLog
       23.09.07.01 - First Release as Addon for HP Devices | HP Basic BIOS Settings Inventory & HP Dock Inventory
       23.09.11.01 - Added HP Secure Platform & HP Sure Recover Inventory
+      23.09.11.02 - Modified some logic for the Dock Inventory, added Try / Catch
 #>
 
 $CollectHPBIOSSettingInventory = $true #Sub selection of BIOS Settings I've picked... let me know if you want more.
@@ -36,6 +37,8 @@ $HPBIOSStringLogName = "HPBIOSStringInventory"
 $HPDockLogName = "HPDockInventory"
 $HPSecurePlatformLogName = "HPSecurePlatformInventory"
 $HPSureRecoverLogName = "HPSureRecoverInventory"
+
+#region HPSureRecoverInventory
 
 if ($CollectHPSureRecoverInventory){
 	#Get BIOS Info from WMI
@@ -68,6 +71,9 @@ if ($CollectHPSureRecoverInventory){
     }
 }
 
+#endregion HPSureRecoverInventory
+
+#region HPSecurePlatformInventory
 if ($CollectHPSecurePlatformInventory){
 	#Get BIOS Info from WMI
     $namespace = "ROOT\HP\InstrumentedBIOS"
@@ -96,6 +102,7 @@ if ($CollectHPSecurePlatformInventory){
     }
     $HPSecurePlatformInventory = $SPInventory
 }
+#endregion HPSecurePlatformInventory
 
 #region HPBIOSINVENTORY
 if ($CollectHPBIOSSettingInventory) {
@@ -243,17 +250,27 @@ if ($CollectHPDockInventory){
     # Function to get HP Dock info - Calling from GitHub
     Invoke-Expression (Invoke-RestMethod -Uri "https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1")
     
-    #Install WMI Provider for Dock if Needed
-    $WMIProvider = Get-InstalledApplications | Where-Object {$_.DisplayName -match 'HP Dock'}
-    if (!($WMIProvider)){Get-Softpaq -Number sp142311 -Action silentinstall}
 
-    #Query WMI Provider for Dock Info:
-    [String]$Namespace = "HP\InstrumentedServices\v1"
-    $classname = "HP_DockAccessory"
-    $ConnectedDock = Get-CimInstance -Class $classname  -Namespace "Root\$namespace" -ErrorAction SilentlyContinue
-    
     #Check if Dock connected that isn't supported by WMI Provider
     $DockUpdateDetails = Get-HPDockUpdateDetails
+
+    if ($DockUpdateDetails){
+        #Install WMI Provider for Dock if Needed
+        $WMIProvider = Get-InstalledApplications | Where-Object {$_.DisplayName -match 'HP Dock Accessory WMI Provider'}
+        if (!($WMIProvider)){
+            try {
+                Get-Softpaq -Number sp142311 -Action silentinstall
+            }
+            catch{
+                #Write-Output "Unable to install WMI Provider"
+            }
+        }
+
+        #Query WMI Provider for Dock Info:
+        [String]$Namespace = "HP\InstrumentedServices\v1"
+        $classname = "HP_DockAccessory"
+        $ConnectedDock = Get-CimInstance -Class $classname  -Namespace "Root\$namespace" -ErrorAction SilentlyContinue
+    }
 
     #If no dock found, don't collect anything!
     if (!($ConnectedDock) -and !($DockUpdateDetails)){
