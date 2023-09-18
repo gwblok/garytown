@@ -15,3 +15,12 @@ Media Creation Tool: https://software-static.download.prss.microsoft.com/dbazure
 21H2 Product Cab: https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab
 
 22H2 Product Cab: https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab
+
+
+## Getting the fwlink:
+
+Using 7Zip, open the MCT.exe -> SetupMgr.dll -> .text file.  Search for "f w l" and it will find any fwlinks in the dll.  Typically there are 2, and it's been the second one, but feel free to test both.
+
+### Snip:
+
+D o w n l o a d P r o d u c t s X m l     p r o d u c t s . c a b         h t t p s : / / g o . m i c r o s o f t . c o m / f w l i n k / ? L i n k I d = 6 2 4 7 3 6     h t t p s : / / g o . m i c r o s o f t . c o m / f w l i n k / ? L i n k I d = 2 1 5 6 2 9 2   S e t u p M g r :   E x p a n d i n g   c a b   [ % s ]   t o   [ % s ] .   p r o d u c t s . x m l   
