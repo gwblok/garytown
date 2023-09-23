@@ -106,3 +106,48 @@ function Run-WindowsUpdate{
     }
     else {Write-Output "No Updates Found"} 
 }
+
+Function Enable-AutoZimeZoneUpdate {
+
+    if ($env:SystemDrive -eq 'X:') {
+    $WindowsPhase = 'WinPE'
+    }
+    else {
+        $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
+        if ($env:UserName -eq 'defaultuser0') {$WindowsPhase = 'OOBE'}
+        elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$WindowsPhase = 'Specialize'}
+        elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
+        else {$WindowsPhase = 'Windows'}
+    }
+    
+    if ($WindowsPhase -eq 'WinPE'){
+    
+        # Mount and edit the setup environment's registry
+        $REG_System = "C:\Windows\System32\config\system"
+        $REG_Software = "C:\Windows\system32\config\SOFTWARE"
+        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"
+        $VirtualRegistryPath_SOFTWARE = "HKLM\WinPE_SOFTWARE"
+        $VirtualRegistryPath_tzautoupdate = $VirtualRegistryPath_SYSTEM + "\CurrentControlSet\Services\tzautoupdate"
+        $VirtualRegistryPath_location = $VirtualRegistryPath_SOFTWARE + "\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+
+        # $VirtualRegistryPath_LabConfig = $VirtualRegistryPath_Setup + "\LabConfig"
+        reg unload $VirtualRegistryPath_SYSTEM | Out-Null # Just in case...
+        reg unload $VirtualRegistryPath_SOFTWARE | Out-Null # Just in case...
+        Start-Sleep 1
+        reg load $VirtualRegistryPath_SYSTEM $REG_System | Out-Null
+        reg load $VirtualRegistryPath_SOFTWARE $REG_Software | Out-Null
+
+        New-ItemProperty -Path $VirtualRegistryPath_location -Name "Value" -Value "Allow" -PropertyType String -Force
+        New-ItemProperty -Path $VirtualRegistryPath_tzautoupdate -Name "start" -Value 3 -PropertyType DWord -Force
+
+
+
+        Start-Sleep 1
+        reg unload $VirtualRegistryPath_SYSTEM
+        reg unload $VirtualRegistryPath_SOFTWARE
+    }
+    else {
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String
+        Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord
+    }
+}
