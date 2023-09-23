@@ -92,14 +92,16 @@ function Run-WindowsUpdate{
         $WUDownloader.Updates=$WUUpdates
         $UpdateCount = $WUDownloader.Updates.count
         if ($UpdateCount -ge 1){
+            Write-Output "Downloading $UpdateCount Updates"
+            foreach ($update in $WUInstaller.Updates){Write-Output "$($update.Title)"}
             $Download = $WUDownloader.Download()
         }
         $InstallUpdateCount = $WUInstaller.Updates.count
         if ($InstallUpdateCount -ge 1){
+            Write-Output "Installing $InstallUpdateCount Updates"
             $Install = $WUInstaller.Install()
             $ResultMeaning = ($Results | Where-Object {$_.ResultCode -eq $Install.ResultCode}).Meaning
             Write-Output $ResultMeaning
-            #if ($Install.RebootRequired -eq $true){Restart-ComputerCM}
         } 
     }
     else {Write-Output "No Updates Found"} 
