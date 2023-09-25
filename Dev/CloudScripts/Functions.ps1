@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.9.25.1'
+$ScriptVersion = '23.9.25.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 #endregion
@@ -132,10 +132,10 @@ Function Enable-AutoZimeZoneUpdate {
         # Mount and edit the setup environment's registry
         $REG_System = "C:\Windows\System32\config\system"
         $REG_Software = "C:\Windows\system32\config\SOFTWARE"
-        $VirtualRegistryPath_SYSTEM = "HKLM:\WinPE_SYSTEM"
-        $VirtualRegistryPath_SOFTWARE = "HKLM:\WinPE_SOFTWARE"
-        $VirtualRegistryPath_tzautoupdate = $VirtualRegistryPath_SYSTEM + "\CurrentControlSet\Services\tzautoupdate"
-        $VirtualRegistryPath_location = $VirtualRegistryPath_SOFTWARE + "\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"
+        $VirtualRegistryPath_SOFTWARE = "HKLM\WinPE_SOFTWARE"
+        $VirtualRegistryPath_tzautoupdate = HKLM:\WinPE_SYSTEM\CurrentControlSet\Services\tzautoupdate"
+        $VirtualRegistryPath_location = HKLM:\WinPE_SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
 
         # $VirtualRegistryPath_LabConfig = $VirtualRegistryPath_Setup + "\LabConfig"
         reg unload $VirtualRegistryPath_SYSTEM | Out-Null # Just in case...
