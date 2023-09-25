@@ -8,7 +8,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.9.25.3'
+$ScriptVersion = '23.9.25.4'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
@@ -29,6 +29,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Remove Personal Teams
     iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
     Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
+    Enable-AutoZimeZoneUpdate
     #Windows Updates
     Update-DefenderStack
     Run-WindowsUpdate
@@ -41,8 +42,6 @@ if ($env:SystemDrive -ne 'X:') {
 #Set Random Stuff
 Inject-Win11ReqBypassRegValues
 Set-TimeZoneFromIP
-Enable-AutoZimeZoneUpdate
-
 if ($Restart -eq "Y"){Restart-Computer}
 
 
