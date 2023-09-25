@@ -25,7 +25,11 @@ Update-DefenderStack
 Run-WindowsUpdate
 Run-WindowsUpdateDriver
 
+Invoke-WebRequest -UseBasicParsing -Uri "blob:https://github.com/6455bd35-864b-4292-870a-b1298536f755" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
+
+
 if ($Restart = "Y"){Restart-Computer}
+
 
 
 <# Future version of OSD Module
