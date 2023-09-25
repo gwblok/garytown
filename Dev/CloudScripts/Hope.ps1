@@ -8,8 +8,21 @@ Creates Setup Complete Files
 #>
 
 #Load Functions
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Functions.ps1)
+iex (irm funtions.garytown.com)
 iex (irm functions.osdcloud.com)
+
+#Set Random Stuff
+Inject-Win11ReqBypassRegValues
+Set-TimeZoneFromIP
+Enable-AutoZimeZoneUpdate
+
+#Windows Updates
+Update-DefenderStack
+Run-WindowsUpdate
+Run-WindowsUpdateDriver
+
+
+
 
 <# Future version of OSD Module
 Set-SetupCompleteCreateStart
