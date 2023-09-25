@@ -50,7 +50,7 @@ Function Inject-Win11ReqBypassRegValues {
     
         # Mount and edit the setup environment's registry
         $REG_System = "C:\Windows\System32\config\system"
-        $VirtualRegistryPath_SYSTEM = "HKLM:\WinPE_SYSTEM"
+        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"
         $VirtualRegistryPath_Setup = $VirtualRegistryPath_SYSTEM + "\Setup"
         # $VirtualRegistryPath_LabConfig = $VirtualRegistryPath_Setup + "\LabConfig"
         reg unload $VirtualRegistryPath_SYSTEM | Out-Null # Just in case...
