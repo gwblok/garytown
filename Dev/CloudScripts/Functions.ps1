@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.9.25.3'
+$ScriptVersion = '23.9.25.4'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 #endregion
@@ -11,8 +11,11 @@ Function Run-DISMFromOSDCloudUSB {
     $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
     $DriverPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
     if (Test-Path $DriverPath){
+        Write-Host "Found Drivers: $DriverPath" -ForegroundColor Green
+        Write-Host "Starting DISM of drivers while Offline" -ForegroundColor Green
         $DismPath = "$env:windir\System32\Dism.exe"
         $DismProcess = Start-Process -FilePath $DismPath -ArgumentList "/image:c:\ /Add-Driver /driver:$($DriverPath) /recurse" -Wait
+        Write-Host "Finished Process with Exit Code: $($DismProcess.ExitCode)"
     }
 }
 
