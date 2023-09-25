@@ -10,7 +10,7 @@ Creates Setup Complete Files
 #Load Functions
 $Restart = Read-Host "Please Type Y if you would like to Restart After Process Completes, otherwise press any key"
 
-iex (irm funtions.garytown.com)
+iex (irm functions.garytown.com)
 iex (irm functions.osdcloud.com)
 
 
