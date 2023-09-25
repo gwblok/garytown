@@ -4,6 +4,10 @@ $ScriptVersion = '23.9.25.2'
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 #endregion
 
+Function Disable-CloudContent {
+    New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableWindowsConsumerFeatures' -Value 1 -PropertyType Dword -Force
+    New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableSoftLanding' -Value 1 -PropertyType Dword -Force
+}
 
 Function Inject-Win11ReqBypassRegValues {
     if ($env:SystemDrive -eq 'X:') {
