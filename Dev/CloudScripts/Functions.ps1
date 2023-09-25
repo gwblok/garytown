@@ -34,7 +34,7 @@ Function Inject-Win11ReqBypassRegValues {
         New-Item -Name "MoSetup" -ErrorAction SilentlyContinue
         New-ItemProperty -Path "MoSetup" -Name "AllowUpgradesWithUnsupportedTPMOrCPU" -Value 1 -PropertyType DWORD -Force
 
-        Set-Location -Path $ScriptDir
+        Set-Location -Path $env:systemdrive
         Start-Sleep 1
         reg unload $VirtualRegistryPath_SYSTEM
     }
