@@ -8,7 +8,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.9.25.4'
+$ScriptVersion = '23.9.25.5'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
@@ -20,6 +20,8 @@ if ($env:SystemDrive -ne 'X:') {
 
 iex (irm functions.garytown.com)
 iex (irm functions.osdcloud.com)
+
+Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
 
