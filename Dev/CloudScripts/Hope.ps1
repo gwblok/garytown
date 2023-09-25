@@ -24,14 +24,27 @@ iex (irm functions.osdcloud.com)
 Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
-
+if ($env:SystemDrive -ne 'X:') {
+    Run-DISMFromOSDCloudUSB
+}
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
     #Remove Personal Teams
     iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
+    
+    # Add Hope PDF to Desktop
     Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
+    
+    #Set Time Zone to Automatic Update
     Enable-AutoZimeZoneUpdate
+    
+    #Try to prevent crap from auto installing
+    Disable-CloudContent
+    
+    #Set Win11 Bypasses
+    Inject-Win11ReqBypassRegValues
+    
     #Windows Updates
     Update-DefenderStack
     Run-WindowsUpdate
@@ -41,9 +54,10 @@ if ($env:SystemDrive -ne 'X:') {
 }
 
 #Both
-#Set Random Stuff
-Inject-Win11ReqBypassRegValues
+#Set Time Zone
 Set-TimeZoneFromIP
+
+
 if ($Restart -eq "Y"){Restart-Computer}
 
 
