@@ -1,22 +1,28 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.9.25.5'
+$ScriptVersion = '23.9.25.6'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 #endregion
 
 Write-Host -ForegroundColor Green "[+] Function Run-DISMFromOSDCloudUSB"
 Function Run-DISMFromOSDCloudUSB {
-    $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
-    $ComputerProduct = (Get-MyComputerProduct)
-    $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
-    $DriverPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
-    Write-Host "Checking location for Drivers: $DriverPath" -ForegroundColor Green
-    if (Test-Path $DriverPath){
-        Write-Host "Found Drivers: $DriverPath" -ForegroundColor Green
-        Write-Host "Starting DISM of drivers while Offline" -ForegroundColor Green
-        $DismPath = "$env:windir\System32\Dism.exe"
-        $DismProcess = Start-Process -FilePath $DismPath -ArgumentList "/image:c:\ /Add-Driver /driver:$($DriverPath) /recurse" -Wait -PassThru
-        Write-Host "Finished Process with Exit Code: $($DismProcess.ExitCode)"
+    #region Initialize
+    if ($env:SystemDrive -eq 'X:') {
+        $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
+        $ComputerProduct = (Get-MyComputerProduct)
+        $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
+        $DriverPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
+        Write-Host "Checking location for Drivers: $DriverPath" -ForegroundColor Green
+        if (Test-Path $DriverPath){
+            Write-Host "Found Drivers: $DriverPath" -ForegroundColor Green
+            Write-Host "Starting DISM of drivers while Offline" -ForegroundColor Green
+            $DismPath = "$env:windir\System32\Dism.exe"
+            $DismProcess = Start-Process -FilePath $DismPath -ArgumentList "/image:c:\ /Add-Driver /driver:$($DriverPath) /recurse" -Wait -PassThru
+            Write-Host "Finished Process with Exit Code: $($DismProcess.ExitCode)"
+        }
+    }
+    else {
+        Write-Output "Skipping Run-DISMFromOSDCloudUSB Function, not running in WinPE"
     }
 }
 
