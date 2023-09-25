@@ -25,7 +25,7 @@ Update-DefenderStack
 Run-WindowsUpdate
 Run-WindowsUpdateDriver
 
-Invoke-WebRequest -UseBasicParsing -Uri "blob:https://github.com/6455bd35-864b-4292-870a-b1298536f755" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
+Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
 
 
 if ($Restart = "Y"){Restart-Computer}
