@@ -13,7 +13,8 @@ $ScriptVersion = '23.9.25.2'
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
 #Load Functions
-$Restart = Read-Host "Please Type Y if you would like to Restart After Process Completes, otherwise press any key"
+Write-Host -ForegroundColor Yellow "Restart after Script Completes?"
+$Restart = Read-Host "y or n, then Enter"
 
 iex (irm functions.garytown.com)
 iex (irm functions.osdcloud.com)
@@ -34,7 +35,7 @@ Run-WindowsUpdateDriver
 Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
 
 
-if ($Restart = "Y"){Restart-Computer}
+if ($Restart -eq "Y"){Restart-Computer}
 
 
 
