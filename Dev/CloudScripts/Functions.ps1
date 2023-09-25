@@ -24,7 +24,7 @@ Function Inject-Win11ReqBypassRegValues {
 
         Set-Location -Path Registry::$VirtualRegistryPath_Setup
        
-        New-Item -Name "LabConfig"
+        New-Item -Name "LabConfig" -Force
         New-ItemProperty -Path "LabConfig" -Name "BypassTPMCheck" -Value 1 -PropertyType DWORD -Force
         New-ItemProperty -Path "LabConfig" -Name "BypassSecureBootCheck" -Value 1 -PropertyType DWORD -Force
         New-ItemProperty -Path "LabConfig" -Name "BypassRAMCheck" -Value 1 -PropertyType DWORD -Force
