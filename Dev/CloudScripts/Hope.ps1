@@ -8,7 +8,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.9.25.1'
+$ScriptVersion = '23.9.25.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
@@ -18,7 +18,8 @@ $Restart = Read-Host "Please Type Y if you would like to Restart After Process C
 iex (irm functions.garytown.com)
 iex (irm functions.osdcloud.com)
 
-
+#Remove Personal Teams
+iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
 
 #Set Random Stuff
 Inject-Win11ReqBypassRegValues
