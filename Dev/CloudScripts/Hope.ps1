@@ -25,42 +25,42 @@ Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
 if ($env:SystemDrive -ne 'X:') {
-    Write-Host -ForegroundColor Grey "Running DISM with Offline Drivers" 
+    Write-Host -ForegroundColor Grey "**Running DISM with Offline Drivers**" 
     Run-DISMFromOSDCloudUSB
 }
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
     #Remove Personal Teams
-    Write-Host -ForegroundColor Grey "Removing Default Chat Tool" 
+    Write-Host -ForegroundColor Grey "**Removing Default Chat Tool**" 
     try {
         iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
     }
     catch {}
     # Add Hope PDF to Desktop
-    Write-Host -ForegroundColor Grey "Adding HOPE PDF to Desktop" 
+    Write-Host -ForegroundColor Grey "**Adding HOPE PDF to Desktop**" 
     try {
         Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
     }
     catch {}
     #Set Time Zone to Automatic Update
-    Write-Host -ForegroundColor Grey "Setting Time Zone" 
+    Write-Host -ForegroundColor Grey "**Setting Time Zone for Auto Update**" 
     Enable-AutoZimeZoneUpdate
     
     #Try to prevent crap from auto installing
-    Write-Host -ForegroundColor Grey "Disabling Cloud Content" 
+    Write-Host -ForegroundColor Grey "**Disabling Cloud Content**" 
     Disable-CloudContent
     
     #Set Win11 Bypasses
-    Write-Host -ForegroundColor Grey "Enabling Win11 Bypasses" 
+    Write-Host -ForegroundColor Grey "**Enabling Win11 Bypasses**" 
     Inject-Win11ReqBypassRegValues
     
     #Windows Updates
-    Write-Host -ForegroundColor Grey "Running Defender Updates"
+    Write-Host -ForegroundColor Grey "**Running Defender Updates**"
     Update-DefenderStack
-    Write-Host -ForegroundColor Grey "Running Windows Updates"
+    Write-Host -ForegroundColor Grey "**Running Windows Updates**"
     Run-WindowsUpdate
-    Write-Host -ForegroundColor Grey "Running Driver Updates"
+    Write-Host -ForegroundColor Grey "**Running Driver Updates**"
     Run-WindowsUpdateDriver
 
 
@@ -68,7 +68,7 @@ if ($env:SystemDrive -ne 'X:') {
 
 #Both
 #Set Time Zone
-Write-Host -ForegroundColor Grey "Setting TimeZone based on IP"
+Write-Host -ForegroundColor Grey "**Setting TimeZone based on IP**"
 Set-TimeZoneFromIP
 
 
