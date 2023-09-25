@@ -7,6 +7,11 @@ Creates Setup Complete Files
 
 #>
 
+$ScriptName = 'hope.garytown.com'
+$ScriptVersion = '23.9.25.1'
+
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+
 #Load Functions
 $Restart = Read-Host "Please Type Y if you would like to Restart After Process Completes, otherwise press any key"
 
