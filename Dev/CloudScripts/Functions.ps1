@@ -1,14 +1,28 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.9.25.2'
+$ScriptVersion = '23.9.25.3'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 #endregion
 
+Write-Host -ForegroundColor Green "[+] Function Run-DISMFromOSDCloudUSB"
+Function Run-DISMFromOSDCloudUSB {
+    $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
+    $ComputerProduct = (Get-MyComputerProduct)
+    $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
+    $DriverPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
+    if (Test-Path $DriverPath){
+        $DismPath = "$env:windir\System32\Dism.exe"
+        $DismProcess = Start-Process -FilePath $DismPath -ArgumentList "/image:c:\ /Add-Driver /driver:$($DriverPath) /recurse" -Wait
+    }
+}
+
+Write-Host -ForegroundColor Green "[+] Function Disable-CloudContent"
 Function Disable-CloudContent {
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableWindowsConsumerFeatures' -Value 1 -PropertyType Dword -Force
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableSoftLanding' -Value 1 -PropertyType Dword -Force
 }
 
+Write-Host -ForegroundColor Green "[+] Inject-Win11ReqBypassRegValues"
 Function Inject-Win11ReqBypassRegValues {
     if ($env:SystemDrive -eq 'X:') {
     $WindowsPhase = 'WinPE'
@@ -64,6 +78,8 @@ Function Inject-Win11ReqBypassRegValues {
         New-ItemProperty -Path "HKLM:\SYSTEM\Setup\MoSetup" -Name "AllowUpgradesWithUnsupportedTPMOrCPU" -Value 1 -PropertyType DWORD -Force
     }
 }
+
+Write-Host -ForegroundColor Green "[+] Run-WindowsUpdate"
 function Run-WindowsUpdate{
     <# Control Windows Update via PowerShell
     Gary Blok - GARYTOWN.COM
@@ -118,6 +134,7 @@ function Run-WindowsUpdate{
     else {Write-Output "No Updates Found"} 
 }
 
+Write-Host -ForegroundColor Green "[+] Run-WindowsUpdateDriver"
 function Run-WindowsUpdateDriver{
     <# Control Windows Update via PowerShell
     Gary Blok - GARYTOWN.COM
@@ -172,6 +189,7 @@ function Run-WindowsUpdateDriver{
     else {Write-Output "No Updates Found"} 
 }
 
+Write-Host -ForegroundColor Green "[+] Enable-AutoZimeZoneUpdate"
 Function Enable-AutoZimeZoneUpdate {
 
     if ($env:SystemDrive -eq 'X:') {
