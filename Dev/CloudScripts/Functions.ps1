@@ -1,3 +1,10 @@
+$ScriptName = 'functions.garytown.com'
+$ScriptVersion = '23.9.25.1'
+
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+#endregion
+
+
 Function Inject-Win11ReqBypassRegValues {
     if ($env:SystemDrive -eq 'X:') {
     $WindowsPhase = 'WinPE'
