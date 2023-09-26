@@ -8,7 +8,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.9.25.8'
+$ScriptVersion = '23.9.25.9'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
@@ -26,7 +26,7 @@ Set-ExecutionPolicy Bypass -Force
 #WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
     Write-Host -ForegroundColor Gray "**Running DISM with Offline Drivers**" 
-    Run-DISMFromOSDCloudUSB
+    Start-DISMFromOSDCloudUSB
 }
 
 #Non-WinPE
@@ -53,15 +53,15 @@ if ($env:SystemDrive -ne 'X:') {
     
     #Set Win11 Bypasses
     Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
-    Inject-Win11ReqBypassRegValues
+    Set-Win11ReqBypassRegValues
     
     #Windows Updates
     Write-Host -ForegroundColor Gray "**Running Defender Updates**"
     Update-DefenderStack
     Write-Host -ForegroundColor Gray "**Running Windows Updates**"
-    Run-WindowsUpdate
+    Start-WindowsUpdate
     Write-Host -ForegroundColor Gray "**Running Driver Updates**"
-    Run-WindowsUpdateDriver
+    Start-WindowsUpdateDriver
 
 
 }
