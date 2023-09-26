@@ -1,5 +1,5 @@
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.9.26.1'
+$ScriptVersion = '23.9.26.2'
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 
