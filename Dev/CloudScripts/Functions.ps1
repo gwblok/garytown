@@ -43,6 +43,7 @@ Function Disable-CloudContent {
     New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows -Name "CloudContent" -Force | out-null
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableWindowsConsumerFeatures' -Value 1 -PropertyType Dword -Force | out-null
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableSoftLanding' -Value 1 -PropertyType Dword -Force | out-null
+    New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableCloudOptimizedContent' -Value 1 -PropertyType Dword -Force | out-null
 }
 
 Write-Host -ForegroundColor Green "[+] Set-Win11ReqBypassRegValues"
@@ -257,4 +258,36 @@ Function Enable-AutoZimeZoneUpdate {
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
         Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord | out-null
     }
+}
+Write-Host -ForegroundColor Green "[+] Set-DefaultProfilePersonalPref"
+function Set-DefaultProfilePersonalPref {
+    #Set Default User Profile to MY PERSONAL preferences.
+
+    $REG_defaultuser = "c:\users\default\ntuser.dat"
+    $VirtualRegistryPath_defaultuser = "HKLM\DefUser" #Load Command
+    $VirtualRegistryPath_software = "HKLM:\DefUser\Software" #PowerShell Path
+
+    reg unload $VirtualRegistryPath_defaultuser | Out-Null # Just in case...
+    Start-Sleep 1
+    reg load $VirtualRegistryPath_defaultuser $REG_defaultuser | Out-Null
+
+    #TaskBar Left / Hide Chat / Hide Widgets / Hide TaskView
+    $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    New-ItemProperty -Path $Path -Name "TaskbarAl" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "TaskbarMn" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "TaskbarDa" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "ShowTaskViewButton" -Value 0 -PropertyType Dword -Force
+
+    #Disable Content Delivery
+    $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+    New-ItemProperty -Path $Path -Name "SystemPaneSuggestionsEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "SubscribedContentEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "SoftLandingEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "SilentInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "PreInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "OemPreInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "FeatureManagementEnabled" -Value 0 -PropertyType Dword -Force
+    New-ItemProperty -Path $Path -Name "ContentDeliveryAllowed" -Value 0 -PropertyType Dword -Force
+
+    reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
