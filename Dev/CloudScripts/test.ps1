@@ -1,10 +1,20 @@
-$Global:MyOSDCloud = [ordered]@{
-        Restart = [bool]$False
-        RecoveryPartition = [bool]$True
-        SkipAllDiskSteps = [bool]$False
-        DriverPackName = "None"
-    }
+iex (irm functions.garytown.com)
 
+if (Test-DISMFromOSDCloudUSB -eq $false){
+    $Global:MyOSDCloud = [ordered]@{
+            Restart = [bool]$False
+            RecoveryPartition = [bool]$True
+            SkipAllDiskSteps = [bool]$False
+            DriverPackName = "None"
+    }
+}
+else {
+    $Global:MyOSDCloud = [ordered]@{
+            Restart = [bool]$False
+            RecoveryPartition = [bool]$True
+            SkipAllDiskSteps = [bool]$False
+    }
+}
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
 $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
 import-module "$ModulePath/OSD.psd1" -Force
