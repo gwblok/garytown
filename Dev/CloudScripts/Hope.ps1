@@ -24,7 +24,7 @@ iex (irm functions.osdcloud.com)
 Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
-if ($env:SystemDrive -ne 'X:') {
+if ($env:SystemDrive -eq 'X:') {
     Write-Host -ForegroundColor Gray "**Running DISM with Offline Drivers**" 
     Run-DISMFromOSDCloudUSB
 }
