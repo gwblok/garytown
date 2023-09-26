@@ -43,12 +43,15 @@ if ($env:SystemDrive -ne 'X:') {
     # Add Hope PDF to Desktop
     Write-Host -ForegroundColor Gray "**Adding HOPE PDF to Desktop**" 
     try {
-        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf" -Verbose
+        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf"
     }
     catch {}
     #Set Time Zone to Automatic Update
+    
     Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
     Enable-AutoZimeZoneUpdate
+    Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
+    Set-DefaultProfilePersonalPref
     
     #Try to prevent crap from auto installing
     Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
