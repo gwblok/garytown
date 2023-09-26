@@ -4,7 +4,7 @@ $ScriptVersion = '23.9.25.9'
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 #endregion
 
-Write-Host -ForegroundColor Green "[+] Function Run-DISMFromOSDCloudUSB"
+Write-Host -ForegroundColor Green "[+] Function Start-DISMFromOSDCloudUSB"
 Function Test-DISMFromOSDCloudUSB {
     #region Initialize
     #require OSD Module Installed
@@ -17,7 +17,7 @@ Function Test-DISMFromOSDCloudUSB {
     else { Return $false}
 
 }
-Function Run-DISMFromOSDCloudUSB {
+Function Start-DISMFromOSDCloudUSB {
     #region Initialize
     if ($env:SystemDrive -eq 'X:') {
         $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
@@ -45,8 +45,8 @@ Function Disable-CloudContent {
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableSoftLanding' -Value 1 -PropertyType Dword -Force | out-null
 }
 
-Write-Host -ForegroundColor Green "[+] Inject-Win11ReqBypassRegValues"
-Function Inject-Win11ReqBypassRegValues {
+Write-Host -ForegroundColor Green "[+] Set-Win11ReqBypassRegValues"
+Function Set-Win11ReqBypassRegValues {
     if ($env:SystemDrive -eq 'X:') {
     $WindowsPhase = 'WinPE'
     }
@@ -103,8 +103,8 @@ Function Inject-Win11ReqBypassRegValues {
     }
 }
 
-Write-Host -ForegroundColor Green "[+] Run-WindowsUpdate"
-function Run-WindowsUpdate{
+Write-Host -ForegroundColor Green "[+] Start-WindowsUpdate"
+function Start-WindowsUpdate{
     <# Control Windows Update via PowerShell
     Gary Blok - GARYTOWN.COM
     NOTE: I'm using this in a RUN SCRIPT, so I hav the Parameters set to STRING, and in the RUN SCRIPT, I Create a list of options (TRUE & FALSE).
@@ -158,8 +158,8 @@ function Run-WindowsUpdate{
     else {Write-Output "No Updates Found"} 
 }
 
-Write-Host -ForegroundColor Green "[+] Run-WindowsUpdateDriver"
-function Run-WindowsUpdateDriver{
+Write-Host -ForegroundColor Green "[+] Start-WindowsUpdateDriver"
+function Start-WindowsUpdateDriver{
     <# Control Windows Update via PowerShell
     Gary Blok - GARYTOWN.COM
     NOTE: I'm using this in a RUN SCRIPT, so I hav the Parameters set to STRING, and in the RUN SCRIPT, I Create a list of options (TRUE & FALSE).
