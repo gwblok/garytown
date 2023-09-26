@@ -5,7 +5,7 @@ iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in
 
 <# Offline Driver Details
 If you extract Driver Packs to your Flash Drive, you can DISM them in while in WinPE and it will make the process much faster, plus ensure driver support for first Boot
-Extract to: OSDCLoudUSB\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct
+Extract to: OSDCLoudUSB:\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct
 Use OSD Module to determine Vars
 $ComputerProduct = (Get-MyComputerProduct)
 $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
