@@ -3,6 +3,13 @@ $ScriptVersion = '23.9.26.1'
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 
+<# Offline Driver Details
+If you extract Driver Packs to your Flash Drive, you can DISM them in while in WinPE and it will make the process much faster, plus ensure driver support for first Boot
+Extract to: OSDCLoudUSB\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct
+Use OSD Module to determine Vars
+$ComputerProduct = (Get-MyComputerProduct)
+$ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
+#>
 if (Test-DISMFromOSDCloudUSB -eq $false){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
