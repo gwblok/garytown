@@ -6,6 +6,7 @@ Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 iex (irm functions.garytown.com)
 
 if (Test-DISMFromOSDCloudUSB -eq $false){
+    Write-Host "Found Driver Pack Extracted on USB, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$True
