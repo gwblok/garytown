@@ -23,15 +23,23 @@ import-module "$ModulePath/OSD.psd1" -Force
 Write-Host "Starting OSDCloud" -ForegroundColor Green
 Start-OSDCloud -OSName 'Windows 11 22H2 x64' -OSEdition Pro -OSActivation Retail -ZTI -OSLanguage en-us
 
-Write-Host "Complete OSDCloud" -ForegroundColor Green
-iex (irm hope.garytown.com)
+#Write-Host "Complete OSDCloud" -ForegroundColor Green
+#iex (irm hope.garytown.com)
 
 #Setup Complete
+Write-Host "Creating SetupComplete Process" -ForegroundColor Green
 Set-SetupCompleteCreateStart
+Write-Host "  Enable OEM Activation" -ForegroundColor gray
 Set-SetupCompleteOEMActivation
+Write-Host "  Enable Defender Updates" -ForegroundColor gray
 Set-SetupCompleteDefenderUpdate
+Write-Host "  Enable Windows Updates" -ForegroundColor gray
 Set-SetupCompleteStartWindowsUpdate
+Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
 Set-SetupCompleteStartWindowsUpdateDriver
+Write-Host "  Set Time Zone Updates" -ForegroundColor gray
 Set-SetupCompleteTimeZone
+Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
 Set-SetupCompleteOSDCloudUSB
+Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
 Set-SetupCompleteCreateFinish
