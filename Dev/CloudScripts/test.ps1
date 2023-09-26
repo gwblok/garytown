@@ -1,12 +1,10 @@
 $ScriptName = 'test.garytown.com'
 $ScriptVersion = '23.9.26.1'
-
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
-
-iex (irm functions.garytown.com)
+iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 
 if (Test-DISMFromOSDCloudUSB -eq $false){
-    Write-Host "Found Driver Pack Extracted on USB, disabling Driver Download via OSDCloud" -ForegroundColor Green
+    Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$True
