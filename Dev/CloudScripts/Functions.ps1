@@ -89,7 +89,7 @@ Function Set-Win11ReqBypassRegValues {
     }
     else {
         if (!(Test-Path -Path HKLM:\SYSTEM\Setup\LabConfig)){
-            New-Item -Path HKLM:\SYSTEM\Setup -Name "LabConfig"
+            New-Item -Path HKLM:\SYSTEM\Setup -Name "LabConfig" | out-null
         }
         New-ItemProperty -Path "HKLM:\SYSTEM\Setup\LabConfig" -Name "BypassTPMCheck" -Value 1 -PropertyType DWORD -Force | out-null
         New-ItemProperty -Path "HKLM:\SYSTEM\Setup\LabConfig" -Name "BypassSecureBootCheck" -Value 1 -PropertyType DWORD -Force | out-null
