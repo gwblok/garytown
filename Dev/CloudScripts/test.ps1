@@ -1,3 +1,8 @@
+$ScriptName = 'test.garytown.com'
+$ScriptVersion = '23.9.26.1'
+
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
+
 iex (irm functions.garytown.com)
 
 if (Test-DISMFromOSDCloudUSB -eq $false){
