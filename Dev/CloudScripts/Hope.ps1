@@ -12,12 +12,15 @@ $ScriptVersion = '23.9.25.9'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
-#Load Functions
+
+<#
 if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Yellow "Restart after Script Completes?"
     $Restart = Read-Host "y or n, then Enter"
 }
+#>
 
+#Load Functions
 iex (irm functions.garytown.com)
 iex (irm functions.osdcloud.com)
 
