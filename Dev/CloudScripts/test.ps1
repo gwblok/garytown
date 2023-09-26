@@ -25,3 +25,13 @@ Start-OSDCloud -OSName 'Windows 11 22H2 x64' -OSEdition Pro -OSActivation Retail
 
 Write-Host "Complete OSDCloud" -ForegroundColor Green
 iex (irm hope.garytown.com)
+
+#Setup Complete
+Set-SetupCompleteCreateStart
+Set-SetupCompleteOEMActivation
+Set-SetupCompleteDefenderUpdate
+Set-SetupCompleteStartWindowsUpdate
+Set-SetupCompleteStartWindowsUpdateDriver
+Set-SetupCompleteTimeZone
+Set-SetupCompleteOSDCloudUSB
+Set-SetupCompleteCreateFinish
