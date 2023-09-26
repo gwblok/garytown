@@ -63,26 +63,27 @@ Function Inject-Win11ReqBypassRegValues {
     
         # Mount and edit the setup environment's registry
         $REG_System = "C:\Windows\System32\config\system"
-        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"
-        $VirtualRegistryPath_Setup = $VirtualRegistryPath_SYSTEM + "\Setup"
+        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM" #Load Command
+        $VirtualRegistryPath_Setup = "HKLM:\WinPE_SYSTEM\Setup" #PowerShell Path
+
         # $VirtualRegistryPath_LabConfig = $VirtualRegistryPath_Setup + "\LabConfig"
         reg unload $VirtualRegistryPath_SYSTEM | Out-Null # Just in case...
         Start-Sleep 1
         reg load $VirtualRegistryPath_SYSTEM $REG_System | Out-Null
 
-        Set-Location -Path Registry::$VirtualRegistryPath_Setup
+
        
-        New-Item -Name "LabConfig" -Force | out-null
-        New-ItemProperty -Path "LabConfig" -Name "BypassTPMCheck" -Value 1 -PropertyType DWORD -Force | out-null
-        New-ItemProperty -Path "LabConfig" -Name "BypassSecureBootCheck" -Value 1 -PropertyType DWORD -Force | out-null
-        New-ItemProperty -Path "LabConfig" -Name "BypassRAMCheck" -Value 1 -PropertyType DWORD -Force | out-null
-        New-ItemProperty -Path "LabConfig" -Name "BypassStorageCheck" -Value 1 -PropertyType DWORD -Force | out-null
-        New-ItemProperty -Path "LabConfig" -Name "BypassCPUCheck" -Value 1 -PropertyType DWORD -Force | out-null
+        New-Item -Path $VirtualRegistryPath_Setup -Name "LabConfig" -Force | out-null
+        New-ItemProperty -Path "$VirtualRegistryPath_Setup\LabConfig" -Name "BypassTPMCheck" -Value 1 -PropertyType DWORD -Force | out-null
+        New-ItemProperty -Path "$VirtualRegistryPath_Setup\LabConfig" -Name "BypassSecureBootCheck" -Value 1 -PropertyType DWORD -Force | out-null
+        New-ItemProperty -Path "$VirtualRegistryPath_Setup\LabConfig" -Name "BypassRAMCheck" -Value 1 -PropertyType DWORD -Force | out-null
+        New-ItemProperty -Path "$VirtualRegistryPath_Setup\LabConfig" -Name "BypassStorageCheck" -Value 1 -PropertyType DWORD -Force | out-null
+        New-ItemProperty -Path "$VirtualRegistryPath_Setup\LabConfig" -Name "BypassCPUCheck" -Value 1 -PropertyType DWORD -Force | out-null
 
-        New-Item -Name "MoSetup" -ErrorAction SilentlyContinue | out-null
-        New-ItemProperty -Path "MoSetup" -Name "AllowUpgradesWithUnsupportedTPMOrCPU" -Value 1 -PropertyType DWORD -Force | out-null
+        New-Item -Path $VirtualRegistryPath_Setup -Name "MoSetup" -ErrorAction SilentlyContinue | out-null
+        New-ItemProperty -Path "$VirtualRegistryPath_Setup\MoSetup" -Name "AllowUpgradesWithUnsupportedTPMOrCPU" -Value 1 -PropertyType DWORD -Force | out-null
 
-        Set-Location -Path $env:systemdrive
+
         Start-Sleep 1
         reg unload $VirtualRegistryPath_SYSTEM
     }
@@ -231,10 +232,10 @@ Function Enable-AutoZimeZoneUpdate {
         # Mount and edit the setup environment's registry
         $REG_System = "C:\Windows\System32\config\system"
         $REG_Software = "C:\Windows\system32\config\SOFTWARE"
-        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"
-        $VirtualRegistryPath_SOFTWARE = "HKLM\WinPE_SOFTWARE"
-        $VirtualRegistryPath_tzautoupdate = "HKLM:\WinPE_SYSTEM\CurrentControlSet\Services\tzautoupdate"
-        $VirtualRegistryPath_location = "HKLM:\WinPE_SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"#Load Command
+        $VirtualRegistryPath_SOFTWARE = "HKLM\WinPE_SOFTWARE"#Load Command
+        $VirtualRegistryPath_tzautoupdate = "HKLM:\WinPE_SYSTEM\CurrentControlSet\Services\tzautoupdate" #PowerShell Path
+        $VirtualRegistryPath_location = "HKLM:\WinPE_SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"#PowerShell Path
 
         # $VirtualRegistryPath_LabConfig = $VirtualRegistryPath_Setup + "\LabConfig"
         reg unload $VirtualRegistryPath_SYSTEM | Out-Null # Just in case...
