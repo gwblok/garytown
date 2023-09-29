@@ -14,6 +14,7 @@ That will call this script
 
 .ChangeLog
       23.09.15.01 - First Release as Addon for Batteries
+      23.09.29.01 - Fixed bug, missing line for Remaining Capacity
 
 #>
 $CollectBatteryInventory = $true #Sub selection of BIOS Settings I've picked... let me know if you want more.
@@ -33,6 +34,7 @@ $BatteryLogName = "BatteryInventory"
             $DesignedCapacity = (Get-WmiObject  -Namespace $namespace -ClassName "BatteryStaticData").DesignedCapacity
             $SerialNumber = (Get-WmiObject  -Namespace $namespace -ClassName "BatteryStaticData").SerialNumber
             $ManufactureName = (Get-WmiObject  -Namespace $namespace -ClassName "BatteryStaticData").ManufactureName
+            $RemainingCapacity = (Get-CimInstance -Namespace $namespace -ClassName "BatteryStatus").RemainingCapacity
 
             $BatteryInventory = New-Object -TypeName PSObject
 	        $BatteryInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
@@ -57,4 +59,3 @@ $BatteryLogName = "BatteryInventory"
 if ($CollectBatteryInventory) {
 	$LogPayLoad | Add-Member -NotePropertyMembers @{$BatteryLogName = $BatteryInventory}
 }
-
