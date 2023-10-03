@@ -34,6 +34,7 @@ else {
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
+    $Global:MyOSDCloud.DevMode = $True
     $Global:MyOSDCloud.HPTPMUpdate = $True
     $Global:MyOSDCloud.HPIAALL = $true
     $Global:MyOSDCloud.HPBIOSUpdate = $true
