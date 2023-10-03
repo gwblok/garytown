@@ -52,6 +52,10 @@ import-module "$ModulePath/OSD.psd1" -Force
 Write-Host "Starting OSDCloud" -ForegroundColor Green
 Start-OSDCloud -OSName 'Windows 11 22H2 x64' -OSEdition Pro -OSActivation Retail -ZTI -OSLanguage en-us
 
+if (Test-DISMFromOSDCloudUSB){
+    Start-DISMFromOSDCloudUSB
+}
+
 #Setup Complete (OSDCloud WinPE stage is complete)
 Write-Host "Creating SetupComplete Process" -ForegroundColor Green
 Set-SetupCompleteCreateStart
