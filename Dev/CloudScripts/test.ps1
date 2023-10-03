@@ -1,5 +1,5 @@
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.10.03.01'
+$ScriptVersion = '23.10.03.02'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -40,6 +40,8 @@ if (Test-HPIASupport){
 
 }
 
+#write variables to console
+$Global:MyOSDCloud
 
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
 $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
