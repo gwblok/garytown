@@ -1,6 +1,6 @@
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.9.26.2'
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
+$ScriptVersion = '23.10.03.01'
+Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
@@ -11,6 +11,8 @@ Use OSD Module to determine Vars
 $ComputerProduct = (Get-MyComputerProduct)
 $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
+
+
 if (Test-DISMFromOSDCloudUSB -eq $false){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
@@ -18,6 +20,7 @@ if (Test-DISMFromOSDCloudUSB -eq $false){
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
             DriverPackName = "None"
+
     }
 }
 else {
@@ -25,8 +28,19 @@ else {
             Restart = [bool]$False
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
+
     }
 }
+
+#Enable HPIA | Update HP BIOS | Update HP TPM
+if (Test-HPIASupport){
+    $Global:MyOSDCloud.HPTPMUpdate = $True
+    $Global:MyOSDCloud.HPIAALL = $true
+    $Global:MyOSDCloud.HPBIOSUpdate = $true
+
+}
+
+
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
 $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
 import-module "$ModulePath/OSD.psd1" -Force
