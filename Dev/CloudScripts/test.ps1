@@ -1,5 +1,5 @@
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.10.03.03'
+$ScriptVersion = '23.10.04.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -13,13 +13,14 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
 
 
-if (Test-DISMFromOSDCloudUSB -eq $false){
+if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
             Restart = [bool]$False
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
             DriverPackName = "None"
+            OSDCloudUnattend = [bool]$True
 
     }
 }
@@ -34,10 +35,10 @@ else {
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
-    $Global:MyOSDCloud.DevMode = $True
-    $Global:MyOSDCloud.HPTPMUpdate = $True
-    $Global:MyOSDCloud.HPIAALL = $true
-    $Global:MyOSDCloud.HPBIOSUpdate = $true
+    $Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    $Global:MyOSDCloud.HPIAALL = [bool]$true
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
 
 }
 
