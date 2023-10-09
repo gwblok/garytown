@@ -357,7 +357,7 @@ $Manufacturer = Get-CimInstance -ClassName Win32_ComputerSystem -Property Manufa
 If ($Manufacturer -notin ('HP','Hewlett-Packard'))
 {
     Write-Output "Not an HP workstation"
-    $CollectHPIAInventory = $false
+    $CollectHPIARecommendationsInventory = $false
     Return
 }
 #endregion
@@ -391,7 +391,7 @@ if ($null -ne $LatestRunStartTime)
     If (((Get-Date) - $LatestRunStartTime).TotalHours -le $MinimumFrequency)
     {
         Write-Output "Minimum threshold for script re-run has not yet been met"
-        $CollectHPIAInventory = $false
+        $CollectHPIARecommendationsInventory = $false
         Return
     }
 }
@@ -784,7 +784,7 @@ foreach ($item in $Recommendations)
 }
 
 
-if ($CollectHPIAInventory) {
+if ($CollectHPIARecommendationsInventory) {
 	$LogPayLoad | Add-Member -NotePropertyMembers @{$HPIARecommendationsLogName = $Recommendations}
 }
 
