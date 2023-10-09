@@ -1,3 +1,16 @@
+<#  Addon Enhancement for HP Devices using MSEndpointMgr's Enhanced Inventory
+https://msendpointmgr.com/2022/01/17/securing-intune-enhanced-inventory-with-azure-function/
+
+I ASSUME you already set that up and have it working, if not, this will not work.  Once you have that setup, you can implement this ADD ON.
+
+
+.Requirements
+Internet Connection
+
+.ChangeLog
+      23.10.09.01 - Intial Release
+#>
+
 ###############################
 ## HP DRIVER UPDATE ANALYZER ##
 ###############################
