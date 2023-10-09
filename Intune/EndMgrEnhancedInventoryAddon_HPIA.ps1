@@ -3,8 +3,8 @@
 ###############################
 
 
-$CollectHPIAInventory = $true #Sub selection of BIOS Settings I've picked... let me know if you want more.
-$HPIALogName = "HPIAInventory"
+$CollectHPIARecommendationsInventory = $true 
+$HPIARecommendationsLogName = "HPIARecommendationsInventory"
 
 ################
 ## Parameters ##
@@ -313,6 +313,8 @@ Function Install-HPIA{
 #endregion
 
 
+
+
 #################
 ## Preparation ##
 #################
@@ -342,6 +344,7 @@ $Manufacturer = Get-CimInstance -ClassName Win32_ComputerSystem -Property Manufa
 If ($Manufacturer -notin ('HP','Hewlett-Packard'))
 {
     Write-Output "Not an HP workstation"
+    $CollectHPIAInventory = $false
     Return
 }
 #endregion
@@ -375,6 +378,7 @@ if ($null -ne $LatestRunStartTime)
     If (((Get-Date) - $LatestRunStartTime).TotalHours -le $MinimumFrequency)
     {
         Write-Output "Minimum threshold for script re-run has not yet been met"
+        $CollectHPIAInventory = $false
         Return
     }
 }
@@ -616,9 +620,11 @@ try
             [array]$DriverRecommendations = $xml.HPIA.Recommendations.Drivers.Recommendation
             [array]$BIOSRecommendations = $xml.HPIA.Recommendations.BIOS.Recommendation
             [array]$FirmwareRecommendations = $xml.HPIA.Recommendations.Firmware.Recommendation
-
+            
+            Set-ItemProperty -Path $FullRegPath -Name SoftwareRecommendations -Value $SoftwareRecommendations.Count -Force
             If (($SoftwareRecommendations.Count -ge 1) -and (($Category -match "Software") -or ($Category -match "All")))
             {
+                $SoftwareReqs = $true
                 Write-Log -Message "Found $($SoftwareRecommendations.Count) software recommendations" -Component "Analyze"
                 foreach ($Item in $SoftwareRecommendations)
                 {
@@ -634,9 +640,14 @@ try
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
             }
-
+            else {
+                $SoftwareReqs = $false
+            }
+            
+            Set-ItemProperty -Path $FullRegPath -Name DriverRecommendations -Value $DriverRecommendations.Count -Force
             If (($DriverRecommendations.Count -ge 1) -and (($Category -match "Driver") -or ($Category -match "All")))
             {
+                $DriverReqs = $true
                 Write-Log -Message "Found $($DriverRecommendations.Count) driver recommendations" -Component "Analyze"
                 foreach ($Item in $DriverRecommendations)
                 {
@@ -652,11 +663,17 @@ try
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
             }
+            else {
+                $DriverReqs = $False
+            }
 
+            Set-ItemProperty -Path $FullRegPath -Name BIOSRecommendations -Value $BIOSRecommendations.Count -Force
             If (($BIOSRecommendations.Count -ge 1) -and (($Category -match "BIOS") -or ($Category -match "All")))
             {
+                $BIOSReqs = $true
                 Write-Log -Message "Found $($BIOSRecommendations.Count) BIOS recommendations" -Component "Analyze"
                 foreach ($Item in $BIOSRecommendations)
+                
                 {
                     $Recommendation = [Recommendation]::new()
                     $Recommendation.TargetComponent = $item.TargetComponent
@@ -670,11 +687,17 @@ try
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
             }
-
+            else {
+                $BIOSReqs = $false
+            }
+            
+            Set-ItemProperty -Path $FullRegPath -Name FirmwareRecommendations -Value $FirmwareRecommendations.Count -Force
             If (($FirmwareRecommendations.Count -ge 1) -and (($Category -match "Firmware") -or ($Category -match "All")))
             {
+                $FirmwareReqs = $true
                 Write-Log -Message "Found $($FirmwareRecommendations.Count) firmware recommendations" -Component "Analyze"
                 foreach ($Item in $FirmwareRecommendations)
+                
                 {
                     $Recommendation = [Recommendation]::new()
                     $Recommendation.TargetComponent = $item.TargetComponent
@@ -688,14 +711,20 @@ try
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
             }
-
-            If ($DriverRecommendations.Count -eq 0 -and $SoftwareRecommendations.Count -eq 0 -and $BIOSRecommendations.Count -eq 0 -and $FirmwareRecommendations.Count -eq 0)
+            else {
+                $FirmwareReqs = $false
+            }
+            If ($FirmwareReqs -eq $false -and $DriverReqs -eq $false -and $BIOSReqs -eq $false -and $SoftwareReqs -eq $false)
             {
                 Write-Log -Message "No recommendations found at this time" -Component "Analyze"
+                Set-ItemProperty -Path $FullRegPath -Name Compliance -Value $true -Force
                 Write-Log -Message "This driver analysis is complete. Have a nice day!" -Component "Completion"
                 Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Complete" -Force
                 Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
                 Return
+            }
+            else {
+                Set-ItemProperty -Path $FullRegPath -Name Compliance -Value $false -Force
             }
         }
         catch 
@@ -729,9 +758,7 @@ catch
 ## Build Inventory Object for LA       ##
 #########################################
 #region
-$HPIAInventory = New-Object -TypeName PSObject
 
-#$Model = Get-CimInstance -ClassName Win32_ComputerSystem -Property Model -ErrorAction SilentlyContinue | Select -ExpandProperty Model
 $InventoryDate = Get-Date ([DateTime]::UtcNow) -Format "s"
 foreach ($item in $Recommendations)
 {
@@ -745,7 +772,7 @@ foreach ($item in $Recommendations)
 
 
 if ($CollectHPIAInventory) {
-	$LogPayLoad | Add-Member -NotePropertyMembers @{$HPIALogName = $Recommendations}
+	$LogPayLoad | Add-Member -NotePropertyMembers @{$HPIARecommendationsLogName = $Recommendations}
 }
 
 #endregion
