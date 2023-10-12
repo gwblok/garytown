@@ -773,15 +773,40 @@ catch
 #region
 
 $InventoryDate = Get-Date ([DateTime]::UtcNow) -Format "s"
-foreach ($item in $Recommendations)
-{
-    $item.ManagedDeviceName = $ManagedDeviceName
-    $item.ManagedDeviceID = $ManagedDeviceID
-    $item.AzureADDeviceID = $AzureADDeviceID
-    $item.ComputerName = $ComputerName
-    $item.InventoryDate = $InventoryDate
-    $item.Model = $ComputerModel
+
+$Platform = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+
+$InventoryDate = Get-Date ([DateTime]::UtcNow) -Format "s"
+$HPIAInventory = New-Object -TypeName PSObject
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceName" -Value "$ManagedDeviceName" -Force
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceID" -Value "$ManagedDeviceID" -Force
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "AzureADDeviceID" -Value "$AzureADDeviceID" -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "Model" -Value "$Model" -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "Platform" -Value "$Platform" -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "InventoryDate" -Value "$InventoryDate" -Force	
+
+$DriverArray = @()
+
+foreach ($item in $Recommendations) {
+
+		
+	$tempdriver = New-Object -TypeName PSObject
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($Recommendations.TargetComponent)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($Recommendations.TargetVersion)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($Recommendations.ReferenceVersion)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($Recommendations.Comments)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($Recommendations.SoftPaqId)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($Recommendations.Type)" -Force
+    $tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($Recommendations.Type)" -Force
+	$DriverArray += $tempdriver
 }
+[System.Collections.ArrayList]$DriverArrayList = $DriverArray
+
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "Recommendations" -Value "$DriverArrayList" -Force	
+
+
+if ($Recommendations.Count -lt 1){$CollectHPIARecommendationsInventory = $false}
 
 
 if ($CollectHPIARecommendationsInventory) {
