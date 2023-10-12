@@ -803,7 +803,7 @@ foreach ($item in $Recommendations) {
 }
 [System.Collections.ArrayList]$DriverArrayList = $DriverArray
 
-$HPIAInventory | Add-Member -MemberType NoteProperty -Name "Recommendations" -Value "$DriverArrayList" -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "Recommendations" -Value $DriverArrayList -Force	
 
 
 if ($Recommendations.Count -lt 1){$CollectHPIARecommendationsInventory = $false}
