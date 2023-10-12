@@ -792,13 +792,12 @@ foreach ($item in $Recommendations) {
 
 		
 	$tempdriver = New-Object -TypeName PSObject
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($Recommendations.TargetComponent)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($Recommendations.TargetVersion)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($Recommendations.ReferenceVersion)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($Recommendations.Comments)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($Recommendations.SoftPaqId)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($Recommendations.Type)" -Force
-    $tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($Recommendations.Type)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
+	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
 	$DriverArray += $tempdriver
 }
 [System.Collections.ArrayList]$DriverArrayList = $DriverArray
