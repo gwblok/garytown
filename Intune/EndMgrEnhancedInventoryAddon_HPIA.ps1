@@ -341,12 +341,7 @@ class Recommendation {
     [string]$SoftPaqId
     [string]$Name
     [string]$Type
-    [string]$Model
-    [string]$ManagedDeviceID
-    [string]$AzureADDeviceID
-    [string]$ManagedDeviceName
-    [string]$ComputerName
-    [string]$InventoryDate
+
 }
 $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
 
@@ -379,7 +374,7 @@ If (!(Test-Path $FullRegPath))
 }
 #endregion
 
-
+<# - Commented out while testing
 #############################
 ## Check the run frequency ##
 #############################
@@ -397,7 +392,7 @@ if ($null -ne $LatestRunStartTime)
 }
 Set-ItemProperty -Path $FullRegPath -Name LatestRunStartTime -Value (Get-Date -Format "s") -Force
 #endregion
-
+#>
 
 ################################################################################
 ## Check if an inventory is already running to avoid simultaneous executions  ##
