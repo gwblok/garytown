@@ -9,6 +9,8 @@ Internet Connection
 
 .ChangeLog
       23.10.09.01 - Intial Release
+      23.10.12.01 - Changed Table layout, one entry per device instead of per driver
+      23.10.13.01 - Bug Fixes
 #>
 
 ###############################
@@ -22,10 +24,6 @@ $HPIARecommendationsLogName = "HPIARecommendationsInventory"
 ################
 ## Parameters ##
 ################
-# WorkspaceID of the Log Analytics workspace
-$script:WorkspaceID = "<YourWorkspaceID>" 
-# Primary Key of the Log Analytics workspace
-$script:PrimaryKey = "<YourPrimaryKey>" 
 # The name of the table to create/use in the Log Analytics workspace
 $script:LogName = "HPDriverUpdates" 
 #registry Key 
@@ -36,15 +34,13 @@ $ParentFoldersName = "HP\IntelligentUpdateService"
 $ChildFolderName = "IUSAnalysisReporting" 
 # The minimum number of hours in between each run of this script
 [int]$MinimumFrequency = 5
-# Static web page of the HP Image Assistant
-$HPIAWebUrl = "https://ftp.hp.com/pub/caps-softpaq/cmit/HPIA.html" 
 # Set the security protocol. Must include Tls1.2.
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12,[Net.SecurityProtocolType]::Tls13
 # to speed up web requests
 $ProgressPreference = 'SilentlyContinue' 
-
+#Where we're going to install HPIA
 $HPIAInstallParentPath = $env:ProgramFiles
-
+#HPIA Categories to scan for
 #[String[]]$DesiredCategories = @("Drivers","BIOS","Firmware","Software")
 [String[]]$DesiredCategories = @("Drivers","BIOS")
 
@@ -341,7 +337,6 @@ class Recommendation {
     [string]$SoftPaqId
     [string]$Name
     [string]$Type
-
 }
 $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
 
@@ -374,7 +369,7 @@ If (!(Test-Path $FullRegPath))
 }
 #endregion
 
-<# - Commented out while testing
+<# disabling during pilot testing
 #############################
 ## Check the run frequency ##
 #############################
@@ -793,18 +788,20 @@ foreach ($item in $Recommendations) {
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
+
 	$DriverArray += $tempdriver
 }
 [System.Collections.ArrayList]$DriverArrayList = $DriverArray
 
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "Recommendations" -Value $DriverArrayList -Force	
 
-
-if ($Recommendations.Count -lt 1){$CollectHPIARecommendationsInventory = $false}
-
+if (!($Recommendations)){$CollectHPIARecommendationsInventory = $false}
+else {
+    if ($Recommendations.Count -lt 1){$CollectHPIARecommendationsInventory = $false}
+}
 
 if ($CollectHPIARecommendationsInventory) {
-	$LogPayLoad | Add-Member -NotePropertyMembers @{$HPIARecommendationsLogName = $Recommendations}
+	$LogPayLoad | Add-Member -NotePropertyMembers @{$HPIARecommendationsLogName = $HPIAInventory}
 }
 
 #endregion
