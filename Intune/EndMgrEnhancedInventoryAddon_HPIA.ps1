@@ -8,9 +8,10 @@ I ASSUME you already set that up and have it working, if not, this will not work
 Internet Connection
 
 .ChangeLog
-      23.10.09.01 - Intial Release
+      23.10.09.01 - Intial Release - Based on: https://smsagent.blog/2023/03/28/managing-hp-driver-updates-with-microsoft-intune-azure-log-analytics-and-power-bi-part-1/
       23.10.12.01 - Changed Table layout, one entry per device instead of per driver
       23.10.13.01 - Bug Fixes
+      23.10.13.02 - Added Function to check JSON to double check Driver Recommendations
 #>
 
 ###############################
@@ -318,6 +319,38 @@ Function Install-HPIA{
         }
     }
 }
+Function Get-HPIAJSONConfirmation {
+<#  
+Grabs the JSON output from a recent run of HPIA to see what was installed and Exit Codes per item
+#>
+[CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$false)]
+        $ReportsFolder = "$WorkingDirectory\Report"
+
+        )
+    try 
+    {
+    $JSONFile = Get-ChildItem -Path $ReportsFolder -Recurse -Include *.JSON -ErrorAction Stop
+        If ($JSONFile){
+            try 
+                {
+                $JSON = Get-Content -Path $JSONFile.FullName  -ErrorAction Stop | ConvertFrom-Json
+                $Recommendations = $JSON.HPIA.Recommendations
+                $BIOSRecommendations = $Recommendations | Where-Object {$_.name -match "BIOS"}
+                $OtherRecommendations = $Recommendations | Where-Object {$_.name -notmatch "BIOS"}
+                if (!($OtherRecommendations)){
+                    #Write-Output "No Driver Recommendations found in JSON"
+                    $Script:DriverRecommendations = $null
+                }
+            }
+            catch {
+            }
+        }
+    }
+    catch{
+    }
+}
 
 #endregion
 
@@ -453,19 +486,17 @@ Write-Log -Message "Finding info for latest version of HP Image Assistant (HPIA)
 try
 {
     $LatestHPIA = Get-HPIALatestVersion
+    $HPIASoftPaqNumber = $LatestHPIA.HPIAVersion
+    $HPIADownloadURL = $LatestHPIA.HPIADownloadURL
+    $HPIAFileName = $LatestHPIA.HPIAFileName
+    Write-Log -Message "HPIA SoftPaq number is $HPIASoftPaqNumber" -Component "DownloadHPIA"
+    Write-Log -Message "HPIA download URL is $HPIADownloadURL" -Component "DownloadHPIA"
 }
 catch 
 {
-    Write-Log -Message "Failed to download the HPIA web page. $($_.Exception.Message)" -Component "DownloadHPIA" -LogLevel 3
-    Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-    Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
-    throw "Failed to download the HPIA web page. $($_.Exception.Message)"
+    Write-Log -Message "Failed to find Updated version of HPIA." -Component "DownloadHPIA" -LogLevel 3
 }
-$HPIASoftPaqNumber = $LatestHPIA.HPIAVersion
-$HPIADownloadURL = $LatestHPIA.HPIADownloadURL
-$HPIAFileName = $LatestHPIA.HPIAFileName
-Write-Log -Message "HPIA SoftPaq number is $HPIASoftPaqNumber" -Component "DownloadHPIA"
-Write-Log -Message "HPIA download URL is $HPIADownloadURL" -Component "DownloadHPIA"
+
 #endregion
 
 
@@ -624,6 +655,9 @@ try
             [array]$BIOSRecommendations = $xml.HPIA.Recommendations.BIOS.Recommendation
             [array]$FirmwareRecommendations = $xml.HPIA.Recommendations.Firmware.Recommendation
             
+            #Confirm Via JSON
+            Get-HPIAJSONConfirmation -ReportsFolder "$WorkingDirectory\Report"
+
             Set-ItemProperty -Path $FullRegPath -Name SoftwareRecommendations -Value $SoftwareRecommendations.Count -Force
             If (($SoftwareRecommendations.Count -ge 1) -and (($Category -match "Software") -or ($Category -match "All")))
             {
@@ -762,10 +796,7 @@ catch
 #########################################
 #region
 
-$InventoryDate = Get-Date ([DateTime]::UtcNow) -Format "s"
-
 $Platform = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
-
 $InventoryDate = Get-Date ([DateTime]::UtcNow) -Format "s"
 $HPIAInventory = New-Object -TypeName PSObject
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
@@ -782,12 +813,14 @@ foreach ($item in $Recommendations) {
 
 		
 	$tempdriver = New-Object -TypeName PSObject
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+    $tempdriver | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+    $tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
 	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
+    
 
 	$DriverArray += $tempdriver
 }
