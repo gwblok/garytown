@@ -291,6 +291,7 @@ function Set-DefaultProfilePersonalPref {
 
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
+Write-Host -ForegroundColor Green "[+] Function Set-APEnterprise"
 function Set-APEnterprise {
     Install-script -name Get-WindowsAutoPilotInfo -Force
     Set-ExecutionPolicy Bypass -Force
