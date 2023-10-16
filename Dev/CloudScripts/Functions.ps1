@@ -1,7 +1,7 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.9.25.9'
+$ScriptVersion = '23.10.16.1'
 
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
 
 Write-Host -ForegroundColor Green "[+] Function Start-DISMFromOSDCloudUSB"
@@ -290,4 +290,9 @@ function Set-DefaultProfilePersonalPref {
     New-ItemProperty -Path $Path -Name "ContentDeliveryAllowed" -Value 0 -PropertyType Dword -Force | Out-Null
 
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
+}
+function Set-APEnterprise {
+    Install-script -name Get-WindowsAutoPilotInfo -Force
+    Set-ExecutionPolicy Bypass -Force
+    Get-WindowsAutopilotInfo -Online -GroupTag Enterprise -Assign
 }
