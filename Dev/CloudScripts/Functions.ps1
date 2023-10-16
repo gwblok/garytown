@@ -291,8 +291,109 @@ function Set-DefaultProfilePersonalPref {
 
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
+
+Write-Host -ForegroundColor Green "[+] Function Install-Nuget"
+function Install-Nuget {
+    [CmdletBinding()]
+    param ()
+    if ($WindowsPhase -eq 'WinPE') {
+        $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
+        $NuGetExeName = 'NuGet.exe'
+        $PSGetProgramDataPath = Join-Path -Path $env:ProgramData -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+        $nugetExeBasePath = $PSGetProgramDataPath
+        $nugetExeFilePath = Join-Path -Path $nugetExeBasePath -ChildPath $NuGetExeName
+    
+        if (-not (Test-Path -Path $nugetExeFilePath)) {
+            if (-not (Test-Path -Path $nugetExeBasePath)) {
+                $null = New-Item -Path $nugetExeBasePath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            }
+            Write-Host -ForegroundColor Yellow "[-] Downloading NuGet to $nugetExeFilePath"
+            $null = Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath
+        }
+    
+        $PSGetAppLocalPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+        $nugetExeBasePath = $PSGetAppLocalPath
+        $nugetExeFilePath = Join-Path -Path $nugetExeBasePath -ChildPath $NuGetExeName
+        if (-not (Test-Path -Path $nugetExeFilePath)) {
+            if (-not (Test-Path -Path $nugetExeBasePath)) {
+                $null = New-Item -Path $nugetExeBasePath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            }
+            Write-Host -ForegroundColor Yellow "[-] Downloading NuGet to $nugetExeFilePath"
+            $null = Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath
+        }
+        if (Test-Path "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll") {
+            Write-Host -ForegroundColor Green "[+] Nuget 2.8.5.208+"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[-] Install-PackageProvider NuGet -MinimumVersion 2.8.5.201"
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers | Out-Null
+        }
+    }
+    else {
+        if (Test-Path "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll") {
+            #Write-Host -ForegroundColor Green "[+] Nuget 2.8.5.208+"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[-] Install-PackageProvider NuGet -MinimumVersion 2.8.5.201"
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers | Out-Null
+        }
+        $InstalledModule = Get-PackageProvider -Name NuGet | Where-Object {$_.Version -ge '2.8.5.201'} | Sort-Object Version -Descending | Select-Object -First 1
+        if ($InstalledModule) {
+            Write-Host -ForegroundColor Green "[+] NuGet $([string]$InstalledModule.Version)"
+        }
+    }
+}
+Write-Host -ForegroundColor Green "[+] Function Install-PackageManagement"
+function Install-PackageManagement {
+    [CmdletBinding()]
+    param ()
+    if ($WindowsPhase -eq 'WinPE') {
+        $InstalledModule = Import-Module PackageManagement -PassThru -ErrorAction Ignore
+        if (-not $InstalledModule) {
+            Write-Host -ForegroundColor Yellow "[-] Install PackageManagement 1.4.8.1"
+            $PackageManagementURL = "https://psg-prod-eastus.azureedge.net/packages/packagemanagement.1.4.8.1.nupkg"
+            Invoke-WebRequest -UseBasicParsing -Uri $PackageManagementURL -OutFile "$env:TEMP\packagemanagement.1.4.8.1.zip"
+            $null = New-Item -Path "$env:TEMP\1.4.8.1" -ItemType Directory -Force
+            Expand-Archive -Path "$env:TEMP\packagemanagement.1.4.8.1.zip" -DestinationPath "$env:TEMP\1.4.8.1"
+            $null = New-Item -Path "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement" -ItemType Directory -ErrorAction SilentlyContinue
+            Move-Item -Path "$env:TEMP\1.4.8.1" -Destination "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement\1.4.8.1"
+            Import-Module PackageManagement -Force -Scope Global
+        }
+    }
+    else {
+        $InstalledModule = Get-PackageProvider -Name PowerShellGet | Where-Object {$_.Version -ge '2.2.5'} | Sort-Object Version -Descending | Select-Object -First 1
+        if (-not ($InstalledModule)) {
+            Write-Host -ForegroundColor Yellow "[-] Install-PackageProvider PowerShellGet -MinimumVersion 2.2.5"
+            Install-PackageProvider -Name PowerShellGet -MinimumVersion 2.2.5 -Force -Scope AllUsers | Out-Null
+            Import-Module PowerShellGet -Force -Scope Global -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+        }
+    
+        $InstalledModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object {$_.Version -ge '1.4.8.1'} | Sort-Object Version -Descending | Select-Object -First 1
+        if (-not ($InstalledModule)) {
+            Write-Host -ForegroundColor Yellow "[-] Install-Module PackageManagement -MinimumVersion 1.4.8.1"
+            Install-Module -Name PackageManagement -MinimumVersion 1.4.8.1 -Force -Confirm:$false -Source PSGallery -Scope AllUsers
+            Import-Module PackageManagement -Force -Scope Global -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+        }
+    
+        Import-Module PackageManagement -Force -Scope Global -ErrorAction SilentlyContinue
+        $InstalledModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object {$_.Version -ge '1.4.8.1'} | Sort-Object Version -Descending | Select-Object -First 1
+        if ($InstalledModule) {
+            Write-Host -ForegroundColor Green "[+] PackageManagement $([string]$InstalledModule.Version)"
+        }
+        Import-Module PowerShellGet -Force -Scope Global -ErrorAction SilentlyContinue
+        $InstalledModule = Get-PackageProvider -Name PowerShellGet | Where-Object {$_.Version -ge '2.2.5'} | Sort-Object Version -Descending | Select-Object -First 1
+        if ($InstalledModule) {
+            Write-Host -ForegroundColor Green "[+] PowerShellGet $([string]$InstalledModule.Version)"
+        }
+    }
+}
+
 Write-Host -ForegroundColor Green "[+] Function Set-APEnterprise"
 function Set-APEnterprise {
+    Install-Nuget
+    Install-PackageManagement
     Install-script -name Get-WindowsAutoPilotInfo -Force
     Set-ExecutionPolicy Bypass -Force
     Get-WindowsAutopilotInfo -Online -GroupTag Enterprise -Assign
