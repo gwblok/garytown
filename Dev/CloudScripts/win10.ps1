@@ -16,7 +16,7 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$True
+            Restart = [bool]$False
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
             DriverPackName = "None"
@@ -26,7 +26,7 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
 }
 else {
     $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$True
+            Restart = [bool]$False
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
 
@@ -74,3 +74,6 @@ Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
 Set-SetupCompleteOSDCloudUSB
 Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
 Set-SetupCompleteCreateFinish
+
+#Restart
+restart-computer
