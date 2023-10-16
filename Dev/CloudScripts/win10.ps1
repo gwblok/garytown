@@ -1,4 +1,4 @@
-$ScriptName = 'test.garytown.com'
+$ScriptName = 'win10.garytown.com'
 $ScriptVersion = '23.10.04.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
@@ -16,7 +16,7 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$False
+            Restart = [bool]$True
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
             DriverPackName = "None"
@@ -26,7 +26,7 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
 }
 else {
     $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$False
+            Restart = [bool]$True
             RecoveryPartition = [bool]$True
             SkipAllDiskSteps = [bool]$False
 
@@ -47,7 +47,7 @@ $Global:MyOSDCloud
 
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
 $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-import-module "$ModulePath/OSD.psd1" -Force
+import-module "$ModulePath\OSD.psd1" -Force
 
 #Launch OSDCloud
 Write-Host "Starting OSDCloud" -ForegroundColor Green
