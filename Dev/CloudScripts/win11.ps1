@@ -1,4 +1,4 @@
-$ScriptName = 'test.garytown.com'
+$ScriptName = 'win11.garytown.com'
 $ScriptVersion = '23.10.04.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
@@ -47,7 +47,7 @@ $Global:MyOSDCloud
 
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
 $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-import-module "$ModulePath/OSD.psd1" -Force
+import-module "$ModulePath\OSD.psd1" -Force
 
 #Launch OSDCloud
 Write-Host "Starting OSDCloud" -ForegroundColor Green
@@ -74,3 +74,6 @@ Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
 Set-SetupCompleteOSDCloudUSB
 Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
 Set-SetupCompleteCreateFinish
+
+#Restart
+restart-computer
