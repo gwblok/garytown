@@ -12,6 +12,8 @@ Internet Connection
       23.10.12.01 - Changed Table layout, one entry per device instead of per driver
       23.10.13.01 - Bug Fixes
       23.10.13.02 - Added Function to check JSON to double check Driver Recommendations
+      23.10.17.01 - Seperated Software, Drivers, BIOS & Firmware recommendations into their own Array
+      23.10.17.02 - Renamed LogName to HPIARecommendationsInv
 #>
 
 ###############################
@@ -20,7 +22,7 @@ Internet Connection
 
 
 $CollectHPIARecommendationsInventory = $true 
-$HPIARecommendationsLogName = "HPIARecommendationsInventory"
+$HPIARecommendationsLogName = "HPIARecommendationsInv"
 
 ################
 ## Parameters ##
@@ -42,8 +44,8 @@ $ProgressPreference = 'SilentlyContinue'
 #Where we're going to install HPIA
 $HPIAInstallParentPath = $env:ProgramFiles
 #HPIA Categories to scan for
-#[String[]]$DesiredCategories = @("Drivers","BIOS","Firmware","Software")
-[String[]]$DesiredCategories = @("Drivers","BIOS")
+[String[]]$DesiredCategories = @("Drivers","BIOS","Firmware","Software")
+#[String[]]$DesiredCategories = @("Drivers","BIOS")
 
 ###############
 ## Functions ##
@@ -108,61 +110,6 @@ Function Rollover-Log {
             Select -First 1).FullName | Remove-Item  
     }
 		
-}
-
-# Create the function to create the authorization signature
-# ref https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-collector-api
-Function Build-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
-{
-    $xHeaders = "x-ms-date:" + $date
-    $stringToHash = $method + "`n" + $contentLength + "`n" + $contentType + "`n" + $xHeaders + "`n" + $resource
-
-    $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-    $keyBytes = [Convert]::FromBase64String($sharedKey)
-
-    $sha256 = New-Object System.Security.Cryptography.HMACSHA256
-    $sha256.Key = $keyBytes
-    $calculatedHash = $sha256.ComputeHash($bytesToHash)
-    $encodedHash = [Convert]::ToBase64String($calculatedHash)
-    $authorization = 'SharedKey {0}:{1}' -f $customerId,$encodedHash
-    return $authorization
-}
-
-# Create the function to create and post the request
-# ref https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-collector-api
-Function Post-LogAnalyticsData($customerId, $sharedKey, $body, $logType)
-{
-    $method = "POST"
-    $contentType = "application/json"
-    $resource = "/api/logs"
-    $rfc1123date = [DateTime]::UtcNow.ToString("r")
-    $contentLength = $body.Length
-    $TimeStampField = ""
-    $signature = Build-Signature `
-        -customerId $customerId `
-        -sharedKey $sharedKey `
-        -date $rfc1123date `
-        -contentLength $contentLength `
-        -method $method `
-        -contentType $contentType `
-        -resource $resource
-    $uri = "https://" + $customerId + ".ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01"
-
-    $headers = @{
-        "Authorization" = $signature;
-        "Log-Type" = $logType;
-        "x-ms-date" = $rfc1123date;
-        "time-generated-field" = $TimeStampField;
-    }
-
-    try {
-        $response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $contentType -Headers $headers -Body $body -UseBasicParsing
-    }
-    catch {
-        $response = $_#.Exception.Response
-    }
-    
-    return $response
 }
 
 Function Get-HPIALatestVersion{
@@ -656,13 +603,14 @@ try
             [array]$FirmwareRecommendations = $xml.HPIA.Recommendations.Firmware.Recommendation
             
             #Confirm Via JSON
-            Get-HPIAJSONConfirmation -ReportsFolder "$WorkingDirectory\Report"
+            #Get-HPIAJSONConfirmation -ReportsFolder "$WorkingDirectory\Report"
 
             Set-ItemProperty -Path $FullRegPath -Name SoftwareRecommendations -Value $SoftwareRecommendations.Count -Force
             If (($SoftwareRecommendations.Count -ge 1) -and (($Category -match "Software") -or ($Category -match "All")))
             {
                 $SoftwareReqs = $true
                 Write-Log -Message "Found $($SoftwareRecommendations.Count) software recommendations" -Component "Analyze"
+                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $SoftwareRecommendations)
                 {
                     $Recommendation = [Recommendation]::new()
@@ -674,8 +622,10 @@ try
                     $Recommendation.Name = $item.Solution.Softpaq.Name
                     $Recommendation.Type = "Software"
                     $Recommendations.Add($Recommendation)
+                    
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
+                $SoftwareRecs = $Recommendations
             }
             else {
                 $SoftwareReqs = $false
@@ -686,6 +636,7 @@ try
             {
                 $DriverReqs = $true
                 Write-Log -Message "Found $($DriverRecommendations.Count) driver recommendations" -Component "Analyze"
+                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $DriverRecommendations)
                 {
                     $Recommendation = [Recommendation]::new()
@@ -699,6 +650,8 @@ try
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
+                $DriverRecs = $Recommendations #| Where-Object {$_.name -notmatch "myHP"}
+
             }
             else {
                 $DriverReqs = $False
@@ -709,6 +662,7 @@ try
             {
                 $BIOSReqs = $true
                 Write-Log -Message "Found $($BIOSRecommendations.Count) BIOS recommendations" -Component "Analyze"
+                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $BIOSRecommendations)
                 
                 {
@@ -723,6 +677,7 @@ try
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
+                $BIOSRecs = $Recommendations
             }
             else {
                 $BIOSReqs = $false
@@ -733,6 +688,7 @@ try
             {
                 $FirmwareReqs = $true
                 Write-Log -Message "Found $($FirmwareRecommendations.Count) firmware recommendations" -Component "Analyze"
+                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $FirmwareRecommendations)
                 
                 {
@@ -747,6 +703,7 @@ try
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
+                $FirmwareRecs = $Recommendations
             }
             else {
                 $FirmwareReqs = $false
@@ -757,7 +714,7 @@ try
                 Set-ItemProperty -Path $FullRegPath -Name Compliance -Value $true -Force
                 Write-Log -Message "This driver analysis is complete. Have a nice day!" -Component "Completion"
                 Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Complete" -Force
-                Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+                #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
                 Return
             }
             else {
@@ -768,7 +725,7 @@ try
         {
             Write-Log -Message "Failed to parse the XML file: $($_.Exception.Message)" -Component "Analyze" -LogLevel 3
             Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-            Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+            #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
             throw "Failed to parse the XML file: $($_.Exception.Message)" 
         }
     }
@@ -776,7 +733,7 @@ try
     {
         Write-Log -Message "Failed to find an XML report." -Component "Analyze" -LogLevel 3
         Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-        Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+        #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
         throw "Failed to find an XML report."
     }
 }
@@ -784,7 +741,7 @@ catch
 {
     Write-Log -Message "Failed to find an XML report: $($_.Exception.Message)" -Component "Analyze" -LogLevel 3
     Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-    Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
     throw "Failed to find an XML report: $($_.Exception.Message)"
 }
 #endregion
@@ -807,26 +764,82 @@ $HPIAInventory | Add-Member -MemberType NoteProperty -Name "Model" -Value "$Mode
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "Platform" -Value "$Platform" -Force	
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "InventoryDate" -Value "$InventoryDate" -Force	
 
+$SoftwareArray = @()
 $DriverArray = @()
+$BIOSArray = @()
+$FirmwareArray = @()
 
-foreach ($item in $Recommendations) {
-
+if ($SoftwareReqs -eq $true){
+    foreach ($item in $SoftwareRecs) {
 		
-	$tempdriver = New-Object -TypeName PSObject
-    $tempdriver | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-    $tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
-    
+	    $temparray = New-Object -TypeName PSObject
+        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
 
-	$DriverArray += $tempdriver
+	    $SoftwareArray += $temparray
+    }
 }
-[System.Collections.ArrayList]$DriverArrayList = $DriverArray
+if ($DriverReqs -eq $true){
+    foreach ($item in $DriverRecs) {
+		
+	    $temparray = New-Object -TypeName PSObject
+        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
 
-$HPIAInventory | Add-Member -MemberType NoteProperty -Name "Recommendations" -Value $DriverArrayList -Force	
+	    $DriverArray += $temparray
+    }
+}
+if ($BIOSReqs -eq $true){
+    foreach ($item in $BIOSRecs) {
+
+	    $temparray = New-Object -TypeName PSObject
+        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force    
+
+	    $BIOSArray += $temparray
+    }
+}
+if ($FirmwareReqs -eq $true){
+    foreach ($item in $FirmwareRecs) {
+	
+	    $temparray = New-Object -TypeName PSObject
+        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
+	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
+
+	    $FirmwareArray += $tempdriver
+    }
+}
+
+[System.Collections.ArrayList]$SoftwareArrayList = $SoftwareArray
+[System.Collections.ArrayList]$DriverArrayList = $DriverArray
+[System.Collections.ArrayList]$BIOSArrayList = $BIOSArray
+[System.Collections.ArrayList]$FirmwareArrayList = $FirmwareArray
+
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "SoftwareRecommendations" -Value $SoftwareArrayList -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "DriverRecommendations" -Value $DriverArrayList -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "BIOSRecommendations" -Value $BIOSArrayList -Force	
+$HPIAInventory | Add-Member -MemberType NoteProperty -Name "FirmwareRecommendations" -Value $FirmwareArrayList -Force	
+
 
 if (!($Recommendations)){$CollectHPIARecommendationsInventory = $false}
 else {
