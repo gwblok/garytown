@@ -30,11 +30,11 @@ $HPIARecommendationsLogName = "HPIARecommendationsInv"
 # The name of the table to create/use in the Log Analytics workspace
 $script:LogName = "HPDriverUpdates" 
 #registry Key 
-$ParentRegKeyName = "IntelligentUpdate" 
+$ParentRegKeyName = "HP" 
 # The name of the parent folder and registry key that we'll work with, eg your company or IT dept name
-$ParentFoldersName = "HP\IntelligentUpdateService"
+$ParentFoldersName = "HP"
 #  The name of the child folder and registry key that we'll work with
-$ChildFolderName = "IUSAnalysisReporting" 
+$ChildFolderName = "HPIAAnalysisReporting" 
 # The minimum number of hours in between each run of this script
 [int]$MinimumFrequency = 5
 # Set the security protocol. Must include Tls1.2.
@@ -337,7 +337,7 @@ If ($Manufacturer -notin ('HP','Hewlett-Packard'))
 ## Create Registry Keys ##
 ##########################
 #region
-$RegRoot = "HKLM:\SOFTWARE\HP"
+$RegRoot = "HKLM:\SOFTWARE"
 $FullRegPath = "$RegRoot\$ParentRegKeyName\$ChildFolderName"
 If (!(Test-Path $RegRoot\$ParentRegKeyName))
 {
@@ -651,7 +651,6 @@ try
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
                 $DriverRecs = $Recommendations #| Where-Object {$_.name -notmatch "myHP"}
-
             }
             else {
                 $DriverReqs = $False
@@ -711,21 +710,15 @@ try
             If ($FirmwareReqs -eq $false -and $DriverReqs -eq $false -and $BIOSReqs -eq $false -and $SoftwareReqs -eq $false)
             {
                 Write-Log -Message "No recommendations found at this time" -Component "Analyze"
-                Set-ItemProperty -Path $FullRegPath -Name Compliance -Value $true -Force
-                Write-Log -Message "This driver analysis is complete. Have a nice day!" -Component "Completion"
+                Write-Log -Message "This analysis is complete. Have a nice day!" -Component "Completion"
                 Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Complete" -Force
-                #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
                 Return
-            }
-            else {
-                Set-ItemProperty -Path $FullRegPath -Name Compliance -Value $false -Force
             }
         }
         catch 
         {
             Write-Log -Message "Failed to parse the XML file: $($_.Exception.Message)" -Component "Analyze" -LogLevel 3
             Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-            #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
             throw "Failed to parse the XML file: $($_.Exception.Message)" 
         }
     }
@@ -733,7 +726,6 @@ try
     {
         Write-Log -Message "Failed to find an XML report." -Component "Analyze" -LogLevel 3
         Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-        #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
         throw "Failed to find an XML report."
     }
 }
@@ -741,7 +733,6 @@ catch
 {
     Write-Log -Message "Failed to find an XML report: $($_.Exception.Message)" -Component "Analyze" -LogLevel 3
     Set-ItemProperty -Path $FullRegPath -Name ExecutionStatus -Value "Failed" -Force
-    #Remove-Item -Path $WorkingDirectory -Recurse -Force -ErrorAction SilentlyContinue
     throw "Failed to find an XML report: $($_.Exception.Message)"
 }
 #endregion
