@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.10.16.2'
+$ScriptVersion = '23.10.17.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -398,3 +398,23 @@ function Set-APEnterprise {
     Set-ExecutionPolicy Bypass -Force
     Get-WindowsAutopilotInfo -Online -GroupTag Enterprise -Assign
 }
+
+#HP Dock Function
+Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)
+
+#HPIA Functions
+Write-Host -ForegroundColor Green "[+] Function Get-HPIALatestVersion"
+Write-Host -ForegroundColor Green "[+] Function Install-HPIA"
+Write-Host -ForegroundColor Green "[+] Function Run-HPIA"
+Write-Host -ForegroundColor Green "[+] Function Get-HPIAXMLResult"
+Write-Host -ForegroundColor Green "[+] Function Get-HPIAJSONResult"
+
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/HPIA/HPIA-Functions.ps1)
+
+
+#Install-ModuleHPCMSL
+Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Install-ModuleHPCMSL.ps1)
+
+
