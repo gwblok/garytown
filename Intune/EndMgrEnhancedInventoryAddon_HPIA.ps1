@@ -831,11 +831,12 @@ $HPIAInventory | Add-Member -MemberType NoteProperty -Name "DriverRecommendation
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "BIOSRecommendations" -Value $BIOSArrayList -Force	
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "FirmwareRecommendations" -Value $FirmwareArrayList -Force	
 
-
+<# Disabling, I want computers to report even if no recommendations 
 if (!($Recommendations)){$CollectHPIARecommendationsInventory = $false}
 else {
     if ($Recommendations.Count -lt 1){$CollectHPIARecommendationsInventory = $false}
 }
+#>
 
 if ($CollectHPIARecommendationsInventory) {
 	$LogPayLoad | Add-Member -NotePropertyMembers @{$HPIARecommendationsLogName = $HPIAInventory}
