@@ -187,45 +187,47 @@ Only Reports on Categories you provide instead of all
 
 #endregion
 
+if (Test-Path -Path $IntelligentUpdateRegKeyPath){
 
-#region get HPIA compliance info from last report
-Get-HPIAXMLResult -Category $DesiredCategories -ReportsFolder $HPIAStagingReports -ErrorAction SilentlyContinue
-Set-ItemProperty -Path $IntelligentUpdateRegKeyPath -Name "Compliance" -Value $script:compliance
-
-
-#endregion
+    #region get HPIA compliance info from last report
+    Get-HPIAXMLResult -Category $DesiredCategories -ReportsFolder $HPIAStagingReports -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $IntelligentUpdateRegKeyPath -Name "Compliance" -Value $script:compliance
 
 
-#region gather info for LA upload
-
-#Start to Build Object
-$IUSInventory = New-Object -TypeName PSObject
-$IUSInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
-$IUSInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceName" -Value "$ManagedDeviceName" -Force
-$IUSInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceID" -Value "$ManagedDeviceID" -Force
-$IUSInventory | Add-Member -MemberType NoteProperty -Name "AzureADDeviceID" -Value "$AzureADDeviceID" -Force
+    #endregion
 
 
-if (Test-Path $IntelligentUpdateRegKeyPath){
-    $IntelligentUpdateRegKey = Get-Item -Path $IntelligentUpdateRegKeyPath
-    ForEach ($Setting in $IntelligentUpdateRegKey.Property){
-        if ($Setting -notin $SkipItmes){
-            $SettingName = $Setting
-            $SettingValue = $IntelligentUpdateRegKey.GetValue($Setting)
-            $IUSInventory | Add-Member -MemberType NoteProperty -Name $SettingName -Value $SettingValue -Force
+    #region gather info for LA upload
+
+    #Start to Build Object
+    $IUSInventory = New-Object -TypeName PSObject
+    $IUSInventory | Add-Member -MemberType NoteProperty -Name "ComputerName" -Value "$ComputerName" -Force
+    $IUSInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceName" -Value "$ManagedDeviceName" -Force
+    $IUSInventory | Add-Member -MemberType NoteProperty -Name "ManagedDeviceID" -Value "$ManagedDeviceID" -Force
+    $IUSInventory | Add-Member -MemberType NoteProperty -Name "AzureADDeviceID" -Value "$AzureADDeviceID" -Force
+
+
+    if (Test-Path $IntelligentUpdateRegKeyPath){
+        $IntelligentUpdateRegKey = Get-Item -Path $IntelligentUpdateRegKeyPath
+        ForEach ($Setting in $IntelligentUpdateRegKey.Property){
+            if ($Setting -notin $SkipItmes){
+                $SettingName = $Setting
+                $SettingValue = $IntelligentUpdateRegKey.GetValue($Setting)
+                $IUSInventory | Add-Member -MemberType NoteProperty -Name $SettingName -Value $SettingValue -Force
+            }
         }
     }
-}
 
-if (Test-Path $HPIAAnalysisReportingRegKeyPath){
-    $IUSAnalysisReportingRegKey = Get-Item -Path $HPIAAnalysisReportingRegKeyPath
-    #$IUSAnalysisReportingRegKey = $IUSAnalysisReportingRegKey | Where-Object {$_.Property -notmatch "ExecutionStatus"}
+    if (Test-Path $HPIAAnalysisReportingRegKeyPath){
+        $IUSAnalysisReportingRegKey = Get-Item -Path $HPIAAnalysisReportingRegKeyPath
+        #$IUSAnalysisReportingRegKey = $IUSAnalysisReportingRegKey | Where-Object {$_.Property -notmatch "ExecutionStatus"}
     
-    ForEach ($Setting in $IUSAnalysisReportingRegKey.Property){
-        if ($Setting -notin $SkipItmes){
-            $SettingName = $Setting
-            $SettingValue = $IUSAnalysisReportingRegKey.GetValue($Setting)
-            $IUSInventory | Add-Member -MemberType NoteProperty -Name $SettingName -Value $SettingValue -Force
+        ForEach ($Setting in $IUSAnalysisReportingRegKey.Property){
+            if ($Setting -notin $SkipItmes){
+                $SettingName = $Setting
+                $SettingValue = $IUSAnalysisReportingRegKey.GetValue($Setting)
+                $IUSInventory | Add-Member -MemberType NoteProperty -Name $SettingName -Value $SettingValue -Force
+            }
         }
     }
 }
