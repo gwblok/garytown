@@ -614,7 +614,6 @@ try
             {
                 $SoftwareReqs = $true
                 Write-Log -Message "Found $($SoftwareRecommendations.Count) software recommendations" -Component "Analyze"
-                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $SoftwareRecommendations)
                 {
                     $Recommendation = [Recommendation]::new()
@@ -629,7 +628,6 @@ try
                     
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
-                $SoftwareRecs = $Recommendations
             }
             else {
                 $SoftwareReqs = $false
@@ -640,7 +638,6 @@ try
             {
                 $DriverReqs = $true
                 Write-Log -Message "Found $($DriverRecommendations.Count) driver recommendations" -Component "Analyze"
-                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $DriverRecommendations)
                 {
                     $Recommendation = [Recommendation]::new()
@@ -654,7 +651,6 @@ try
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
-                $DriverRecs = $Recommendations #| Where-Object {$_.name -notmatch "myHP"}
             }
             else {
                 $DriverReqs = $False
@@ -665,7 +661,6 @@ try
             {
                 $BIOSReqs = $true
                 Write-Log -Message "Found $($BIOSRecommendations.Count) BIOS recommendations" -Component "Analyze"
-                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $BIOSRecommendations)
                 
                 {
@@ -680,7 +675,6 @@ try
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
-                $BIOSRecs = $Recommendations
             }
             else {
                 $BIOSReqs = $false
@@ -691,7 +685,6 @@ try
             {
                 $FirmwareReqs = $true
                 Write-Log -Message "Found $($FirmwareRecommendations.Count) firmware recommendations" -Component "Analyze"
-                $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
                 foreach ($Item in $FirmwareRecommendations)
                 
                 {
@@ -706,7 +699,6 @@ try
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
-                $FirmwareRecs = $Recommendations
             }
             else {
                 $FirmwareReqs = $false
@@ -765,101 +757,22 @@ $RecommendationArray = @()
 foreach ($item in $Recommendations) {
 
 		
-	$tempdriver = New-Object -TypeName PSObject
-    $tempdriver | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-    $tempdriver | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
-	$tempdriver | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
+	$tempitem = New-Object -TypeName PSObject
+    $tempitem | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+    $tempitem | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
     
 
-	$RecommendationArray += $tempdriver
+	$RecommendationArray += $tempitem
 }
 [System.Collections.ArrayList]$RecommendationArrayList = $RecommendationArray
 
 $HPIAInventory | Add-Member -MemberType NoteProperty -Name "Recommendations" -Value $RecommendationArrayList -Force	
 
-
-<#
-$SoftwareArray = @()
-$DriverArray = @()
-$BIOSArray = @()
-$FirmwareArray = @()
-
-if ($SoftwareReqs -eq $true){
-    foreach ($item in $SoftwareRecs) {
-		
-	    $temparray = New-Object -TypeName PSObject
-        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
-
-	    $SoftwareArray += $temparray
-    }
-}
-if ($DriverReqs -eq $true){
-    foreach ($item in $DriverRecs) {
-		
-	    $temparray = New-Object -TypeName PSObject
-        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
-
-	    $DriverArray += $temparray
-    }
-}
-if ($BIOSReqs -eq $true){
-    foreach ($item in $BIOSRecs) {
-
-	    $temparray = New-Object -TypeName PSObject
-        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force    
-
-	    $BIOSArray += $temparray
-    }
-}
-if ($FirmwareReqs -eq $true){
-    foreach ($item in $FirmwareRecs) {
-	
-	    $temparray = New-Object -TypeName PSObject
-        $temparray | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-        $temparray | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
-	    $temparray | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
-
-	    $FirmwareArray += $tempdriver
-    }
-}
-
-[System.Collections.ArrayList]$SoftwareArrayList = $SoftwareArray
-[System.Collections.ArrayList]$DriverArrayList = $DriverArray
-[System.Collections.ArrayList]$BIOSArrayList = $BIOSArray
-[System.Collections.ArrayList]$FirmwareArrayList = $FirmwareArray
-
-$HPIAInventory | Add-Member -MemberType NoteProperty -Name "SoftwareRecommendations" -Value $SoftwareArrayList -Force	
-$HPIAInventory | Add-Member -MemberType NoteProperty -Name "DriverRecommendations" -Value $DriverArrayList -Force	
-$HPIAInventory | Add-Member -MemberType NoteProperty -Name "BIOSRecommendations" -Value $BIOSArrayList -Force	
-$HPIAInventory | Add-Member -MemberType NoteProperty -Name "FirmwareRecommendations" -Value $FirmwareArrayList -Force	
-
-#>
 
 
 <# Disabling, I want computers to report even if no recommendations 
