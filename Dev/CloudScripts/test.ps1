@@ -73,6 +73,7 @@ foreach ($Update in $Windows1122H2MSUUpdates){
     Install-MSU -MSUPath $Update.FullName
 }
 
+<#
 #Setup Complete (OSDCloud WinPE stage is complete)
 Write-Host "Creating SetupComplete Process" -ForegroundColor Green
 Set-SetupCompleteCreateStart
@@ -90,3 +91,4 @@ Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
 Set-SetupCompleteOSDCloudUSB
 Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
 Set-SetupCompleteCreateFinish
+#>
