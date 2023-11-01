@@ -1,5 +1,5 @@
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.10.04.01'
+$ScriptVersion = '23.11.01.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -53,8 +53,24 @@ import-module "$ModulePath/OSD.psd1" -Force
 Write-Host "Starting OSDCloud" -ForegroundColor Green
 Start-OSDCloud -OSName 'Windows 11 22H2 x64' -OSEdition Pro -OSActivation Retail -ZTI -OSLanguage en-us
 
+
+
 if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
+}
+
+$OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
+$UpdatesPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\OS\Updates"
+$MSUUpdates = Get-ChildItem -Path $UpdatesPath -Recurse -Filter *.msu
+$Windows11MSUUpdates = $MSUUpdates | Where-Object {$_.name -match "windows11"}
+$Windows1122H2MSUUpdates = $Windows11MSUUpdates | Where-Object {$_.FullName -match "22H2"}
+Write-Host "Windows 11 22H2 Updates"
+foreach ($Update in $Windows1122H2MSUUpdates){
+    $Update.FullName
+}
+Write-Host "Starting DISM Update Process"
+foreach ($Update in $Windows1122H2MSUUpdates){
+    Install-MSU -MSUPath $Update.FullName
 }
 
 #Setup Complete (OSDCloud WinPE stage is complete)
