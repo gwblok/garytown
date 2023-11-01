@@ -64,7 +64,9 @@ $UpdatesPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\OS\Updates"
 $MSUUpdates = Get-ChildItem -Path $UpdatesPath -Recurse -Filter *.msu
 $Windows11MSUUpdates = $MSUUpdates | Where-Object {$_.name -match "windows11"}
 $Windows1122H2MSUUpdates = $Windows11MSUUpdates | Where-Object {$_.FullName -match "22H2"}
-Write-Host "Windows 11 22H2 Updates"
+
+Write-Output "Current OS UBR: $(Get-UBR)"
+
 foreach ($Update in $Windows1122H2MSUUpdates){
     $Update.FullName
 }
@@ -72,6 +74,7 @@ Write-Host "Starting DISM Update Process"
 foreach ($Update in $Windows1122H2MSUUpdates){
     Install-MSU -MSUPath $Update.FullName
 }
+Write-Output "Current OS UBR: $(Get-UBR)"
 
 <#
 #Setup Complete (OSDCloud WinPE stage is complete)
