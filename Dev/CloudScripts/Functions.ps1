@@ -55,6 +55,7 @@ Function Install-MSU {
         Write-Output "Unable to Find DISM"
         throw
     }
+    Write-Output "Starting install of $MSUPath"
     $DISM = Start-Process $Process -ArgumentList "/Add-Package /PackagePath:$MSUPath" -Wait -PassThru
     return $DISM.ExitCode
 }
