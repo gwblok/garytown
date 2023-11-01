@@ -76,7 +76,7 @@ foreach ($Update in $Windows1122H2MSUUpdates){
 }
 Write-Output "Current OS UBR: $(Get-UBR)"
 
-<#
+
 #Setup Complete (OSDCloud WinPE stage is complete)
 Write-Host "Creating SetupComplete Process" -ForegroundColor Green
 Set-SetupCompleteCreateStart
@@ -86,8 +86,8 @@ Write-Host "  Enable Defender Updates" -ForegroundColor gray
 Set-SetupCompleteDefenderUpdate
 Write-Host "  Enable Windows Updates" -ForegroundColor gray
 Set-SetupCompleteStartWindowsUpdate
-Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
-Set-SetupCompleteStartWindowsUpdateDriver
+#Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
+#Set-SetupCompleteStartWindowsUpdateDriver
 Write-Host "  Set Time Zone Updates" -ForegroundColor gray
 Set-SetupCompleteTimeZone
 Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
