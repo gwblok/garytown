@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.11.01.3'
+$ScriptVersion = '23.11.01.4'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -428,7 +428,7 @@ function Install-CMTrace {
     $AppName = "CMTrace"
     $FileName = "CMTrace.exe"
     $InstallPath = "$env:windir\system32"
-    $URL = "https://github.com/gwblok/garytown/blob/master/OSD/CloudOSD/CMTrace.exe"
+    $URL = "https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/CMTrace.exe"
     $AppPath = "$InstallPath\$FileName"
     $ShortCutFolderPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
 
