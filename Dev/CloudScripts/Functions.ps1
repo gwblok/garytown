@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.10.17.2'
+$ScriptVersion = '23.11.01.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -55,8 +55,12 @@ Function Install-MSU {
         Write-Output "Unable to Find DISM"
         throw
     }
+    $scratchdir = 'C:\OSDCloud\Temp'
+    if (!(Test-Path -Path $scratchdir)){
+        new-item -Path $scratchdir | Out-Null
+    }
     Write-Output "Starting install of $MSUPath"
-    $DISM = Start-Process $Process -ArgumentList "/Image:C:\ /Add-Package /PackagePath:$MSUPath" -Wait -PassThru
+    $DISM = Start-Process $Process -ArgumentList "/Image:C:\ /Add-Package /PackagePath:$MSUPath /ScratchDir:$scratchdir" -Wait -PassThru
     return $DISM.ExitCode
 }
 Write-Host -ForegroundColor Green "[+] Function Disable-CloudContent"
