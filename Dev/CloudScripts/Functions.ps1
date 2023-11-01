@@ -37,7 +37,27 @@ Function Start-DISMFromOSDCloudUSB {
         Write-Output "Skipping Run-DISMFromOSDCloudUSB Function, not running in WinPE"
     }
 }
+Write-Host -ForegroundColor Green "[+] Function Install-MSU"
+Function Install-MSU {
+    [CmdletBinding()]
+    Param (
+    [Parameter(Mandatory=$true)]
+	$MSUPath
+    )
 
+    if (Test-Path "X:\Windows\system32\Dism.exe"){
+        $Process = "X:\Windows\system32\Dism.exe"
+    }
+    elseif (Test-Path "C:\Windows\system32\Dism.exe"){
+        $Process = "C:\Windows\system32\Dism.exe"
+    }
+    else {
+        Write-Output "Unable to Find DISM"
+        throw
+    }
+    $DISM = Start-Process $Process -ArgumentList "/Add-Package /PackagePath:$MSUPath" -Wait -PassThru
+    return $DISM.ExitCode
+}
 Write-Host -ForegroundColor Green "[+] Function Disable-CloudContent"
 Function Disable-CloudContent {
     New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows -Name "CloudContent" -Force | out-null
