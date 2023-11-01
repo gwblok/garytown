@@ -414,7 +414,106 @@ function Install-PackageManagement {
         }
     }
 }
+Write-Host -ForegroundColor Green "[+] Install-CMTrace"
+function Install-CMTrace {
 
+    <#
+    Gary Blok - @gwblok - GARYTOWN.COM
+    .Synopsis
+      Proactive Remediation for CMTrace to be on endpoint
+
+     .Description
+      Creates Generic Shortcut in Start Menu
+    #>
+    $AppName = "CMTrace"
+    $FileName = "CMTrace.exe"
+    $InstallPath = "$env:windir\system32"
+    $URL = "https://github.com/gwblok/garytown/blob/master/OSD/CloudOSD/CMTrace.exe"
+    $AppPath = "$InstallPath\$FileName"
+    $ShortCutFolderPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
+
+    if ($env:SystemDrive -eq "C:"){ 
+        Function New-AppIcon {
+            param(
+            [string]$SourceExePath = "$env:windir\system32\control.exe",
+            [string]$ArgumentsToSourceExe,
+            [string]$ShortCutName = "AppName"
+
+            )
+            #Build ShortCut Information
+
+            $ShortCutFolderPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
+            $DestinationPath = "$ShortCutFolderPath\$($ShortCutName).lnk"
+            Write-Output "Shortcut Creation Path: $DestinationPath"
+
+            if ($ArgumentsToSourceExe){
+                Write-Output "Shortcut = $SourceExePath -$($ArgumentsToSourceExe)"
+            }
+            Else {
+                Write-Output "Shortcut = $SourceExePath"
+            }
+    
+
+            #Create Shortcut
+            $WshShell = New-Object -comObject WScript.Shell
+            $Shortcut = $WshShell.CreateShortcut($DestinationPath)
+            $Shortcut.IconLocation = "$SourceExePath, 0"
+            $Shortcut.TargetPath = $SourceExePath
+            if ($ArgumentsToSourceExe){$Shortcut.Arguments = $ArgumentsToSourceExe}
+            $Shortcut.Save()
+
+            Write-Output "Shortcut Created"
+        }
+
+        if (!(Test-Path -Path $AppPath)){
+            Write-Output "$AppName Not Found, Starting Remediation"
+            #Download & Extract to System32
+            Write-Output "Downloading $URL"
+            Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
+            if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
+            else{Write-Output "Failed Downloaded"; exit 255}
+            Write-Output "Starting Copy of $AppName to $InstallPath"
+            Copy-Item -Path $env:TEMP\$FileName -Destination $InstallPath -Force
+            #Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
+            if (Test-Path -Path $AppPath){
+                Write-Output "Successfully Installed File"
+                New-AppIcon -SourceExePath $AppPath -ShortCutName $AppName 
+            }
+            else{Write-Output "Failed Extract"; exit 255}
+        }
+        else {
+            Write-Output "$AppName Already Installed"
+        }
+
+
+        if (!(Test-Path "$ShortCutFolderPath\$($AppName).lnk")){
+            New-AppIcon -SourceExePath $AppPath -ShortCutName $AppName 
+        }
+    }
+    else {
+        if (!(Test-Path -Path $AppPath)){
+            Write-Output "$AppName Not Found, Starting Remediation"
+            #Download & Extract to System32
+            Write-Output "Downloading $URL"
+            Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
+            if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
+            else{Write-Output "Failed Downloaded"; exit 255}
+            Write-Output "Starting Copy of $AppName to $InstallPath"
+            Copy-Item -Path $env:TEMP\$FileName -Destination $InstallPath -Force
+            #Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
+            if (Test-Path -Path $AppPath){
+                Write-Output "Successfully Installed File"
+                New-AppIcon -SourceExePath $AppPath -ShortCutName $AppName 
+            }
+            else{Write-Output "Failed Install"; exit 255}
+        }
+        else {
+            Write-Output "$AppName Already Installed"
+        }
+
+    }
+
+}
 Write-Host -ForegroundColor Green "[+] Function Set-APEnterprise"
 function Set-APEnterprise {
     Install-Nuget
