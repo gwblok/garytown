@@ -56,7 +56,7 @@ Function Install-MSU {
         throw
     }
     Write-Output "Starting install of $MSUPath"
-    $DISM = Start-Process $Process -ArgumentList "/Add-Package /PackagePath:$MSUPath" -Wait -PassThru
+    $DISM = Start-Process $Process -ArgumentList "/Image:C:\ /Add-Package /PackagePath:$MSUPath" -Wait -PassThru
     return $DISM.ExitCode
 }
 Write-Host -ForegroundColor Green "[+] Function Disable-CloudContent"
