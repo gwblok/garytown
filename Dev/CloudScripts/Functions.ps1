@@ -17,6 +17,19 @@ Function Test-DISMFromOSDCloudUSB {
     else { Return $false}
 
 }
+Write-Host -ForegroundColor Green "[+] Function Get-UBR"
+function Get-UBR {
+    if ($env:SystemDrive -eq "X:"){
+        $Info = DISM.exe /image:c:\ /Get-CurrentEdition
+        $UBR = ($Info | Where-Object {$_ -match "Image Version"}).replace("Image Version: ","")
+    }
+    else {
+        $Info = DISM.exe /online /Get-CurrentEdition
+        $UBR = ($Info | Where-Object {$_ -match "Image Version"}).replace("Image Version: ","")
+    }
+    return $UBR
+}
+
 Function Start-DISMFromOSDCloudUSB {
     #region Initialize
     if ($env:SystemDrive -eq 'X:') {
