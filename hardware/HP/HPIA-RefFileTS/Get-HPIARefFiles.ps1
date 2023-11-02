@@ -9,6 +9,8 @@ $OSTable = OS Version you're going to run HPIA on.  You need a reference file PE
 AKA Windows 10, 21H2, 22H2, etc & Windows 11 21H2, 22H2, etc
 
 
+
+
 #>
 
 
@@ -73,16 +75,21 @@ $ModelsTable= @(
 @{ Model ="HP EliteDesk 705 G3 DM"; Platform = "8266"}
 )
 
+$Platforms = $ModelsTable.Platform
 
+<#  Testing Area
 
+Quick Test a Single Model
 $ModelsTable= @(
 @{ Model ="HP EliteBook x360 830 G5"; Platform = "853D"}
-
 )
 
 #Get all Platforms HPIA supports:
 $TotalMachines = Get-HPDeviceDetails -Like *
 $Platforms = $TotalMachines.SystemID | Select-Object -Unique
+#>
+
+
 
 #OS Builds for Each Model that we'll create Reference files for:
 $OSTable = @(
