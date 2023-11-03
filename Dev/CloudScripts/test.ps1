@@ -72,9 +72,19 @@ foreach ($Update in $Windows1122H2MSUUpdates){
 }
 Write-Host "Starting DISM Update Process"
 foreach ($Update in $Windows1122H2MSUUpdates){
-    Install-MSU -MSUPath $Update.FullName
+    Install-Update -MSUPath $Update.FullName
 }
 Write-Output "Current OS UBR: $(Get-UBR)"
+
+write-output "Installing Enablement Package to 23H2"
+$LocalUpdatePath = "C:\OSDCloud\OS"
+$23H2EnablementCabURL = "https://raw.githubusercontent.com/gwblok/garytown/master/SoftwareUpdates/Windows11.0-kb5027397-x64.cab"
+Invoke-WebRequest -UseBasicParsing -Uri $23H2EnablementCabURL -OutFile "$LocalUpdatePath\Windows11.0-kb5027397-x64.cab"
+
+if (Test-Path -Path "$LocalUpdatePath\Windows11.0-kb5027397-x64.cab"){
+    Install-Update -UpdatePath "$LocalUpdatePath\Windows11.0-kb5027397-x64.cab"
+}
+
 
 
 #Setup Complete (OSDCloud WinPE stage is complete)
