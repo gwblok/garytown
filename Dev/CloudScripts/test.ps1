@@ -72,7 +72,7 @@ foreach ($Update in $Windows1122H2MSUUpdates){
 }
 Write-Host "Starting DISM Update Process"
 foreach ($Update in $Windows1122H2MSUUpdates){
-    Install-Update -MSUPath $Update.FullName
+    Install-Update -UpdatePath $Update.FullName
 }
 Write-Output "Current OS UBR: $(Get-UBR)"
 
