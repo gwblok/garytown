@@ -1,7 +1,7 @@
 function Install-ModuleHPCMSL {
     [CmdletBinding()]
     param ()
-    osdcloud-SetExecutionPolicy
+    Set-ExecutionPolicy Bypass -Scope CurrentUser
     $InstallModule = $false
     $PSModuleName = 'HPCMSL'
     if (-not (Get-Module -Name PowerShellGet -ListAvailable | Where-Object {$_.Version -ge '2.2.5'})) {
