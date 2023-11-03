@@ -50,30 +50,32 @@ Function Start-DISMFromOSDCloudUSB {
         Write-Output "Skipping Run-DISMFromOSDCloudUSB Function, not running in WinPE"
     }
 }
-Write-Host -ForegroundColor Green "[+] Function Install-MSU"
-Function Install-MSU {
+Write-Host -ForegroundColor Green "[+] Function Install-Update"
+Function Install-Update {
     [CmdletBinding()]
     Param (
     [Parameter(Mandatory=$true)]
-	$MSUPath
+	$UpdatePath
     )
 
-    if (Test-Path "X:\Windows\system32\Dism.exe"){
-        $Process = "X:\Windows\system32\Dism.exe"
-    }
-    elseif (Test-Path "C:\Windows\system32\Dism.exe"){
-        $Process = "C:\Windows\system32\Dism.exe"
-    }
-    else {
-        Write-Output "Unable to Find DISM"
-        throw
-    }
     $scratchdir = 'C:\OSDCloud\Temp'
     if (!(Test-Path -Path $scratchdir)){
         new-item -Path $scratchdir | Out-Null
     }
-    Write-Output "Starting install of $MSUPath"
-    $DISM = Start-Process $Process -ArgumentList "/Image:C:\ /Add-Package /PackagePath:$MSUPath /ScratchDir:$scratchdir" -Wait -PassThru
+
+    if ($env:SystemDrive -eq "X:"){
+        $Process = "X:\Windows\system32\Dism.exe"
+        $DISMArg = "/Image:C:\ /Add-Package /PackagePath:$UpdatePath /ScratchDir:$scratchdir /Quiet /NoRestart"
+    }
+    else {
+        $Process = "C:\Windows\system32\Dism.exe"
+        $DISMArg = "/Online /Add-Package /PackagePath:$UpdatePath /ScratchDir:$scratchdir /Quiet /NoRestart"
+    }
+
+
+    Write-Output "Starting Process of $Process -ArgumentList $DismArg -Wait"
+    $DISM = Start-Process $Process -ArgumentList $DISMArg -Wait -PassThru
+    
     return $DISM.ExitCode
 }
 Write-Host -ForegroundColor Green "[+] Function Disable-CloudContent"
