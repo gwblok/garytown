@@ -8,9 +8,10 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.9.25.9'
+$ScriptVersion = '23.11.07.01'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+
 
 
 <#
@@ -20,16 +21,17 @@ if ($env:SystemDrive -ne 'X:') {
 }
 #>
 
-#Load Functions
-iex (irm functions.garytown.com)
-iex (irm functions.osdcloud.com)
 
 Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
-    Write-Host -ForegroundColor Gray "**Running DISM with Offline Drivers**" 
-    Start-DISMFromOSDCloudUSB
+    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
+    iex (irm win11.garytown.com)
+
+    #Create Marker so it knows this is a "HOPE" computer
+    new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
+    restart-computer
 }
 
 #Non-WinPE
