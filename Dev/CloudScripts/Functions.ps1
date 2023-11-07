@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.11.01.4'
+$ScriptVersion = '23.11.07.1'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -637,7 +637,7 @@ function Install-BuildUpdatesFromOSCloudUSB {
     $MSUUpdates = Get-ChildItem -Path $UpdatesPath -Recurse | Where-Object {$_.Name -match ".msu" -or $_.Name -match ".cab"}
     $BuildUpdates = $MSUUpdates | Where-Object {$_.fullname -match "$BuildNumber"}
 
-
+write-host "Looking for updates here: $UpdatesPath for Build: $BuildNumber"
     if ($BuildUpdates){
         Write-Output "Current OS UBR: $(Get-UBR)"
         Write-Host " Found thse Updates: "
@@ -650,6 +650,9 @@ function Install-BuildUpdatesFromOSCloudUSB {
             Install-Update -UpdatePath $Update.FullName
         }
         Write-Output "Current OS UBR: $(Get-UBR)"
+    }
+    else {
+	write-host "No Updates found for $BuildNumber"
     }
 }
 #HP Dock Function
