@@ -16,22 +16,26 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$False
-            RecoveryPartition = [bool]$True
-            SkipAllDiskSteps = [bool]$False
-            DriverPackName = "None"
-            OSDCloudUnattend = [bool]$True
-
+        DriverPackName = "None"
+        OSDCloudUnattend = [bool]$True
     }
 }
 else {
     $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$False
-            RecoveryPartition = [bool]$True
-            SkipAllDiskSteps = [bool]$False
-
+        OSDCloudUnattend = [bool]$True
     }
 }
+
+#Always Set
+$Global:MyOSDCloud.DevMode = [bool]$True
+$Global:MyOSDCloud.Restart = [bool]$False
+$Global:MyOSDCloud.RecoveryPartition = [bool]$true
+$Global:MyOSDCloud.SkipAllDiskSteps = [bool]$False
+$Global:MyOSDCloud.OEMActivation = [bool]$True
+$Global:MyOSDCloud.WindowsUpdate = [bool]$False
+$Global:MyOSDCloud.WindowsUpdateDrivers = [bool]$true
+$Global:MyOSDCloud.WindowsDefenderUpdate = [bool]$False
+$Global:MyOSDCloud.SetTimeZone = [bool]$False
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
@@ -41,6 +45,8 @@ if (Test-HPIASupport){
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
 
 }
+
+
 
 #write variables to console
 $Global:MyOSDCloud
@@ -57,6 +63,10 @@ if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
 
+#Install any updates located on USB Drive
+Install-BuildUpdatesFromOSCloudUSB
+
+<# This is now in OSDCloud and controlled by the Vars above
 #Setup Complete (OSDCloud WinPE stage is complete)
 Write-Host "Creating SetupComplete Process" -ForegroundColor Green
 Set-SetupCompleteCreateStart
@@ -74,6 +84,7 @@ Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
 Set-SetupCompleteOSDCloudUSB
 Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
 Set-SetupCompleteCreateFinish
+#>
 
 #Restart
 restart-computer
