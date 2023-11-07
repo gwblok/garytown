@@ -588,7 +588,7 @@ function Install-23H2EnablementPackage {
 	Invoke-WebRequest -UseBasicParsing -Uri $23H2EnablementCabURL -OutFile "$env:TEMP\Windows11.0-kb5027397-x64.cab"
 	
 	if (Test-Path -Path "$env:TEMP\Windows11.0-kb5027397-x64.cab"){
-	    Install-MSU -MSUPath "$env:TEMP\Windows11.0-kb5027397-x64.cab"
+	    Install-Update -UpdatePath "$env:TEMP\Windows11.0-kb5027397-x64.cab"
 	}
 }
 Write-Host -ForegroundColor Green "[+] Install-BuildUpdatesFromOSCloudUSB - Coming to OSDCloud native in 21.11.XX"
