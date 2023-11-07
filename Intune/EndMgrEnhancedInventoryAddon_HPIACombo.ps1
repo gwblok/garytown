@@ -16,6 +16,7 @@ Internet Connection
       23.10.17.02 - Renamed LogName to HPIARecommendationsInv
       23.10.20.01 - Took the orginal and modified it for "Combo", which grabs all recocommendations and places into 1 array, testing idea for reporting simplification
       23.10.20.01 A - Renamed LogName to HPIARecommendationsComboInv
+      23.11.04.01 - Added Advisory Infomration
 #>
 
 ###############################
@@ -25,6 +26,11 @@ Internet Connection
 
 $CollectHPIARecommendationsInventory = $true 
 $HPIARecommendationsLogName = "HPIARecommendationsComboInv"
+
+$Model = (Get-WmiObject -Class:Win32_ComputerSystem).Model
+$Platform = ((Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product).ToLower()
+$CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+$WindowsRelease = $CurrentOSInfo.GetValue('ReleaseId')
 
 ################
 ## Parameters ##
@@ -305,7 +311,30 @@ Grabs the JSON output from a recent run of HPIA to see what was installed and Ex
 
 #endregion
 
+#region Grab Advisory Data
+$AdvisoryURL = "https://hpia.hpcloud.hp.com/ref/$($platform)/$($platform)_cds.cab"
+$AdvisoryCab = "$env:temp\$($platform)_cds.cab"
+$AdvisoryURL = $AdvisoryURL.ToLower()
+if (Test-WebConnection -Uri $AdvisoryURL){
+    Invoke-WebRequest -UseBasicParsing -Uri $AdvisoryURL -OutFile $AdvisoryCab
+}
+if (Test-Path -Path $AdvisoryCab){
+    $file = Invoke-HPPrivateExpandCAB -cab $AdvisoryCab -expectedFile "$AdvisoryCab.dir\$($platform)_cds.xml" -ErrorAction SilentlyContinue
+}
 
+$XMLAdvisoryFile = Get-Item -Path "$AdvisoryCab.dir\$($platform)_cds.xml" -ErrorAction SilentlyContinue
+if ($XMLAdvisoryFile){
+    #Compare Reference File Versions
+    [XML]$HPIAAdvisoryFileLocalXML = Get-Content -Path $XMLAdvisoryFile.FullName -Encoding UTF8
+    if ($HPIAAdvisoryFileLocalXML){
+        $docs = $HPIAAdvisoryFileLocalXML.ImagePal.doc
+        $EnglishDocs = $docs | Where-Object {$_.language_code  -match "EN_US"}
+        #$SPID = "SP143414"
+        #$SPAdvisory = $EnglishDocs | Where-Object {$_.Softpaqs.Softpaq -contains $SPID}
+
+        #Write-Output "Softpaq $SPID resolves: $($SPAdvisory.full_title)"
+    }
+}
 
 
 #################
@@ -321,6 +350,9 @@ class Recommendation {
     [string]$SoftPaqId
     [string]$Name
     [string]$Type
+    [string]$Url
+    [string]$ReleaseNotesUrl
+    [string]$Advisory
 }
 $Recommendations = [System.Collections.Generic.List[Recommendation]]::new()
 
@@ -624,8 +656,20 @@ try
                     $Recommendation.SoftPaqId = $item.Solution.Softpaq.Id
                     $Recommendation.Name = $item.Solution.Softpaq.Name
                     $Recommendation.Type = "Software"
-                    $Recommendations.Add($Recommendation)
+                    $Recommendation.Url = $item.Solution.Softpaq.Url
+                    $Recommendation.ReleaseNotesUrl = $item.Solution.Softpaq.ReleaseNotesUrl
                     
+                    $SPAdvisory = $EnglishDocs | Where-Object {$_.Softpaqs.Softpaq -contains $item.Solution.Softpaq.Id}
+                    if ($SPAdvisory){
+                        Write-Host " Found Advisory Remediated by Softpaq $SPID" -ForegroundColor Yellow
+                        Write-Host "  $($SPAdvisory.full_title)" -ForegroundColor Yellow
+                        #CMTraceLog -Message " SFound Advisory Remediated by Softpaq $SPID" -Component "Report" 
+                        #CMTraceLog -Message "  $($SPAdvisory.full_title)" -Component "Report"
+                        $Recommendation.Advisory = $($SPAdvisory.full_title)
+                    }
+                    else {Write-Host " No Advisories found"}
+
+                    $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
             }
@@ -648,6 +692,17 @@ try
                     $Recommendation.SoftPaqId = $item.Solution.Softpaq.Id
                     $Recommendation.Name = $item.Solution.Softpaq.Name
                     $Recommendation.Type = "Driver"
+                    $Recommendation.Url = $item.Solution.Softpaq.Url
+                    $Recommendation.ReleaseNotesUrl = $item.Solution.Softpaq.ReleaseNotesUrl
+                    $SPAdvisory = $EnglishDocs | Where-Object {$_.Softpaqs.Softpaq -contains $item.Solution.Softpaq.Id}
+                    if ($SPAdvisory){
+                        Write-Host " Found Advisory Remediated by Softpaq $SPID" -ForegroundColor Yellow
+                        Write-Host "  $($SPAdvisory.full_title)" -ForegroundColor Yellow
+                        #CMTraceLog -Message " SFound Advisory Remediated by Softpaq $SPID" -Component "Report" 
+                        #CMTraceLog -Message "  $($SPAdvisory.full_title)" -Component "Report"
+                        $Recommendation.Advisory = $($SPAdvisory.full_title)
+                    }
+                    else {Write-Host " No Advisories found"}
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
@@ -672,6 +727,17 @@ try
                     $Recommendation.SoftPaqId = $item.Solution.Softpaq.Id
                     $Recommendation.Name = $item.Solution.Softpaq.Name
                     $Recommendation.Type = "BIOS"
+                    $Recommendation.Url = $item.Solution.Softpaq.Url
+                    $Recommendation.ReleaseNotesUrl = $item.Solution.Softpaq.ReleaseNotesUrl
+                    $SPAdvisory = $EnglishDocs | Where-Object {$_.Softpaqs.Softpaq -contains $item.Solution.Softpaq.Id}
+                    if ($SPAdvisory){
+                        Write-Host " Found Advisory Remediated by Softpaq $SPID" -ForegroundColor Yellow
+                        Write-Host "  $($SPAdvisory.full_title)" -ForegroundColor Yellow
+                        #CMTraceLog -Message " SFound Advisory Remediated by Softpaq $SPID" -Component "Report" 
+                        #CMTraceLog -Message "  $($SPAdvisory.full_title)" -Component "Report"
+                        $Recommendation.Advisory = $($SPAdvisory.full_title)
+                    }
+                    else {Write-Host " No Advisories found"}
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
@@ -696,6 +762,17 @@ try
                     $Recommendation.SoftPaqId = $item.Solution.Softpaq.Id
                     $Recommendation.Name = $item.Solution.Softpaq.Name
                     $Recommendation.Type = "Firmware"
+                    $Recommendation.Url = $item.Solution.Softpaq.Url
+                    $Recommendation.ReleaseNotesUrl = $item.Solution.Softpaq.ReleaseNotesUrl
+                    $SPAdvisory = $EnglishDocs | Where-Object {$_.Softpaqs.Softpaq -contains $item.Solution.Softpaq.Id}
+                    if ($SPAdvisory){
+                        Write-Host " Found Advisory Remediated by Softpaq $SPID" -ForegroundColor Yellow
+                        Write-Host "  $($SPAdvisory.full_title)" -ForegroundColor Yellow
+                        #CMTraceLog -Message " SFound Advisory Remediated by Softpaq $SPID" -Component "Report" 
+                        #CMTraceLog -Message "  $($SPAdvisory.full_title)" -Component "Report"
+                        $Recommendation.Advisory = $($SPAdvisory.full_title)
+                    }
+                    else {Write-Host " No Advisories found"}
                     $Recommendations.Add($Recommendation)
                     Write-Log -Message ">> $($Recommendation.SoftPaqId): $($Recommendation.Name) ($($Recommendation.ReferenceVersion))" -Component "Analyze"
                 }
@@ -758,13 +835,15 @@ foreach ($item in $Recommendations) {
 
 		
 	$tempitem = New-Object -TypeName PSObject
-    $tempitem | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
-    $tempitem | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($item.Name)" -Force	
+	$tempitem | Add-Member -MemberType NoteProperty -Name "TargetComponent" -Value "$($item.TargetComponent)" -Force
 	$tempitem | Add-Member -MemberType NoteProperty -Name "TargetVersion" -Value  "$($item.TargetVersion)" -Force
 	$tempitem | Add-Member -MemberType NoteProperty -Name "ReferenceVersion" -Value "$($item.ReferenceVersion)" -Force
 	$tempitem | Add-Member -MemberType NoteProperty -Name "Comments" -Value "$($item.Comments)" -Force
 	$tempitem | Add-Member -MemberType NoteProperty -Name "SoftPaqId" -Value "$($item.SoftPaqId)" -Force
 	$tempitem | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($item.Type)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "Url" -Value "$($item.Url)" -Force
+	$tempitem | Add-Member -MemberType NoteProperty -Name "ReleaseNotesUrl" -Value "$($item.ReleaseNotesUrl)" -Force
     
 
 	$RecommendationArray += $tempitem
