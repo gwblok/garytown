@@ -1,4 +1,4 @@
-<# Gary Blok @gwblok Recast Software
+<# Gary Blok @gwblok
 Generate Generic Computer Name based on Model Name... doesn't work well in Production as it names the machine after the model, so if you have more than one model.. it will get the same name.
 This is used in my lab to name the PCs after the model, which makes life easier for me.
 
@@ -19,6 +19,7 @@ Write-Output "Not in TS"
 $Manufacturer = (Get-WmiObject -Class:Win32_ComputerSystem).Manufacturer
 $Model = (Get-WmiObject -Class:Win32_ComputerSystem).Model
 $CompanyName = "GARYTOWN"
+$Serial = (Get-WmiObject -class:win32_bios).SerialNumber
 
 if ($Manufacturer -match "Lenovo")
     {
@@ -42,9 +43,15 @@ elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
     elseif($Model-match "ProBook"){$Model = $Model.replace("ProBook","PB")}
     elseif($Model-match "ZBook"){$Model = $Model.replace("ZBook","ZB")}
     if($Model-match "Fury"){$Model = "$($Model.Substring(0,11))$Generation"}
-    $Model = $model.replace(" ","-")
+    $Model = $model.replace(" ","")
     if ($Model.Length -gt 15){$ComputerName = $Model.Substring(0,15)}
     else {$ComputerName = $Model}
+    if ($ComputerName.Length -lt 15){
+    [int]$Extra = 15 - $ComputerName.Length -1
+    $LastXofSerial = $Serial.Substring($Serial.Length - $Extra, $Extra)
+    $ComputerName = "$($ComputerName)-$($LastXofSerial)"
+    }
+
     }
 elseif($Manufacturer -match "Dell"){
     $Manufacturer = "Dell"
@@ -77,7 +84,7 @@ elseif ($Manufacturer -match "Microsoft")
         }
     }
 else {
-    $Serial = (Get-WmiObject -class:win32_bios).SerialNumber
+    
     if ($Serial.Length -ge 15)
         {
         $ComputerName = $Serial.substring(0,15)
