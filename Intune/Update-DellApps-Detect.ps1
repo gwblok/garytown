@@ -11,11 +11,14 @@ Changes:
  - Added App Matching, if you already have "Universal" installed, it will install the Universal.
  - Removed Date Time modification on whim that it is causing issues
  - Updated some variable names from DCU... to DCM ... to make reading code easier.
+23.11.09
+ - Updated to fix issue https://github.com/gwblok/garytown/issues/12
+   - When DCU or DCM is NOT installed, set version to 0.0.0.0 instead of NULL
 
 #>
 
 $temproot = "$env:windir\temp"
-$ScriptVersion = "23.3.9.1"
+$ScriptVersion = "23.11.9.1"
 $whoami = $env:USERNAME
 $IntuneFolder = "$env:ProgramData\Intune"
 $LogFilePath = "$IntuneFolder\Logs"
@@ -313,7 +316,7 @@ if ($Manufacturer -match "Dell")
             #Lets CHeck DCU First
             $DellItem = $AppDCU
             If ($InstalledDCU){[Version]$CurrentVersion = $InstalledDCU.Version}
-            Else {$CurrentVersion = $null}
+            Else {[Version]$CurrentVersion = 0.0.0.0}
             [Version]$DCUVersion = $DellItem.vendorVersion
             #$DCUReleaseDate = $(Get-Date $DellItem.releaseDate -Format 'yyyy-MM-dd')
             $DCUReleaseDate = $($DellItem.releaseDate)              
@@ -321,7 +324,7 @@ if ($Manufacturer -match "Dell")
             $TargetFileName = ($DellItem.path).Split("/") | Select-Object -Last 1
             if ($DCUVersion -gt $CurrentVersion)
                 {
-                if ($CurrentVersion -eq $null){[String]$CurrentVersion = "Not Installed"}
+                if ($CurrentVersion -eq 0.0.0.0){[String]$CurrentVersion = "Not Installed"}
                 if ($Remediate -eq $true)
                     {
                     CMTraceLog -Message  "New Update available: Installed = $CurrentVersion DCU = $DCUVersion" -Type 1 -LogFile $LogFile
@@ -392,7 +395,7 @@ if ($Manufacturer -match "Dell")
             #Lets CHeck DCM Now
             $DellItem = $AppDCM
             If ($InstalledDCM){[Version]$CurrentVersion = $InstalledDCM.Version}
-            Else {$CurrentVersion = $null}
+            Else {[Version]$CurrentVersion = 0.0.0.0}
 
 
             [Version]$DCMVersion = $DellItem.vendorVersion
@@ -403,7 +406,7 @@ if ($Manufacturer -match "Dell")
 
             if ($DCMVersion -gt $CurrentVersion)
                 {
-                if ($CurrentVersion -eq $null){[String]$CurrentVersion = "Not Installed"}
+                if ($CurrentVersion -eq 0.0.0.0){[String]$CurrentVersion = "Not Installed"}
                 if ($Remediate -eq $true)
                     {
                     CMTraceLog -Message  "New Update available: Installed = $CurrentVersion DCM = $DCMVersion" -Type 1 -LogFile $LogFile
