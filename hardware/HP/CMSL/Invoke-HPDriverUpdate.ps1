@@ -61,6 +61,8 @@ Function Invoke-HPAnalyzer {
         [Parameter(Mandatory = $false)]
         [switch]$Silent = $true,
         [Parameter(Mandatory = $false)]
+        [switch]$OSVerOverride,
+        [Parameter(Mandatory = $false)]
         [switch]$Help
 
 
@@ -120,6 +122,17 @@ Function Invoke-HPAnalyzer {
     #Replaced Dan's Switch Method with grabbing it from the Regsitry
     $OSVer = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'DisplayVersion'
 
+    if ($OSVerOverride){
+        $MaxOSSupported = ((Get-HPDeviceDetails -oslist).OperatingSystem | Where-Object {$_ -notmatch "LTSB"} | Select-Object -Unique| measure -Maximum).Maximum
+        if ($MaxOSSupported -Match "11"){$MaxOS = "Win11"}
+        else {$MaxOS = "Win10"}
+        $MaxBuild = ((Get-HPDeviceDetails -oslist | Where-Object {$_.OperatingSystem -eq "$MaxOSSupported"}).OperatingSystemRelease | measure -Maximum).Maximum
+        #Write-Host " Max Build Supported for this Device: $MaxBuild"
+        #Write-Host " Max OS: $MaxOS"
+        $OSVer = $MaxBuild
+        $OS = $MaxOS
+        $script:OSOVerOverRideComment = "Overriding OS and/or OSVer with: $OS & $OSVer"
+        }
     <#  Dan's Method
     switch -Wildcard ( $WinOS.version ) {
         '*18363' { $OSVer = '1909' }
@@ -1081,7 +1094,9 @@ Function Invoke-HPDriverUpdate {
 
     .Notes  
         Author: Gary Blok/HP Inc
-        11/09/2023 - initial release 1.00.01
+        23.11.09 - initial release
+        23.11.10 - added override parameter (-OSVerOverride), which allows you to run in unsupported land
+           - This is useful when you're running an unsupported OS on a device.  This typically happens when you run a new OS on older hardware.
 
     .Dependencies
         Requires HP Client Management Script Library
@@ -1113,12 +1128,22 @@ Function Invoke-HPDriverUpdate {
         [ValidateNotNullOrEmpty()]
         [ValidateSet("All","Audio", "Graphics", "Chipset", "FirmwareandDriver", "Network", "Keyboard", "MouseandInputDevices")]
         [string]$DriverType = "All",
-        [switch]$Test, 
+        [switch]$Test,
+        [switch]$OSVerOverride,
         [switch]$Details #Enables Verbose on the Softpaq Install Command
 
 
     ) # param
-    $UpdatesAvailable = Invoke-HPAnalyzer
+    if ($OSVerOverride){
+        $UpdatesAvailable = Invoke-HPAnalyzer -OSVerOverride
+    }
+    else {
+        $UpdatesAvailable = Invoke-HPAnalyzer
+    }
+    
+    if (!($UpdatesAvailable.Category -match "Driver")){
+        $UpdatesForDriverType = $null
+    }
 
     $OSCurrent = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $OSVer = $OSCurrent.GetValue('DisplayVersion')
@@ -1132,12 +1157,21 @@ Function Invoke-HPDriverUpdate {
     Write-Output "---------------------------------------------------------------"
     Write-Host "Device Info: Platform $Platform  | Model $Model" -ForegroundColor Green
     Write-Host "OS: $OS | OSVer: $OSVer | UBR: $UBR " -ForegroundColor green
+    if ($OSVerOverride){
+    Write-Host "Running in OSVerOverride Mode - this is not supported by HP as these updates are not tested with this combination of hardware and OS" -ForegroundColor Red
+    Write-Host "$script:OSOVerOverRideComment (the latest supported OS for this platform)" -ForegroundColor Red
+
+    }
 
     if ($DriverType -eq "All"){
         $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.Category -notmatch "BIOS"}
     }
     else {
         $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.SubCategory -match $DriverType}
+    }
+
+    if (!($UpdatesAvailable.Category -match "Driver")){
+        $UpdatesForDriverType = $null
     }
 
     if ($UpdatesForDriverType.Count -gt 0){
@@ -1194,4 +1228,19 @@ Function Invoke-HPDriverUpdate {
     else {
         Write-Output "No Updates found for DriverType: $DriverType"
     }
+    if (!($UpdatesAvailable.Category -match "Driver")){
+        $UpdatesAvailable
+        if ($UpdatesAvailable -match "Cannot validate argument on parameter 'OsVer'"){
+            Write-Host "Try again with -OSVerOverride parameter to bypass supported OS check" -ForegroundColor Red
+        }
+    }
 }
+
+#Invoke-HPDriverUpdate -DriverType Network
+
+#Get-Softpaq -Number sp142308 -Action silentinstall -Quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\sp142308.exe" -Verbose#+
+
+ #$Update = Get-Softpaq -Number sp101129 -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\sp101129.exe" -Verbose
+
+
+# $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.SubCategory -match "Graphics"}
