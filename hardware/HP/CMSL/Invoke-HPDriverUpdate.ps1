@@ -12,6 +12,12 @@ Function Invoke-HPAnalyzer {
     .Notes  
         Author: Dan Felman/HP Inc
         11/30/2022 - initial release 1.00.01
+        Changes by Gary:
+          11/10/2023
+            - added OSVerOverride parameter
+            - modified output to return only array of updates (or error code if errors)
+            - modified method to get OSVer
+
 
     .Dependencies
         Requires HP Client Management Script Library
@@ -1141,9 +1147,7 @@ Function Invoke-HPDriverUpdate {
         $UpdatesAvailable = Invoke-HPAnalyzer
     }
     
-    if (!($UpdatesAvailable.Category -match "Driver")){
-        $UpdatesForDriverType = $null
-    }
+
 
     $OSCurrent = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $OSVer = $OSCurrent.GetValue('DisplayVersion')
@@ -1164,14 +1168,16 @@ Function Invoke-HPDriverUpdate {
     }
 
     if ($DriverType -eq "All"){
-        $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.Category -notmatch "BIOS"}
+        $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.Category -notmatch "BIOS" -and $_.SubCategory -notmatch "Enabling" -and $_.Category -notmatch "Software"}
     }
     else {
         $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.SubCategory -match $DriverType}
     }
-
+    
+    # NO Driver updates available, so setting the $UpdatesForDriverType to NULL
     if (!($UpdatesAvailable.Category -match "Driver")){
         $UpdatesForDriverType = $null
+        #Write-Output "No Driver Updates found"
     }
 
     if ($UpdatesForDriverType.Count -gt 0){
@@ -1180,7 +1186,7 @@ Function Invoke-HPDriverUpdate {
         }
         #Remove Deplicate Vendor Graphic Updates (Drop oldest Softpaq Date)
         $GraphicUpdates = $UpdatesForDriverType | Where-Object {$_.SubCategory -match "Graphics"}
-        if ($GraphicUpdates.count -gt 1){
+        if (($GraphicUpdates.SoftpaqID).count -gt 1){
             ForEach ($Vendor in ($GraphicUpdates.Vendor | Select-Object -Unique)){
                 #Write-Host $Vendor
                 $VendorGraphicUpdates = $GraphicUpdates | Where-Object {$_.Vendor -match $Vendor}
@@ -1197,6 +1203,7 @@ Function Invoke-HPDriverUpdate {
 
             Write-Output "--------------------------------------------------"
             Write-Host "Found Updated Driver $($Update.SoftpaqName)" -ForegroundColor Cyan
+            Write-Output " DriverType:         $($Update.SubCategory)"
             Write-Output " Release Date:       $($Update.SoftpaqDate)"
             Write-Output " Updated Version:    $($Update.SoftpaqVersion)"
             Write-Output " Installed Verson:   $($Update.InstallVersion)"
@@ -1235,12 +1242,3 @@ Function Invoke-HPDriverUpdate {
         }
     }
 }
-
-#Invoke-HPDriverUpdate -DriverType Network
-
-#Get-Softpaq -Number sp142308 -Action silentinstall -Quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\sp142308.exe" -Verbose#+
-
- #$Update = Get-Softpaq -Number sp101129 -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\sp101129.exe" -Verbose
-
-
-# $UpdatesForDriverType = $UpdatesAvailable | Where-Object {$_.SubCategory -match "Graphics"}
