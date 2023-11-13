@@ -1,14 +1,47 @@
 <#
 Loads Functions
 Creates Setup Complete Files
-
-
-
-
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.11.07.01'
+$ScriptVersion = '23.11.13.01'
+
+#region functions
+function Set-SetupCompleteCreateStartHOPEonUSB {
+    
+    $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
+    $SetupCompletePath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\Config\Scripts\SetupComplete"
+    $ScriptsPath = $SetupCompletePath
+
+    if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath} 
+
+    $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
+
+
+    Write-Output "Creating $($RunScript.Script) Files"
+
+    $BatFilePath = "$($RunScript.Path)\$($RunScript.batFile)"
+    $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
+            
+    #Create Batch File to Call PowerShell File
+            
+    New-Item -Path $BatFilePath -ItemType File -Force
+    $CustomActionContent = New-Object system.text.stringbuilder
+    [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File')
+    [void]$CustomActionContent.Append(" $PSFilePath")
+    Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
+
+    #Create PowerShell File to do actions
+            
+    New-Item -Path $PSFilePath -ItemType File -Force
+    Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
+    Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    }
+
+#endregion
+
+
+
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
@@ -29,8 +62,11 @@ if ($env:SystemDrive -eq 'X:') {
     Write-Host -ForegroundColor Green "Starting win11.garytown.com"
     iex (irm win11.garytown.com)
 
-    #Create Marker so it knows this is a "HOPE" computer
-    new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
+    #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
+    Set-SetupCompleteCreateStartHOPEonUSB
+
+    #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
+    #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
     restart-computer
 }
 
