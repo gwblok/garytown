@@ -1103,6 +1103,9 @@ Function Invoke-HPDriverUpdate {
         23.11.09 - initial release
         23.11.10 - added override parameter (-OSVerOverride), which allows you to run in unsupported land
            - This is useful when you're running an unsupported OS on a device.  This typically happens when you run a new OS on older hardware.
+        23.11.13 - added "WhatIf" support [https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules/shouldprocess?view=ps-modules]
+           - https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-shouldprocess?view=powershell-7.3
+
 
     .Dependencies
         Requires HP Client Management Script Library
@@ -1126,7 +1129,7 @@ Function Invoke-HPDriverUpdate {
         Invoke-HPDriverUpdate -DriverType Network -details
     #>
     
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$true)]
     param(
     #    [Parameter(Mandatory = $false)]
     #    [String]$DriverType,
@@ -1134,7 +1137,6 @@ Function Invoke-HPDriverUpdate {
         [ValidateNotNullOrEmpty()]
         [ValidateSet("All","Audio", "Graphics", "Chipset", "FirmwareandDriver", "Network", "Keyboard", "MouseandInputDevices")]
         [string]$DriverType = "All",
-        [switch]$Test,
         [switch]$OSVerOverride,
         [switch]$Details #Enables Verbose on the Softpaq Install Command
 
@@ -1211,23 +1213,28 @@ Function Invoke-HPDriverUpdate {
             #Start Update Process
             Write-Output " Starting Update...."
             
-            if ($Details){
-                Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -Verbose"
-                if ($Test){
-                    Write-Output " !!! Skipping Install Command - Test Mode !!!"
-                }
-                else {
+            if ($Details){ #Just adding -verbose to commandline
+                if ($PSCmdlet.ShouldProcess("$($env:computername)","Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -verbose")){
+                    Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -verbose"
                     Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\$($Update.SoftpaqID).exe" -Verbose
+                }
+                else
+                {
+                    # Code that should be processed if doing a WhatIf operation
+                    # Must NOT change anything outside of the function / script
                 }
             }
             else {
-                Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe"
-                if ($Test){
-                    Write-Output " !!! Skipping Install Command - Test Mode !!!"
-                }
-                else {
+                if ($PSCmdlet.ShouldProcess("$($env:computername)","Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe")){
+                    Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe"
                     Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\$($Update.SoftpaqID).exe"
                 }
+                else
+                {
+                    # Code that should be processed if doing a WhatIf operation
+                    # Must NOT change anything outside of the function / script
+                }
+                
             }
             Write-Output " Completed Install of Softpaq"
         }
