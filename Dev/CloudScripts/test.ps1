@@ -8,7 +8,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.11.13.01'
+$ScriptVersion = '23.11.13.02'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
 
