@@ -29,13 +29,6 @@ if ($env:SystemDrive -eq 'X:') {
     Write-Host -ForegroundColor Green "Starting win11.garytown.com"
 
     
-
-
-    $Global:MyOSDCloud = [ordered]@{
-        PauseSpecialize = [bool]$True
-        OSDCloudUnattend = [bool]$True
-    }
-    
     iex (irm win11.garytown.com)
 
     #Create Marker so it knows this is a "HOPE" computer
@@ -60,7 +53,21 @@ if ($env:SystemDrive -eq 'X:') {
     Set-SetupCompleteOSDCloudUSB
     Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
     Set-SetupCompleteCreateFinish
-    
+
+
+    Write-Host -ForegroundColor Cyan "Adding Pause Tasks into JSON Config File for Action during Specialize" 
+    $HashTable = @{
+        'Addons' = @{
+            'Pause' = $Global:OSDCloud.PauseSpecialize
+        }
+    }
+    $HashVar = $HashTable | ConvertTo-Json
+    $ConfigPath = "c:\osdcloud\configs"
+    $ConfigFile = "$ConfigPath\Extras.JSON"
+    try {[void][System.IO.Directory]::CreateDirectory($ConfigPath)}
+    catch {}
+    $HashVar | Out-File $ConfigFile
+                
     restart-computer
 }
 
