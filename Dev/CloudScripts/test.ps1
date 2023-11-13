@@ -52,8 +52,8 @@ if ($env:SystemDrive -eq 'X:') {
     Set-SetupCompleteDefenderUpdate
     Write-Host "  Enable Windows Updates" -ForegroundColor gray
     Set-SetupCompleteStartWindowsUpdate
-    Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
-    Set-SetupCompleteStartWindowsUpdateDriver
+    #Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
+    #Set-SetupCompleteStartWindowsUpdateDriver
     Write-Host "  Set Time Zone Updates" -ForegroundColor gray
     Set-SetupCompleteTimeZone
     Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
