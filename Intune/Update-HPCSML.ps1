@@ -16,17 +16,20 @@ Changes
 2021.06.10 - Updated Function that gets info from HP Website and merged it into 1
 2021.06.10 - Added logic to "exit 1" if running in discovery mode & non-compliant to trigger remediation
 2021.06.10 - Added URL that is bad, but it's nice as it grabs old version of the EXE (1.5.0) you can use to test updating 
+
+2023.11.14 - Replaced function with HTML scraping to lookup the HPCMSL version in the PS Gallery
+2023.11.14 - Modified function to get HPCMSL installer via web scrapping
 #>
 
 $Compliance = $true 
 
 $ScriptName = "Update-HPCMSL"
-$ScriptVersion = "21.6.14.1"
+$ScriptVersion = "23.11.14.1"
 $whoami = $env:USERNAME
 $IntuneFolder = "$env:ProgramData\Intune"
 $LogFilePath = "$IntuneFolder\Logs"
 $LogFile = "$LogFilePath\$ScriptName.log"
-$Remediate = $false
+$Remediate = $true
 if ($Remediate -eq $true){$ComponentText = "Intune - Remediation"}
 else {$ComponentText = "Intune - Detection"}
 
@@ -76,27 +79,19 @@ Set-Location C:\
 $filepath = "$env:temp\Downloads.html"
  
 #https://www8.hp.com/us/en/ads/clientmanagement/download.html
-Invoke-WebRequest -Uri https://www8.hp.com/us/en/ads/clientmanagement/download.html -OutFile $filepath
- 
-# find all <td> tags and put into an array
-$myarray = gc $filepath | 
-    % { [regex]::matches( $_ , '(?<=<td>)(.*?)(?=</td>)' ) } | select -expa value
-    # search for the CMSL tag and the next item is the version number
-for ($i = 0 ; $i -lt $myarray.Count; $i++ ) {
-    if ( $myarray[$i] -match 'script library' ) { 
-        $CMSLversion = $myarray[$i+1] ; $CMSLURL = $myarray[$i+3]
-        $CMSLURL = ($myarray[$i+3]).Split("`"")[1]
-        break 
-        }
-}
+$DownloadPage = Invoke-WebRequest -Uri https://www.hp.com/us-en/solutions/client-management-solutions/download.html -UseBasicParsing
+$CMSLURL = ($DownloadPage.Links | Where-Object {$_.href -match "hp-cmsl"}).href
+$CMSLEXE = $CMSLURL.split("/") | Select-Object -Last 1
+[version]$CMSLversion = ($CMSLEXE.split("-") | Select-Object -Last 1).replace(".exe","")
 
 $CMSLInfo = New-Object -TypeName PSObject
-$Info = [ordered]@{Version="$CMSLversion";URL="$CMSLURL"}
+$Info = [ordered]@{Version="$CMSLversion";URL="$CMSLURL";EXE="$CMSLEXE"}
 $CMSLInfo | Add-Member -NotePropertyMembers $Info
 
 $CMSLInfo
 
 }
+
 
 CMTraceLog -Message  "-------------------------------------------------------" -Type 1 -LogFile $LogFile
 CMTraceLog -Message  "Running Script: $ScriptName | Version: $ScriptVersion" -Type 1 -LogFile $LogFile
@@ -118,7 +113,7 @@ Foreach ($InstalledSoftware in $InstalledSoftwareRegistry)
     {
     if ($InstalledSoftware.GetValue('DisplayName') -eq "HP Client Management Script Library")
         {
-        #Write-Output "Found $($InstalledSoftware.GetValue('DisplayName')) Version: $($InstalledSoftware.GetValue('DisplayVersion'))"
+        Write-Output "Found $($InstalledSoftware.GetValue('DisplayName')) Version: $($InstalledSoftware.GetValue('DisplayVersion'))"
         $InstalledHPCMSLInstallerVer = $InstalledSoftware.GetValue('DisplayVersion')
         CMTraceLog -Message  "Found $($InstalledSoftware.GetValue('DisplayName')) Version: $($InstalledSoftware.GetValue('DisplayVersion'))" -Type 1 -LogFile $LogFile
         }
@@ -130,7 +125,9 @@ Foreach ($InstalledSoftware in $InstalledSoftwareRegistry)
     }
 
 
-$CurrentHPVer = (Get-HPCMSLWebInfo).Version
+#$CurrentHPVer = (Get-HPCMSLWebInfo).Version
+$CurrentHPVer = (Find-Module -name HPCMSL).Version
+
 #IF Module installed via Installer, Update Via Installer
 if ($InstalledHPCMSLInstallerVer -and $InstalledHPCMSLModuleVer)
     {
@@ -190,12 +187,13 @@ if ($Remediate -eq $true)
     {
     CMTraceLog -Message  "Remeditating... " -Type 1 -LogFile $LogFile
     if ($InstallHPCMSLInstaller){
+        $CMSLWebInfo = Get-HPCMSLWebInfo
         $WorkingDir = "$env:TEMP\HP"
         if (Test-Path -Path $WorkingDir){Remove-Item -Path $WorkingDir -Recurse -Force}
         $Null = New-Item -Path $WorkingDir -ItemType Directory -Force
-        $DownloadURL = (Get-HPCMSLWebInfo).URL
+        $DownloadURL = $CMSLWebInfo.URL
         CMTraceLog -Message  "Downloading $DownloadURL ... " -Type 1 -LogFile $LogFile
-        $FileName = $DownloadURL.Split("/") | Select-Object -Last 1
+        $FileName = $CMSLWebInfo.EXE
         $Download = Invoke-WebRequest -Uri $DownloadURL -UseBasicParsing -OutFile "$WorkingDir\$Filename" -PassThru
         if (Test-Path -Path "$WorkingDir\$Filename"){
             $InstallProcess = Start-Process -FilePath "$WorkingDir\$Filename" -ArgumentList "/VERYSILENT /LOG=$($WorkingDir)\$($Filename).log" -Wait -PassThru
@@ -216,4 +214,4 @@ else
     }
 
 if ($Compliance -eq $false){exit 1}
-if ($Compliance -eq $true){exit 0}
+#if ($Compliance -eq $true){exit 0}
