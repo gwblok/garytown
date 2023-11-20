@@ -6,7 +6,7 @@ $SMSTSLogPath = $tsenv.value("_SMSTSLogPath")
 $TempFolder = "$env:TEMP\LogBuild"
 $WinSetupScriptsPath = "$($OSDisk)\Windows\System32\Setup\Scripts"
 $OSDLogFolder = "$($OSDisk)\programdata\OSD"
-$TimeStamp = Get-Date -Format "yyyyMMdd-hhmmss"
+$TimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
 
 #region Functions
