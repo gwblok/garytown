@@ -380,14 +380,16 @@ if (Test-Path -Path $WinSetupScriptsPath){
 }
 
 #Grab Registry Files
-Write-Output ""
-Write-Output "Copy Offline Registry Files from C:\Windows\System32\config"
-Write-Output ""
-if (Test-path -Path "C:\Windows\System32\config\SYSTEM"){
-    Copy-Item -Path "C:\Windows\System32\config\SYSTEM" -Destination $TempFolder -Verbose
-}
-if (Test-path -Path "C:\Windows\System32\config\SOFTWARE"){
-    Copy-Item -Path "C:\Windows\System32\config\SOFTWARE" -Destination $TempFolder -Verbose
+if ($env:SystemDrive -eq "X:"){ 
+    Write-Output ""
+    Write-Output "Copy Offline Registry Files from C:\Windows\System32\config"
+    Write-Output ""
+    if (Test-path -Path "C:\Windows\System32\config\SYSTEM"){
+        Copy-Item -Path "C:\Windows\System32\config\SYSTEM" -Destination $TempFolder -Verbose
+    }
+    if (Test-path -Path "C:\Windows\System32\config\SOFTWARE"){
+        Copy-Item -Path "C:\Windows\System32\config\SOFTWARE" -Destination $TempFolder -Verbose
+    }
 }
 
 #Grab Panther
