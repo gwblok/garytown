@@ -314,8 +314,9 @@ Function Invoke-TSVarSafeDump {
         Config: List of variables to exclude, edit as needed:
                 $ExcludeVariables = @('_OSDOAF','_SMSTSReserved','_SMSTSTaskSequence')
     #>
+    [CmdletBinding()]
     param (
-        [Parameter][string]$DumpPath 
+        [string]$DumpPath 
     )
 
     # Config Start
