@@ -1,5 +1,11 @@
 #Gather OSD Logs for Later Review
 
+Write-Output "---------------------------------------------------"
+Write-Output "            Log Gather Script for OSD"
+Write-Output ""
+
+
+
 $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
 $OSDisk = $tsenv.value("OSDisk")
 $SMSTSLogPath = $tsenv.value("_SMSTSLogPath")
@@ -7,6 +13,8 @@ $TempFolder = "$env:TEMP\LogBuild"
 $WinSetupScriptsPath = "$($OSDisk)\Windows\System32\Setup\Scripts"
 $OSDLogFolder = "$($OSDisk)\programdata\OSD"
 $TimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+
+Write-Output "Log Folder: $OSDLogFolder"
 
 
 #region Functions
@@ -348,22 +356,33 @@ if (Test-Path -Path $TempFolder){Remove-Item -Path $TempFolder -Recurse -Force}
 if (!(Test-Path -Path $TempFolder)){New-Item -Path $TempFolder -ItemType Directory -Force | Out-Null}
 
 #Gather Additional Info about device and place into TS Variables (Similar to MDTGather)
+Write-Output "Gathering Variables"
 Invoke-TSGather
 
 #Dump that information into the Log Folder
+Write-Output "Dumping Variables to Build Folder"
 Invoke-TSVarSafeDump -DumpPath $TempFolder
 
 
 
 #Get SMSTS Log Files
+Write-Output ""
+Write-Output "Copy OSD TS Log Files from $SMSTSLogPath"
+Write-Output ""
 Get-ChildItem -Path $SMSTSLogPath -Recurse | Copy-Item -Destination $TempFolder -Verbose
 
 #Grab SetupComplete Files
 if (Test-Path -Path $WinSetupScriptsPath){
+    Write-Output ""
+    Write-Output "Copy SetupComplete Files from $WinSetupScriptsPath"
+    Write-Output ""
     Get-ChildItem -Path $WinSetupScriptsPath | Copy-Item -Destination $TempFolder -Verbose
 }
 
 #Grab Registry Files
+Write-Output ""
+Write-Output "Copy Offline Registry Files from C:\Windows\System32\config"
+Write-Output ""
 if (Test-path -Path "C:\Windows\System32\config\SYSTEM"){
     Copy-Item -Path "C:\Windows\System32\config\SYSTEM" -Destination $TempFolder -Verbose
 }
@@ -373,16 +392,27 @@ if (Test-path -Path "C:\Windows\System32\config\SOFTWARE"){
 
 #Grab Panther
 if (Test-Path -Path "C:\windows\Panther"){
+    Write-Output ""
+    Write-Output "Copy Panter Files from C:\Windows\Panter"
+    Write-Output ""
     Copy-Item -Path "C:\windows\Panther" -Filter "*.*" -Recurse -Destination $TempFolder -Container
 }
 
 #Debug Logs (Netsetup for domain Join)
 if (Test-Path -Path "C:\windows\Debug"){
+    Write-Output ""
+    Write-Output "Copy Debug Files from C:\Windows\Debug"
+    Write-Output ""
     Copy-Item -Path "C:\windows\Debug" -Filter "*.*" -Recurse -Destination $TempFolder -Container
 }
 
 #Create Archive
+Write-Output "Compressing to Archive: $OSDLogFolder\OSDLogs-$($TimeStamp).zip"
 Compress-Archive -Path $TempFolder\* -DestinationPath "$OSDLogFolder\OSDLogs-$($TimeStamp).zip" -Verbose
-
+Write-Output ""
 #Cleanup
+Write-Output "Cleanup Temp Files"
 Remove-Item -Path $TempFolder -Recurse -Force
+Write-Output ""
+Write-Output "        Complete Log Gather Script for OSD"
+Write-Output "---------------------------------------------------"
