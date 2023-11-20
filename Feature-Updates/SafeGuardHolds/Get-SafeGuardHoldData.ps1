@@ -97,6 +97,7 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_10_27_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2614'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_10_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2616'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2653'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_14_04_04_AMD64.cab'; ALTERNATEDATAVERSION = '2661'}
 
 #Other:
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_03_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '11030302'}
@@ -109,6 +110,7 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_03_AMD64.cab'; ALTERNATEDATAVERSION = '08300303'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_05_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_14_04_03_AMD64.cab'; ALTERNATEDATAVERSION = '11140403'}
 )
 
 $Path = "C:\Temp"
