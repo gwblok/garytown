@@ -3,6 +3,9 @@
 I've built this database for my own use, but have published the data as well as the method I used to build it.  Thanks Adam Gross for laying the foundation:
 Based on https://github.com/AdamGrossTX/FU.WhyAmIBlocked/blob/master/Get-SafeguardHoldInfo.ps1 
 
+
+Database Safeguard Hold ID Count: 110 | 2023.11.20
+
 ## Getting Required Data for Building Database
 Basically I ran this in my environment:
 
