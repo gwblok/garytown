@@ -471,9 +471,12 @@ if (Test-Path -Path "C:\windows\Debug"){
     Copy-Item -Path "C:\windows\Debug" -Filter "*.*" -Recurse -Destination $TempFolder -Container
 }
 
+if ($env:SystemDrive -eq "X:"){$Suffix = "WinPE"}
+else {$Suffix = $FullOS}
+
 #Create Archive
-Write-Output "Compressing to Archive: $OSDLogFolder\OSDLogs-$($TimeStamp).zip"
-Compress-Archive -Path $TempFolder\* -DestinationPath "$OSDLogFolder\OSDLogs-$($TimeStamp).zip" -Verbose
+Write-Output "Compressing to Archive: $OSDLogFolder\OSDLogs-$($Suffix)-$($TimeStamp).zip"
+Compress-Archive -Path $TempFolder\* -DestinationPath "$OSDLogFolder\OSDLogs-$($Suffix)-$($TimeStamp).zip" -Verbose
 Write-Output ""
 #Cleanup
 Write-Output "Cleanup Temp Files"
