@@ -1,5 +1,21 @@
-#Gather OSD Logs for Later Review
+<# Gather OSD Logs for Later Review
+Gary Blok | GARYTOWN.COM | @gwblok
 
+Gathers Logs and Files useful in troubleshootings, compresses them into a zip file and places in C:\ProgramData\OSD
+
+Recommend running in TS just before "Setup Windows and ConfigMgr" Step to gather information while still in WinPE
+Recommend running again at the very end of your TS, or in your error handling section if you trap errors.
+
+
+Script creates a lot of Task Sequence Variables (Similar to MDT Gather) then exports to a file (Using Johan Schrewelius' scripts)
+Captures SOFTWARE & SYSTEM Registry Hives
+Captures Panther Folder
+Captures SetupComplete Files
+Captures SMSTSLog Folder and Log Files
+Captures Debug Logs (helpful for Domain Join Issues)
+Captures DISM Logs
+
+#>
 Write-Output "---------------------------------------------------"
 Write-Output "            Log Gather Script for OSD"
 Write-Output ""
@@ -10,7 +26,8 @@ $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
 $OSDisk = $tsenv.value("OSDisk")
 $SMSTSLogPath = $tsenv.value("_SMSTSLogPath")
 $TempFolder = "$env:TEMP\LogBuild"
-$WinSetupScriptsPath = "$($OSDisk)\Windows\System32\Setup\Scripts"
+$WinSetupScriptsPath = "$($OSDisk)\Windows\Setup\Scripts"
+$DISMLogs = "$($OSDisk)\windows\Logs\DISM"
 $OSDLogFolder = "$($OSDisk)\programdata\OSD"
 $TimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
@@ -18,6 +35,18 @@ Write-Output "Log Folder: $OSDLogFolder"
 
 
 #region Functions
+
+function Get-UBR {
+    if ($env:SystemDrive -eq "X:"){
+        $Info = DISM.exe /image:c:\ /Get-CurrentEdition
+        $UBR = ($Info | Where-Object {$_ -match "Image Version"}).replace("Image Version: ","")
+    }
+    else {
+        $Info = DISM.exe /online /Get-CurrentEdition
+        $UBR = ($Info | Where-Object {$_ -match "Image Version"}).replace("Image Version: ","")
+    }
+    return $UBR
+}
 
 Function Invoke-TSGather {
     <#
@@ -35,6 +64,7 @@ Function Invoke-TSGather {
         2020-04-13 v. 1.0.4: Additional variables when executed in Full OS: OsLocale, WindowsInstallationType, WindowsProductName, TimeZone. 
                              Added desktop chassis type "35".
         2023-04-09 v. 1.0.5: Added variable 'SystemSKUNumber' (According to advice from Mike Terrill)
+        2023-11-21 - GARY BLOK - Added UBR for the OS on C:\
     #>
 
     param (
@@ -89,6 +119,18 @@ Function Invoke-TSGather {
         $cmp = gwmi -Class 'Win32_ComputerSystem'
         $TSvars.Add("Memory", ($cmp.TotalPhysicalMemory / 1024 / 1024).ToString())
         $TSvars.Add("SystemSKUNumber", $cmp.SystemSKUNumber)
+    }
+    function Get-UBR {
+        if ($env:SystemDrive -eq "X:"){
+            $Info = DISM.exe /image:c:\ /Get-CurrentEdition
+            $UBR = ($Info | Where-Object {$_ -match "Image Version"}).replace("Image Version: ","")
+        }
+        else {
+            $Info = DISM.exe /online /Get-CurrentEdition
+            $UBR = ($Info | Where-Object {$_ -match "Image Version"}).replace("Image Version: ","")
+        }
+        #return $UBR
+        $TSvars.Add("CDriveUBR", $UBR)
     }
 
     function Get-Product {
@@ -268,6 +310,7 @@ Function Invoke-TSGather {
     Get-Architecture
     Get-Processor
     Get-Bitlocker
+    Get-UBR
 
     if($Debug) {
         $TSvars.Keys | Sort-Object |% {
@@ -409,6 +452,15 @@ if (Test-Path -Path "C:\windows\Panther"){
     Write-Output "Copy Panter Files from C:\Windows\Panter"
     Write-Output ""
     Copy-Item -Path "C:\windows\Panther" -Filter "*.*" -Recurse -Destination $TempFolder -Container
+}
+
+
+#Grab DISM Logs
+if (Test-Path -Path $DISMLogs){
+    Write-Output ""
+    Write-Output "Copy DISM Files from$DISMLogs"
+    Write-Output ""
+    Copy-Item -Path $DISMLogs -Filter "*.*" -Recurse -Destination $TempFolder -Container
 }
 
 #Debug Logs (Netsetup for domain Join)
