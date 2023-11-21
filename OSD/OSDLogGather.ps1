@@ -472,7 +472,7 @@ if (Test-Path -Path "C:\windows\Debug"){
 }
 
 if ($env:SystemDrive -eq "X:"){$Suffix = "WinPE"}
-else {$Suffix = $FullOS}
+else {$Suffix = "FullOS"}
 
 #Create Archive
 Write-Output "Compressing to Archive: $OSDLogFolder\OSDLogs-$($Suffix)-$($TimeStamp).zip"
