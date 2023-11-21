@@ -392,6 +392,16 @@ if ($env:SystemDrive -eq "X:"){
         Copy-Item -Path "C:\Windows\System32\config\SOFTWARE" -Destination $TempFolder -Verbose
     }
 }
+else {
+    Write-Output ""
+    Write-Output "Exporting HIVES using REG.EXE"
+    Write-Output ""
+    $ProcessPath = 'C:\windows\System32\reg.exe'
+    $BackupSoftware = Start-Process -FilePath $ProcessPath -ArgumentList "SAVE HKLM\SOFTWARE $TempFolder\SOFTWARE /y" -PassThru -Wait
+    $BackupSystem = Start-Process -FilePath $ProcessPath -ArgumentList "SAVE HKLM\SYSTEM $TempFolder\SYSTEM /y" -PassThru -Wait
+
+
+}
 
 #Grab Panther
 if (Test-Path -Path "C:\windows\Panther"){
