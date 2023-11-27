@@ -1148,8 +1148,13 @@ Function Invoke-HPDriverUpdate {
     else {
         $UpdatesAvailable = Invoke-HPAnalyzer
     }
-    
 
+    
+    if ($UpdatesAvailable -match "-2"){
+        Write-Host "Unable to Find Reference File for this Device with this OS, if you'd like to try going unsupported, use the -OSVerOverride parameter" -ForegroundColor Red
+        break
+
+    }
 
     $OSCurrent = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $OSVer = $OSCurrent.GetValue('DisplayVersion')
