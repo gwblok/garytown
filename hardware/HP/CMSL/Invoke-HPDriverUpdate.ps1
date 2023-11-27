@@ -1150,11 +1150,7 @@ Function Invoke-HPDriverUpdate {
     }
 
     
-    if ($UpdatesAvailable -match "-2"){
-        Write-Host "Unable to Find Reference File for this Device with this OS, if you'd like to try going unsupported, use the -OSVerOverride parameter" -ForegroundColor Red
-        break
 
-    }
 
     $OSCurrent = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $OSVer = $OSCurrent.GetValue('DisplayVersion')
@@ -1163,9 +1159,20 @@ Function Invoke-HPDriverUpdate {
     if ( $WinOS.BuildNumber -lt 22000 ) { $OS = 'Win10' } else { $OS = 'Win11' }
 
 
+
+
     $Model = $((Get-CimInstance -ClassName Win32_ComputerSystem).Model)
     $Platform = $((Get-CimInstance -ClassName win32_baseboard).Product)
+    
+    
+    
     Write-Output "---------------------------------------------------------------"
+    if ($UpdatesAvailable -match "-2"){
+        Write-Host "Unable to Find Reference File for this Platform $Platform with this OS $OS $OSVer, if you'd like to try going unsupported, use the -OSVerOverride parameter" -ForegroundColor Red
+        break
+    }
+    
+    
     Write-Host "Device Info: Platform $Platform  | Model $Model" -ForegroundColor Green
     Write-Host "OS: $OS | OSVer: $OSVer | UBR: $UBR " -ForegroundColor green
     if ($OSVerOverride){
