@@ -27,7 +27,7 @@ $OSDisk = $tsenv.value("OSDisk")
 $SMSTSLogPath = $tsenv.value("_SMSTSLogPath")
 $TempFolder = "$env:TEMP\LogBuild"
 $WinSetupScriptsPath = "$($OSDisk)\Windows\Setup\Scripts"
-$DISMLogs = "$($OSDisk)\windows\Logs\DISM"
+$DISMLogs = "$env:SystemDrive\windows\Logs\DISM"
 $OSDLogFolder = "$($OSDisk)\programdata\OSD"
 $TimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
