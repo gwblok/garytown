@@ -33,7 +33,7 @@ $Global:MyOSDCloud.RecoveryPartition = [bool]$true
 $Global:MyOSDCloud.SkipAllDiskSteps = [bool]$False
 $Global:MyOSDCloud.OEMActivation = [bool]$True
 $Global:MyOSDCloud.WindowsUpdate = [bool]$False
-$Global:MyOSDCloud.WindowsUpdateDrivers = [bool]$true
+$Global:MyOSDCloud.WindowsUpdateDrivers = [bool]$false
 $Global:MyOSDCloud.WindowsDefenderUpdate = [bool]$False
 $Global:MyOSDCloud.SetTimeZone = [bool]$False
 
