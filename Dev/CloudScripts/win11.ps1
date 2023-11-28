@@ -1,5 +1,5 @@
 $ScriptName = 'win11.garytown.com'
-$ScriptVersion = '23.11.07.01'
+$ScriptVersion = '23.11.28.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 #iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -36,6 +36,8 @@ $Global:MyOSDCloud.WindowsUpdate = [bool]$False
 $Global:MyOSDCloud.WindowsUpdateDrivers = [bool]$false
 $Global:MyOSDCloud.WindowsDefenderUpdate = [bool]$False
 $Global:MyOSDCloud.SetTimeZone = [bool]$False
+$Global:MyOSDCloud.ClearDiskConfirm = [bool]$False
+
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
@@ -57,9 +59,9 @@ import-module "$ModulePath\OSD.psd1" -Force
 
 #Launch OSDCloud
 Write-Host "Starting OSDCloud" -ForegroundColor Green
-write-host "Start-OSDCloud -OSName 'Windows 11 23H2 x64' -OSEdition Pro -OSActivation Retail -ZTI -OSLanguage en-us"
+write-host "Start-OSDCloud -OSName 'Windows 11 23H2 x64' -OSEdition Pro -OSActivation Retail -OSLanguage en-us"
 
-Start-OSDCloud -OSName 'Windows 11 23H2 x64' -OSEdition Pro -OSActivation Retail -ZTI -OSLanguage en-us
+Start-OSDCloud -OSName 'Windows 11 23H2 x64' -OSEdition Pro -OSActivation Retail -OSLanguage en-us
 
 write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
 if (Test-DISMFromOSDCloudUSB){
