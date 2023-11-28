@@ -64,7 +64,7 @@ if (Test-DISMFromOSDCloudUSB){
 }
 
 #Install any updates located on USB Drive
-Install-BuildUpdatesFromOSCloudUSB
+#Install-BuildUpdatesFromOSCloudUSB
 
 <# This is now in OSDCloud and controlled by the Vars above
 #Setup Complete (OSDCloud WinPE stage is complete)
