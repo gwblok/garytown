@@ -60,7 +60,7 @@ if (!($OSDisk)){
     $OSDisk = $Script:TaskSequenceEnvironment.Value("OSDisk")
 }
 if ((!$SourcePath)){
-    $OSDisk = $Script:TaskSequenceEnvironment.Value("DRIVERS01")
+    $SourcePath = $Script:TaskSequenceEnvironment.Value("DRIVERS01")
 }
 if (Test-Path $SourcePath)
     {
