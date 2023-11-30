@@ -59,7 +59,7 @@ $LogPath = $Script:TaskSequenceEnvironment.Value("_SMSTSLogPath")
 if (!($OSDisk)){
     $OSDisk = $Script:TaskSequenceEnvironment.Value("OSDisk")
 }
-if ((!$SourcePath)){
+if (!($SourcePath)){
     $SourcePath = $Script:TaskSequenceEnvironment.Value("DRIVERS01")
 }
 if (Test-Path $SourcePath)
