@@ -73,12 +73,12 @@ if (Test-Path $SourcePath)
     $DISM = Start-Process DISM.EXE -ArgumentList "/image:$($OSDisk)\ /Add-Driver /driver:$SourcePath /recurse" -PassThru -NoNewWindow -RedirectStandardOutput $Output
 
     do {
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 500
         
         $Content = Get-Content -Path $Output -ReadCount 1
         $LastLine = $Content | Select-Object -Last 1
         if ($LastLine -match "Searching for driver packages to install..."){
-            Write-Output $LastLine
+            #Write-Output $LastLine
             Show-TSActionProgress -Message $LastLine -Step 1 -MaxStep 100 -ErrorAction SilentlyContinue
         }
         $Message = $Content | Where-Object {$_ -match "Installing"} | Select-Object -Last 1
@@ -86,10 +86,10 @@ if (Test-Path $SourcePath)
             $ToRemove = $Message.Split(':') | Select-Object -Last 1
             $Message = $Message.Replace(":$($ToRemove)","")
             $Message = $Message.Replace($SourcePath,"")
-            $Message = $Message.Replace("\Offline","")
+            $Message = $Message.Replace("\offline","")
             $Total = (($Message.Split("-")[0]).Split("of") | Select-Object -Last 1).replace(" ","")
             $Counter = ((($Message.Split("-")[0]).Split("of") | Select-Object -First 1).replace(" ","")).replace("Installing","")
-            Write-Output $Message
+            #Write-Output $Message
             Show-TSActionProgress -Message $Message -Step $Counter -MaxStep $Total -ErrorAction SilentlyContinue
         }
         
