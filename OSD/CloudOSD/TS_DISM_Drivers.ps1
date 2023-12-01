@@ -55,10 +55,12 @@ Confirm-TSEnvironmentSetup
 Write-Output "--------------------------------------"
 Write-Output "Starting DISM Driver Install"
 
+#Location to store the DISM Log
 $LogPath = $Script:TaskSequenceEnvironment.Value("_SMSTSLogPath")
 if (!($OSDisk)){
     $OSDisk = $Script:TaskSequenceEnvironment.Value("OSDisk")
 }
+#Source Path for the Driver Pack Contents, if not provided, defaulting to DRIVERS01 variable.
 if (!($SourcePath)){
     $SourcePath = $Script:TaskSequenceEnvironment.Value("DRIVERS01")
 }
@@ -69,12 +71,14 @@ if (Test-Path $SourcePath)
 
     $Output = "$LogPath\DISMDriversOutput.txt"
 
+    #Start the DISM Process, but redirect the output from the console to a logfile which we can read to provide the info
     Write-Output 'Start-Process DISM.EXE -ArgumentList '"/image:$($OSDisk)\ /Add-Driver /driver:$SourcePath /recurse"' -PassThru -NoNewWindow -RedirectStandardOutput $Output'
     $DISM = Start-Process DISM.EXE -ArgumentList "/image:$($OSDisk)\ /Add-Driver /driver:$SourcePath /recurse" -PassThru -NoNewWindow -RedirectStandardOutput $Output
     $SameLastLine = $null
-    do {
+    do {  #Continous loop while DISM is running
         Start-Sleep -Milliseconds 300
-        
+
+        #Read in the DISM Logfile
         $Content = Get-Content -Path $Output -ReadCount 1
         $LastLine = $Content | Select-Object -Last 1
         if ($LastLine){
