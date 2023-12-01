@@ -71,32 +71,47 @@ if (Test-Path $SourcePath)
 
     Write-Output 'Start-Process DISM.EXE -ArgumentList '"/image:$($OSDisk)\ /Add-Driver /driver:$SourcePath /recurse"' -PassThru -NoNewWindow -RedirectStandardOutput $Output'
     $DISM = Start-Process DISM.EXE -ArgumentList "/image:$($OSDisk)\ /Add-Driver /driver:$SourcePath /recurse" -PassThru -NoNewWindow -RedirectStandardOutput $Output
-
+    $SameLastLine = $null
     do {
-        Start-Sleep -Milliseconds 500
+        Start-Sleep -Milliseconds 300
         
         $Content = Get-Content -Path $Output -ReadCount 1
         $LastLine = $Content | Select-Object -Last 1
-        if ($LastLine -match "Searching for driver packages to install..."){
-            #Write-Output $LastLine
-            Show-TSActionProgress -Message $LastLine -Step 1 -MaxStep 100 -ErrorAction SilentlyContinue
-        }
-        $Message = $Content | Where-Object {$_ -match "Installing"} | Select-Object -Last 1
-        if ($Message){
-            $ToRemove = $Message.Split(':') | Select-Object -Last 1
-            $Message = $Message.Replace(":$($ToRemove)","")
-            $Message = $Message.Replace($SourcePath,"")
-            $Message = $Message.Replace("\offline","")
-            $Total = (($Message.Split("-")[0]).Split("of") | Select-Object -Last 1).replace(" ","")
-            $Counter = ((($Message.Split("-")[0]).Split("of") | Select-Object -First 1).replace(" ","")).replace("Installing","")
-            #Write-Output $Message
-            Show-TSActionProgress -Message $Message -Step $Counter -MaxStep $Total -ErrorAction SilentlyContinue
+        if ($LastLine){
+            if ($SameLastLine -ne $LastLine){ #Only continue if DISM log has changed
+                $SameLastLine = $LastLine
+                Write-Output $LastLine
+                if ($LastLine -match "Searching for driver packages to install..."){
+                    #Write-Output $LastLine
+                    Show-TSActionProgress -Message $LastLine -Step 1 -MaxStep 100 -ErrorAction SilentlyContinue
+                }
+                elseif ($LastLine -match "Installing"){
+                    #Write-Output $LastLine
+                    $Message = $Content | Where-Object {$_ -match "Installing"} | Select-Object -Last 1
+                    if ($Message){
+                        $ToRemove = $Message.Split(':') | Select-Object -Last 1
+                        $Message = $Message.Replace(":$($ToRemove)","")
+                        $Message = $Message.Replace($SourcePath,"")
+                        $Message = $Message.Replace("\offline","")
+                        $Total = (($Message.Split("-")[0]).Split("of") | Select-Object -Last 1).replace(" ","")
+                        $Counter = ((($Message.Split("-")[0]).Split("of") | Select-Object -First 1).replace(" ","")).replace("Installing","")
+                        #Write-Output $Message
+                        Show-TSActionProgress -Message $Message -Step $Counter -MaxStep $Total -ErrorAction SilentlyContinue
+                    }
+                }
+                elseif ($LastLine -match "The operation completed successfully."){
+                    Show-TSActionProgress -Message $LastLine -Step 1 -MaxStep 1 -ErrorAction SilentlyContinue
+                }
+                else{
+                    Show-TSActionProgress -Message $LastLine -Step 1 -MaxStep 100 -ErrorAction SilentlyContinue
+                }
+            }
         }
         
     }
     until (!(Get-Process -Name DISM -ErrorAction SilentlyContinue))
 
-    Write-Output "Dism Complete with Code: $($DISM.ExitCode)"
+    Write-Output "Dism Step Complete"
     Write-Output "See DISM log for more Details: $Output"
 
     }
