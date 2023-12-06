@@ -145,7 +145,7 @@ function Get-HPDockUpdateDetails {
         $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp149501-150000/sp149576.exe'  #  01.00.09.00 | Oct 3, 2023
         
         #Thunderbolt G4
-        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp147001-147500/sp147372.exe'   #  1.4.20.0 | Nov 1, 2023
+        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp149501-150000/sp150000.exe'   #  1.4.20.0 | Nov 1, 2023
 
         #Thunderbolt G2
         $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  1.0.71.1 | Dec 15, 2022
