@@ -62,6 +62,8 @@ function Get-HPDockUpdateDetails {
       23.09.07.01 - Added fallback if current HP Device doesn't have softpaq list, falls back to pre-determined model.(Get-SoftpaqList -Category Dock -Platform 8870 )
       23.09.07.02 - Added additional support for HP E24d G4 Docking Monitor
       23.09.07.03 - updated firmware for Docks: TB G4 & USB-C G5 Essential
+      23.12.06.01 - updated firmware for Docks: TB G4 & USB-C G5 Essential
+      23.12.06.02 - cleaned up the firmware link area, added more notes 
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -139,13 +141,26 @@ function Get-HPDockUpdateDetails {
         param($pPnpSignedDrivers)
 
         # **** Hardcode URLs in case of no CMSL installed: ****
-        $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  (as of sept 9 2023)
-        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp147001-147500/sp147372.exe'   #  (as of sept 9, 2023)
-        $Url_UniG2 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146291.exe'  #  (as of sept 9, 2023)
-        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146273.exe'  #  (as of sept 9, 2023)
-        $Url_UsbG4 = 'ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  (as of apr 6, 2023)
-        $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp148501-149000/sp148858.exe'  #  (as of sept 9, 2023)
-        $Url_E24D = 'ftp.hp.com/pub/softpaq/sp145501-146000/sp145577.exe'   #  (as of sept 9, 2023)
+        #USB-C G5 Essential Dock
+        $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp149501-150000/sp149576.exe'  #  01.00.09.00 | Oct 3, 2023
+        
+        #Thunderbolt G4
+        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp147001-147500/sp147372.exe'   #  1.4.20.0 | Nov 1, 2023
+
+        #Thunderbolt G2
+        $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  1.0.71.1 | Dec 15, 2022
+
+        #USB-C Dock G5
+        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146273.exe'  #  1.0.18.0 | April 18, 2023
+
+        #USB-C Universal Dock G2
+        $Url_UniG2 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146291.exe'  #  1.1.18.0 | April 18, 2023
+
+        #USB-C Dock G4
+        $Url_UsbG4 = 'ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
+
+        #E24d G4 FHD Docking Monitor
+        $Url_E24D = 'ftp.hp.com/pub/softpaq/sp145501-146000/sp145577.exe'   #  1.0.17.0 | Mar 28, 2023
 
         #######################################################################################
         $Dock_Attached = 0      # default: no dock found
