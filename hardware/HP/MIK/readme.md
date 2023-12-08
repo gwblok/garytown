@@ -8,6 +8,10 @@ if ($Manufacturer -match "HP"){Write-Output $Manufacturer}
 elseif ($Manufacturer -match "Hewlett"){Write-Output $Manufacturer}
 else{}
 ```
+Compliance Rule:
+Rule Type: Value [Drop down]
+Operator: Equals [Drop down]
+Values: Compliant [String Entry]
 
 Settings: Discovery Script <br>
 https://github.com/gwblok/garytown/blob/master/hardware/HP/MIK/MIKClient_CI_Discovery.ps1
