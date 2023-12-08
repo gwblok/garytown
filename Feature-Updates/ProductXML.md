@@ -16,6 +16,7 @@ Media Creation Tool: https://software-static.download.prss.microsoft.com/dbazure
 
 22H2 Product Cab: https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab
 
+23H2 Product Cab: "https://download.microsoft.com/download/e/8/6/e86b4c6f-4ae8-40df-b983-3de63ea9502d/products_win11_202311109.cab"
 
 ## Getting the fwlink:
 
