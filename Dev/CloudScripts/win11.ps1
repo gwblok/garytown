@@ -27,7 +27,7 @@ else {
 }
 
 #Always Set
-$Global:MyOSDCloud.DevMode = [bool]$True
+#$Global:MyOSDCloud.DevMode = [bool]$True
 $Global:MyOSDCloud.Restart = [bool]$False
 $Global:MyOSDCloud.RecoveryPartition = [bool]$true
 $Global:MyOSDCloud.SkipAllDiskSteps = [bool]$False
@@ -41,7 +41,7 @@ $Global:MyOSDCloud.ClearDiskConfirm = [bool]$False
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
-    $Global:MyOSDCloud.DevMode = [bool]$True
+    #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
     $Global:MyOSDCloud.HPIAALL = [bool]$true
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
