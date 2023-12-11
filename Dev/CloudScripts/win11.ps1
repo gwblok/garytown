@@ -13,32 +13,26 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
 
 
-if (Test-DISMFromOSDCloudUSB -eq $true){
-    Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
-    $Global:MyOSDCloud = [ordered]@{
-        DriverPackName = "None"
-        OSDCloudUnattend = [bool]$True
-    }
-}
-else {
-    $Global:MyOSDCloud = [ordered]@{
-        OSDCloudUnattend = [bool]$True
-    }
-}
+
 
 #Always Set
-#$Global:MyOSDCloud.DevMode = [bool]$True
-$Global:MyOSDCloud.Restart = [bool]$False
-$Global:MyOSDCloud.RecoveryPartition = [bool]$true
-$Global:MyOSDCloud.SkipAllDiskSteps = [bool]$False
-$Global:MyOSDCloud.OEMActivation = [bool]$True
-$Global:MyOSDCloud.WindowsUpdate = [bool]$False
-$Global:MyOSDCloud.WindowsUpdateDrivers = [bool]$false
-$Global:MyOSDCloud.WindowsDefenderUpdate = [bool]$False
-$Global:MyOSDCloud.SetTimeZone = [bool]$False
-$Global:MyOSDCloud.ClearDiskConfirm = [bool]$False
 
+$Global:MyOSDCloud = [ordered]@{
+    Restart = [bool]$False
+    RecoveryPartition = [bool]$true
+    SkipAllDiskSteps = [bool]$False
+    OEMActivation = [bool]$True
+    WindowsUpdate = [bool]$False
+    WindowsUpdateDrivers = [bool]$false
+    WindowsDefenderUpdate = [bool]$False
+    SetTimeZone = [bool]$False
+    ClearDiskConfirm = [bool]$False
+}
 
+if (Test-DISMFromOSDCloudUSB -eq $true){
+    Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
+    $Global:MyOSDCloud.DriverPackName = "None"
+}
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
