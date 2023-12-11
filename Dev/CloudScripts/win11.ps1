@@ -62,6 +62,9 @@ if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
 
+OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Verbose -Recurse
+
 #Install any updates located on USB Drive
 #Install-BuildUpdatesFromOSCloudUSB
 
