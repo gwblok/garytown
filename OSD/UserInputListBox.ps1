@@ -1,3 +1,4 @@
+#Gary Blok | @gwblok | GARYTOWN.COM
 #Code From: https://learn.microsoft.com/en-us/powershell/scripting/samples/multiple-selection-list-boxes?view=powershell-7.3
 
 
@@ -11,7 +12,7 @@ try {
 }
 catch { write-output "Not running in TS"}
 
-if ($TSEnv){
+if ($TSEnv){ #Pull in Variables from Task Sequence, make sure you set these before running the step.
 
     $Title = $tsenv.Value('TSListTitle')
     $Text = $tsenv.Value('TSListText')
@@ -19,7 +20,7 @@ if ($TSEnv){
     $Icon = $tsenv.Value('TSListIcon')
 
 }
-else {
+else { #If Not running in TS, set the Variables here
 
     $Title = 'Office Location'
     $Text = 'Choose your Office Location from the Drop Down, this will be used to match to the OU during Domain Join'
@@ -36,23 +37,24 @@ else {
 }
 
 
-
+#Form Area - You might need to tweak the Form size based on your text amount.
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = $Title
-$form.Size = New-Object System.Drawing.Size(400,260)
+$form.Size = New-Object System.Drawing.Size(400,260)  #Use this to change the size of the form
 $form.StartPosition = 'CenterScreen'
 
-# This base64 string holds the bytes that make up the orange 'G' icon (just an example for a 32x32 pixel image)
+# ICON Area
 $iconBase64      = $Icon
 $iconBytes       = [Convert]::FromBase64String($iconBase64)
 # initialize a Memory stream holding the bytes
 $stream          = [System.IO.MemoryStream]::new($iconBytes, 0, $iconBytes.Length)
 $Form.Icon       = [System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]::new($stream).GetHIcon()))
 
+#OK Button
 $OKButton = New-Object System.Windows.Forms.Button
 $OKButton.Location = New-Object System.Drawing.Point(215,180)
 $OKButton.Size = New-Object System.Drawing.Size(75,23)
@@ -61,6 +63,7 @@ $OKButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
 $form.AcceptButton = $OKButton
 $form.Controls.Add($OKButton)
 
+#Cancel Button
 $CancelButton = New-Object System.Windows.Forms.Button
 $CancelButton.Location = New-Object System.Drawing.Point(300,180)
 $CancelButton.Size = New-Object System.Drawing.Size(75,23)
@@ -69,19 +72,21 @@ $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
 $form.CancelButton = $CancelButton
 $form.Controls.Add($CancelButton)
 
+#Text Area
 $label = New-Object System.Windows.Forms.Label
 $label.Location = New-Object System.Drawing.Point(10,20)
 $label.Size = New-Object System.Drawing.Size(280,50)
 $label.Text = $Text
 $form.Controls.Add($label)
 
+#List Box Area
 $listBox = New-Object System.Windows.Forms.Listbox
 $listBox.Location = New-Object System.Drawing.Point(10,90)
 $listBox.Size = New-Object System.Drawing.Size(360,40)
 
 #$listBox.SelectionMode = 'MultiExtended'
 
-<# Orginal Code
+<# Orginal Code - Replaced Static List with Dynamic based on Variables. 
 [void] $listBox.Items.Add('Item 1')
 [void] $listBox.Items.Add('Item 2')
 [void] $listBox.Items.Add('Item 3')
@@ -91,13 +96,13 @@ $listBox.Size = New-Object System.Drawing.Size(360,40)
 
 
 
-if ($TSEnv){
+if ($TSEnv){ #Get Options from task sequence variables
      Foreach ($ListOption in $ListOptions){
         $Option = $tsenv.Value($ListOption)
         [void] $listBox.Items.Add($Option)
     }   
 }
-else {
+else { #or get them from the list you created above
     Foreach ($Location in $Locations){
         [void] $listBox.Items.Add($Location)
     }
@@ -109,6 +114,7 @@ $form.Topmost = $true
 
 $result = $form.ShowDialog()
 
+#If you push OK, grab result and place into variable
 if ($result -eq [System.Windows.Forms.DialogResult]::OK)
 {
     $x = $listBox.SelectedItems[0]
@@ -118,5 +124,5 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK)
 
 }
 
-
+#Run the Script Block (PowerShell Form)
 start-process powershell.exe -ArgumentList "Invoke-Command -ScriptBlock {$script}" -NoNewWindow -Wait -PassThru -ErrorAction SilentlyContinue
