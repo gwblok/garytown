@@ -70,4 +70,4 @@
         if ($TSEnv){$tsenv.Value($TSVarName) = $x}
     }
 }
-start-process powershell.exe -ArgumentList "Invoke-Command -ScriptBlock $script" -NoNewWindow -Wait -PassThru
+start-process powershell.exe -ArgumentList "Invoke-Command -ScriptBlock {$script}" -NoNewWindow -Wait -PassThru
