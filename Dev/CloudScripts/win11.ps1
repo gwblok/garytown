@@ -62,7 +62,7 @@ if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
 
-OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
 write-output "Updating $OfflineModulePath using $ModulePath"
 copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
 
