@@ -71,7 +71,7 @@ import-module "$ModulePath\OSD.psd1" -Force
 Write-Host "Starting OSDCloud" -ForegroundColor Green
 write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
-Start-OSDCloud -OSName 'Windows 11 23H2 x64' -OSEdition Pro -OSActivation Retail -OSLanguage en-us
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 
 write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
 if (Test-DISMFromOSDCloudUSB){
