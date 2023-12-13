@@ -1,8 +1,8 @@
 $ScriptName = 'win10.garytown.com'
-$ScriptVersion = '23.10.04.01'
+$ScriptVersion = '23.11.28.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
-iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
-iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
+#iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
+#iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
 <# Offline Driver Details
 If you extract Driver Packs to your Flash Drive, you can DISM them in while in WinPE and it will make the process much faster, plus ensure driver support for first Boot
@@ -13,34 +13,52 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
 
 
+
+
+#Variables to define the Windows OS / Edition etc to be applied during OSDCloud
+$OSVersion = 'Windows 10' #Used to Determine Driver Pack
+$OSReleaseID = '22H2' #Used to Determine Driver Pack
+$OSName = 'Windows 10 22H2 x64'
+$OSEdition = 'Pro'
+$OSActivation = 'Retail'
+$OSLanguage = 'en-us'
+
+#Used to Determine Driver Pack
+$Product = (Get-MyComputerProduct)
+$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
+
+#Set OSDCloud Vars
+$Global:MyOSDCloud = [ordered]@{
+    Restart = [bool]$False
+    RecoveryPartition = [bool]$true
+    OEMActivation = [bool]$True
+    WindowsUpdate = [bool]$true
+    WindowsUpdateDrivers = [bool]$true
+    WindowsDefenderUpdate = [bool]$true
+    SetTimeZone = [bool]$False
+    ClearDiskConfirm = [bool]$False
+}
+
+if ($DriverPack){
+    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
+}
+
+#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
-    $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$False
-            RecoveryPartition = [bool]$True
-            SkipAllDiskSteps = [bool]$False
-            DriverPackName = "None"
-            OSDCloudUnattend = [bool]$True
-
-    }
-}
-else {
-    $Global:MyOSDCloud = [ordered]@{
-            Restart = [bool]$False
-            RecoveryPartition = [bool]$True
-            SkipAllDiskSteps = [bool]$False
-
-    }
+    $Global:MyOSDCloud.DriverPackName = "None"
 }
 
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
-    $Global:MyOSDCloud.DevMode = [bool]$True
+    #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
     $Global:MyOSDCloud.HPIAALL = [bool]$true
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
 
 }
+
+
 
 #write variables to console
 $Global:MyOSDCloud
@@ -51,29 +69,21 @@ import-module "$ModulePath\OSD.psd1" -Force
 
 #Launch OSDCloud
 Write-Host "Starting OSDCloud" -ForegroundColor Green
-Start-OSDCloud -OSName 'Windows 10 22H2 x64' -OSEdition Pro -OSActivation Retail -ZTI -OSLanguage en-us
+write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+
+write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
 if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
 
-#Setup Complete (OSDCloud WinPE stage is complete)
-Write-Host "Creating SetupComplete Process" -ForegroundColor Green
-Set-SetupCompleteCreateStart
-Write-Host "  Enable OEM Activation" -ForegroundColor gray
-Set-SetupCompleteOEMActivation
-Write-Host "  Enable Defender Updates" -ForegroundColor gray
-Set-SetupCompleteDefenderUpdate
-Write-Host "  Enable Windows Updates" -ForegroundColor gray
-Set-SetupCompleteStartWindowsUpdate
-Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
-Set-SetupCompleteStartWindowsUpdateDriver
-Write-Host "  Set Time Zone Updates" -ForegroundColor gray
-Set-SetupCompleteTimeZone
-Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
-Set-SetupCompleteOSDCloudUSB
-Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
-Set-SetupCompleteCreateFinish
+#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
+$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+write-output "Updating $OfflineModulePath using $ModulePath"
+copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
+
+
 
 #Restart
-restart-computer
+#restart-computer
