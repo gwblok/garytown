@@ -1,3 +1,4 @@
+#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'win11.garytown.com'
 $ScriptVersion = '23.12.13.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
