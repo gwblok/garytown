@@ -3,8 +3,8 @@ Windows 10 Latest Cab: https://go.microsoft.com/fwlink/?LinkId=841361
 
 Media Creation Tool: https://download.microsoft.com/download/9/e/a/9eac306f-d134-4609-9c58-35d1638c2363/MediaCreationTool22H2.exe
 
-22H2 Product Cab: https://download.microsoft.com/download/3/c/9/3c959fca-d288-46aa-b578-2a6c6c33137a/products_win10_20230510.cab.cab
-
+22H2 Product Cab [2023-05-10]: https://download.microsoft.com/download/3/c/9/3c959fca-d288-46aa-b578-2a6c6c33137a/products_win10_20230510.cab.cab
+22H2 Product Cab [2023-12-12]: https://download.microsoft.com/download/7/9/c/79cbc22a-0eea-4a0d-89c0-054a1b3aa8e0/products.cab
 
 
 # Windows 11
