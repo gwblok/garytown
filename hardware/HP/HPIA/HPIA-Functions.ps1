@@ -26,7 +26,7 @@ Function CMTraceLog {
 		    [Parameter(Mandatory=$false)]
 		    [int]$Type,
 		    [Parameter(Mandatory=$false)]
-		    $LogFile = "$programdata\logs\Cmtracelog.log"
+		    $LogFile = "$($env:ProgramData)\logs\Cmtracelog.log"
 	    )
     <#
     Type: 1 = Normal, 2 = Warning (yellow), 3 = Error (red)
@@ -232,6 +232,7 @@ Function Run-HPIA {
         )
     $DateTime = Get-Date –Format "yyyyMMdd-HHmmss"
     $ReportsFolder = "$ReportsFolder\$DateTime"
+    $CMTraceLog = $ReportFolder\HPIACustomLog.log
     $script:TempWorkFolder = "$env:temp\HPIA"
     try 
     {
