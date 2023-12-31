@@ -1,126 +1,95 @@
-<#
-Loads Functions
-Creates Setup Complete Files
-
-
-
-
-#>
-
+#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '23.11.13.02'
+$ScriptVersion = '23.12.30.02'
+Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
+#iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
+#iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
-
-
-
-<#
-if ($env:SystemDrive -ne 'X:') {
-    Write-Host -ForegroundColor Yellow "Restart after Script Completes?"
-    $Restart = Read-Host "y or n, then Enter"
-}
+<# Offline Driver Details
+If you extract Driver Packs to your Flash Drive, you can DISM them in while in WinPE and it will make the process much faster, plus ensure driver support for first Boot
+Extract to: OSDCLoudUSB:\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct
+Use OSD Module to determine Vars
+$ComputerProduct = (Get-MyComputerProduct)
+$ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
 
 
-Set-ExecutionPolicy Bypass -Force
-
-#WinPE Stuff
-if ($env:SystemDrive -eq 'X:') {
-    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
-
-    
-    iex (irm win11.garytown.com)
-
-    #Create Marker so it knows this is a "HOPE" computer
-    new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
 
 
-    This is now in OSDCloud and controlled by the Vars above
-    #Setup Complete (OSDCloud WinPE stage is complete)
-    Write-Host "Creating SetupComplete Process" -ForegroundColor Green
-    Set-SetupCompleteCreateStart
-    Write-Host "  Enable OEM Activation" -ForegroundColor gray
-    Set-SetupCompleteOEMActivation
-    Write-Host "  Enable Defender Updates" -ForegroundColor gray
-    Set-SetupCompleteDefenderUpdate
-    Write-Host "  Enable Windows Updates" -ForegroundColor gray
-    Set-SetupCompleteStartWindowsUpdate
-    #Write-Host "  Enable MS Driver Updates" -ForegroundColor gray
-    #Set-SetupCompleteStartWindowsUpdateDriver
-    Write-Host "  Set Time Zone Updates" -ForegroundColor gray
-    Set-SetupCompleteTimeZone
-    Write-Host "  Check for Setup Complete on CloudUSB Drive" -ForegroundColor gray
-    Set-SetupCompleteOSDCloudUSB
-    Write-Host "Conclude SetupComplete Process Creation" -ForegroundColor Green
-    Set-SetupCompleteCreateFinish
+#Variables to define the Windows OS / Edition etc to be applied during OSDCloud
+$OSVersion = 'Windows 11' #Used to Determine Driver Pack
+$OSReleaseID = '23H2' #Used to Determine Driver Pack
+$OSName = 'Windows 11 23H2 x64'
+$OSEdition = 'Pro'
+$OSActivation = 'Retail'
+$OSLanguage = 'en-us'
 
+#Used to Determine Driver Pack
+$Product = (Get-MyComputerProduct)
+$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
-    Write-Host -ForegroundColor Cyan "Adding Pause Tasks into JSON Config File for Action during Specialize" 
-    $HashTable = @{
-        'Addons' = @{
-            'Pause' = $Global:OSDCloud.PauseSpecialize
-        }
-    }
-    $HashVar = $HashTable | ConvertTo-Json
-    $ConfigPath = "c:\osdcloud\configs"
-    $ConfigFile = "$ConfigPath\Extras.JSON"
-    try {[void][System.IO.Directory]::CreateDirectory($ConfigPath)}
-    catch {}
-    $HashVar | Out-File $ConfigFile
-                
-    restart-computer
+#Set OSDCloud Vars
+$Global:MyOSDCloud = [ordered]@{
+    Restart = [bool]$False
+    RecoveryPartition = [bool]$true
+    OEMActivation = [bool]$True
+    WindowsUpdate = [bool]$true
+    WindowsUpdateDrivers = [bool]$true
+    WindowsDefenderUpdate = [bool]$true
+    SetTimeZone = [bool]$False
+    ClearDiskConfirm = [bool]$False
+    ShutdownSetupComplete = [bool]$true
+    SyncMSUpCatDriverUSB = [bool]$true
 }
 
-#Non-WinPE
-if ($env:SystemDrive -ne 'X:') {
-    #Remove Personal Teams
-    Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
-    try {
-        iex (irm https://raw.githubusercontent.com/suazione/CodeDump/main/Set-ConfigureChatAutoInstall.ps1)
-    }
-    catch {}
+#Testing MS Update Catalog Driver Sync
+#$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
-    #Set Time Zone to Automatic Update
-    
-    Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    Enable-AutoZimeZoneUpdate
-    Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
-    Set-DefaultProfilePersonalPref
-    
-    #Try to prevent crap from auto installing
-    Write-Host -ForegroundColor Gray "**Disabling Cloud Content**" 
-    Disable-CloudContent
-    
-    #Set Win11 Bypasses
-    Write-Host -ForegroundColor Gray "**Enabling Win11 Bypasses**" 
-    Set-Win11ReqBypassRegValues
-    
-    #Windows Updates
-    Write-Host -ForegroundColor Gray "**Running Defender Updates**"
-    Update-DefenderStack
-    Write-Host -ForegroundColor Gray "**Running Windows Updates**"
-    Start-WindowsUpdate
-    Write-Host -ForegroundColor Gray "**Running Driver Updates**"
-    Start-WindowsUpdateDriver
-
-
+if ($DriverPack){
+    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-#Both
-#Set Time Zone
-Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
-Set-TimeZoneFromIP
-
-
-if ($Restart -eq "Y"){Restart-Computer}
-
-
-
-<# Future version of OSD Module
-Set-SetupCompleteCreateStart
-Set-SetupCompleteTimeZone
-Set-SetupCompleteRunWindowsUpdate
-Set-SetupCompleteOSDCloudUSB
-Set-SetupCompleteCreateFinish
-
+#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
+if (Test-DISMFromOSDCloudUSB -eq $true){
+    Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
+    $Global:MyOSDCloud.DriverPackName = "None"
+}
 #>
+#Enable HPIA | Update HP BIOS | Update HP TPM
+if (Test-HPIASupport){
+    #$Global:MyOSDCloud.DevMode = [bool]$True
+    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
+    $Global:MyOSDCloud.HPIAALL = [bool]$true
+    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
+
+}
+
+
+
+#write variables to console
+$Global:MyOSDCloud
+
+#Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
+$ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+import-module "$ModulePath\OSD.psd1" -Force
+
+#Launch OSDCloud
+Write-Host "Starting OSDCloud" -ForegroundColor Green
+write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
+
+Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
+
+write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
+if (Test-DISMFromOSDCloudUSB){
+    Start-DISMFromOSDCloudUSB
+}
+
+#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
+$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+write-output "Updating $OfflineModulePath using $ModulePath"
+copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
+
+
+
+#Restart
+#restart-computer
