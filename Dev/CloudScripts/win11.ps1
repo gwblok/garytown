@@ -41,7 +41,7 @@ $Global:MyOSDCloud = [ordered]@{
 }
 
 #Testing MS Update Catalog Driver Sync
-$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
+#$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
