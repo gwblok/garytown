@@ -1,6 +1,6 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'win11.garytown.com'
-$ScriptVersion = '23.12.30.02'
+$ScriptVersion = '24.01.01.02'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 #iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -12,8 +12,6 @@ Use OSD Module to determine Vars
 $ComputerProduct = (Get-MyComputerProduct)
 $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
-
-
 
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
@@ -36,8 +34,10 @@ $Global:MyOSDCloud = [ordered]@{
     WindowsUpdate = [bool]$true
     WindowsUpdateDrivers = [bool]$true
     WindowsDefenderUpdate = [bool]$true
-    SetTimeZone = [bool]$False
+    SetTimeZone = [bool]$true
     ClearDiskConfirm = [bool]$False
+    ShutdownSetupComplete = [bool]$true
+    SyncMSUpCatDriverUSB = [bool]$true
 }
 
 #Testing MS Update Catalog Driver Sync
@@ -47,10 +47,15 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-<#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
+#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
-    $Global:MyOSDCloud.DriverPackName = "None"
+    if ($Global:MyOSDCloud.SyncMSUpCatDriverUSB -eq $true){
+        $Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
+    }
+    else {
+        $Global:MyOSDCloud.DriverPackName = "None"
+    }
 }
 #>
 #Enable HPIA | Update HP BIOS | Update HP TPM
@@ -77,7 +82,9 @@ write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $
 
 Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 
-write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
+write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
+
+
 if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
