@@ -39,7 +39,7 @@ $Global:MyOSDCloud = [ordered]@{
     SetTimeZone = [bool]$False
     ClearDiskConfirm = [bool]$False
     ShutdownSetupComplete = [bool]$true
-    SyncMSUpCatDriverUSB = [bool]$true
+    SyncMSUpCatDriverUSB = [bool]$false
 }
 
 #Testing MS Update Catalog Driver Sync
@@ -81,7 +81,7 @@ Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation
 
 write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
 if (Test-DISMFromOSDCloudUSB){
-    Start-DISMFromOSDCloudUSB
+    #Start-DISMFromOSDCloudUSB
 }
 
 #Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
