@@ -52,9 +52,11 @@ if ($DriverPack){
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     if ($Global:MyOSDCloud.SyncMSUpCatDriverUSB -eq $true){
+        write-host "Setting DriverPackName to 'Microsoft Update Catalog'"
         $Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
     }
     else {
+        write-host "Setting DriverPackName to 'None'"
         $Global:MyOSDCloud.DriverPackName = "None"
     }
 }
