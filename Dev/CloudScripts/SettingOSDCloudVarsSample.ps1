@@ -59,7 +59,7 @@ if ($ImageFileItem){
 #Testing MS Update Catalog Driver Sync
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
-#Used to Determine Driver Pack (not needed, OSDCloud will automatically do this for you, but just showing as another example)
+#Used to Determine Driver Pack
 $Product = (Get-MyComputerProduct)
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
@@ -67,12 +67,18 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-<#If Drivers are expanded on the USB Drive, disable installing a Driver Pack and just DISM in the drivers instead
+#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
-    $Global:MyOSDCloud.DriverPackName = "None"
+    if ($Global:MyOSDCloud.SyncMSUpCatDriverUSB -eq $true){
+        $Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
+    }
+    else {
+        $Global:MyOSDCloud.DriverPackName = "None"
+    }
 }
 #>
+
 #Enable HPIA | Update HP BIOS | Update HP TPM
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
