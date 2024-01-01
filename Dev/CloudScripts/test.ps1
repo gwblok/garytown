@@ -39,7 +39,7 @@ $Global:MyOSDCloud = [ordered]@{
     SetTimeZone = [bool]$False
     ClearDiskConfirm = [bool]$False
     ShutdownSetupComplete = [bool]$true
-    SyncMSUpCatDriverUSB = [bool]$false
+    SyncMSUpCatDriverUSB = [bool]$true
 }
 
 #Testing Custom Images
