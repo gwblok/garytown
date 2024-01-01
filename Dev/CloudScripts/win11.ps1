@@ -22,9 +22,6 @@ $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'en-us'
 
-#Used to Determine Driver Pack
-$Product = (Get-MyComputerProduct)
-$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 #Set OSDCloud Vars
 $Global:MyOSDCloud = [ordered]@{
@@ -42,6 +39,10 @@ $Global:MyOSDCloud = [ordered]@{
 
 #Testing MS Update Catalog Driver Sync
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
+
+#Used to Determine Driver Pack
+$Product = (Get-MyComputerProduct)
+$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
