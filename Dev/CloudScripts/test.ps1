@@ -45,13 +45,17 @@ $Global:MyOSDCloud = [ordered]@{
 #Testing Custom Images
 $ESDName = '22621.382.220806-0833.ni_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_en-us.esd'
 $ImageFileItem = Find-OSDCloudFile -Name $ESDName  -Path '\OSDCloud\OS\'
-$ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
-$ImageFileName = Split-Path -Path $ImageFileItem.FullName -Leaf
-$ImageFileFullName = $ImageFileItem.FullName
-
-$Global:MyOSDCloud.ImageFileItem = $ImageFileItem
-$Global:MyOSDCloud.ImageFileName = $ImageFileName
-$Global:MyOSDCloud.ImageFileFullName = $ImageFileFullName
+if ($ImageFileItem){
+    $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
+    if ($ImageFileItem){
+        $ImageFileName = Split-Path -Path $ImageFileItem.FullName -Leaf
+        $ImageFileFullName = $ImageFileItem.FullName
+        
+        $Global:MyOSDCloud.ImageFileItem = $ImageFileItem
+        $Global:MyOSDCloud.ImageFileName = $ImageFileName
+        $Global:MyOSDCloud.ImageFileFullName = $ImageFileFullName
+    }
+}
 
 
 #Testing MS Update Catalog Driver Sync
