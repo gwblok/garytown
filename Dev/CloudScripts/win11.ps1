@@ -98,7 +98,9 @@ $OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Mo
 write-output "Updating $OfflineModulePath using $ModulePath"
 copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
 
-
+#Copy CMTrace Local:
+iex (irm functions.garytown.com)
+Install-CMTrace
 
 #Restart
 #restart-computer
