@@ -17,6 +17,8 @@ Function Invoke-HPAnalyzer {
             - added OSVerOverride parameter
             - modified output to return only array of updates (or error code if errors)
             - modified method to get OSVer
+	    - commented out: (line 347ish) if ( $gh_PnpDriverDate ) { $gh_PnpDriverDate = $gh_PnpDriverDate.ToString("MM-dd-yyyy") }
+      		- it was throwing error: Cannot find an overload for "ToString" and the argument count: "1".
 
 
     .Dependencies
