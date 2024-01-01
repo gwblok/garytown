@@ -17,8 +17,9 @@ Function Invoke-HPAnalyzer {
             - added OSVerOverride parameter
             - modified output to return only array of updates (or error code if errors)
             - modified method to get OSVer
-	    - commented out: (line 347ish) if ( $gh_PnpDriverDate ) { $gh_PnpDriverDate = $gh_PnpDriverDate.ToString("MM-dd-yyyy") }
-      		- it was throwing error: Cannot find an overload for "ToString" and the argument count: "1".
+          12/31/2023
+          	- commented out: (line 347ish) if ( $gh_PnpDriverDate ) { $gh_PnpDriverDate = $gh_PnpDriverDate.ToString("MM-dd-yyyy") }
+      		 - it was throwing error: Cannot find an overload for "ToString" and the argument count: "1".
 
 
     .Dependencies
@@ -76,7 +77,14 @@ Function Invoke-HPAnalyzer {
 
     ) # param
 
+
     $startTime = (Get-Date).DateTime
+
+    if (!($Script:LogFile)){
+        if ($LogFile){
+            $Script:LogFile = $LogFile
+        }
+    }
 
     $Script:RecommendedSWList = @(          # these are checked with '-r' option
         'HP Notifications', `
@@ -224,6 +232,8 @@ Function Invoke-HPAnalyzer {
         } # else if ( $Script:LogFile )
     } # function TraceLog
 
+    #Write-Host "LogFile: $Script:LogFile"
+    #Write-Host "LogFile: $LogFile"
     TraceLog -Message "Analyzer: 2.01.02 -- $($startTime)"
     TraceLog -Message "-- Working Reference File: '$XmlFile'"
 
@@ -337,7 +347,7 @@ Function Invoke-HPAnalyzer {
                         $gh_PnPDriverVersion = $gh_iDriver.DriverVersion
                         $gh_PnpDriverDate = $gh_iDriver.DriverDate
                         $gh_DriverProvider = $gh_iDriver.DriverProviderName
-                        if ( $gh_PnpDriverDate ) { $gh_PnpDriverDate = $gh_PnpDriverDate.ToString("MM-dd-yyyy") }
+                        #if ( $gh_PnpDriverDate ) { $gh_PnpDriverDate = $gh_PnpDriverDate.ToString("MM-dd-yyyy") }
                         if ( $DebugOutput ) {
                             TraceLog -Message "  ... Matched CVA Device ID: $($gh_DevToMatch)"
                             TraceLog -Message "  ... Matched HWID : $($gh_MatchedHardwareID)"
