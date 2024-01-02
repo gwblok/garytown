@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '23.11.07.1'
+$ScriptVersion = '24.01.02.1'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -523,11 +523,27 @@ function Install-CMTrace {
             else{Write-Output "Failed Install"; exit 255}
         }
         else {
-            Write-Output "$AppName Already Installed"
+            Write-Output "$AppName already installed here: $AppPath"
         }
-
+        if (Test-Path "C:\Windows\System32\$FileName"){
+            Write-Output "$AppName already installed here: C:\Windows\System32\$FileName"
+        }
+        else{
+            Write-Output "$AppName Not Found, Starting Remediation"
+            #Download & Extract to System32
+            Write-Output "Downloading $URL"
+            Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
+            if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
+            else{Write-Output "Failed Downloaded"; exit 255}
+            Write-Output "Starting Copy of $AppName to C:\Windows\System32\$FileName"
+            Copy-Item -Path $env:TEMP\$FileName -Destination "C:\Windows\System32\$FileName" -Force
+            if (Test-Path -Path "C:\Windows\System32\$FileName"){
+                Write-Output "Successfully Installed File"
+            }
+            else{Write-Output "Failed Install"; exit 255}
+               
+        }
     }
-
 }
 Write-Host -ForegroundColor Green "[+] Function Set-LatestUpdatesASAPEnabled"
 function Set-LatestUpdatesASAPEnabled {
