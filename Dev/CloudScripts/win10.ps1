@@ -37,6 +37,7 @@ $Global:MyOSDCloud = [ordered]@{
     WindowsDefenderUpdate = [bool]$true
     SetTimeZone = [bool]$False
     ClearDiskConfirm = [bool]$False
+    SyncMSUpCatDriverUSB = [bool]$true
 }
 
 if ($DriverPack){
