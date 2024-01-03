@@ -2,8 +2,6 @@
 $ScriptName = 'test.garytown.com'
 $ScriptVersion = '24.01.01.03'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
-#iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
-#iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
 
 <# Offline Driver Details
 If you extract Driver Packs to your Flash Drive, you can DISM them in while in WinPE and it will make the process much faster, plus ensure driver support for first Boot
