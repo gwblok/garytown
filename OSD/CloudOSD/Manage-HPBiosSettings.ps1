@@ -1,4 +1,4 @@
-write-output "Manage-HPBIOSSettings Script 24.1.3"
+write-output "Manage-HPBIOSSettings Script 24.1.3.2"
 #Modified version of Jon's Script - https://www.configjon.com/hp-bios-settings-management/
 function Manage-HPBiosSettings{<#
     .DESCRIPTION
@@ -80,7 +80,7 @@ param(
         }
         return $true
     })]
-    [System.IO.FileInfo]$LogFile = "$ENV:temp\Manage-HPBiosSettings.log"
+    [System.IO.FileInfo]$script:LogFile = "$ENV:temp\Manage-HPBiosSettings.log"
 )
 
 #List of settings to be configured ============================================================================================
