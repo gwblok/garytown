@@ -79,7 +79,7 @@ param(
         }
         return $true
     })]
-    [System.IO.FileInfo]$LogFile = "$ENV:temp\HP\Manage-HPBiosSettings.log"
+    [System.IO.FileInfo]$LogFile = "$ENV:temp\Manage-HPBiosSettings.log"
 )
 
 #List of settings to be configured ============================================================================================
