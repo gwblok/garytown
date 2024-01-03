@@ -14,8 +14,6 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #>
 
 
-
-
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
 $OSReleaseID = '23H2' #Used to Determine Driver Pack
@@ -24,63 +22,36 @@ $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'en-us'
 
-#Used to Determine Driver Pack
-$Product = (Get-MyComputerProduct)
-$DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 #Set OSDCloud Vars
 $Global:MyOSDCloud = [ordered]@{
-    Restart = [bool]$false
+    Restart = [bool]$False
     RecoveryPartition = [bool]$true
     OEMActivation = [bool]$True
-    WindowsUpdate = [bool]$true
-    WindowsUpdateDrivers = [bool]$true
     WindowsDefenderUpdate = [bool]$true
-    SetTimeZone = [bool]$False
     ClearDiskConfirm = [bool]$False
-    ShutdownSetupComplete = [bool]$true
     SyncMSUpCatDriverUSB = [bool]$true
 }
-
-#Testing Custom Images
-$ESDName = '22621.382.220806-0833.ni_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_en-us.esd'
-$ImageFileItem = Find-OSDCloudFile -Name $ESDName  -Path '\OSDCloud\OS\'
-if ($ImageFileItem){
-    $ImageFileItem = $ImageFileItem | Where-Object {$_.FullName -notlike "C*"} | Where-Object {$_.FullName -notlike "X*"} | Select-Object -First 1
-    if ($ImageFileItem){
-        $ImageFileName = Split-Path -Path $ImageFileItem.FullName -Leaf
-        $ImageFileFullName = $ImageFileItem.FullName
-        
-        $Global:MyOSDCloud.ImageFileItem = $ImageFileItem
-        $Global:MyOSDCloud.ImageFileName = $ImageFileName
-        $Global:MyOSDCloud.ImageFileFullName = $ImageFileFullName
-        $Global:MyOSDCloud.OSImageIndex = 9 #Pro
-    }
-}
-
 
 #Testing MS Update Catalog Driver Sync
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
-if ($DriverPack){
-    $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
-}
+#Used to Determine Driver Pack
+$Product = (Get-MyComputerProduct)
 
-<#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
+#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
-    $Global:MyOSDCloud.DriverPackName = "None"
+    if ($Global:MyOSDCloud.SyncMSUpCatDriverUSB -eq $true){
+        write-host "Setting DriverPackName to 'Microsoft Update Catalog'"
+        $Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
+    }
+    else {
+        write-host "Setting DriverPackName to 'None'"
+        $Global:MyOSDCloud.DriverPackName = "None"
+    }
 }
 #>
-#Enable HPIA | Update HP BIOS | Update HP TPM
-if (Test-HPIASupport){
-    #$Global:MyOSDCloud.DevMode = [bool]$True
-    $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    $Global:MyOSDCloud.HPIAALL = [bool]$true
-    $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-
-}
-
 
 
 #write variables to console
@@ -96,17 +67,14 @@ write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $
 
 Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 
-write-host "OSDCloud Process Complete, Running Custom Actions Before Reboot" -ForegroundColor Green
-if (Test-DISMFromOSDCloudUSB){
-    #Start-DISMFromOSDCloudUSB
-}
+write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
 
-#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
-$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-write-output "Updating $OfflineModulePath using $ModulePath"
-copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
+#This will DISM in your driver Packs after OSDCloud has finished
+if (Test-DISMFromOSDCloudUSB){
+    Start-DISMFromOSDCloudUSB
+}
 
 
 
 #Restart
-restart-computer
+#restart-computer
