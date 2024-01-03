@@ -521,4 +521,4 @@ Write-LogEntry -Value "END - HP BIOS settings management script" -Severity 1
 
 }
 
-Manage-HPBiosSettings -SetSettings -LogFile "$ENV:temp\Manage-HPBiosSettings.log"
+Manage-HPBiosSettings -SetSettings -LogFile "$ENV:temp\HPBiosSettings.log"
