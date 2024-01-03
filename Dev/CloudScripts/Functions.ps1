@@ -19,8 +19,10 @@ Function Test-DISMFromOSDCloudUSB {
 }
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
 Function Get-MyComputerInfoBasic {
+    Function Convert-FromUnixDate ($UnixDate) {
+    	[timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($UnixDate))
+     }
     Function Get-TPMVer {
-
     $Manufacturer = (Get-WmiObject -Class:Win32_ComputerSystem).Manufacturer
     if ($Manufacturer -match "HP"){
         if ($((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion) -match "1.2")
