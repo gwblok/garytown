@@ -1,4 +1,4 @@
-write-output "Manage-HPBIOSSettings Script 24.1.3.2"
+write-output "Manage-HPBIOSSettings Script 24.1.3.3"
 #Modified version of Jon's Script - https://www.configjon.com/hp-bios-settings-management/
 function Manage-HPBiosSettings{<#
     .DESCRIPTION
@@ -522,4 +522,4 @@ Write-LogEntry -Value "END - HP BIOS settings management script" -Severity 1
 
 }
 
-Manage-HPBiosSettings -SetSettings -LogFile "$ENV:temp\HPBiosSettings.log"
+Manage-HPBiosSettings -SetSettings
