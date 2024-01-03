@@ -20,8 +20,8 @@ Function Test-DISMFromOSDCloudUSB {
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
 Function Get-MyComputerInfoBasic {
     Function Convert-FromUnixDate ($UnixDate) {
-    	[timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($UnixDate))
-     }
+        [timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($UnixDate))
+    }
     Function Get-TPMVer {
     $Manufacturer = (Get-WmiObject -Class:Win32_ComputerSystem).Manufacturer
     if ($Manufacturer -match "HP"){
@@ -85,35 +85,27 @@ Function Get-MyComputerInfoBasic {
 
 
     Write-Output "DiskSize = $DiskSize, FreeSpace = $Freespace"
-        #Get Volume Infomration
-        try 
-            {
-            $SecureBootStatus = Confirm-SecureBootUEFI
-            }
-        catch {}
-        if ($SecureBootStatus -eq $false -or $SecureBootStatus -eq $true)
-            {
-            $Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
-            $SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
-            $SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
-            $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
-            $FreeMB = [MATH]::Round(($SystemVolume).SizeRemaining /1MB)
-            if ($FreeMB -le 50)
-                {
-                Write-Output "Systvem Volume FreeSpace = $FreeMB MB"
-            
-                }
-            else
-                {Write-Output "Systvem Volume FreeSpace = $FreeMB MB"}
-            }
-        else
-            {
-            }
+    #Get Volume Infomration
+    try {$SecureBootStatus = Confirm-SecureBootUEFI}
+    catch {}
+    if ($SecureBootStatus -eq $false -or $SecureBootStatus -eq $true){
+        $Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
+        $SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
+        $SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
+        $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
+        $FreeMB = [MATH]::Round(($SystemVolume).SizeRemaining /1MB)
+        Write-Output "Systvem Volume FreeSpace = $FreeMB MB"
+    }
 
+    $Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
+    write-output "$($Disk.Model) $($Disk.BusType)"
     
+
     $MemorySize = [math]::Round((Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory/1MB)
     Write-Output "Memory size = $MemorySize MB"
 }
+
+
 
 Write-Host -ForegroundColor Green "[+] Function Get-UBR"
 function Get-UBR {
