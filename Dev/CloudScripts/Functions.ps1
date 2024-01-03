@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.01.02.1'
+$ScriptVersion = '24.01.03.1'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -17,6 +17,102 @@ Function Test-DISMFromOSDCloudUSB {
     else { Return $false}
 
 }
+Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
+Function Get-MyComputerInfoBasic {
+    Function Get-TPMVer {
+
+    $Manufacturer = (Get-WmiObject -Class:Win32_ComputerSystem).Manufacturer
+    if ($Manufacturer -match "HP"){
+        if ($((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion) -match "1.2")
+            {
+            $versionInfo = (Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).ManufacturerVersionInfo
+            $verMaj      = [Convert]::ToInt32($versionInfo[0..1] -join '', 16)
+            $verMin      = [Convert]::ToInt32($versionInfo[2..3] -join '', 16)
+            $verBuild    = [Convert]::ToInt32($versionInfo[4..6] -join '', 16)
+            $verRevision = 0
+            [version]$ver = "$verMaj`.$verMin`.$verBuild`.$verRevision"
+            Write-Output "TPM Verion: $ver | Spec: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion)"
+            }
+        else {Write-Output "TPM Verion: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).ManufacturerVersion) | Spec: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion)"}
+    }
+
+    else    {
+        if ($((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion) -match "1.2"){
+            Write-Output "TPM Verion: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).ManufacturerVersion) | Spec: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion)"
+            }
+        else {Write-Output "TPM Verion: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).ManufacturerVersion) | Spec: $((Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM).SpecVersion)"}
+        }
+    }
+
+    $BIOSInfo = Get-WmiObject -Class 'Win32_Bios'
+
+    # Get the current BIOS release date and format it to datetime
+    $CurrentBIOSDate = [System.Management.ManagementDateTimeConverter]::ToDatetime($BIOSInfo.ReleaseDate).ToUniversalTime()
+
+    $Manufacturer = (Get-WmiObject -Class:Win32_ComputerSystem).Manufacturer
+    $ManufacturerBaseBoard = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Manufacturer
+    $ComputerModel = (Get-WmiObject -Class:Win32_ComputerSystem).Model
+    if ($ManufacturerBaseBoard -eq "Intel Corporation")
+        {
+        $ComputerModel = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+        }
+    $HPProdCode = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+    $Serial = (Get-WmiObject -class:win32_bios).SerialNumber
+    $cpuDetails = @(Get-WmiObject -Class Win32_Processor)[0]
+
+    Write-Output "Computer Name: $env:computername"
+    $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+    $InstallDate_CurrentOS = Convert-FromUnixDate $CurrentOSInfo.GetValue('InstallDate')
+    $WindowsRelease = $CurrentOSInfo.GetValue('ReleaseId')
+    if ($WindowsRelease -eq "2009"){$WindowsRelease = $CurrentOSInfo.GetValue('DisplayVersion')}
+    $BuildUBR_CurrentOS = $($CurrentOSInfo.GetValue('CurrentBuild'))+"."+$($CurrentOSInfo.GetValue('UBR'))
+    Write-Output "Windows $WindowsRelease | $BuildUBR_CurrentOS | Installed: $InstallDate_CurrentOS"
+
+
+    Write-Output "Computer Model: $ComputerModel"
+    Write-Output "Serial: $Serial"
+    if ($Manufacturer -like "H*"){Write-Output "Computer Product Code: $HPProdCode"}
+    Write-Output $cpuDetails.Name
+    Write-Output "Current BIOS Level: $($BIOSInfo.SMBIOSBIOSVersion) From Date: $CurrentBIOSDate"
+    Get-TPMVer
+    Write-Output "Time Zone: $(Get-TimeZone)"
+    $Locale = Get-WinSystemLocale
+    if ($Locale -ne "en-US"){Write-Output "WinSystemLocale: $locale"}
+    Get-WmiObject win32_LogicalDisk -Filter "DeviceID='C:'" | % { $FreeSpace = $_.FreeSpace/1GB -as [int] ; $DiskSize = $_.Size/1GB -as [int] }
+
+
+
+    Write-Output "DiskSize = $DiskSize, FreeSpace = $Freespace"
+        #Get Volume Infomration
+        try 
+            {
+            $SecureBootStatus = Confirm-SecureBootUEFI
+            }
+        catch {}
+        if ($SecureBootStatus -eq $false -or $SecureBootStatus -eq $true)
+            {
+            $Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
+            $SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
+            $SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
+            $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
+            $FreeMB = [MATH]::Round(($SystemVolume).SizeRemaining /1MB)
+            if ($FreeMB -le 50)
+                {
+                Write-Output "Systvem Volume FreeSpace = $FreeMB MB"
+            
+                }
+            else
+                {Write-Output "Systvem Volume FreeSpace = $FreeMB MB"}
+            }
+        else
+            {
+            }
+
+    
+    $MemorySize = [math]::Round((Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory/1MB)
+    Write-Output "Memory size = $MemorySize MB"
+}
+
 Write-Host -ForegroundColor Green "[+] Function Get-UBR"
 function Get-UBR {
     if ($env:SystemDrive -eq "X:"){
