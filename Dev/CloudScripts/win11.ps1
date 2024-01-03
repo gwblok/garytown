@@ -105,4 +105,4 @@ iex (irm functions.garytown.com)
 Install-CMTrace
 
 #Restart
-#restart-computer
+restart-computer
