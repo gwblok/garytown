@@ -35,7 +35,6 @@ $Global:MyOSDCloud = [ordered]@{
     ClearDiskConfirm = [bool]$False
     ShutdownSetupComplete = [bool]$true
     SyncMSUpCatDriverUSB = [bool]$true
-    Bitlocker = [bool]$true
 }
 
 #Testing MS Update Catalog Driver Sync
