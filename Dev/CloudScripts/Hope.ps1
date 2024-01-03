@@ -6,6 +6,7 @@ Creates Setup Complete Files
 $ScriptName = 'hope.garytown.com'
 $ScriptVersion = '23.11.13.01'
 
+iex (irm functions.garytown.com)
 #region functions
 function Set-SetupCompleteCreateStartHOPEonUSB {
     
