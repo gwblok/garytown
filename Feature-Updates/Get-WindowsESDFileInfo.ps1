@@ -3,15 +3,26 @@ if (!(Test-Path -Path $StagingFolder)){
     new-item -Path $StagingFolder -ItemType Directory | Out-Null
 }
 
-$WindowsTable = @(
-@{ Version = 'Win1022H2';LocalCab = "Win1022H2.Cab"; URL = "https://download.microsoft.com/download/3/c/9/3c959fca-d288-46aa-b578-2a6c6c33137a/products_win10_20230510.cab.cab"}
-@{ Version = 'Win1121H2';LocalCab = "Win1121H2.Cab"; URL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"}
-@{ Version = 'Win1121H2';LocalCab = "Win1122H2.Cab"; URL = "https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab"}
+#Windows 10 Latest Cab: https://go.microsoft.com/fwlink/?LinkId=841361
+#Windows 11 Latest CAB: https://go.microsoft.com/fwlink/?LinkId=2156292
+
+
+$WindowsMCTTable = @(
+@{ Version = 'Win10';LocalCab = "Win10.Cab"; URL = "https://go.microsoft.com/fwlink/?LinkId=841361"}
+@{ Version = 'Win11';LocalCab = "Win11.Cab"; URL = "https://go.microsoft.com/fwlink/?LinkId=2156292"}
 )
 
-$Win1022H2CabURL = "https://download.microsoft.com/download/3/c/9/3c959fca-d288-46aa-b578-2a6c6c33137a/products_win10_20230510.cab.cab"
-$Win1121H2CabURL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"
-$Win1122H2CabURL = "https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab"
+$WindowsTable = @(
+@{ Version = 'Win1022H2';LocalCab = "Win1022H2.Cab"; URL = "https://download.microsoft.com/download/7/9/c/79cbc22a-0eea-4a0d-89c0-054a1b3aa8e0/products.cab"}
+@{ Version = 'Win1121H2';LocalCab = "Win1121H2.Cab"; URL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"}
+@{ Version = 'Win1122H2';LocalCab = "Win1122H2.Cab"; URL = "https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab"}
+@{ Version = 'Win1123H2';LocalCab = "Win1123H2.Cab"; URL = "https://download.microsoft.com/download/6/2/b/62b47bc5-1b28-4bfa-9422-e7a098d326d4/products_win11_20231208.cab"}
+)
+
+#$Win1022H2CabURL = "https://download.microsoft.com/download/7/9/c/79cbc22a-0eea-4a0d-89c0-054a1b3aa8e0/products.cab"
+#$Win1121H2CabURL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"
+#$Win1122H2CabURL = "https://download.microsoft.com/download/b/1/9/b19bd7fd-78c4-4f88-8c40-3e52aee143c2/products_win11_20230510.cab.cab"
+#$Win1123H2CabURL = "https://download.microsoft.com/download/6/2/b/62b47bc5-1b28-4bfa-9422-e7a098d326d4/products_win11_20231208.cab"
 
 
 
@@ -108,12 +119,28 @@ function Test-WebConnection{
 
 $ESDInfo  = @()
 ForEach ($Option in $WindowsTable){
-    Invoke-WebRequest -Uri $Option.URL -UseBasicParsing -OutFile "$StagingFolder\$($Option.LocalCab)" -ErrorAction SilentlyContinue -Verbose
-    $file = Invoke-HPPrivateExpandCAB -cab "$StagingFolder\$($Option.LocalCab)" -expectedFile "$StagingFolder\$($Option.LocalCab).dir\products.xml" -Verbose
+    Invoke-WebRequest -Uri $Option.URL -UseBasicParsing -OutFile "$StagingFolder\$($Option.LocalCab)" -ErrorAction SilentlyContinue
+    $file = Invoke-HPPrivateExpandCAB -cab "$StagingFolder\$($Option.LocalCab)" -expectedFile "$StagingFolder\$($Option.LocalCab).dir\products.xml"
     [XML]$XML = Get-Content -Raw -Path "$StagingFolder\$($Option.LocalCab).dir\products.xml"
     $ESDInfo += $XML.MCT.Catalogs.Catalog.PublishedMedia.Files.File
+}
+
+
+
+ForEach ($MCT in $WindowsMCTTable){
+    New-Variable -Name "$($MCT.Version)Change" -Value $true -Force
+    Invoke-WebRequest -Uri $MCT.URL -UseBasicParsing -OutFile "$StagingFolder\$($MCT.LocalCab)" -ErrorAction SilentlyContinue
+    $MD5HashMCT = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($MCT.LocalCab)"
+    ForEach ($Option in $WindowsTable){
+        $MD5HashOption = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($Option.LocalCab)"
+        if ($MD5HashMCT.Hash -eq $MD5HashOption.Hash){
+            Set-Variable -Name "$($MCT.Version)Change" -Value $false
+            Write-Output "$($MCT.Version) Has not changed"
+        }
     }
+    if ("$($MCT.Version)Change" -eq $true){Write-Output "$($MCT.Version) has changed"}
+}
 
 #Clean Up Results
 $x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
-$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}
+#$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}
