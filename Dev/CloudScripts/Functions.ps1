@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.01.03.1'
+$ScriptVersion = '24.01.08.1'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -782,3 +782,6 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CM
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPAnalyzer"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPDriverUpdate"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Invoke-HPDriverUpdate.ps1)
+
+Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)
