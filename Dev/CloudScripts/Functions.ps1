@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.01.08.1'
+$ScriptVersion = '24.01.09.1'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -785,3 +785,6 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CM
 
 Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)
+
+Write-Host -ForegroundColor Green "[+] Function Invoke-OSDCloudIPU"
+iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudIPU/Invoke-OSDCloudIPU.ps1)
