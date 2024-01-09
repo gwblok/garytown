@@ -788,3 +788,7 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Do
 
 Write-Host -ForegroundColor Green "[+] Function Invoke-OSDCloudIPU"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudIPU/Invoke-OSDCloudIPU.ps1)
+
+Write-Host -ForegroundColor Green "[+] Function Manage-HPBiosSettings"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+
