@@ -1,4 +1,4 @@
-write-output "Manage-HPBIOSSettings Script 24.1.3.3"
+#write-output "Manage-HPBIOSSettings Script 24.1.3.3"
 #Modified version of Jon's Script - https://www.configjon.com/hp-bios-settings-management/
 function Manage-HPBiosSettings{<#
     .DESCRIPTION
