@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.01.09.1'
+$ScriptVersion = '24.1.9.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
