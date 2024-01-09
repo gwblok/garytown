@@ -1,6 +1,6 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '24.01.01.03'
+$ScriptVersion = '24.01.09.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 
 <# Offline Driver Details
@@ -29,6 +29,7 @@ $Global:MyOSDCloud = [ordered]@{
     WindowsDefenderUpdate = [bool]$true
     ClearDiskConfirm = [bool]$False
     SyncMSUpCatDriverUSB = [bool]$true
+    DebugMode = [bool]$true
 }
 
 #Testing MS Update Catalog Driver Sync
