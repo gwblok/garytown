@@ -49,7 +49,7 @@ if ($DriverPack){
     $Global:MyOSDCloud.DriverPackName = $DriverPack.Name
 }
 
-#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
+<#If Drivers are expanded on the USB Drive, disable installing a Driver Pack
 if (Test-DISMFromOSDCloudUSB -eq $true){
     Write-Host "Found Driver Pack Extracted on Cloud USB Flash Drive, disabling Driver Download via OSDCloud" -ForegroundColor Green
     if ($Global:MyOSDCloud.SyncMSUpCatDriverUSB -eq $true){
@@ -90,10 +90,11 @@ Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation
 
 write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
 
-
+<#
 if (Test-DISMFromOSDCloudUSB){
     Start-DISMFromOSDCloudUSB
 }
+#>
 
 #Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
 $OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
