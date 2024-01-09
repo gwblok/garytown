@@ -30,6 +30,7 @@ $Global:MyOSDCloud = [ordered]@{
     ClearDiskConfirm = [bool]$False
     SyncMSUpCatDriverUSB = [bool]$true
     DebugMode = [bool]$true
+    Debug = [bool]$true
 }
 
 #Testing MS Update Catalog Driver Sync
