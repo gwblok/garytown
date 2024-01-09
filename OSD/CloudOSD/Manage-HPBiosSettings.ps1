@@ -83,6 +83,8 @@ param(
     [System.IO.FileInfo]$script:LogFile = "$ENV:temp\Manage-HPBiosSettings.log"
 )
 
+
+
 #List of settings to be configured ============================================================================================
 #==============================================================================================================================
 $Global:Settings = (
@@ -247,7 +249,7 @@ Function Set-HPBiosSetting
         if($CurrentValue.Substring(1) -eq $Value)
         {
             Write-LogEntry -Value "Setting ""$Name"" is already set to ""$Value""" -Severity 1
-            $Script:AlreadySet++
+            $Global:ManageBIOS.AlreadySet++
         }
         #Setting is not set to specified value
         else
@@ -263,12 +265,12 @@ Function Set-HPBiosSetting
             if($SettingResult -eq 0)
             {
                 Write-LogEntry -Value "Successfully set ""$Name"" to ""$Value""" -Severity 1
-                $Script:SuccessSet++
+                $Global:ManageBIOS.SuccessSet++
             }
             else
             {
                 Write-LogEntry -Value "Failed to set ""$Name"" to ""$Value"". Return code $SettingResult" -Severity 3
-                $Script:FailSet++
+                $Global:ManageBIOS.FailSet++
             }
         }
     }
@@ -276,7 +278,7 @@ Function Set-HPBiosSetting
     else
     {
         Write-LogEntry -Value "Setting ""$Name"" not found" -Severity 2
-        $Script:NotFound++
+        $Global:ManageBIOS.NotFound++
     }
 }
 
@@ -390,10 +392,12 @@ Write-LogEntry -Value "Parameter validation completed" -Severity 1
 #Set counters to 0
 if($SetSettings)
 {
-    $AlreadySet = 0
-    $SuccessSet = 0
-    $FailSet = 0
-    $NotFound = 0
+$Global:ManageBIOS = [ordered]@{
+    AlreadySet = 0
+    SuccessSet = 0
+    FailSet = 0
+    NotFound = 0
+    }
 }
 
 #Get the current password status
@@ -508,18 +512,15 @@ if($SetSettings)
 #Display results
 if($SetSettings)
 {
-    Write-Output "$AlreadySet settings already set correctly"
-    Write-LogEntry -Value "$AlreadySet settings already set correctly" -Severity 1
-    Write-Output "$SuccessSet settings successfully set"
-    Write-LogEntry -Value "$SuccessSet settings successfully set" -Severity 1
-    Write-Output "$FailSet settings failed to set"
-    Write-LogEntry -Value "$FailSet settings failed to set" -Severity 3
-    Write-Output "$NotFound settings not found"
-    Write-LogEntry -Value "$NotFound settings not found" -Severity 2
+    Write-Output "$($Global:ManageBIOS.AlreadySet) settings already set correctly"
+    Write-LogEntry -Value "$($Global:ManageBIOS.AlreadySet) settings already set correctly" -Severity 1
+    Write-Output "$($Global:ManageBIOS.SuccessSet) settings successfully set"
+    Write-LogEntry -Value "$($Global:ManageBIOS.SuccessSet) settings successfully set" -Severity 1
+    Write-Output "$($Global:ManageBIOS.FailSet) settings failed to set"
+    Write-LogEntry -Value "$($Global:ManageBIOS.FailSet) settings failed to set" -Severity 3
+    Write-Output "$($Global:ManageBIOS.NotFound) settings not found"
+    Write-LogEntry -Value "$($Global:ManageBIOS.NotFound) settings not found" -Severity 2
 }
 Write-Output "HP BIOS settings Management completed. Check the log file for more information"
 Write-LogEntry -Value "END - HP BIOS settings management script" -Severity 1
-
 }
-
-Manage-HPBiosSettings -SetSettings
