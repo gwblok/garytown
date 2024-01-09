@@ -16,6 +16,7 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
+$Product = (Get-MyComputerProduct)
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
 $OSReleaseID = '23H2' #Used to Determine Driver Pack
 $OSName = 'Windows 11 23H2 x64'
@@ -42,7 +43,6 @@ $Global:MyOSDCloud = [ordered]@{
 #$Global:MyOSDCloud.DriverPackName = 'Microsoft Update Catalog'
 
 #Used to Determine Driver Pack
-$Product = (Get-MyComputerProduct)
 $DriverPack = Get-OSDCloudDriverPack -Product $Product -OSVersion $OSVersion -OSReleaseID $OSReleaseID
 
 if ($DriverPack){
@@ -63,15 +63,17 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
 }
 #>
 #Enable HPIA | Update HP BIOS | Update HP TPM
+ 
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    $Global:MyOSDCloud.HPIAALL = [bool]$true
+    if ($Product -ne '83B2'){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
 
     #Set HP BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
 }
+
 
 
 
