@@ -4,7 +4,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '23.11.13.01'
+$ScriptVersion = '24.1.11.1'
 
 iex (irm functions.garytown.com)
 #region functions
@@ -37,6 +37,7 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     New-Item -Path $PSFilePath -ItemType File -Force
     Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
     Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
     }
 
 #endregion
@@ -60,11 +61,11 @@ Set-ExecutionPolicy Bypass -Force
 
 #WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
-    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
-    iex (irm win11.garytown.com)
-
     #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
     Set-SetupCompleteCreateStartHOPEonUSB
+    
+    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
+    iex (irm win11.garytown.com)
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
     #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
