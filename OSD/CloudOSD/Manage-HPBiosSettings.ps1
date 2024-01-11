@@ -84,6 +84,18 @@ param(
 )
 
 
+#Test Connection to WMI
+do {
+    Try {
+        $HPWMI = Get-CimInstance -Namespace root/HP/InstrumentedBIOS -ClassName HPBIOS_BIOSEnumeration -ErrorAction SilentlyContinue
+    }
+    catch{
+        Start-Sleep -Seconds 10
+        Write-Host "Sleeping 10 seconds at a time until WMI is available"
+    }
+}
+until ($HPWMI)
+
 
 #List of settings to be configured ============================================================================================
 #==============================================================================================================================
