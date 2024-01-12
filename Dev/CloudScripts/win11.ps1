@@ -110,4 +110,4 @@ if (Test-path -path "x:\windows\system32\cmtrace.exe"){
 }
 
 #Restart
-restart-computer
+#restart-computer
