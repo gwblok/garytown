@@ -120,7 +120,10 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Driver Updates**"
     Start-WindowsUpdateDriver
 
-
+    #Store Updates
+    Write-Host -ForegroundColor Gray "**Running Winget Updates**"
+    Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
+    winget upgrade --all --accept-package-agreements --accept-source-agreements
 }
 
 #Both
