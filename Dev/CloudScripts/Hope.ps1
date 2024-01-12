@@ -25,7 +25,9 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
             
     #Create Batch File to Call PowerShell File
-            
+    if (Test-Path -Path $PSFilePath){
+        copy-item $PSFilePath -Destination "$ScriptsPath\SetupComplete.ps1.bak"
+    }        
     New-Item -Path $BatFilePath -ItemType File -Force
     $CustomActionContent = New-Object system.text.stringbuilder
     [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File')
@@ -33,13 +35,21 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
 
     #Create PowerShell File to do actions
-            
+
     New-Item -Path $PSFilePath -ItemType File -Force
     Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
     Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
     Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
-    }
+}
 
+Function Restore-SetupCompleteOriginal {
+    $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
+    $SetupCompletePath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\Config\Scripts\SetupComplete"
+    $ScriptsPath = $SetupCompletePath
+    if (Test-Path -Path "$ScriptsPath\SetupComplete.ps1.bak"){
+        copy-item -Path "$ScriptsPath\SetupComplete.ps1.bak" -Destination "$ScriptsPath\SetupComplete.ps1"
+    }
+}
 #endregion
 
 
@@ -69,6 +79,7 @@ if ($env:SystemDrive -eq 'X:') {
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
     #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
+    Restore-SetupCompleteOriginal
     restart-computer
 }
 
