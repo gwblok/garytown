@@ -97,6 +97,10 @@ if ($env:SystemDrive -ne 'X:') {
         Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf"
     }
     catch {}
+
+    #Set DO
+    Set-DOPoliciesGPORegistry
+    
     #Set Time Zone to Automatic Update
     
     Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
@@ -124,6 +128,8 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
     Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     winget upgrade --all --accept-package-agreements --accept-source-agreements
+
+
 }
 
 #Both
