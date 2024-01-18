@@ -60,6 +60,7 @@ Function Get-MyComputerInfoBasic {
         }
     $HPProdCode = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
     $Serial = (Get-WmiObject -class:win32_bios).SerialNumber
+    $LenovoName = (Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version
     $cpuDetails = @(Get-WmiObject -Class Win32_Processor)[0]
 
     Write-Output "Computer Name: $env:computername"
@@ -70,10 +71,11 @@ Function Get-MyComputerInfoBasic {
     $BuildUBR_CurrentOS = $($CurrentOSInfo.GetValue('CurrentBuild'))+"."+$($CurrentOSInfo.GetValue('UBR'))
     Write-Output "Windows $WindowsRelease | $BuildUBR_CurrentOS | Installed: $InstallDate_CurrentOS"
 
-
+    Write-Output "Computer Manufacturer: $Manufacturer"
     Write-Output "Computer Model: $ComputerModel"
     Write-Output "Serial: $Serial"
     if ($Manufacturer -like "H*"){Write-Output "Computer Product Code: $HPProdCode"}
+    if ($Manufacturer -like "Le*"){Write-Output "Computer Friendly Name: $LenovoName"}
     Write-Output $cpuDetails.Name
     Write-Output "Current BIOS Level: $($BIOSInfo.SMBIOSBIOSVersion) From Date: $CurrentBIOSDate"
     Get-TPMVer
