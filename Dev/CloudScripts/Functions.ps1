@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.1.17.2'
+$ScriptVersion = '24.1.18.1'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -652,6 +652,22 @@ function Install-CMTrace {
         }
     }
 }
+Write-Host -ForegroundColor Green "[+] Function Invoke-UpdateScanMethodMSStore"
+Function Invoke-UpdateScanMethodMSStore {
+    try {
+        $AppMan01 = Get-CimInstance -Namespace 'Root\cimv2\mdm\dmmap' -ClassName 'MDM_EnterpriseModernAppManagement_AppManagement01'
+        try {
+            Get-CimInstance -Namespace 'Root\cimv2\mdm\dmmap' -ClassName 'MDM_EnterpriseModernAppManagement_AppManagement01'| Invoke-CimMethod -MethodName UpdateScanMethod | Out-Null
+        }
+        catch {
+            Write-Output "Failed to trigger Updates"
+        }
+    }
+    catch{
+        Write-Output "Failed to get CimInstance"
+    }
+}
+
 Write-Host -ForegroundColor Green "[+] Function Set-LatestUpdatesASAPEnabled"
 function Set-LatestUpdatesASAPEnabled {
     Write-Host "Enable 'Get the latest updates as soon as they’re available' Reg Value" -ForegroundColor DarkGray
