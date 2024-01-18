@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.1.9.2'
+$ScriptVersion = '24.1.17.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -177,7 +177,22 @@ Function Disable-CloudContent {
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableSoftLanding' -Value 1 -PropertyType Dword -Force | out-null
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableCloudOptimizedContent' -Value 1 -PropertyType Dword -Force | out-null
 }
-
+Write-Host -ForegroundColor Green "[+] Set-DOPoliciesGPORegistry"
+Function Set-DOPoliciesGPORegistry {
+    $DOReg = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
+    if (!(Test-Path -Path $DOReg)){
+        New-Item -Path $DOReg -ItemType Directory
+    }
+    New-ItemProperty -Path $DOReg -Name "DOAbsoluteMaxCacheSize" -PropertyType dword -Value '0000001e' -Force
+    New-ItemProperty -Path $DOReg -Name "DODelayBackgroundDownloadFromHttp" -PropertyType dword -Value '00000258' -Force
+    New-ItemProperty -Path $DOReg -Name "DODelayForegroundDownloadFromHttp" -PropertyType dword -Value '00000258' -Force
+    New-ItemProperty -Path $DOReg -Name "DOMaxCacheAge" -PropertyType dword -Value '00000000' -Force
+    New-ItemProperty -Path $DOReg -Name "DOMaxForegroundDownloadBandwidth" -PropertyType dword -Value '00000a00' -Force
+    New-ItemProperty -Path $DOReg -Name "DODownloadMode" -PropertyType dword -Value '00000001' -Force
+    New-ItemProperty -Path $DOReg -Name "DOMinBackgroundQos" -PropertyType dword -Value '00000040' -Force
+    New-ItemProperty -Path $DOReg -Name "DOMinRAMAllowedToPeer" -PropertyType dword -Value '00000002' -Force
+    New-ItemProperty -Path $DOReg -Name "DOMinFileSizeToCache" -PropertyType dword -Value '00000001' -Force
+}
 Write-Host -ForegroundColor Green "[+] Set-Win11ReqBypassRegValues"
 Function Set-Win11ReqBypassRegValues {
     if ($env:SystemDrive -eq 'X:') {
