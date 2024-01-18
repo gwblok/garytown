@@ -126,6 +126,8 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Store Updates
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
+    Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
+    Invoke-UpdateScanMethodMSStore
     Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     winget upgrade --all --accept-package-agreements --accept-source-agreements
 
