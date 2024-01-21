@@ -99,7 +99,7 @@ if ($env:SystemDrive -ne 'X:') {
     catch {}
 
     #Set DO
-    Set-DOPoliciesGPORegistry
+    #Set-DOPoliciesGPORegistry
     
     #Set Time Zone to Automatic Update
     
