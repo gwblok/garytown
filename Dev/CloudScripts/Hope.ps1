@@ -127,27 +127,16 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
     Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
     Invoke-UpdateScanMethodMSStore
-    Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
-    winget upgrade --all --accept-package-agreements --accept-source-agreements
+    #Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
+    #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
+    #Modified Version of Andrew's Debloat Script
+    Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
+    #Set Time Zone
+    Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
+    Set-TimeZoneFromIP
+
+    Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
 }
-
-#Both
-#Set Time Zone
-Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
-Set-TimeZoneFromIP
-
-
-if ($Restart -eq "Y"){Restart-Computer}
-
-
-
-<# Future version of OSD Module
-Set-SetupCompleteCreateStart
-Set-SetupCompleteTimeZone
-Set-SetupCompleteRunWindowsUpdate
-Set-SetupCompleteOSDCloudUSB
-Set-SetupCompleteCreateFinish
-
-#>
