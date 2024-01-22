@@ -825,3 +825,6 @@ iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudIP
 Write-Host -ForegroundColor Green "[+] Function Manage-HPBiosSettings"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
 
+Write-Host -ForegroundColor Gray "[+] Function Invoke-Debloat"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
+
