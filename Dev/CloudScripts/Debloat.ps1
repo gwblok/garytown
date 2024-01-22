@@ -1,3 +1,4 @@
+function Invoke-Debloat {
 <#
 This is a custom variant of Andrew's Script used for my own needs:
 https://github.com/andrew-s-taylor/public/blob/main/De-Bloat/RemoveBloat.ps1
@@ -932,3 +933,4 @@ Remove-Item C:\Windows\Temp\SetACL.exe -recurse
 write-host "Completed"
 
 Stop-Transcript
+}
