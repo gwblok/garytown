@@ -30,8 +30,7 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     }        
     New-Item -Path $BatFilePath -ItemType File -Force
     $CustomActionContent = New-Object system.text.stringbuilder
-    [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File')
-    [void]$CustomActionContent.Append(" $PSFilePath")
+    [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1')
     Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
 
     #Create PowerShell File to do actions
