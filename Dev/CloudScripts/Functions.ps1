@@ -400,9 +400,23 @@ Function Enable-AutoZimeZoneUpdate {
         Start-Sleep 1
         reg unload $VirtualRegistryPath_SYSTEM
         reg unload $VirtualRegistryPath_SOFTWARE
+
+	$REG_defaultuser = "c:\users\default\ntuser.dat"
+    	$VirtualRegistryPath_defaultuser = "HKLM\DefUser" #Load Command
+    	$VirtualRegistryPath_software = "HKLM:\DefUser\Software" #PowerShell Path
+
+    	reg unload $VirtualRegistryPath_defaultuser | Out-Null # Just in case...
+    	Start-Sleep 1
+    	reg load $VirtualRegistryPath_defaultuser $REG_defaultuser | Out-Null
+    	#Enable Location for Auto Time Zone
+    	$Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+    	New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
+    
+    	reg unload $VirtualRegistryPath_defaultuser | Out-Null     
     }
     else {
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
+	Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
         Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord | out-null
     }
 }
@@ -436,6 +450,10 @@ function Set-DefaultProfilePersonalPref {
     New-ItemProperty -Path $Path -Name "FeatureManagementEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
     New-ItemProperty -Path $Path -Name "ContentDeliveryAllowed" -Value 0 -PropertyType Dword -Force | Out-Null
 
+    #Enable Location for Auto Time Zone
+    $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+    New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
+    
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
 
