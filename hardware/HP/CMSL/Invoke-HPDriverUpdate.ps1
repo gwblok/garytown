@@ -12,6 +12,8 @@ Function Invoke-HPAnalyzer {
     .Notes  
         Author: Dan Felman/HP Inc
         11/30/2022 - initial release 1.00.01
+	1/23/2024 - changes in one function get_hardwareid()... 
+ 	    -was mishandling softpaqs associated with Extension drivers... had to mod checks around that to compare correct drivers vs Softpaq info like 1
         Changes by Gary:
           11/10/2023
             - added OSVerOverride parameter
@@ -20,6 +22,7 @@ Function Invoke-HPAnalyzer {
           12/31/2023
           	- commented out: (line 347ish) if ( $gh_PnpDriverDate ) { $gh_PnpDriverDate = $gh_PnpDriverDate.ToString("MM-dd-yyyy") }
       		 - it was throwing error: Cannot find an overload for "ToString" and the argument count: "1".
+	 
 
 
     .Dependencies
