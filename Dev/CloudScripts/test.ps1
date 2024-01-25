@@ -1,19 +1,44 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'test.garytown.com'
-$ScriptVersion = '24.01.09.01'
+$ScriptVersion = '24.01.25.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 
 Write-Output "Starting Winget Section"
 if (-not (Test-Path "C:\ProgramData\WinGet")) {
 	New-Item -ItemType Directory -Path "C:\ProgramData\WinGet" | Out-Null
   }
-Write-Output "Download Winget"  
-Invoke-WebRequest -Uri https://aka.ms/getwinget -OutFile "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" | Out-null
-Write-Output "Download VClibs"  
-Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile "C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx" | Out-null
+
+if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
+
+    # Test if Microsoft.DesktopAppInstaller is present and install it
+    if (Get-AppxPackage -Name Microsoft.DesktopAppInstaller) {
+        Write-Host -ForegroundColor Yellow "[-] Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe"
+        Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction SilentlyContinue
+    }
+}
+if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
+
+    # Test if Microsoft.DesktopAppInstaller is present and install it
+	Write-Output "Download Winget"  
+	Start-BitsTransfer -DisplayName "WinGet" -Source "https://aka.ms/getwinget" -Destination "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
+	if (Test-Path -Path "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"){
+        Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx -SkipLicense | Out-null	    
+        Write-Host -ForegroundColor Yellow "[-] Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe"
+	    Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction SilentlyContinue
+	}
+    else{
+        Write-Host -ForegroundColor Red "Failed to download and install WinGet"
+    }
+}
+if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
+
+	}
+else{
+    Write-Host -ForegroundColor Red "Failed to download and install WinGet"
+}
+
+Write-Output "Download VClibs"
+Start-BitsTransfer -DisplayName "VClibs" -Source "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -Destination "C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx"  
 Write-Output "Install Microsoft.VCLibs.x64.14.00.Desktop.appx" 
 Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx -SkipLicense | Out-null
-Write-Output "Install Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" 
-Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -SkipLicense | Out-null
-
 
