@@ -3,7 +3,7 @@ $ScriptName = 'test.garytown.com'
 $ScriptVersion = '24.01.25.01'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 
-Write-Output "Starting Winget Section"
+
 if (-not (Test-Path "C:\ProgramData\WinGet")) {
 	New-Item -ItemType Directory -Path "C:\ProgramData\WinGet" | Out-Null
   }
@@ -27,14 +27,14 @@ if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
 	    Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction SilentlyContinue
 	}
     else{
-        Write-Host -ForegroundColor Red "Failed to download and install WinGet"
+        Write-Host -ForegroundColor Red "[F] Failed to download and install WinGet"
     }
 }
 
 
 Write-Output "Download VClibs"
 Start-BitsTransfer -DisplayName "VClibs" -Source "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -Destination "C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx"  
-Write-Output "Install Microsoft.VCLibs.x64.14.00.Desktop.appx" 
+Write-Host -ForegroundColor Green "[+] Install Microsoft.VCLibs.x64.14.00.Desktop.appx" 
 Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx -SkipLicense | Out-null
 
 if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
