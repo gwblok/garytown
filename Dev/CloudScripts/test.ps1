@@ -30,15 +30,17 @@ if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
         Write-Host -ForegroundColor Red "Failed to download and install WinGet"
     }
 }
-if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
 
-	}
-else{
-    Write-Host -ForegroundColor Red "Failed to download and install WinGet"
-}
 
 Write-Output "Download VClibs"
 Start-BitsTransfer -DisplayName "VClibs" -Source "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -Destination "C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx"  
 Write-Output "Install Microsoft.VCLibs.x64.14.00.Desktop.appx" 
 Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx -SkipLicense | Out-null
 
+if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
+	Write-Host -ForegroundColor Red "Failed to download and install WinGet"
+	}
+else{
+	Write-Host -ForegroundColor Green "[+] winget upgrade --all --accept-source-agreements --accept-package-agreements"
+    	winget upgrade --all --accept-source-agreements --accept-package-agreements
+}
