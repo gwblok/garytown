@@ -100,6 +100,9 @@ if ($env:SystemDrive -ne 'X:') {
     #Set DO
     #Set-DOPoliciesGPORegistry
     
+    Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
+    iex (irm test.garytown.com)
+     
     #Set Time Zone to Automatic Update
     
     Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
