@@ -79,7 +79,7 @@ if (Test-HPIASupport){
 
 
 #write variables to console
-$Global:MyOSDCloud
+Write-Output $Global:MyOSDCloud
 
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
 $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
