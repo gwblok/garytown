@@ -365,7 +365,7 @@ Write-Host -ForegroundColor Green "[+] Enable-AutoZimeZoneUpdate"
 Function Enable-AutoZimeZoneUpdate {
 
     if ($env:SystemDrive -eq 'X:') {
-    $WindowsPhase = 'WinPE'
+        $WindowsPhase = 'WinPE'
     }
     else {
         $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
@@ -374,7 +374,7 @@ Function Enable-AutoZimeZoneUpdate {
         elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
         else {$WindowsPhase = 'Windows'}
     }
-    
+    Write-Output "Running in $WindowsPhase"
     if ($WindowsPhase -eq 'WinPE'){
     
         # Mount and edit the setup environment's registry
@@ -401,7 +401,7 @@ Function Enable-AutoZimeZoneUpdate {
         reg unload $VirtualRegistryPath_SYSTEM
         reg unload $VirtualRegistryPath_SOFTWARE
 
-	$REG_defaultuser = "c:\users\default\ntuser.dat"
+	    $REG_defaultuser = "c:\users\default\ntuser.dat"
     	$VirtualRegistryPath_defaultuser = "HKLM\DefUser" #Load Command
     	$VirtualRegistryPath_software = "HKLM:\DefUser\Software" #PowerShell Path
 
@@ -416,7 +416,7 @@ Function Enable-AutoZimeZoneUpdate {
     }
     else {
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
-	Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
+	    Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
         Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord | out-null
     }
 }
