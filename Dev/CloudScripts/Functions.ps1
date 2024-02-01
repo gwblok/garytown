@@ -428,8 +428,10 @@ function Set-DefaultProfilePersonalPref {
     $VirtualRegistryPath_defaultuser = "HKLM\DefUser" #Load Command
     $VirtualRegistryPath_software = "HKLM:\DefUser\Software" #PowerShell Path
 
-    reg unload $VirtualRegistryPath_defaultuser | Out-Null # Just in case...
-    Start-Sleep 1
+    if (Test-Path -Path $VirtualRegistryPath_software){
+        reg unload $VirtualRegistryPath_defaultuser | Out-Null # Just in case...
+        Start-Sleep 1
+    }
     reg load $VirtualRegistryPath_defaultuser $REG_defaultuser | Out-Null
 
     #TaskBar Left / Hide Chat / Hide Widgets / Hide TaskView
@@ -454,7 +456,7 @@ function Set-DefaultProfilePersonalPref {
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
-    start-sleep -s 1
+    Start-Sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
 
