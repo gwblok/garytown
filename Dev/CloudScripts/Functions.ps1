@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.2.1.1'
+$ScriptVersion = '24.2.1.2'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -177,7 +177,7 @@ Function Disable-CloudContent {
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableSoftLanding' -Value 1 -PropertyType Dword -Force | out-null
     New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent -Name 'DisableCloudOptimizedContent' -Value 1 -PropertyType Dword -Force | out-null
 }
-Write-Host -ForegroundColor Green "[+] Set-DOPoliciesGPORegistry"
+Write-Host -ForegroundColor Green "[+] Function Set-DOPoliciesGPORegistry"
 Function Set-DOPoliciesGPORegistry {
     $DOReg = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization"
     if (!(Test-Path -Path $DOReg)){
@@ -193,7 +193,7 @@ Function Set-DOPoliciesGPORegistry {
     New-ItemProperty -Path $DOReg -Name "DOMinRAMAllowedToPeer" -PropertyType dword -Value '00000002' -Force
     New-ItemProperty -Path $DOReg -Name "DOMinFileSizeToCache" -PropertyType dword -Value '00000001' -Force
 }
-Write-Host -ForegroundColor Green "[+] Set-Win11ReqBypassRegValues"
+Write-Host -ForegroundColor Green "[+] Function Set-Win11ReqBypassRegValues"
 Function Set-Win11ReqBypassRegValues {
     if ($env:SystemDrive -eq 'X:') {
     $WindowsPhase = 'WinPE'
@@ -251,7 +251,7 @@ Function Set-Win11ReqBypassRegValues {
     }
 }
 
-Write-Host -ForegroundColor Green "[+] Start-WindowsUpdate"
+Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdate"
 function Start-WindowsUpdate{
     <# Control Windows Update via PowerShell
     Gary Blok - GARYTOWN.COM
@@ -306,7 +306,7 @@ function Start-WindowsUpdate{
     else {Write-Output "No Updates Found"} 
 }
 
-Write-Host -ForegroundColor Green "[+] Start-WindowsUpdateDriver"
+Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdateDriver"
 function Start-WindowsUpdateDriver{
     <# Control Windows Update via PowerShell
     Gary Blok - GARYTOWN.COM
@@ -361,7 +361,7 @@ function Start-WindowsUpdateDriver{
     else {Write-Output "No Updates Found"} 
 }
 
-Write-Host -ForegroundColor Green "[+] Enable-AutoZimeZoneUpdate"
+Write-Host -ForegroundColor Green "[+] Function Enable-AutoZimeZoneUpdate"
 Function Enable-AutoZimeZoneUpdate {
 
     if ($env:SystemDrive -eq 'X:') {
@@ -420,7 +420,7 @@ Function Enable-AutoZimeZoneUpdate {
         Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord | out-null
     }
 }
-Write-Host -ForegroundColor Green "[+] Set-DefaultProfilePersonalPref"
+Write-Host -ForegroundColor Green "[+] Function Set-DefaultProfilePersonalPref"
 function Set-DefaultProfilePersonalPref {
     #Set Default User Profile to MY PERSONAL preferences.
 
@@ -848,4 +848,7 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/M
 
 Write-Host -ForegroundColor Green "[+] Function Invoke-Debloat"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
+
+Write-Host -ForegroundColor Green "[+] Function Set-ThisPC"
+function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/f64b267ba11c3a632ee0d19656875f93b715a989/OSD/CloudOSD/Set-ThisPC.ps1)}
 
