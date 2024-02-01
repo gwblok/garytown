@@ -454,7 +454,7 @@ function Set-DefaultProfilePersonalPref {
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
-    
+    start-sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
 
