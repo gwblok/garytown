@@ -452,6 +452,7 @@ function Set-DefaultProfilePersonalPref {
 
     #Enable Location for Auto Time Zone
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
+    New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
     
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
