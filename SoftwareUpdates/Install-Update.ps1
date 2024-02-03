@@ -31,5 +31,5 @@ $23H2EnablementCabURL = "https://raw.githubusercontent.com/gwblok/garytown/maste
 Invoke-WebRequest -UseBasicParsing -Uri $23H2EnablementCabURL -OutFile "$env:TEMP\Windows11.0-kb5027397-x64.cab"
 
 if (Test-Path -Path "$env:TEMP\Windows11.0-kb5027397-x64.cab"){
-    Install-MSU -MSUPath "$env:TEMP\Windows11.0-kb5027397-x64.cab"
+    Install-Update -UpdatePath "$env:TEMP\Windows11.0-kb5027397-x64.cab"
 }
