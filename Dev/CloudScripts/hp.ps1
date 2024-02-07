@@ -61,32 +61,6 @@ function Format-OSDCloudGUI {
 
     #Set OSDCloud Vars
 
-    #Set Extra Static Variables
-    $Global:MyOSDCloud = [ordered]@{
-        Restart = [bool]$False
-        RecoveryPartition = [bool]$true
-        OEMActivation = [bool]$true
-        WindowsUpdate = [bool]$true
-        WindowsUpdateDrivers = [bool]$true
-        WindowsDefenderUpdate = [bool]$true
-        #SetTimeZone = [bool]$true
-        #ClearDiskConfirm = [bool]$False
-        #ShutdownSetupComplete = [bool]$true
-        SyncMSUpCatDriverUSB = [bool]$true
-    }
-    
-    #Confirm HP Enterprise Device
-    if (Test-HPIASupport){
-        #$Global:MyOSDCloud.DevMode = [bool]$True
-        $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-        if ($Product -ne '83B2'){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-        $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
-
-        #Set HP BIOS Settings to what I want:
-        #iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-        #Manage-HPBiosSettings -SetSettings
-    }
-
     #Customize the OSDCloud Defaults
     $OSDModuleResource.OSDCloud.Default.Activation = 'Volume'
     $OSDModuleResource.OSDCloud.Default.Edition = 'Enterprise'
@@ -114,7 +88,6 @@ function Format-OSDCloudGUI {
     $OSDModuleResource.StartOSDCloudGUI.WindowsUpdateDrivers = $true
     $OSDModuleResource.StartOSDCloudGUI.HPIADrivers = $true
     $OSDModuleResource.StartOSDCloudGUI.HPIAFirmware = $true
-
 
 
     #Start OSDCloudGUI
