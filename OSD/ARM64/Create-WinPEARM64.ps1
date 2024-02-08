@@ -1,11 +1,15 @@
 <# Gary Blok - GARYTOWN.COM - @gwblok
 
+https://garytown.com/arm64-creating-your-winpe
+
 Script for creating ARM64 Boot Media
 Requires PS Module OSD as pre-req
     install-module -Name OSD
 
 the OSD Module Code was created by David Segura
 https://github.com/OSDeploy/OSD
+
+Requires latest ADK Installed
 
 
 #>
