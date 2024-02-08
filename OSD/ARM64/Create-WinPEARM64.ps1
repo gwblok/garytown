@@ -15,7 +15,7 @@ if ((Get-OSDCloudTemplateNames) -notcontains "$OSDCloudTemplateName"){
     New-OSDCloudTemplate -Name ARM64
 }
 
-#Creaet the OSDCloud WorkSpace - This will be created based on the template, but we'll replace what we need
+#Create the OSDCloud WorkSpace - This will be created based on the template, but we'll replace what we need
 if ((Get-OSDCloudWorkspace) -ne $WinPE_ARM64WorkSpace){
     New-OSDCloudWorkspace -WorkspacePath $WinPE_ARM64WorkSpace
 }
@@ -24,11 +24,12 @@ if ((Get-OSDCloudWorkspace) -ne $WinPE_ARM64WorkSpace){
 Remove-Item -Path "$WinPE_ARM64WorkSpace\media\*" -Recurse -Force
 Remove-Item -Path "$WinPE_ARM64WorkSpace\logs\*" -Recurse -Force
 
+#Create Media Folder Structure
 if (!(test-path -path "$WinPE_ARM64WorkSpace\media")){New-Item -Path "$WinPE_ARM64WorkSpace\media" -ItemType Directory | Out-Null}
 if (!(test-path -path "$WinPE_ARM64WorkSpace\media\sources")){New-Item -Path "$WinPE_ARM64WorkSpace\media\sources" -ItemType Directory | Out-Null}
 if (!(test-path -path "$WinPE_ARM64WorkSpace\fwfiles")){New-Item -Path "$WinPE_ARM64WorkSpace\fwfiles" -ItemType Directory | Out-Null}
-
 if (!(Test-path -path $MountDir)){new-item -path $mountdir -ItemType directory -force | Out-Null}
+#Copy Items needed from the ADK (copype)
 copy-item -Path "$ADKPathPE\arm64\Media\*" -Destination "$WinPE_ARM64WorkSpace\media" -Recurse -Force
 Copy-item -path "$ADKPath\Deployment Tools\arm64\Oscdimg\efisys.bin" -Destination "$WinPE_ARM64WorkSpace\fwfiles"
 copy-item -Path "$ADKPathPE\arm64\en-us\winpe.wim"-Destination "$WinPE_ARM64WorkSpace\media\sources\boot.wim"
