@@ -1,5 +1,6 @@
 $ScriptName = 'functions.garytown.com'
 $ScriptVersion = '24.2.10.3'
+Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
