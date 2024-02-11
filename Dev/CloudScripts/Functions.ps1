@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.2.1.3'
+$ScriptVersion = '24.2.10.3'
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -852,4 +852,12 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScrip
 Write-Host -ForegroundColor Green "[+] Function Set-ThisPC"
 function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/f64b267ba11c3a632ee0d19656875f93b715a989/OSD/CloudOSD/Set-ThisPC.ps1)}
 
-
+if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenovo"){
+	Write-Host -ForegroundColor Green "[+] Function Install-LenovoDMM"
+    function Install-LenovoDMM {
+        $LenovoDMMURL = "https://download.lenovo.com/cdrt/tools/ldmm_1.0.0.zip"
+        Invoke-WebRequest -UseBasicParsing -Uri $LenovoDMMURL -OutFile "$env:TEMP\ldmm.zip"
+        Expand-Archive -Path "$env:TEMP\ldmm.zip" -DestinationPath "$env:ProgramFiles\WindowsPowerShell\Modules" -Force
+        Import-Module LnvDeviceManagement -Force -Verbose
+    }
+}
