@@ -7,11 +7,13 @@ if (!(Test-Path -Path $StagingFolder)){
 #Windows 11 Latest CAB: https://go.microsoft.com/fwlink/?LinkId=2156292
 
 
+#Cab File URLS that get updated (need to be able to compare to Static to see if there is change)
 $WindowsMCTTable = @(
 @{ Version = 'Win10';LocalCab = "Win10.Cab"; URL = "https://go.microsoft.com/fwlink/?LinkId=841361"}
 @{ Version = 'Win11';LocalCab = "Win11.Cab"; URL = "https://go.microsoft.com/fwlink/?LinkId=2156292"}
 )
 
+#Static CAB File URLS
 $WindowsTable = @(
 @{ Version = 'Win1022H2';LocalCab = "Win1022H2.Cab"; URL = "https://download.microsoft.com/download/7/9/c/79cbc22a-0eea-4a0d-89c0-054a1b3aa8e0/products.cab"}
 @{ Version = 'Win1121H2';LocalCab = "Win1121H2.Cab"; URL = "https://download.microsoft.com/download/1/b/4/1b4e06e2-767a-4c9a-9899-230fe94ba530/products_Win11_20211115.cab"}
@@ -125,12 +127,15 @@ ForEach ($Option in $WindowsTable){
     $ESDInfo += $XML.MCT.Catalogs.Catalog.PublishedMedia.Files.File
 }
 
+#Compare the FWLink CAB files to the Static Cab Files
+#if FWLink cab doesn't match the Static, then they released an update.
 
-
+#Loop through the 2 Items in the MCT Table & Get the Hash of the Cab
 ForEach ($MCT in $WindowsMCTTable){
     New-Variable -Name "$($MCT.Version)Change" -Value $true -Force
     Invoke-WebRequest -Uri $MCT.URL -UseBasicParsing -OutFile "$StagingFolder\$($MCT.LocalCab)" -ErrorAction SilentlyContinue
     $MD5HashMCT = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($MCT.LocalCab)"
+    #Compare the Hash to each of the 4 items in the CAB table, if there is a match to any, then we know there isn't a change
     ForEach ($Option in $WindowsTable){
         $MD5HashOption = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($Option.LocalCab)"
         if ($MD5HashMCT.Hash -eq $MD5HashOption.Hash){
