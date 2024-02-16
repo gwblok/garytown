@@ -362,8 +362,8 @@ function Start-WindowsUpdateDriver{
     else {Write-Output "No Updates Found"} 
 }
 
-Write-Host -ForegroundColor Green "[+] Function Enable-AutoZimeZoneUpdate"
-Function Enable-AutoZimeZoneUpdate {
+Write-Host -ForegroundColor Green "[+] Function Enable-AutoTimeZoneUpdate"
+Function Enable-AutoTimeZoneUpdate {
 
     if ($env:SystemDrive -eq 'X:') {
         $WindowsPhase = 'WinPE'
@@ -417,7 +417,7 @@ Function Enable-AutoZimeZoneUpdate {
     }
     else {
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
-	    Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
+	Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location -Name Value -Value "Allow" -Type String | out-null
         Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord | out-null
     }
 }
