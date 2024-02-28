@@ -69,25 +69,26 @@ $Product = $tsenv.value('Product')
 $SystemSKUNumber = $tsenv.value('SystemSKUNumber')
 $BIOSVersion = $tsenv.value('BIOSVersion')
 
-<#
+
 if ($InWinPE){Write-Output "Running Script in WinPE Mode"}
+#Unique ID is now being pulled from MachineMatchID in Johan's Gather Script.
 if ($SMSTSMake -eq "LENOVO"){
-    $UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
+    #$UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
     $ModelFriendly = (Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version 
     }
 elseif($SMSTSMake -match "Dell"){
-    $UniqueID = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    #$UniqueID = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     $ModelFriendly = $SMSTSModel
     }
 elseif(($SMSTSMake -match "HP") -or ($SMSTSMake -match "Hewlett")){
-    $UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+    #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
     $ModelFriendly = $SMSTSModel
     }
 else{
-    $UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+    #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
     $ModelFriendly = $SMSTSModel
     }
-#>
+
 $Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
 
 if ($IsOnBattery -eq "TRUE"){$PowerSource = "Battery"}
