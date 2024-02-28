@@ -88,6 +88,7 @@ else{
     $ModelFriendly = $SMSTSModel
     }
 #>
+$Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
 
 if ($IsOnBattery -eq "TRUE"){$PowerSource = "Battery"}
 else {$PowerSource = "AC Adapter"}
@@ -112,6 +113,7 @@ $Null = New-ItemProperty -Path $RegistryPath -Name Product -Value $Product -Prop
 $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name SystemSKUNumber -Value $SystemSKUNumber -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name BIOSVersion -Value $BIOSVersion -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name DiskInfo -Value "$($Disk[0].Model) $($Disk[0].BusType)" -PropertyType String -Force
 }
 
 catch{
