@@ -1,3 +1,4 @@
+
 <#
 Modified for OSD by @gwblok
 
@@ -11,6 +12,8 @@ Changes
  - Modified for OSD Prestart to be used with BGInfo Command @gwblok
  - Updated for BGInfo Post TS start - Requires that you ran a Gather Step ahead of time: https://github.com/gwblok/garytown/blob/master/OSD/gather.ps1
 
+2024.02.28 - Added UniqueID, Product, SystemSkuNumber, BIOS Version #MMS2024 - YOU MUST NOW BE USING THE LATEST VERSION OF JOHAN'S SCRIPT
+  - https://github.com/Josch62/Gather-Script-For-ConfigMgr-TS/blob/main/Gather.ps1
 #>
 
 #=============================================================================================================================
@@ -61,9 +64,12 @@ $IsLaptop = $tsenv.value('IsLaptop')
 $IsServer = $tsenv.value('IsServer')
 $IsVM = $tsenv.value('IsVM')
 $IsOnBattery = $tsenv.value('IsOnBattery')
+$UniqueID = $tsenv.value('MachineMatchID')
+$Product = $tsenv.value('Product')
+$SystemSKUNumber = $tsenv.value('SystemSKUNumber')
+$BIOSVersion = $tsenv.value('BIOSVersion')
 
-
-
+<#
 if ($InWinPE){Write-Output "Running Script in WinPE Mode"}
 if ($SMSTSMake -eq "LENOVO"){
     $UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
@@ -81,7 +87,7 @@ else{
     $UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
     $ModelFriendly = $SMSTSModel
     }
-
+#>
 
 if ($IsOnBattery -eq "TRUE"){$PowerSource = "Battery"}
 else {$PowerSource = "AC Adapter"}
@@ -102,8 +108,10 @@ $Null = New-ItemProperty -Path $RegistryPath -Name UniqueID -Value $UniqueID -Pr
 $Null = New-ItemProperty -Path $RegistryPath -Name ModelFriendly -Value $ModelFriendly -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name PowerSource -Value $PowerSource -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name FormFactor -Value $FormFactor -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name Product -Value $Product -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
-
+$Null = New-ItemProperty -Path $RegistryPath -Name SystemSKUNumber -Value $SystemSKUNumber -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name BIOSVersion -Value $BIOSVersion -PropertyType String -Force
 }
 
 catch{
@@ -657,8 +665,5 @@ $Null = New-ItemProperty -Path $RegistryPath -Name WinPEName -Value $ComputerNam
 #CM Info:
 if(Test-Path "$env:SystemDrive\sms\bin\x64\TSManager.exe"){$TSManager = get-item "$env:SystemDrive\sms\bin\x64\TSManager.exe"}
 $Null = New-ItemProperty -Path $RegistryPath -Name TSManagerVer -Value $TSManager.VersionInfo.ProductVersion -PropertyType String -Force
-
-Start-Process -FilePath ./bginfo64.exe -ArgumentList "WinPE-PreStart.BGI /nolicprompt /silent /timer:0"
-
 
 $outObject | Out-File $env:TEMP\Win11Readiness.txt
