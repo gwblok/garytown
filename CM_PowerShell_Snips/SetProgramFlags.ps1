@@ -42,25 +42,37 @@ Thanks Nathan Ziehnert for explaining to this to me.
 
 
 #Package ID for the Package with the Program you wish to test.
-$PackageID = 'MCM0004A'
+#$PackageID = 'MCM0004A'
 #Assumes you have the CM Module available
-$Program = Get-CMProgram -PackageId $PackageID
+#$Program = Get-CMProgram -PackageId $PackageID
 
 #Test if Program is set to "Any Platform"
 #https://learn.microsoft.com/en-us/mem/configmgr/develop/core/servers/configure/how-to-modify-the-supported-platforms-for-a-program
-([ProgramFlags]($Program.ProgramFlags) -band [ProgramFlags]::ANY_PLATFORM) -eq [ProgramFlags]::ANY_PLATFORM
+#([ProgramFlags]($Program.ProgramFlags) -band [ProgramFlags]::ANY_PLATFORM) -eq [ProgramFlags]::ANY_PLATFORM
 
 
 #Test All CM Packages:
 $AllCMPackages = Get-CMPackage -Fast
+$AnyPlatform = '0x08000000'
 ForEach ($Package in $AllCMPackages){
     if ($Package.NumOfPrograms -gt 0){
         $Programs = Get-CMProgram -PackageId $Package.PackageID
         foreach ($Program in $Programs){
             if (!([ProgramFlags]($Program.ProgramFlags) -band [ProgramFlags]::ANY_PLATFORM) -eq [ProgramFlags]::ANY_PLATFORM){
                 Write-Output "$($Program.PackageName) | Is not set to Any Platform"
+                Write-Output "Fixing....."
+                #Fix It
+                $newFlags = $Program.ProgramFlags -bxor $AnyPlatform
+                $Program.ProgramFlags = $newFlags
+                $Program.Put()
+
+                #Test
+                $Test = Get-CMProgram -PackageId $Package.PackageID -ProgramName $Program.ProgramName
+                $TestResult = ([ProgramFlags]($Test.ProgramFlags) -band [ProgramFlags]::ANY_PLATFORM) -eq [ProgramFlags]::ANY_PLATFORM
+                if ($TestResult -eq $true){ Write-Output "$($Test.PackageName) Successfully Update"}
+                else {Write-Output "$($Test.PackageName) Failed to Update"}  
+
             }
         }
     }
 }
-
