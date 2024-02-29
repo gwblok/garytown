@@ -7,6 +7,8 @@ Creates several TS Variables
 
 Changes
 2022.01.28
+ - Using (slightly modified) MS Windows Readiness Script: HardwareReadiness.ps1
+   https://techcommunity.microsoft.com/t5/microsoft-intune-blog/understanding-readiness-for-windows-11-with-microsoft-endpoint/ba-p/2770866
  - Changed Get-TPM to using Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM
 2022.02.08 
  - Modified for OSD Prestart to be used with BGInfo Command @gwblok
