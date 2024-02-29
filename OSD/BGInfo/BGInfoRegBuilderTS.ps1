@@ -68,6 +68,7 @@ $UniqueID = $tsenv.value('MachineMatchID')
 $Product = $tsenv.value('Product')
 $SystemSKUNumber = $tsenv.value('SystemSKUNumber')
 $BIOSVersion = $tsenv.value('BIOSVersion')
+$SerialNumber = $tsenv.value('SerialNumber')
 
 
 if ($InWinPE){Write-Output "Running Script in WinPE Mode"}
@@ -114,6 +115,7 @@ $Null = New-ItemProperty -Path $RegistryPath -Name Product -Value $Product -Prop
 $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name SystemSKUNumber -Value $SystemSKUNumber -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name BIOSVersion -Value $BIOSVersion -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name SerialNumber -Value $SerialNumber -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name DiskInfo -Value "$($Disk[0].Model) $($Disk[0].BusType)" -PropertyType String -Force
 }
 
