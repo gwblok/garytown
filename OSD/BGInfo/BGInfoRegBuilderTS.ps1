@@ -7,6 +7,8 @@ Creates several TS Variables
 
 Changes
 2022.01.28
+ - Using (slightly modified) MS Windows Readiness Script: HardwareReadiness.ps1
+   https://techcommunity.microsoft.com/t5/microsoft-intune-blog/understanding-readiness-for-windows-11-with-microsoft-endpoint/ba-p/2770866
  - Changed Get-TPM to using Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM
 2022.02.08 
  - Modified for OSD Prestart to be used with BGInfo Command @gwblok
@@ -68,26 +70,28 @@ $UniqueID = $tsenv.value('MachineMatchID')
 $Product = $tsenv.value('Product')
 $SystemSKUNumber = $tsenv.value('SystemSKUNumber')
 $BIOSVersion = $tsenv.value('BIOSVersion')
+$SerialNumber = $tsenv.value('SerialNumber')
 
-<#
+
 if ($InWinPE){Write-Output "Running Script in WinPE Mode"}
+#Unique ID is now being pulled from MachineMatchID in Johan's Gather Script.
 if ($SMSTSMake -eq "LENOVO"){
-    $UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
+    #$UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
     $ModelFriendly = (Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version 
     }
 elseif($SMSTSMake -match "Dell"){
-    $UniqueID = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    #$UniqueID = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     $ModelFriendly = $SMSTSModel
     }
 elseif(($SMSTSMake -match "HP") -or ($SMSTSMake -match "Hewlett")){
-    $UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+    #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
     $ModelFriendly = $SMSTSModel
     }
 else{
-    $UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+    #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
     $ModelFriendly = $SMSTSModel
     }
-#>
+
 $Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
 
 if ($IsOnBattery -eq "TRUE"){$PowerSource = "Battery"}
@@ -113,6 +117,7 @@ $Null = New-ItemProperty -Path $RegistryPath -Name Product -Value $Product -Prop
 $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name SystemSKUNumber -Value $SystemSKUNumber -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name BIOSVersion -Value $BIOSVersion -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name SerialNumber -Value $SerialNumber -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name DiskInfo -Value "$($Disk[0].Model) $($Disk[0].BusType)" -PropertyType String -Force
 }
 
