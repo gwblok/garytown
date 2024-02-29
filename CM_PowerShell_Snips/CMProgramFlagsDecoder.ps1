@@ -7,42 +7,7 @@ https://learn.microsoft.com/en-us/mem/configmgr/develop/reference/core/servers/c
 #>
 
 #Update this line for your Package & Program
-$variable = Get-CMProgram -PackageId 'MEM00027' -ProgramName "MPAM-FE" 
-
-$Flags = @(
-
-	"UNKNOWN",
-	"AUTHORIZED_DYNAMIC_INSTALL",
-	"USECUSTOMPROGRESSMSG",
-	"DEFAULT_PROGRAM",
-	"DISABLEMOMALERTONRUNNING",
-	"MOMALERTONFAIL",
-	"RUN_DEPENDANT_ALWAYS",
-	"WINDOWS_CE",
-	"NOT_USED",
-	"COUNTDOWN",
-	"FORCERERUN",
-	"DISABLED",
-	"UNATTENDED",
-	"USERCONTEXT",
-	"ADMINRIGHTS",
-	"EVERYUSER",
-	"NOUSERLOGGEDIN",
-	"OKTOQUIT",
-	"OKTOREBOOT",
-	"USEUNCPATH",
-	"PERSISTCONNECTION",
-	"RUNMINIMIZED",
-	"RUNMAXIMIZED",
-	"HIDEWINDOW",
-	"OKTOLOGOFF",
-	"RUNACCOUNT",
-	"ANY_PLATFORM",
-	"STILL_RUNNING",
-	"SUPPORT_UNINSTALL",
-	"UNSUPPORTED",
-	"SHOW_IN_ARP"
-)
+$variable = (Get-CMProgram -PackageId 'MEM00027' -ProgramName "MPAM-FE").ProgramFlags
 
 [flags()]enum ProgramFlags {
 	UNKNOWN = 0x00000000
@@ -78,9 +43,13 @@ $Flags = @(
 	SHOW_IN_ARP = 0x80000000
 }
 
-foreach ($Flag in $Flags){
-    $Bool = ([ProgramFlags]($variable.ProgramFlags) -band [ProgramFlags]::$Flag) -eq [ProgramFlags]::$Flag
-
-    write-host -ForegroundColor Cyan "$Flag : "  -NoNewline
-    Write-Host -ForegroundColor Green "$Bool"
+[ProgramFlags]$variable = $variable
+foreach ($Flag in [ProgramFlags].GetEnumValues()){
+    Write-Host -ForegroundColor Cyan "$Flag : "  -NoNewline
+    
+    if($Flag -eq [ProgramFlags]::UNKNOWN -and $variable -ne 0) { # Handle the UNKNOWN Case
+        Write-Host -ForegroundColor Green "False"
+    } else {
+        Write-Host -ForegroundColor Green $variable.HasFlag($Flag)
+    }
 }
