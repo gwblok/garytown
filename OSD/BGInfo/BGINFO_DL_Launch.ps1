@@ -14,7 +14,7 @@ else{Write-Output "Failed Extract"; exit 255}
 
 
 #Upload your own .bgi template file and then download it.
-Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/master/OSD/BGInfo/WinPE-PreStart.bgi" -OutFile "$env:TEMP\WinPE_BGInfo.bgi"
+Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/master/OSD/BGInfo/WinPE-TSStarted.bgi" -OutFile "$env:TEMP\WinPE_BGInfo.bgi"
 
 #Create Process Vars
 $BGinfoPath = "$ExpandPath\bginfo64.exe"
