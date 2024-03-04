@@ -1,4 +1,4 @@
-﻿[
+[
     {
         "EXE_ID":  "{a4764c0e-e053-42f4-bbf2-acd0c757a37d}",
         "APP_NAME":  "Kaspersky Endpoint Security for Windows",
@@ -1920,82 +1920,6 @@
         "MATCHING_REG":  "HARDWARE\\DESCRIPTION\\System\\BIOS",
         "DEST_OS_GTE":  "NI22H2",
         "DEST_OS_LT":  "CU23H2"
-    },
-    {
-        "APP_NAME":  "Dell XPS 15 7590 (Wu Offer Block)",
-        "SafeguardId":  "44218181",
-        "EXE_ID":  "{0b3615e1-284a-41fb-b760-0ba544388fea}",
-        "PICK_ONE":  null,
-        "AppName":  "Dell XPS 15 7590 (Wu Offer Block)",
-        "VENDOR":  "Dell Inc.",
-        "NAME":  null,
-        "BlockType":  "GatedBlock",
-        "INNERXML":  "\u003cNAME type=\"xs:string\"\u003e\u003c/NAME\u003e\u003cAPP_NAME type=\"xs:string\"\u003eDell XPS 15 7590 (Wu Offer Block)\u003c/APP_NAME\u003e\u003cVENDOR type=\"xs:string\"\u003eDell Inc.\u003c/VENDOR\u003e\u003cEXE_ID type=\"xs:string\" baseType=\"xs:base64Binary\"\u003e{0b3615e1-284a-41fb-b760-0ba544388fea}\u003c/EXE_ID\u003e\u003cAPP_ID type=\"xs:base64Binary\" /\u003e\u003cDEST_OS_GTE type=\"xs:string\"\u003eNI22H2\u003c/DEST_OS_GTE\u003e\u003cDEST_OS_LT type=\"xs:string\"\u003eZN23H2\u003c/DEST_OS_LT\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eHARDWARE\\DESCRIPTION\\System\\BIOS\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eSystemManufacturer\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003eDell*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eHARDWARE\\DESCRIPTION\\System\\BIOS\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eSystemProductName\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003eXPS 15 7590\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003eGatedBlock\u003c/DATA_STRING\u003e\u003c/DATA\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData_GatedBlockId\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003e44218181\u003c/DATA_STRING\u003e\u003c/DATA\u003e",
-        "MATCHING_DEVICE":  null,
-        "MATCH_PLUGIN":  null,
-        "SOURCE_OS_LTE":  null,
-        "MATCHING_REG":  [
-                             "HARDWARE\\DESCRIPTION\\System\\BIOS",
-                             "HARDWARE\\DESCRIPTION\\System\\BIOS"
-                         ],
-        "DEST_OS_GTE":  "NI22H2",
-        "DEST_OS_LT":  "ZN23H2"
-    },
-    {
-        "EXE_ID":  "{9a6cb0e8-5290-4570-9373-8055da9f35c5}",
-        "APP_NAME":  "Solidworks PDM + address bar (23H2)",
-        "PICK_ONE":  null,
-        "SafeguardId":  "48070271",
-        "INNERXML":  "\u003cNAME type=\"xs:string\"\u003eConisioAdmin.exe\u003c/NAME\u003e\u003cAPP_NAME type=\"xs:string\"\u003eSolidworks PDM + address bar (23H2)\u003c/APP_NAME\u003e\u003cVENDOR type=\"xs:string\"\u003eDassault Systemes SolidWorks Corp\u003c/VENDOR\u003e\u003cEXE_ID type=\"xs:string\" baseType=\"xs:base64Binary\"\u003e{9a6cb0e8-5290-4570-9373-8055da9f35c5}\u003c/EXE_ID\u003e\u003cAPP_ID type=\"xs:base64Binary\" /\u003e\u003cDEST_OS_GTE type=\"xs:string\"\u003eNI23H2\u003c/DEST_OS_GTE\u003e\u003cDEST_OS_LT type=\"xs:string\"\u003eGE24H1\u003c/DEST_OS_LT\u003e\u003cMATCHING_FILE\u003e\u003cNAME type=\"xs:string\"\u003e*\u003c/NAME\u003e\u003cCOMPANY_NAME type=\"xs:string\"\u003e*SolidWorks Corporation\u003c/COMPANY_NAME\u003e\u003cPRODUCT_NAME type=\"xs:string\"\u003eSOLIDWORKS PDM*\u003c/PRODUCT_NAME\u003e\u003c/MATCHING_FILE\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003eGatedBlock\u003c/DATA_STRING\u003e\u003c/DATA\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData_GatedBlockId\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003e48070271\u003c/DATA_STRING\u003e\u003c/DATA\u003e",
-        "MATCHING_FILE":  null,
-        "NAME":  "ConisioAdmin.exe",
-        "BlockType":  "GatedBlock",
-        "DEST_OS_GTE":  "NI23H2",
-        "DEST_OS_LT":  "GE24H1",
-        "VENDOR":  "Dassault Systemes SolidWorks Corp",
-        "AppName":  "Solidworks PDM + address bar (23H2)"
-    },
-    {
-        "EXE_ID":  "{db389fed-344d-4d60-8bfc-e5f32cfda793}",
-        "APP_NAME":  "iCloud files shared in Explorer via WhatsApp (23H2)",
-        "PICK_ONE":  null,
-        "SafeguardId":  "48070312",
-        "INNERXML":  "\u003cNAME type=\"xs:string\"\u003eiCloudServices.exe\u003c/NAME\u003e\u003cAPP_NAME type=\"xs:string\"\u003eiCloud files shared in Explorer via WhatsApp (23H2)\u003c/APP_NAME\u003e\u003cVENDOR type=\"xs:string\"\u003eApple Inc.\u003c/VENDOR\u003e\u003cEXE_ID type=\"xs:string\" baseType=\"xs:base64Binary\"\u003e{db389fed-344d-4d60-8bfc-e5f32cfda793}\u003c/EXE_ID\u003e\u003cAPP_ID type=\"xs:base64Binary\" /\u003e\u003cDEST_OS_GTE type=\"xs:string\"\u003eNI23H2\u003c/DEST_OS_GTE\u003e\u003cDEST_OS_LT type=\"xs:string\"\u003eGE24H1\u003c/DEST_OS_LT\u003e\u003cMATCHING_FILE\u003e\u003cNAME type=\"xs:string\"\u003e*\u003c/NAME\u003e\u003cCOMPANY_NAME type=\"xs:string\"\u003eApple*\u003c/COMPANY_NAME\u003e\u003cPRODUCT_NAME type=\"xs:string\"\u003eiCloud for Windows\u003c/PRODUCT_NAME\u003e\u003c/MATCHING_FILE\u003e\u003cMATCH_PLUGIN\u003e\u003cNAME type=\"xs:string\"\u003ePowerShellMatchingPlugin\u003c/NAME\u003e\u003cCOMMAND_LINE type=\"xs:string\"\u003e$Res = 0; $WinCurVerReg = Get-Item -Path \u0027HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\u0027; $Build = [int]$WinCurVerReg.GetValue(\u0027CurrentBuild\u0027); $UBR = [int]$WinCurVerReg.GetValue(\u0027UBR\u0027); if ($Build -ge 22621 -and $Build -le 22635 -and $UBR -ge 3085) { $Res = 1; }; Write-Host \u0027Final result:\u0027, $Res;\u003c/COMMAND_LINE\u003e\u003cMATCH_LOGIC_NOT /\u003e\u003c/MATCH_PLUGIN\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003eGatedBlock\u003c/DATA_STRING\u003e\u003c/DATA\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData_GatedBlockId\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003e48070312\u003c/DATA_STRING\u003e\u003c/DATA\u003e",
-        "MATCHING_FILE":  null,
-        "NAME":  "iCloudServices.exe",
-        "BlockType":  "GatedBlock",
-        "DEST_OS_GTE":  "NI23H2",
-        "DEST_OS_LT":  "GE24H1",
-        "VENDOR":  "Apple Inc.",
-        "AppName":  "iCloud files shared in Explorer via WhatsApp (23H2)"
-    },
-    {
-        "EXE_ID":  "{6db3b3db-0271-4251-a626-33f75873635f}",
-        "APP_NAME":  "AMD GPU perf settings (23H2)",
-        "PICK_ONE":  null,
-        "SafeguardId":  "48070225",
-        "INNERXML":  "\u003cNAME type=\"xs:string\"\u003eRadeonSoftware.exe\u003c/NAME\u003e\u003cAPP_NAME type=\"xs:string\"\u003eAMD GPU perf settings (23H2)\u003c/APP_NAME\u003e\u003cVENDOR type=\"xs:string\"\u003eAMD\u003c/VENDOR\u003e\u003cEXE_ID type=\"xs:string\" baseType=\"xs:base64Binary\"\u003e{6db3b3db-0271-4251-a626-33f75873635f}\u003c/EXE_ID\u003e\u003cAPP_ID type=\"xs:base64Binary\" /\u003e\u003cDEST_OS_GTE type=\"xs:string\"\u003eNI23H2\u003c/DEST_OS_GTE\u003e\u003cDEST_OS_LT type=\"xs:string\"\u003eGE24H1\u003c/DEST_OS_LT\u003e\u003cMATCHING_FILE\u003e\u003cNAME type=\"xs:string\"\u003e*\u003c/NAME\u003e\u003cCOMPANY_NAME type=\"xs:string\"\u003eAdvanced Micro Devices*\u003c/COMPANY_NAME\u003e\u003cPRODUCT_NAME type=\"xs:string\"\u003eAMD *Software*\u003c/PRODUCT_NAME\u003e\u003c/MATCHING_FILE\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\u003c/NAME\u003e\u003cMATCH_LOGIC_NOT /\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eForceIDDHDR\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e4\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_DWORD type=\"xs:int\"\u003e1\u003c/REG_VALUE_DATA_DWORD\u003e\u003c/MATCHING_REG\u003e\u003cPICK_ONE\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e?.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e1?.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e20.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e21.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e22.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e23.?.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e23.10.*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003cMATCHING_REG\u003e\u003cNAME type=\"xs:string\"\u003eSOFTWARE\\ATI Technologies\\Install\u003c/NAME\u003e\u003cREG_VALUE_NAME type=\"xs:string\"\u003eRadeonSoftwareVersion\u003c/REG_VALUE_NAME\u003e\u003cREG_VALUE_TYPE type=\"xs:int\"\u003e1\u003c/REG_VALUE_TYPE\u003e\u003cREG_VALUE_DATA_SZ type=\"xs:string\"\u003e23.11.0*\u003c/REG_VALUE_DATA_SZ\u003e\u003c/MATCHING_REG\u003e\u003c/PICK_ONE\u003e\u003cMATCH_PLUGIN\u003e\u003cNAME type=\"xs:string\"\u003ePowerShellMatchingPlugin\u003c/NAME\u003e\u003cCOMMAND_LINE type=\"xs:string\"\u003e$Res = 0; $WinCurVerReg = Get-Item -Path \u0027HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\u0027; $Build = [int]$WinCurVerReg.GetValue(\u0027CurrentBuild\u0027); $UBR = [int]$WinCurVerReg.GetValue(\u0027UBR\u0027); if ($Build -ge 22621 -and $Build -le 22635 -and $UBR -ge 3078) { $Res = 1; }; Write-Host \u0027Final result:\u0027, $Res;\u003c/COMMAND_LINE\u003e\u003cMATCH_LOGIC_NOT /\u003e\u003c/MATCH_PLUGIN\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003eGatedBlock\u003c/DATA_STRING\u003e\u003c/DATA\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData_GatedBlockId\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003e48070225\u003c/DATA_STRING\u003e\u003c/DATA\u003e",
-        "MATCHING_FILE":  null,
-        "NAME":  "RadeonSoftware.exe",
-        "BlockType":  "GatedBlock",
-        "DEST_OS_GTE":  "NI23H2",
-        "DEST_OS_LT":  "GE24H1",
-        "VENDOR":  "AMD",
-        "AppName":  "AMD GPU perf settings (23H2)"
-    },
-    {
-        "EXE_ID":  "{0aebdc40-7d31-4dc3-b9df-0771ee8b06bb}",
-        "APP_NAME":  "StartAllBack (Feature_WASDKInFileExplorer) (23H2)",
-        "PICK_ONE":  null,
-        "SafeguardId":  "48070166",
-        "INNERXML":  "\u003cNAME type=\"xs:string\"\u003eStartAllBackCfg.exe\u003c/NAME\u003e\u003cAPP_NAME type=\"xs:string\"\u003eStartAllBack (Feature_WASDKInFileExplorer) (23H2)\u003c/APP_NAME\u003e\u003cVENDOR type=\"xs:string\"\u003ewww.startisback.com\u003c/VENDOR\u003e\u003cEXE_ID type=\"xs:string\" baseType=\"xs:base64Binary\"\u003e{0aebdc40-7d31-4dc3-b9df-0771ee8b06bb}\u003c/EXE_ID\u003e\u003cAPP_ID type=\"xs:base64Binary\" /\u003e\u003cDEST_OS_GTE type=\"xs:string\"\u003eNI23H2\u003c/DEST_OS_GTE\u003e\u003cDEST_OS_LT type=\"xs:string\"\u003eGE24H1\u003c/DEST_OS_LT\u003e\u003cMATCHING_FILE\u003e\u003cNAME type=\"xs:string\"\u003e*\u003c/NAME\u003e\u003cFILE_DESCRIPTION type=\"xs:string\"\u003eStartAllBack\u003c/FILE_DESCRIPTION\u003e\u003c/MATCHING_FILE\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003eGatedBlock\u003c/DATA_STRING\u003e\u003c/DATA\u003e\u003cDATA\u003e\u003cNAME type=\"xs:string\"\u003eAppraiserData_GatedBlockId\u003c/NAME\u003e\u003cDATA_VALUETYPE type=\"xs:int\"\u003e1\u003c/DATA_VALUETYPE\u003e\u003cDATA_STRING type=\"xs:string\"\u003e48070166\u003c/DATA_STRING\u003e\u003c/DATA\u003e",
-        "MATCHING_FILE":  null,
-        "NAME":  "StartAllBackCfg.exe",
-        "BlockType":  "GatedBlock",
-        "DEST_OS_GTE":  "NI23H2",
-        "DEST_OS_LT":  "GE24H1",
-        "VENDOR":  "www.startisback.com",
-        "AppName":  "StartAllBack (Feature_WASDKInFileExplorer) (23H2)"
     },
     {
         "APP_NAME":  "Multi-mon + Copilot (23H2)",
