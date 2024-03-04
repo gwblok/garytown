@@ -35,6 +35,8 @@ Registry('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Targ
   - Skips Items that were already completed in a previous run
     - Skips downloading and extracting the XML, still parses XML and adds info to the Database.
 23.11.20 - Added more rows for Lookup
+24.3.4 - Added more rows for Lookup
+24.3.4 - Added count per row as verification it is doing something. :-)
 
 #>
 
@@ -94,7 +96,9 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_01_19_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2553'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_02_21_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2554'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_03_01_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2555'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_04_20_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2559'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2568'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2585'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_10_27_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2614'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_10_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2616'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_14_04_03_AMD64.cab'; ALTERNATEDATAVERSION = '2643'}
@@ -102,6 +106,21 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2653'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_14_04_04_AMD64.cab'; ALTERNATEDATAVERSION = '2661'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_16_04_04_AMD64.cab'; ALTERNATEDATAVERSION = '2662'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_12_07_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2664'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_12_07_04_04_AMD64.cab'; ALTERNATEDATAVERSION = '26641'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_12_14_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2665'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_12_14_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '26651'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_04_02_02_AMD64.cab'; ALTERNATEDATAVERSION = '2666'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_04_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '26661'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_18_06_04_AMD64.cab'; ALTERNATEDATAVERSION = '2667'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_18_06_02_AMD64.cab'; ALTERNATEDATAVERSION = '26671'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_25_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '2668'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_25_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '26681'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_06_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '2669'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_06_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '26691'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '2670'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '26701'}
+
 
 #Other:
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_03_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '11030302'}
@@ -141,6 +160,7 @@ ForEach ($Item in $SettingsTable){
     }
     $ExistingXMLS = Get-ChildItem -Path $AppriaserRoot\*.xml -Recurse -File | Where-Object { $_.Name -like "*$AppraiserVersion*" } -ErrorAction SilentlyContinue
     if (-Not $ExistingXMLS){
+        write-host "Starting Function Export-FUXMLFromSDB $OutFilePath" -ForegroundColor Magenta
         Export-FUXMLFromSDB -AlternateSourcePath $OutFilePath -Path $AppriaserRoot
     }
     foreach ($ExistingXML in $ExistingXMLS){
@@ -187,10 +207,18 @@ ForEach ($Item in $SettingsTable){
                 }
             }
         } Select-Object -Unique * | Sort-Object AppName
-    $SafeGuardHoldDataWorking  = $DBBlocks | ForEach-Object { [PSCustomObject]$_ }
-    $SafeGuardHoldCombined += $SafeGuardHoldDataWorking
-    }
+        $SafeGuardHoldDataWorking  = $DBBlocks | ForEach-Object { [PSCustomObject]$_ }
+        $SafeGuardHoldCombined += $SafeGuardHoldDataWorking
+        if ($ExistingXMLS.Count -gt 1){
+            $Last = $ExistingXMLS | Select-Object -Last 1
+            if ($ExistingXML -eq $Last){
 
+                Write-Host " SafeguardHoldCount:       $($SafeGuardHoldCombined.Count)" -ForegroundColor Green
+                $SafeGuardHoldIDs = $SafeGuardHoldCombined.SafeguardID | Select-Object -Unique
+                Write-Host " SafeguardHoldUniqueCount: $($SafeGuardHoldIDs.Count)" -ForegroundColor Green
+            }
+        }
+    }
 }
 Write-Host "Found $($SafeGuardHoldCombined.Count) Safeguard hold Items contained in the $TotalCount Appraiser DB Versions, exported to $Path\SafeGuardHoldCombinedDataBase.json" -ForegroundColor Green
 $SafeGuardHoldCombined | ConvertTo-Json | Out-File "$Path\SafeGuardHoldCombinedDataBase.json"
