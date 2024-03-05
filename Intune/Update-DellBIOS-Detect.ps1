@@ -72,8 +72,8 @@ CMTraceLog -Message  "User Session: $Session" -Type 1 -LogFile $LogFile
 Suspend-BitLocker -MountPoint $env:SystemDrive
 If ($Session -ne $null){
     CMTraceLog -Message  "User Session: $Session, Restarting in 90 minutes" -Type 1 -LogFile $LogFile
-    Start-Process shutdown.exe -ArgumentList '/r /f /t 300 /c "Updating Bios, please save your work, Computer will reboot in 5 minutes"'
-    #Start-Process shutdown.exe -ArgumentList '/r /f /t 5400 /c "Updating Bios, please save your work, Computer will reboot in 90 minutes"'
+    #Start-Process shutdown.exe -ArgumentList '/r /f /t 300 /c "Updating Bios, please save your work, Computer will reboot in 5 minutes"'
+    Start-Process shutdown.exe -ArgumentList '/r /f /t 5400 /c "Updating Bios, please save your work, Computer will reboot in 90 minutes"'
 
     }
 else {
