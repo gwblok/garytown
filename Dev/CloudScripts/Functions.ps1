@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.2.10.3'
+$ScriptVersion = '24.3.7.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -816,6 +816,20 @@ write-host "Looking for updates here: $UpdatesPath for Build: $BuildNumber"
 	write-host "No Updates found for $BuildNumber"
     }
 }
+
+#Updating the OSD Module on the Offline OS from the one installed in WinPE - Used in testing to copy over updates not yet in the Gallery Module
+Write-Host -ForegroundColor Green "[+] Function Update-OfflineOSDModuleFromWinPEVersion"
+Function Update-OfflineOSDModuleFromWinPEVersion {
+    #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
+    $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+    import-module "$ModulePath\OSD.psd1" -Force
+
+    #Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
+    $OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+    write-output "Updating $OfflineModulePath using $ModulePath"
+    copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
+}
+
 #HP Dock Function
 Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)
