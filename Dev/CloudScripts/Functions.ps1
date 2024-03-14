@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.3.7.2'
+$ScriptVersion = '24.3.14.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -7,17 +7,109 @@ Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 
 Write-Host -ForegroundColor Green "[+] Function Start-DISMFromOSDCloudUSB"
 Function Test-DISMFromOSDCloudUSB {
-    #region Initialize
-    #require OSD Module Installed
+    [CmdletBinding()]
+    param (
 
+        [Parameter()]
+        [System.String]
+        $PackageID
+    )
     $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
-    $ComputerProduct = (Get-MyComputerProduct)
-    $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
-    $DriverPath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
-    if (Test-Path $DriverPath){Return $true}
-    else { Return $false}
-
+    if ($OSDCloudUSB){
+        $OSDCloudDriveLetter = $OSDCloudUSB.DriveLetter
+    }
+    $MappedDrives = (Get-CimInstance -ClassName Win32_MappedLogicalDisk).DeviceID | Select-Object -Unique
+    if ($MappedDrives){
+        ForEach ($MappedDrive in $MappedDrives){
+            if (Test-Path -Path "$MappedDrive\OSDCloud"){
+                $OSDCloudDriveLetter = $MappedDrive.replace(":","")
+            }
+        }
+    }
+    if ($OSDCloudDriveLetter){
+        $ComputerProduct = (Get-MyComputerProduct)
+        if (!($PackageID)){
+            $PackageID = $DriverPack.PackageID
+            $DriverPack = Get-OSDCloudDriverPack -Product $ComputerProduct
+        }
+        $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
+        if ($ComputerManufacturer -match "Samsung"){$ComputerManufacturer = "Samsung"}
+        $DriverPathProduct = "$($OSDCloudDriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
+        $DriverPathPackageID = "$($OSDCloudDriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$PackageID"
+        if ($PackageID){  
+            Write-Host "Testing Paths:"
+            Write-Host "  $DriverPathProduct"
+            Write-Host "  $DriverPathPackageID"
+        }
+        else {
+            Write-Host "Testing Path:"
+            Write-Host "  $DriverPathProduct"
+        }
+        if (Test-Path $DriverPathProduct){Return $true}
+        elseif (Test-Path $DriverPathPackageID){Return $true}
+        else { Return $false}
+    }
+    else{
+        Write-Host "NO OSDCloud USB Found"
+        return $false
+    }
 }
+Function Start-DISMFromOSDCloudUSB {
+    [CmdletBinding()]
+    param (
+
+        [Parameter()]
+        [System.String]
+        $PackageID
+    )
+    if ($env:SystemDrive -eq 'X:') {
+        $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
+        if ($OSDCloudUSB){
+            $OSDCloudDriveLetter = $OSDCloudUSB.DriveLetter
+        }
+        $MappedDrives = (Get-CimInstance -ClassName Win32_MappedLogicalDisk).DeviceID | Select-Object -Unique
+        if ($MappedDrives){
+            ForEach ($MappedDrive in $MappedDrives){
+                if (Test-Path -Path "$MappedDrive\OSDCloud"){
+                    $OSDCloudDriveLetter = $MappedDrive.replace(":","")
+                }
+            }
+        }
+        if ($OSDCloudDriveLetter){
+            $ComputerProduct = (Get-MyComputerProduct)
+            if (!($PackageID)){
+                $DriverPack = Get-OSDCloudDriverPack -Product $ComputerProduct
+                if ($DriverPack){
+                    $PackageID = $DriverPack.PackageID
+                }
+            }
+            $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
+            if ($ComputerManufacturer -match "Samsung"){$ComputerManufacturer = "Samsung"}
+            $DriverPathProduct = "$($OSDCloudDriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$ComputerProduct"
+            if ($PackageID){
+                $DriverPathPackageID = "$($OSDCloudDriveLetter):\OSDCloud\DriverPacks\DISM\$ComputerManufacturer\$PackageID"
+            }
+    
+            Write-Host "Checking locations for Drivers" -ForegroundColor Green
+            if ($PackageID){
+                if (Test-Path $DriverPathPackageID){$DriverPath = $DriverPathPackageID}
+            }
+            if (Test-Path $DriverPathProduct){$DriverPath = $DriverPathProduct}
+            if (Test-Path $DriverPath){
+                Write-Host "Found Drivers: $DriverPath" -ForegroundColor Green
+                Write-Host "Starting DISM of drivers while Offline" -ForegroundColor Green
+                $DismPath = "$env:windir\System32\Dism.exe"
+                $DismProcess = Start-Process -FilePath $DismPath -ArgumentList "/image:c:\ /Add-Driver /driver:`"$($DriverPath)`" /recurse" -Wait -PassThru
+                Write-Host "Finished Process with Exit Code: $($DismProcess.ExitCode)"
+            }
+        }
+        
+    }
+    else {
+        Write-Output "Skipping Start-DISMFromOSDCloudUSB Function, not running in WinPE"
+    }
+}
+
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
 Function Get-MyComputerInfoBasic {
     Function Convert-FromUnixDate ($UnixDate) {
