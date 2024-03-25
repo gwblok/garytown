@@ -63,7 +63,7 @@ Function Install-HPIA{
     }
     else {
         $HPIAWebUrl = "https://ftp.hp.com/pub/caps-softpaq/cmit/HPIA.html" # Static web page of the HP Image Assistant
-        try {$HTML = Invoke-WebRequest –Uri $HPIAWebUrl –ErrorAction Stop }
+        try {$HTML = Invoke-WebRequest -Uri $HPIAWebUrl -ErrorAction Stop }
         catch {Write-Output "Failed to download the HPIA web page. $($_.Exception.Message)" ;throw}
         $HPIASoftPaqNumber = ($HTML.Links | Where {$_.href -match "hp-hpia-"}).outerText
         $HPIADownloadURL = ($HTML.Links | Where {$_.href -match "hp-hpia-"}).href
@@ -88,15 +88,15 @@ Function Install-HPIA{
         if (!(Test-Path -Path "$TempWorkFolder\$HPIAFileName")){
             try 
             {
-                $ExistingBitsJob = Get-BitsTransfer –Name "$HPIAFileName" –AllUsers –ErrorAction SilentlyContinue
+                $ExistingBitsJob = Get-BitsTransfer -Name "$HPIAFileName" -AllUsers -ErrorAction SilentlyContinue
                 If ($ExistingBitsJob)
                 {
                     Write-Output "An existing BITS tranfer was found. Cleaning it up."
-                    Remove-BitsTransfer –BitsJob $ExistingBitsJob
+                    Remove-BitsTransfer -BitsJob $ExistingBitsJob
                 }
-                $BitsJob = Start-BitsTransfer –Source $HPIADownloadURL –Destination $TempWorkFolder\$HPIAFileName –Asynchronous –DisplayName "$HPIAFileName" –Description "HPIA download" –RetryInterval 60 –ErrorAction Stop 
+                $BitsJob = Start-BitsTransfer -Source $HPIADownloadURL -Destination $TempWorkFolder\$HPIAFileName -Asynchronous -DisplayName "$HPIAFileName" -Description "HPIA download" -RetryInterval 60 -ErrorAction Stop 
                 do {
-                    Start-Sleep –Seconds 5
+                    Start-Sleep -Seconds 5
                     $Progress = [Math]::Round((100 * ($BitsJob.BytesTransferred / $BitsJob.BytesTotal)),2)
                     Write-Output "Downloaded $Progress`%"
                 } until ($BitsJob.JobState -in ("Transferred","Error"))
@@ -105,7 +105,7 @@ Function Install-HPIA{
                     Write-Output "BITS tranfer failed: $($BitsJob.ErrorDescription)"
                     throw
                 }
-                Complete-BitsTransfer –BitsJob $BitsJob
+                Complete-BitsTransfer -BitsJob $BitsJob
                 Write-Host "BITS transfer is complete" -ForegroundColor Green
             }
             catch 
@@ -123,8 +123,8 @@ Function Install-HPIA{
         Write-Host "Extracting HPIA" -ForegroundColor Green
         try 
         {
-            $Process = Start-Process –FilePath $TempWorkFolder\$HPIAFileName –WorkingDirectory $HPIAInstallPath –ArgumentList "/s /f .\ /e" –NoNewWindow –PassThru –Wait –ErrorAction Stop
-            Start-Sleep –Seconds 5
+            $Process = Start-Process -FilePath $TempWorkFolder\$HPIAFileName -WorkingDirectory $HPIAInstallPath -ArgumentList "/s /f .\ /e" -NoNewWindow -PassThru -Wait -ErrorAction Stop
+            Start-Sleep -Seconds 5
             If (Test-Path $HPIAInstallPath\HPImageAssistant.exe)
             {
                 Write-Host "Extraction complete" -ForegroundColor Green
@@ -168,7 +168,7 @@ Function Run-HPIA {
         [Parameter(Mandatory=$false)]
         $ReferenceFile
         )
-    $DateTime = Get-Date –Format "yyyyMMdd-HHmmss"
+    $DateTime = Get-Date -Format "yyyyMMdd-HHmmss"
     $ReportsFolder = "$ReportsFolder\$DateTime"
     $script:TempWorkFolder = "$env:temp\HPIA"
     try 
@@ -190,11 +190,11 @@ Function Run-HPIA {
 
         if ($ReferenceFile){
             Write-Host "Running HPIA With Args: /Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" -ForegroundColor Green
-            $Process = Start-Process –FilePath $HPIAInstallPath\HPImageAssistant.exe –WorkingDirectory $TempWorkFolder –ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" –NoNewWindow –PassThru –Wait –ErrorAction Stop
+            $Process = Start-Process -FilePath $HPIAInstallPath\HPImageAssistant.exe -WorkingDirectory $TempWorkFolder -ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" -NoNewWindow -PassThru -Wait -ErrorAction Stop
         }
         else {
             Write-Host "Running HPIA With Args: /Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder" -ForegroundColor Green
-            $Process = Start-Process –FilePath $HPIAInstallPath\HPImageAssistant.exe –WorkingDirectory $TempWorkFolder –ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder" –NoNewWindow –PassThru –Wait –ErrorAction Stop
+            $Process = Start-Process -FilePath $HPIAInstallPath\HPImageAssistant.exe -WorkingDirectory $TempWorkFolder -ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder" -NoNewWindow -PassThru -Wait -ErrorAction Stop
         }
 
         If ($Process.ExitCode -eq 0)
@@ -276,12 +276,12 @@ Grabs the JSON output from a recent run of HPIA to see what was installed and Ex
     try 
     {
     $LatestReportFolder = (Get-ChildItem -Path $ReportsFolder | Where-Object {$_.Attributes -match 'Directory'} | Select-Object -Last 1).FullName
-    $JSONFile = Get-ChildItem –Path $LatestReportFolder –Recurse –Include *.JSON –ErrorAction Stop
+    $JSONFile = Get-ChildItem -Path $LatestReportFolder -Recurse -Include *.JSON -ErrorAction Stop
         If ($JSONFile)
         {
             try 
             {
-            $JSON = Get-Content –Path $JSONFile.FullName  –ErrorAction Stop | ConvertFrom-Json
+            $JSON = Get-Content -Path $JSONFile.FullName  -ErrorAction Stop | ConvertFrom-Json
             $Recommendations = $JSON.HPIA.Recommendations
             if ($Recommendations) {
                 return $true
@@ -309,15 +309,15 @@ Grabs the JSON output from a recent run of HPIA to see what was installed and Ex
 if (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main"){
     $IEMainKey = Get-Item "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main"
     if (!($IEMainKey.GetValue('DisableFirstRunCustomize') -eq 1)){
-        New-Item –Path "HKLM:\SOFTWARE\Policies\Microsoft" –Name "Internet Explorer" –Force | Out-Null
-        New-Item –Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer" –Name "Main" –Force | Out-Null
-        New-ItemProperty –Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" –Name "DisableFirstRunCustomize" –PropertyType DWORD –Value 1 –Force | Out-Null
+        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft" -Name "Internet Explorer" -Force | Out-Null
+        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer" -Name "Main" -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -PropertyType DWORD -Value 1 -Force | Out-Null
     }
 }
 else {
-    New-Item –Path "HKLM:\SOFTWARE\Policies\Microsoft" –Name "Internet Explorer" –Force | Out-Null
-    New-Item –Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer" –Name "Main" –Force | Out-Null
-    New-ItemProperty –Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" –Name "DisableFirstRunCustomize" –PropertyType DWORD –Value 1 –Force | Out-Null
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft" -Name "Internet Explorer" -Force | Out-Null
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer" -Name "Main" -Force | Out-Null
+    New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -PropertyType DWORD -Value 1 -Force | Out-Null
 }
 
 
