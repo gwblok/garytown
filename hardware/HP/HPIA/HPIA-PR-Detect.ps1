@@ -323,6 +323,6 @@ else {
 Run-HPIA -Operation Analyze -Category 'Drivers' -Selection All -Action List -LogFolder $HPIAStagingLogfFiles -ReportsFolder $HPIAStagingReports -HPIAInstallPath $HPIAStagingProgram
 $Result = Get-HPIAJSONResult
 if ($Result -eq $true){
-    exit 1 #Trigger Remediation
     Write-Host "Trigger Remediation"
+    exit 1 #Trigger Remediation 
 }
