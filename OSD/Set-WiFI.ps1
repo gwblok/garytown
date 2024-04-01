@@ -50,5 +50,19 @@ Function Set-WiFi {
     remove-item "$($ENV:TEMP)\$guid.SSID" -Force
 }
 Get-Service -Name WlanSvc | Start-Service
+Write-Output "====================================================="
+Write-Output "WiFi Profile Setup"
+Write-Output "====================================================="
+Write-Output ""
+Write-Output "WLANSvc Status"
+Get-Service -Name WlanSvc
+Write-Output ""
 $WirelessAdapters = Get-NetAdapter | Where-Object {($_.PhysicalMediaType -eq 'Native 802.11') -or ($_.PhysicalMediaType -eq 'Wireless LAN')}
-if ($WirelessAdapters){Set-WiFi -SSID $SSID -PSK $PSK}
+Write-Output "Wireless Adapters: $($WirelessAdapters.InterfaceDescription)"
+Write-Output ""
+
+if ($WirelessAdapters){
+    Write-Output "Setting WiFi Profile"
+    Set-WiFi -SSID $SSID -PSK $PSK
+}
+else {Write-Output "NO WiFi Adapters Found to set"}
