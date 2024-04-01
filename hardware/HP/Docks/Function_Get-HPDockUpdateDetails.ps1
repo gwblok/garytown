@@ -61,9 +61,10 @@ function Get-HPDockUpdateDetails {
       23.06.08.01 - Fixed issue with Thunderbolt Dock detection if another Dock had been connected and updated on device in past, leaving Registry Info Behind.
       23.09.07.01 - Added fallback if current HP Device doesn't have softpaq list, falls back to pre-determined model.(Get-SoftpaqList -Category Dock -Platform 8870 )
       23.09.07.02 - Added additional support for HP E24d G4 Docking Monitor
-      23.09.07.03 - updated firmware for Docks: TB G4 & USB-C G5 Essential
-      23.12.06.01 - updated firmware for Docks: TB G4 & USB-C G5 Essential
-      23.12.06.02 - cleaned up the firmware link area, added more notes 
+      23.09.07.03 - updated firmware URLs for Docks: TB G4 & USB-C G5 Essential
+      23.12.06.01 - updated firmware URLs for Docks: TB G4 & USB-C G5 Essential
+      23.12.06.02 - cleaned up the firmware link area, added more notes
+      24.04.01.01 - updated firmware URLs for Docks: TB G4 & USB-C G5 Essential & USB-C G5 & HP USB-C Universal Dock G2
 
      .Notes
       This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -73,7 +74,7 @@ function Get-HPDockUpdateDetails {
       HPFirmwareUpdater.exe Options:
 		    Non-Interactive		        -ni
 		    Silent mode			        -s		    		
-		    Force				        -f	
+			Force				        -f	
 
      DocksTested:
       1) HP USB-C G5 Essential Dock
@@ -142,19 +143,19 @@ function Get-HPDockUpdateDetails {
 
         # **** Hardcode URLs in case of no CMSL installed: ****
         #USB-C G5 Essential Dock
-        $Url_EssG5 = 'ftp.hp.com/pub/softpaq/sp149501-150000/sp149576.exe'  #  01.00.09.00 | Oct 3, 2023
+        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151760.exe'  #  01.00.10.00 | Mar 14, 2024
         
         #Thunderbolt G4
-        $Url_TBG4 = 'ftp.hp.com/pub/softpaq/sp149501-150000/sp150000.exe'   #  1.4.20.0 | Nov 1, 2023
+        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151762.exe'   #  1.5.22.0 | Mar 14, 2024
 
         #Thunderbolt G2
         $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  1.0.71.1 | Dec 15, 2022
 
         #USB-C Dock G5
-        $Url_UsbG5 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146273.exe'  #  1.0.18.0 | April 18, 2023
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp150001-150500/sp150455.exe'  #  1.0.20.0 | Dec 20, 2023
 
         #USB-C Universal Dock G2
-        $Url_UniG2 = 'ftp.hp.com/pub/softpaq/sp146001-146500/sp146291.exe'  #  1.1.18.0 | April 18, 2023
+        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp150001-150500/sp150473.exe'  #  1.0.20.0 | Dec 4, 2023
 
         #USB-C Dock G4
         $Url_UsbG4 = 'ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
