@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.3.14.1'
+$ScriptVersion = '24.4.3.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -346,6 +346,9 @@ Function Set-Win11ReqBypassRegValues {
 
 Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdate"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Start-WindowsUpdate.ps1)
+
+Write-Host -ForegroundColor Green "[+] Functions for HP TPM"
+iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Get-HPTPMDetermine.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdateDriver"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Start-WindowsUpdateDrivers.ps1)
