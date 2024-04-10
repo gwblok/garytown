@@ -17,12 +17,19 @@ if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
     }
 }
 if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
+$URL = "https://api.github.com/repos/microsoft/winget-cli/releases/latest"
+$URL = (Invoke-WebRequest -Uri $URL -UseBasicParsing).Content | ConvertFrom-Json |
+        Select-Object -ExpandProperty "assets" |
+        Where-Object "browser_download_url" -Match '.msixbundle' |
+        Select-Object -ExpandProperty "browser_download_url"
 
+
+Write-Output "Latest URL: $URL"
     # Test if Microsoft.DesktopAppInstaller is present and install it
 	Write-Output "Download Winget"  
 	Start-BitsTransfer -DisplayName "WinGet" -Source "https://aka.ms/getwinget" -Destination "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
 	if (Test-Path -Path "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"){
-        Add-AppxProvisionedPackage -online -packagepath C:\ProgramData\WinGet\Microsoft.VCLibs.x64.14.00.Desktop.appx -SkipLicense | Out-null	    
+        Add-AppxProvisionedPackage -online -packagepath "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -SkipLicense | Out-null	    
         Write-Host -ForegroundColor Yellow "[-] Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe"
 	    Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction SilentlyContinue
 	}
