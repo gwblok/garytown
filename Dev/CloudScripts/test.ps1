@@ -18,7 +18,6 @@ if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
 }
 if (-not (Get-Command 'WinGet' -ErrorAction SilentlyContinue)) {
 
-Write-Output "Latest URL: $URL"
     # Test if Microsoft.DesktopAppInstaller is present and install it
 	Write-Output "Download Winget"  
 	Start-BitsTransfer -DisplayName "WinGet" -Source "https://aka.ms/getwinget" -Destination "C:\ProgramData\WinGet\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
