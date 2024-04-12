@@ -6,6 +6,7 @@ Packages: Driver Pack Package & Offline Repo Package in CM.  These are emtpy she
 Update the script with your environment details
 
 #>
+
 #Load CM PowerShell
 $SiteCode = "MCM"
 $SetScope = $true #If you plan to scope the packages
@@ -88,10 +89,10 @@ $Test = Get-CMPackage -Name $HPIACMPackageName -Fast
 if (!($Test)){
     
     Set-Location -Path "C:" 
-    if (!(Test-Path -Path "$HPIASourceShareRootLocation\temp")){New-Item -Path "$HPIASourceShareRootLocation\temp" -ItemType Directory -Force | Out-Null}
+    if (!(Test-Path -Path "$HPIASourceShareRootLocation")){New-Item -Path "$HPIASourceShareRootLocation" -ItemType Directory -Force | Out-Null}
     Set-Location -Path "$($SiteCode):"
     $NewPackage = New-CMPackage -Name $HPIACMPackageName
-    Set-CMPackage -InputObject $NewPackage -Path "$HPIASourceShareRootLocation\temp"
+    Set-CMPackage -InputObject $NewPackage -Path "$HPIASourceShareRootLocation"
     Set-CMPackage -InputObject $NewPackage -IconLocationFile $HPICONPath
     Set-CMPackage -InputObject $NewPackage -Description 'https://ftp.ext.hp.com/pub/caps-softpaq/cmit/HPIA.html'
     Set-CMPackage -InputObject $NewPackage -Manufacturer 'HP'
