@@ -666,7 +666,7 @@ $Null = New-ItemProperty -Path $RegistryPath -Name DriveModel -Value $Disk0.Mode
 
 
 #Running OS Info
-$Null = New-ItemProperty -Path $RegistryPath -Name CurrentBuild -Value $CurrentVersion.CurrentBuild -PropertyType String -Force
+$Null = New-ItemProperty -Path $RegistryPath -Name CurrentBuild -Value "$($CurrentVersion.CurrentBuild).$($CurrentVersion.UBR)" -PropertyType String -Force
 $Null = New-ItemProperty -Path $RegistryPath -Name WinPEName -Value $ComputerName -PropertyType String -Force
 
 #CM Info:
