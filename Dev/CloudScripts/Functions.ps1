@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.4.3.1'
+$ScriptVersion = '24.4.22.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -857,6 +857,9 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScrip
 
 Write-Host -ForegroundColor Green "[+] Function Set-ThisPC"
 function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/f64b267ba11c3a632ee0d19656875f93b715a989/OSD/CloudOSD/Set-ThisPC.ps1)}
+
+Write-Host -ForegroundColor Green "[+] Function Check-ComplianceKB5025885"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-CheckCompliance.ps1}
 
 if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenovo"){
 	Write-Host -ForegroundColor Green "[+] Function Install-LenovoDMM"
