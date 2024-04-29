@@ -24,7 +24,10 @@ function Get-MMSDemo2 {
         TitleBarIcon = $logopath
     }
     write-host '  $ToastBase64Image = [Base64PNG File - Already created]' -ForegroundColor Gray
-    Write-host '  $logopath = "c:\programdata\toastlogo.png"; $bytes = [Convert]::FromBase64String($ToastBase64Image); [IO.File]::WriteAllBytes($logopath , $bytes)' -ForegroundColor Gray
+    Write-host '  $logopath = "c:\programdata\toastlogo.png"' -ForegroundColor Gray
+    write-host '  $bytes = [Convert]::FromBase64String($ToastBase64Image)'
+    write-host '  [IO.File]::WriteAllBytes($logopath , $bytes)'
+    write-host ''
     Write-host '  $param = @{' -ForegroundColor Gray
     Write-host '      Title = "Please Reboot"' -ForegroundColor Gray
     Write-host '      Message = "Security Changes Require a Reboot"' -ForegroundColor Gray
