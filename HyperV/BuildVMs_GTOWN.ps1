@@ -34,8 +34,15 @@ This script will...
 [int64]$DriveSize = 100 * 1024 * 1024 * 1024 #100GB
 
 $VMPath = "D:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
-$VMNamePreFix = "VM-MEMCM-"  #The VM will start with this name
-$ISOFolderPath = "E:\HyperVLab"
+$VMNamePreFix = "VM-CM-"  #The VM will start with this name
+$ISOFolderPath = "C:\HyperV"
+
+try {
+    [void][System.IO.Directory]::CreateDirectory($VMPath)
+    [void][System.IO.Directory]::CreateDirectory($ISOFolderPath)
+}
+catch {throw}
+
 #$BootISO = "$ISOFolderPath\Boot_image_x64.iso"  #If you're booting to an ISO, put the location here.
 $ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
 $BootISO = $ISList[0].FullName
@@ -45,17 +52,17 @@ $RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collecti
 [int]$StartNumber = 1
 [int]$EndNumber = 20
 [int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
-$SiteCode = "MEM" #ConfigMgr Site Code
-$ProviderMachineName = "memcm.dev.recastsoftware.dev" #ConfigMgr Provider Machine
+$SiteCode = "MCM" #ConfigMgr Site Code
+$ProviderMachineName = "CM.lab.garytown.com" #ConfigMgr Provider Machine
 $CMModulePath = "E:\HyperVLab\CMConsolePosh\ConfigurationManager.psd1"
 $CMConnected = $null
 
-$Purpose = "AutoPilot", "ConfigMgr" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
-$Tenant = "RecastBlog", "OSDCloud","Lightaria" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
+$Purpose = "AutoPilot", "ConfigMgr", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
+
 if ($Purpose -eq "AutoPilot"){
-    if ($Tenant -eq "RecastBlog"){$VMNamePreFix = "VM-RBlog-"}
+    $Tenant = "GARYTOWN", "OSDCloud" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
+    if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-GT-"}
     elseif ($Tenant -eq "OSDCloud"){$VMNamePreFix = "VM-OSDC-"}
-    elseif ($Tenant -eq "Lightaria"){$VMNamePreFix = "AEM-BLOK"}
     }
 
 if (!(Test-Path -Path $VMPath))
@@ -70,7 +77,7 @@ elseif (!(Test-Path -Path $BootISO))
     Throw "Stopping"
     }
 
-elseif (!(Test-Path -Path $CMModulePath))
+elseif ((!(Test-Path -Path $CMModulePath)) -and $Purpose -eq "ConfigMgr")
     {
     if ($Purpose -eq "ConfigMgr"){
         Write-Host "CM Module Path not Set correctly!"  -ForegroundColor Red
