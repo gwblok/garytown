@@ -53,3 +53,9 @@ Function Get-MMSDemo4 {
     write-host '  Pull Up GitHub Script'
     Write-host '  https://github.com/gwblok/garytown/blob/master/hardware/HP/HPIA-BlogSeries-2024/CreateHPIARepo-FileShare.ps1'
 }
+
+Function Get-MMSDemo5 {
+    Write-host ' Getting the latest Driver Pack for a Platform' -ForegroundColor Cyan
+    write-host '  Pull Up GitHub Script'
+    Write-host '  https://github.com/gwblok/garytown/blob/master/hardware/HP_Driver_PopulateCMPackage.ps1'
+}

@@ -13,5 +13,6 @@ Write-Host " [+] Get-MMSDemo1 - Softpaq Automation Demo" -ForegroundColor Gray
 Write-Host " [+] Get-MMSDemo2 - Notification Demo" -ForegroundColor Gray
 Write-Host " [+] Get-MMSDemo3 - BIOS Update Method Demo" -ForegroundColor Gray
 Write-Host " [+] Get-MMSDemo4 - Create Offline Repo Demo" -ForegroundColor Gray
+Write-Host " [+] Get-MMSDemo5 - Max Driver Pack Demo" -ForegroundColor Gray
 iex (irm mms24demo.garytown.com)
 
