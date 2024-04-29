@@ -8,7 +8,9 @@ Write-Host " [+] Get-HPIAJSONResult" -ForegroundColor Gray
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Invoke-HPIA.ps1)
 
 Write-Host ""
-write-host "Demo Commands" -ForegroundColor Green
-Write-Host " Get-MMSDemo1" -ForegroundColor Gray
-Write-Host " Get-MMSDemo2" -ForegroundColor Gray
-Write-Host " Get-MMSDemo3" -ForegroundColor Gray
+write-host "Demo Functions" -ForegroundColor Green
+Write-Host " [+] Get-MMSDemo1" -ForegroundColor Gray
+Write-Host " [+] Get-MMSDemo2" -ForegroundColor Gray
+Write-Host " [+] Get-MMSDemo3" -ForegroundColor Gray
+iex (irm mms24demo.garytown.com)
+
