@@ -38,4 +38,6 @@ function Get-MMSDemo2 {
 
 }
 
-Get-MMSDemo3{}
+Function Get-MMSDemo3{
+    
+}
