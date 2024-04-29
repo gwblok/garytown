@@ -39,5 +39,14 @@ function Get-MMSDemo2 {
 }
 
 Function Get-MMSDemo3{
+    Write-host ' BIOS Update Method Demo' -ForegroundColor Cyan
+    Write-host '  Get-HPBIOSUpdates' -ForegroundColor Gray
+    Write-host '  Get-HPBIOSWindowsUpdate' -ForegroundColor Gray
+    Write-host '  Get-SoftpaqList -Category bios -OsVer 23H2' -ForegroundColor Gray
+}
 
+Function Get-MMSDemo4 {
+    Write-host ' Create Offline Repo Demo' -ForegroundColor Cyan
+    write-host '  Pull Up GitHub Script'
+    Write-host '  https://github.com/gwblok/garytown/blob/master/hardware/HP/HPIA-BlogSeries-2024/CreateHPIARepo-FileShare.ps1'
 }
