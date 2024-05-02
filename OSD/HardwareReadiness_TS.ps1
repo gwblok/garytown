@@ -10,6 +10,7 @@ Changes
  - Changed Get-TPM to using Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM
 2024.05.07
  - Added logic to use Disk 0 as default if TS Var OSDisk doesn't exist
+ - Added logic to still work when TPM wasn't already owned (think first time OSD on VM)
 
 #>
 
@@ -375,8 +376,8 @@ try {
         $exitCode = 1
         $HR_TPM = $FAIL_STRING
     }
-    elseif ($tpm.IsOwned_InitialValue -or $tpm.TpmPresent) {
-        $tpmVersion = Get-WmiObject -Class Win32_Tpm -Namespace root\CIMV2\Security\MicrosoftTpm | Select-Object -Property SpecVersion
+    elseif ($tpm.IsOwned_InitialValue -or $tpm.TpmPresent -or $tpm.IsEnabled_InitialValue -or $tpm.IsActivated_InitialValue) {
+        $tpmVersion = Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM  | Select-Object -Property SpecVersion
 
         if ($null -eq $tpmVersion.SpecVersion) {
             UpdateReturnCode -ReturnCode 1
