@@ -8,7 +8,8 @@ Creates several TS Variables
 Changes
 2022.01.28
  - Changed Get-TPM to using Get-CimInstance -Namespace "ROOT\cimv2\Security\MicrosoftTpm" -ClassName Win32_TPM
-
+2024.05.07
+ - Added logic to use Disk 0 as default if TS Var OSDisk doesn't exist
 
 #>
 
@@ -44,9 +45,7 @@ $OSDisk = $tsenv.value('OSDisk')
 if ($InWinPE){
     Write-Output "Running Script in WinPE Mode"
     }
-
 }
-
 catch{
 Write-Output "Not in TS"
     }
@@ -287,7 +286,8 @@ using System.Runtime.InteropServices;
 try {
 
     if ($InWinPE){
-        $osDrive = get-volume -DriveLetter ($OSDisk[0])
+        if ($OSDisk){$osDrive = get-volume -DriveLetter ($OSDisk[0])}
+        else {$osDrive = Get-Disk -Number 0}
         $osDriveSize = $osDrive | Select-Object @{Name = "SizeGB"; Expression = { $_.Size / 1GB -as [int] } } 
         }
     else {
@@ -610,4 +610,3 @@ else
 
         }
     }
-
