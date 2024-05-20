@@ -84,6 +84,8 @@ if ($env:SystemDrive -eq 'X:') {
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
+    Set-ExecutionPolicy Bypass -Force
+    iex (irm functions.garytown.com)
     #Remove Personal Teams
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
