@@ -26,7 +26,7 @@ $ScheduledTaskName = 'OSDCloudPostAction'
 
 #Get Current Run, Cleanup if = 5
 [int] $CurrentRun = Get-ItemPropertyValue -Path $RegistryPath -Name 'TriggerPostActions'
-if ($CurrentRun -ge 5){Unregister-ScheduledTask -TaskName $ScheduledTaskName -ErrorAction SilentlyContinue}
+if ($CurrentRun -ge 5){Unregister-ScheduledTask -TaskName $ScheduledTaskName -confirm:$false -ErrorAction SilentlyContinue}
     
 #Update Post Actions Count
 $UpdateCountTo = $CurrentRun + 1
