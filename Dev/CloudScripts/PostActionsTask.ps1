@@ -53,6 +53,12 @@ New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name 
 Start-Sleep -Seconds 100
 Invoke-UpdateScanMethodMSStore
 
+if ($CurrentRun -ge 2){
+    Start-Sleep -Seconds 180
+    Restart-Computer
+}
+
+
 '@
 
 $PostActionScript | Out-File -FilePath $ScriptPath -Force
