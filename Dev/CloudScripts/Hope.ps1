@@ -4,7 +4,7 @@ Creates Setup Complete Files
 #>
 
 $ScriptName = 'hope.garytown.com'
-$ScriptVersion = '24.1.22.1'
+$ScriptVersion = '24.5.20.1'
 
 iex (irm functions.garytown.com)
 #region functions
