@@ -54,8 +54,8 @@ Start-Sleep -Seconds 100
 Invoke-UpdateScanMethodMSStore
 
 if ($CurrentRun -ge 2){
-    Start-Sleep -Seconds 180
-    Restart-Computer
+    Start-Sleep -Seconds 60
+    Restart-Computer -force
 }
 
 
