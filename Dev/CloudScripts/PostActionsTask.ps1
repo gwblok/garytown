@@ -30,7 +30,7 @@ if ($CurrentRun -ge 5){Unregister-ScheduledTask -TaskName $ScheduledTaskName -Er
     
 #Update Post Actions Count
 $UpdateCountTo = $CurrentRun + 1
-New-ItemProperty -Path $RegistryPath -Name "TriggerPostActions" -PropertyType dword -Value $UpdateCountTo | Out-Null
+New-ItemProperty -Path $RegistryPath -Name "TriggerPostActions" -PropertyType dword -Value $UpdateCountTo -force | Out-Null
 
 #Import Functions from GitHUb
 iex (irm functions.garytown.com)
