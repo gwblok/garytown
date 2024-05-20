@@ -106,9 +106,15 @@ if ($env:SystemDrive -ne 'X:') {
     iex (irm test.garytown.com)
      
     #Set Time Zone to Automatic Update
-    
-    Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
-    Enable-AutoZimeZoneUpdate
+    #Write-Host -ForegroundColor Gray "**Setting Time Zone for Auto Update**" 
+    #Enable-AutoZimeZoneUpdate
+
+    #Enable Microsoft Other Updates:
+    (New-Object -com "Microsoft.Update.ServiceManager").AddService2("7971f918-a847-4430-9279-4a52d1efe18d",7,"")
+
+    #Enable "Notify me when a restart is required to finish updating"
+    New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name RestartNotificationsAllowed2 -PropertyType dword -Value 1
+
     Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
     
