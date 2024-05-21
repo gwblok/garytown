@@ -72,6 +72,8 @@ Set-ExecutionPolicy Bypass -Force
 if ($env:SystemDrive -eq 'X:') {
     #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
     Set-SetupCompleteCreateStartHOPEonUSB
+    Write-Host -ForegroundColor Green "Mapping Drive W: to \\WD1TB\OSD"
+    net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
     
     Write-Host -ForegroundColor Green "Starting win11.garytown.com"
     iex (irm win11.garytown.com)
