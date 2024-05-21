@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.4.22.1'
+$ScriptVersion = '24.5.21.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -872,6 +872,6 @@ if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenov
 }
 if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Dell"){
 	Write-Host -ForegroundColor Green "[+] Function OSDCloud-DCU..."
-	iex (irm hhttps://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1)
+	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1)
 }
 
