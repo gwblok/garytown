@@ -870,3 +870,8 @@ if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenov
         Import-Module LnvDeviceManagement -Force -Verbose
     }
 }
+if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Dell"){
+	Write-Host -ForegroundColor Green "[+] Function OSDCloud-DCU..."
+	iex (irm hhttps://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1)
+}
+
