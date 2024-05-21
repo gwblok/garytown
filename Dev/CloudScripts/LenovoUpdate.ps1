@@ -1,4 +1,6 @@
-if (Get-MyComputerManufacturer -match "Lenovo"){
+$Vendor = Get-MyComputerManufacturer
+write-host "Manufacturer: $Vendor"
+if ($Vendor -match "Lenovo"){
     Write-Host "Device is Lenovo, attempting to install Module LSUClient"
     Install-Module -Name LSUClient -Force -Verbose
     Import-Module -Name LSUClient
