@@ -868,9 +868,9 @@ if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenov
         Invoke-WebRequest -UseBasicParsing -Uri $LenovoDMMURL -OutFile "$env:TEMP\ldmm.zip"
         Expand-Archive -Path "$env:TEMP\ldmm.zip" -DestinationPath "$env:ProgramFiles\WindowsPowerShell\Modules" -Force
         Import-Module LnvDeviceManagement -Force -Verbose
-	Write-Host -ForegroundColor Green "[+] Function Install-LenovoSystemUpdater"
-	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Install-LenovoApps.ps1)
     }
+    	Write-Host -ForegroundColor Green "[+] Function Install-LenovoSystemUpdater"
+	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Install-LenovoApps.ps1)
 }
 if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Dell"){
 	Write-Host -ForegroundColor Green "[+] Function OSDCloud-DCU..."
