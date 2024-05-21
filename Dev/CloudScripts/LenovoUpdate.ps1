@@ -1,5 +1,6 @@
 if (Get-MyComputerManufacturer -match "Lenovo"){
-    Install-Module -Name LSUClient
+    Write-Host "Device is Lenovo, attempting to install Module LSUClient"
+    Install-Module -Name LSUClient -Force -Verbose
     Import-Module -Name LSUClient
     $updates = Get-LSUpdate | Where-Object { $_.Installer.Unattended }
     $i = 1
