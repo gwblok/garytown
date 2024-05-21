@@ -91,6 +91,9 @@ if ($env:SystemDrive -ne 'X:') {
     #Setup Post Actions Scheduled Task
     iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
 
+    #Disable Auto Bitlocker
+    New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker -Name PreventDeviceEncryption -PropertyType dword -Value 1 -Force
+    
     #Add Functions
     iex (irm functions.garytown.com)
     #Remove Personal Teams
