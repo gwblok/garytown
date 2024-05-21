@@ -4,6 +4,7 @@ if ($Manufacturer -match "Lenovo"){
     Write-Host "Device is Lenovo, attempting to install Module LSUClient"
     Install-Module -Name LSUClient -Force
     Import-Module -Name LSUClient
+    Write-Host "Scanning for updates...."
     $updates = Get-LSUpdate | Where-Object { $_.Installer.Unattended }
     $i = 1
     foreach ($update in $updates) {
