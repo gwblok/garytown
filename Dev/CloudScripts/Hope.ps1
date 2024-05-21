@@ -103,6 +103,12 @@ if ($env:SystemDrive -ne 'X:') {
         Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/85ad154fa2964ea4757a458dc5c91aea5bf483c6/HopeForUsedComputers/Hope%20for%20Used%20Computers%20PDF.pdf" -OutFile "C:\Users\Public\Desktop\Hope For Used Computers.pdf"
     }
     catch {}
+    #Lenovo Updates
+    try {
+        iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/LenovoUpdate.ps1)
+    }
+    catch {}
+
 
     #Set DO
     #Set-DOPoliciesGPORegistry
