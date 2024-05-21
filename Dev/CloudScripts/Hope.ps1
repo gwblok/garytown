@@ -38,6 +38,7 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     New-Item -Path $PSFilePath -ItemType File -Force
     Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
     Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
     Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
 }
 
