@@ -17,6 +17,7 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
+$Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
 $OSReleaseID = '23H2' #Used to Determine Driver Pack
 $OSName = 'Windows 11 23H2 x64'
@@ -110,5 +111,10 @@ if (Test-path -path "x:\windows\system32\cmtrace.exe"){
     copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe"
 }
 
+if ($Manufacturer -match "Lenovo") {
+    Write-Verbose -Verbose "Copy-PSModuleToFolder -Name HPCMSL to $PowerShellSavePath\Modules"
+    $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
+    Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
+}
 #Restart
 #restart-computer
