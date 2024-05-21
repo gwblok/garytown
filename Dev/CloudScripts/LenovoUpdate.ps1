@@ -2,7 +2,7 @@ $Manufacturer = (Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_Computer
 Write-Output "Manufacturer = $Manufacturer"
 if ($Manufacturer -match "Lenovo"){
     Write-Host "Device is Lenovo, attempting to install Module LSUClient"
-    Install-Module -Name LSUClient -Force -Verbose
+    Install-Module -Name LSUClient -Force
     Import-Module -Name LSUClient
     $updates = Get-LSUpdate | Where-Object { $_.Installer.Unattended }
     $i = 1
