@@ -1,6 +1,10 @@
 $Manufacturer = (Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_ComputerSystem).Manufacturer
 Write-Output "Manufacturer = $Manufacturer"
 if ($Manufacturer -match "Lenovo"){
+    iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Install-LenovoApps.ps1)
+    iex (irm https://sandbox.osdcloud.com)
+    Install-LenovoVantage
+    Set-LenovoVantage
     Write-Host "Device is Lenovo, attempting to install Module LSUClient"
     Install-Module -Name LSUClient -Force
     Import-Module -Name LSUClient
