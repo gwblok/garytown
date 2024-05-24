@@ -86,7 +86,7 @@ if ($WindowsPhase -eq 'OOBE') {
     osdcloud-RunDCU -UpdateType CleanImage
     Write-Host -ForegroundColor Green "[+] Setting Dell Command Update to Auto Update"
     osdcloud-DCUAutoUpdate
-    osdcloud-StartOOBE -Display -Language -DateTime -Autopilot -KeyVault
+    #osdcloud-StartOOBE -Display -Language -DateTime -Autopilot -KeyVault
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
