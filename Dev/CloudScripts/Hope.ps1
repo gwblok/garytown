@@ -162,7 +162,7 @@ if ($env:SystemDrive -ne 'X:') {
     }
     catch {}
 
-        try {
+    try {
         iex (irm https://dell.garytown.com)
     }
     catch {}
