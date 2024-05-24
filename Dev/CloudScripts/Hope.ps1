@@ -162,6 +162,11 @@ if ($env:SystemDrive -ne 'X:') {
     }
     catch {}
 
+        try {
+        iex (irm https://dell.garytown.com)
+    }
+    catch {}
+
     #Set Time Zone
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
