@@ -23,7 +23,7 @@ if ($Manufacturer -match "Dell"){
         elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
         else {$WindowsPhase = 'Windows'}
     }
-    write-ouput "Running in Windows Phase: $WindowsPhase"
+    write-output "Running in Windows Phase: $WindowsPhase"
     #region OOBE
     if ($WindowsPhase -eq 'OOBE') {
         Write-Host -ForegroundColor Green "[+] Installing Dell Command Update"
