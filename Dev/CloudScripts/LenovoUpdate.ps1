@@ -19,6 +19,6 @@ if ($Manufacturer -match "Lenovo"){
 
     $LenovoBackgroundTask = Get-ScheduledTask -TaskName "Background monitor" -ErrorAction SilentlyContinue
     if ($LenovoBackgroundTask){
-        Disable-ScheduledTask -TaskName "Background monitor"
+        $LenovoBackgroundTask | Disable-ScheduledTask 
     }
 }
