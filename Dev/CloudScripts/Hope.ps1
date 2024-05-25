@@ -149,8 +149,8 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
     Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
     Invoke-UpdateScanMethodMSStore
-    Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
-    winget upgrade --all --accept-package-agreements --accept-source-agreements
+    #Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
+    #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
     #Modified Version of Andrew's Debloat Script
     Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
