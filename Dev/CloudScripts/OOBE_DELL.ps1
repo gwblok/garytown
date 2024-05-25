@@ -17,25 +17,9 @@ if ($Manufacturer -match "Dell"){
         $WindowsPhase = 'WinPE'
     }
     else {
-        $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
-        if ($env:UserName -eq 'defaultuser0') {$WindowsPhase = 'OOBE'}
-        elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$WindowsPhase = 'Specialize'}
-        elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
-        else {$WindowsPhase = 'Windows'}
+        {$WindowsPhase = 'Windows'}
     }
     write-output "Running in Windows Phase: $WindowsPhase"
-    #region OOBE
-    if ($WindowsPhase -eq 'OOBE') {
-        Write-Host -ForegroundColor Green "[+] Installing Dell Command Update"
-        osdcloud-InstallDCU
-        Write-Host -ForegroundColor Green "[+] Running Dell Command Update Drivers"
-        osdcloud-RunDCU -UpdateType driver
-        Write-Host -ForegroundColor Green "[+] Running Dell Command Update BIOS"
-        osdcloud-RunDCU -UpdateType bios
-        Write-Host -ForegroundColor Green "[+] Setting Dell Command Update to Auto Update"
-        osdcloud-DCUAutoUpdate
-    }
-    #endregion
 
     #region Windows
     if ($WindowsPhase -eq 'Windows') {
