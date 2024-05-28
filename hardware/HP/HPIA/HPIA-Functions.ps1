@@ -228,7 +228,11 @@ Function Run-HPIA {
         [Parameter(Mandatory=$false)]
         $HPIAInstallPath = "$env:ProgramFiles\HP\HPIA\bin",
         [Parameter(Mandatory=$false)]
-        $ReferenceFile
+        $ReferenceFile,
+        [Parameter(Mandatory=$false)]
+        [switch]$Silent,
+        [Parameter(Mandatory=$false)]
+        [switch]$Noninteractive
         )
     $DateTime = Get-Date -Format "yyyyMMdd-HHmmss"
     $ReportsFolder = "$ReportsFolder\$DateTime"
@@ -246,6 +250,12 @@ Function Run-HPIA {
         throw
     }
     
+ 
+    if ($Noninteractive -eq $true){$Noninteractive = "/Noninteractive"}
+    else {$Noninteractive = ""} 
+    if ($silent -eq $true){$Silent = "/Silent"; $Noninteractive = ""}
+    else {$Silent = ""}
+
     Install-HPIA -HPIAInstallPath $HPIAInstallPath
     if ($Action -eq "List"){$LogComp = "Scanning"}
     else {$LogComp = "Updating"}
@@ -254,12 +264,12 @@ Function Run-HPIA {
         if ($ReferenceFile){
             CMTraceLog -LogFile $CMTraceLog -Message "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" -Component $LogComp
             Write-Host "Running HPIA With Args: /Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" -ForegroundColor Green
-            $Process = Start-Process -FilePath $HPIAInstallPath\HPImageAssistant.exe -WorkingDirectory $TempWorkFolder -ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" -NoNewWindow -PassThru -Wait -ErrorAction Stop
+            $Process = Start-Process -FilePath $HPIAInstallPath\HPImageAssistant.exe -WorkingDirectory $TempWorkFolder -ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action $Silent $Noninteractive /Debug /ReportFolder:$ReportsFolder /ReferenceFile:$ReferenceFile" -NoNewWindow -PassThru -Wait -ErrorAction Stop
         }
         else {
             CMTraceLog -LogFile $CMTraceLog -Message "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder" -Component $LogComp
             Write-Host "Running HPIA With Args: /Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder" -ForegroundColor Green
-            $Process = Start-Process -FilePath $HPIAInstallPath\HPImageAssistant.exe -WorkingDirectory $TempWorkFolder -ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action /Silent /Debug /ReportFolder:$ReportsFolder" -NoNewWindow -PassThru -Wait -ErrorAction Stop
+            $Process = Start-Process -FilePath $HPIAInstallPath\HPImageAssistant.exe -WorkingDirectory $TempWorkFolder -ArgumentList "/Operation:$Operation /Category:$Category /Selection:$Selection /Action:$Action $Silent $Noninteractive /Debug /ReportFolder:$ReportsFolder" -NoNewWindow -PassThru -Wait -ErrorAction Stop
         }
 
         
@@ -274,7 +284,7 @@ Function Run-HPIA {
             Write-Host "Exit $($Process.ExitCode) - The analysis returned no recommendation." -ForegroundColor Green
             CMTraceLog -LogFile $CMTraceLog -Message "########################################" -Component "Complete"
             Stop-Transcript
-            Exit 0
+            #Exit 0
         }
          elseif ($Process.ExitCode -eq 257) 
         {
@@ -283,7 +293,7 @@ Function Run-HPIA {
             CMTraceLog -LogFile $CMTraceLog -Message "########################################" -Component "Complete"
             
             Stop-Transcript
-            Exit 0
+            #Exit 0
         }
         elseif ($Process.ExitCode -eq 3010) 
         {
@@ -296,60 +306,67 @@ Function Run-HPIA {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - Install failed — One or more SoftPaq installations failed." -Component "Update" -Type 2
             Write-Host "Exit $($Process.ExitCode) - Install failed — One or more SoftPaq installations failed." -ForegroundColor Yellow
         }
+        elseif ($Process.ExitCode -eq 4104) 
+        {
+            CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - HPIA used a generic reference file to make the recommendation!" -Component "Update" -Type 2
+            Write-Host "Exit $($Process.ExitCode) -  HPIA used a generic reference file to make the recommendation!" -ForegroundColor Yellow
+            Stop-Transcript
+            #throw
+        }
         elseif ($Process.ExitCode -eq 4096) 
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - This platform is not supported!" -Component "Update" -Type 2
             Write-Host "Exit $($Process.ExitCode) - This platform is not supported!" -ForegroundColor Yellow
             Stop-Transcript
-            throw
+            #throw
         }
         elseif ($Process.ExitCode -eq 16386) 
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - This platform is not supported!" -Component "Update" -Type 2
             Write-Output "Exit $($Process.ExitCode) - The reference file is not supported on platforms running the Windows 10 operating system!"
             Stop-Transcript 
-            throw
+            #throw
         }
         elseif ($Process.ExitCode -eq 16385) 
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - The reference file is invalid" -Component "Update" -Type 2
             Write-Output "Exit $($Process.ExitCode) - The reference file is invalid"
             Stop-Transcript 
-            throw
+            #throw
         }
         elseif ($Process.ExitCode -eq 16387) 
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - The reference file given explicitly on the command line does not match the target System ID or OS version." -Component "Update" -Type 2
             Write-Output "Exit $($Process.ExitCode) - The reference file given explicitly on the command line does not match the target System ID or OS version." 
-            throw
+            #throw
         }
         elseif ($Process.ExitCode -eq 16388) 
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - HPIA encountered an error processing the reference file provided on the command line." -Component "Update" -Type 2
             Write-Output "Exit $($Process.ExitCode) - HPIA encountered an error processing the reference file provided on the command line." 
             Stop-Transcript
-            throw
+            #throw
         }
         elseif ($Process.ExitCode -eq 16389) 
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Exit $($Process.ExitCode) - HPIA could not find the reference file specified in the command line reference file parameter" -Component "Update" -Type 2
             Write-Output "Exit $($Process.ExitCode) - HPIA could not find the reference file specified in the command line reference file parameter" 
             Stop-Transcript
-            throw
+            #throw
         }
         Else
         {
             CMTraceLog -LogFile $CMTraceLog -Message "Process exited with code $($Process.ExitCode). Expecting 0." -Component "Update" -Type 3
             Write-Host "Process exited with code $($Process.ExitCode). Expecting 0." -ForegroundColor Yellow
             Stop-Transcript
-            throw
+            #throw
         }
     }
     catch {
         CMTraceLog -LogFile $CMTraceLog -Message "Failed to start the HPImageAssistant.exe: $($_.Exception.Message)" -Component "Update" -Type 3
         Write-Host "Failed to start the HPImageAssistant.exe: $($_.Exception.Message)" -ForegroundColor Red
         Stop-Transcript
-        throw
+        #throw
     }
 
 
