@@ -230,9 +230,9 @@ Function Run-HPIA {
         [Parameter(Mandatory=$false)]
         $ReferenceFile,
         [Parameter(Mandatory=$false)]
-        [switch]$Silent,
+        [switch]$SilentMode,
         [Parameter(Mandatory=$false)]
-        [switch]$Noninteractive
+        [switch]$NoninteractiveMode
         )
     $DateTime = Get-Date -Format "yyyyMMdd-HHmmss"
     $ReportsFolder = "$ReportsFolder\$DateTime"
@@ -251,9 +251,9 @@ Function Run-HPIA {
     }
     
  
-    if ($Noninteractive -eq $true){$Noninteractive = "/Noninteractive"}
+    if ($NoninteractiveMode -eq $true){$Noninteractive = "/Noninteractive"}
     else {$Noninteractive = ""} 
-    if ($silent -eq $true){$Silent = "/Silent"; $Noninteractive = ""}
+    if ($silentMode -eq $true){$Silent = "/Silent"; $Noninteractive = ""}
     else {$Silent = ""}
 
     Install-HPIA -HPIAInstallPath $HPIAInstallPath
