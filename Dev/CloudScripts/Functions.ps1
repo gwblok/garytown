@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.4.22.1'
+$ScriptVersion = '24.5.21.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -869,4 +869,11 @@ if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenov
         Expand-Archive -Path "$env:TEMP\ldmm.zip" -DestinationPath "$env:ProgramFiles\WindowsPowerShell\Modules" -Force
         Import-Module LnvDeviceManagement -Force -Verbose
     }
+    	Write-Host -ForegroundColor Green "[+] Function Install-LenovoSystemUpdater"
+	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Install-LenovoApps.ps1)
 }
+if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Dell"){
+	Write-Host -ForegroundColor Green "[+] Function OSDCloud-DCU..."
+	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1)
+}
+
