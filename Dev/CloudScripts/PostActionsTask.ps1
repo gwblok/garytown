@@ -56,10 +56,17 @@ if ($LenovoBackgroundTask){
 Start-Sleep -Seconds 100
 Invoke-UpdateScanMethodMSStore
 
+if ($CurrentRun -eq 3){
+    if (Test-HPIASupport -eq $true){
+        Run-HPIA -Category All -Action Install -NoninteractiveMode
+    }
+}
+
 if (($CurrentRun -ge 2) -and ($CurrentRun -lt 5)){
     Start-Sleep -Seconds 60
     Restart-Computer -force
 }
+
 if ($CurrentRun -ge 5){
     Start-Sleep -Seconds 60
     stop-Computer -force
