@@ -108,12 +108,12 @@ if (Test-DISMFromOSDCloudUSB){
 
 #Copy CMTrace Local:
 if (Test-path -path "x:\windows\system32\cmtrace.exe"){
-    copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe"
+    copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe" -verbose
 }
 
 if ($Manufacturer -match "Lenovo") {
-    Write-Verbose -Verbose "Copy-PSModuleToFolder -Name HPCMSL to $PowerShellSavePath\Modules"
     $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
+    Write-Host "Copy-PSModuleToFolder -Name LSUClient to $PowerShellSavePath\Modules"
     Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
 }
 #Restart
