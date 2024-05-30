@@ -51,7 +51,7 @@ $BaseURL = $BaseURL_US
 $ClientID = "AppClientID"
 $Secret = "AppSecret"
 
-$TokenURI = "https://daas.api.hp.com/oauth/v1/token"
+$TokenURI = "$($BaseURL)/oauth/v1/token"
 $redirect_uri = "https://localhost:5000/"
 
 #Where you want to back up your access token

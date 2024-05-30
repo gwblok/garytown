@@ -95,8 +95,6 @@ if ($env:SystemDrive -ne 'X:') {
     #Disable Auto Bitlocker
     New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker -Name PreventDeviceEncryption -PropertyType dword -Value 1 -Force
     
-    #Add Functions
-    iex (irm functions.garytown.com)
     #Remove Personal Teams
     Write-Host -ForegroundColor Gray "**Removing Default Chat Tool**" 
     try {
