@@ -213,8 +213,8 @@ Function Run-HPIA {
         [ValidateSet("Analyze", "DownloadSoftPaqs")]
         $Operation = "Analyze",
         [Parameter(Mandatory=$false)]
-        [ValidateSet("All", "BIOS", "Drivers", "Software", "Firmware", "Accessories","BIOS,Drivers")]
-        $Category = "Drivers",
+        [ValidateSet("All", "BIOS", "Drivers", "Software", "Firmware", "Accessories")]
+        [String[]]$Category = @("Drivers"),
         [Parameter(Mandatory=$false)]
         [ValidateSet("All", "Critical", "Recommended", "Routine")]
         $Selection = "All",
@@ -238,6 +238,7 @@ Function Run-HPIA {
     $ReportsFolder = "$ReportsFolder\$DateTime"
     $CMTraceLog = "$ReportFolder\HPIACustomLog.log"
     $script:TempWorkFolder = "$env:temp\HPIA"
+    [String]$Category = $($Category -join ",").ToString()
     try 
     {
         [void][System.IO.Directory]::CreateDirectory($LogFolder)
@@ -366,13 +367,14 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
 #>
 [CmdletBinding()]
     Param (
-        [ValidateSet("All", "BIOS", "Drivers", "Software", "Firmware", "Accessories","BIOS,Drivers")]
-        $Category = "Drivers",
+        [ValidateSet("All", "BIOS", "Drivers", "Software", "Firmware", "Accessories")]
+        [String[]]$Category = @("Drivers"),
         [Parameter(Mandatory=$false)]
         $ReportsFolder = "$env:systemdrive\ProgramData\HP\HPIA"
 
         )
     $LatestReportFolder = (Get-ChildItem -Path $ReportsFolder | Where-Object {$_.Attributes -match 'Directory'} | Select-Object -Last 1).FullName
+    [String]$Category = $($Category -join ",").ToString()
     try 
     {
         $XMLFile = Get-ChildItem -Path $LatestReportFolder -Recurse -Include *.xml -ErrorAction Stop
@@ -384,7 +386,7 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
                 [xml]$XML = Get-Content -Path $XMLFile.FullName -ErrorAction Stop
                 
                 if ($Category -eq "BIOS" -or $Category -eq "All" -or $Category -eq "BIOS,Drivers"){
-                    CMTraceLog -LogFile $CMTraceLog -Message "Checking BIOS Recommendations" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message "Checking BIOS Recommendations" -Component "Report"
                     Write-Host "Checking BIOS Recommendations" -ForegroundColor Green 
                     $null = $Recommendation
                     $Recommendation = $xml.HPIA.Recommendations.BIOS.Recommendation
@@ -396,13 +398,13 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
                         $DownloadURL = "https://" + $Recommendation.Solution.Softpaq.Url
                         $SoftpaqFileName = $DownloadURL.Split('/')[-1]
                         Write-Host "Component: $ItemName" -ForegroundColor Gray
-                        CMTraceLog -LogFile $CMTraceLog -Message "Component: $ItemName" -Component "Report"                        
+                        #CMTraceLog -LogFile $CMTraceLog -Message "Component: $ItemName" -Component "Report"                        
                         Write-Host " Current version is $CurrentBIOSVersion" -ForegroundColor Gray
-                        CMTraceLog -LogFile $CMTraceLog -Message " Current version is $CurrentBIOSVersion" -Component "Report"    
-                        Write-Host " Recommended version is $ReferenceBIOSVersion" -ForegroundColor Gray
-                        CMTraceLog -LogFile $CMTraceLog -Message " Recommended version is $ReferenceBIOSVersion" -Component "Report"    
+                        #CMTraceLog -LogFile $CMTraceLog -Message " Current version is $CurrentBIOSVersion" -Component "Report"    
+                        #Write-Host " Recommended version is $ReferenceBIOSVersion" -ForegroundColor Gray
+                        #CMTraceLog -LogFile $CMTraceLog -Message " Recommended version is $ReferenceBIOSVersion" -Component "Report"    
                         Write-Host " Softpaq download URL is $DownloadURL" -ForegroundColor Gray
-                        CMTraceLog -LogFile $CMTraceLog -Message " Softpaq download URL is $DownloadURL" -Component "Report"    
+                        #CMTraceLog -LogFile $CMTraceLog -Message " Softpaq download URL is $DownloadURL" -Component "Report"    
                         $Script:BIOSReboot = $true
                         $Script:HPIABIOSUpdateAvailable = $true
                     }
@@ -412,7 +414,7 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
                     }
                 }
                 if ($Category -eq "drivers" -or $Category -eq "All" -or $Category -eq "BIOS,Drivers"){
-                    CMTraceLog -LogFile $CMTraceLog -Message "Checking Driver Recommendations" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message "Checking Driver Recommendations" -Component "Report"
                     Write-Host "Checking Driver Recommendations" -ForegroundColor Green                
                     $null = $Recommendation
                     $Recommendation = $xml.HPIA.Recommendations.drivers.Recommendation
@@ -425,19 +427,19 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
                             $DownloadURL = "https://" + $item.Solution.Softpaq.Url
                             $SoftpaqFileName = $DownloadURL.Split('/')[-1]
                             Write-Host "Component: $ItemName" -ForegroundColor Gray   
-                            CMTraceLog -LogFile $CMTraceLog -Message "Component: $ItemName" -Component "Report"                        
+                            #CMTraceLog -LogFile $CMTraceLog -Message "Component: $ItemName" -Component "Report"                        
                             Write-Host " Current version is $CurrentBIOSVersion" -ForegroundColor Gray
-                            CMTraceLog -LogFile $CMTraceLog -Message " Current version is $CurrentBIOSVersion" -Component "Report"
+                            #CMTraceLog -LogFile $CMTraceLog -Message " Current version is $CurrentBIOSVersion" -Component "Report"
                             Write-Host " Recommended version is $ReferenceBIOSVersion" -ForegroundColor Gray
-                            CMTraceLog -LogFile $CMTraceLog -Message " Recommended version is $ReferenceBIOSVersion" -Component "Report"
+                            #CMTraceLog -LogFile $CMTraceLog -Message " Recommended version is $ReferenceBIOSVersion" -Component "Report"
                             Write-Host " Softpaq download URL is $DownloadURL" -ForegroundColor Gray
-                            CMTraceLog -LogFile $CMTraceLog -Message " Softpaq download URL is $DownloadURL" -Component "Report"
+                            #CMTraceLog -LogFile $CMTraceLog -Message " Softpaq download URL is $DownloadURL" -Component "Report"
                             }
                         }
                     Else  
                         {
                         Write-Host "No Driver recommendation in XML" -ForegroundColor Gray
-                        CMTraceLog -LogFile $CMTraceLog -Message "No Driver recommendation in XML" -Component "Report"
+                        #CMTraceLog -LogFile $CMTraceLog -Message "No Driver recommendation in XML" -Component "Report"
                         }
                     }
                  if ($Category -eq "Software" -or $Category -eq "All"){
@@ -466,19 +468,19 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
             catch 
             {
                 Write-Host "Failed to parse the XML file: $($_.Exception.Message)"
-                CMTraceLog -LogFile $CMTraceLog -Message "Failed to parse the XML file: $($_.Exception.Message)" -Component "Report"
+                #CMTraceLog -LogFile $CMTraceLog -Message "Failed to parse the XML file: $($_.Exception.Message)" -Component "Report"
             }
         }
         Else  
         {
             Write-Host "Failed to find an XML report."
-            CMTraceLog -LogFile $CMTraceLog -Message "Failed to find an XML report." -Component "Report"
+            #CMTraceLog -LogFile $CMTraceLog -Message "Failed to find an XML report." -Component "Report"
             }
     }
     catch 
     {
         Write-Host "Failed to find an XML report: $($_.Exception.Message)"
-        CMTraceLog -LogFile $CMTraceLog -Message "Failed to find an XML report: $($_.Exception.Message)" -Component "Report"
+        #CMTraceLog -LogFile $CMTraceLog -Message "Failed to find an XML report: $($_.Exception.Message)" -Component "Report"
     }
 }
 Function Get-HPIAJSONResult {
@@ -498,17 +500,17 @@ Grabs the JSON output from a recent run of HPIA to see what was installed and Ex
         If ($JSONFile)
         {
             Write-Host "Reporting Full HPIA Results" -ForegroundColor Green
-            CMTraceLog -LogFile $CMTraceLog -Message "JSON located at $($JSONFile.FullName)" -Component "Report"
+            #CMTraceLog -LogFile $CMTraceLog -Message "JSON located at $($JSONFile.FullName)" -Component "Report"
             try 
             {
             $JSON = Get-Content -Path $JSONFile.FullName  -ErrorAction Stop | ConvertFrom-Json
-            CMTraceLog -LogFile $CMTraceLog -Message "HPIAOpertaion: $($JSON.HPIA.HPIAOperation)" -Component "Report"
+            #CMTraceLog -LogFile $CMTraceLog -Message "HPIAOpertaion: $($JSON.HPIA.HPIAOperation)" -Component "Report"
             Write-Host " HPIAOpertaion: $($JSON.HPIA.HPIAOperation)" -ForegroundColor Gray
-            CMTraceLog -LogFile $CMTraceLog -Message "ExitCode: $($JSON.HPIA.ExitCode)" -Component "Report"
+            #CMTraceLog -LogFile $CMTraceLog -Message "ExitCode: $($JSON.HPIA.ExitCode)" -Component "Report"
             Write-Host " ExitCode: $($JSON.HPIA.ExitCode)" -ForegroundColor Gray
-            CMTraceLog -LogFile $CMTraceLog -Message "LastOperation: $($JSON.HPIA.LastOperation)" -Component "Report"
+            #CMTraceLog -LogFile $CMTraceLog -Message "LastOperation: $($JSON.HPIA.LastOperation)" -Component "Report"
             Write-Host " LastOperation: $($JSON.HPIA.LastOperation)" -ForegroundColor Gray
-            CMTraceLog -LogFile $CMTraceLog -Message "LastOperationStatus: $($JSON.HPIA.LastOperationStatus)" -Component "Report"
+            #CMTraceLog -LogFile $CMTraceLog -Message "LastOperationStatus: $($JSON.HPIA.LastOperationStatus)" -Component "Report"
             Write-Host " LastOperationStatus: $($JSON.HPIA.LastOperationStatus)" -ForegroundColor Gray
             $Recommendations = $JSON.HPIA.Recommendations
             if ($Recommendations) {
@@ -517,27 +519,27 @@ Grabs the JSON output from a recent run of HPIA to see what was installed and Ex
                     $ItemName = $Item.Name
                     $ItemRecommendationValue = $Item.RecommendationValue
                     $ItemSoftPaqID = $Item.SoftPaqID
-                    CMTraceLog -LogFile $CMTraceLog -Message " $ItemName $ItemRecommendationValue | $ItemSoftPaqID" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message " $ItemName $ItemRecommendationValue | $ItemSoftPaqID" -Component "Report"
                     Write-Host " $ItemName $ItemRecommendationValue | $ItemSoftPaqID" -ForegroundColor Gray
-                    CMTraceLog -LogFile $CMTraceLog -Message "  URL: $($Item.ReleaseNotesUrl)" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message "  URL: $($Item.ReleaseNotesUrl)" -Component "Report"
                     write-host "  URL: $($Item.ReleaseNotesUrl)" -ForegroundColor Gray
-                    CMTraceLog -LogFile $CMTraceLog -Message "  Status: $($item.Remediation.Status)" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message "  Status: $($item.Remediation.Status)" -Component "Report"
                     Write-Host "  Status: $($item.Remediation.Status)" -ForegroundColor Gray
-                    CMTraceLog -LogFile $CMTraceLog -Message "  ReturnCode: $($item.Remediation.ReturnCode)" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message "  ReturnCode: $($item.Remediation.ReturnCode)" -Component "Report"
                     Write-Host "  ReturnCode: $($item.Remediation.ReturnCode)" -ForegroundColor Gray
-                    CMTraceLog -LogFile $CMTraceLog -Message "  ReturnDescription: $($item.Remediation.ReturnDescription)" -Component "Report"
+                    #CMTraceLog -LogFile $CMTraceLog -Message "  ReturnDescription: $($item.Remediation.ReturnDescription)" -Component "Report"
                     Write-Host "  ReturnDescription: $($item.Remediation.ReturnDescription)" -ForegroundColor Gray
                     if ($($item.Remediation.ReturnCode) -eq 3010){$script:RebootRequired = $true}
                     }
                 }
             }
             catch {
-            CMTraceLog -LogFile $CMTraceLog -Message "Failed to parse the JSON file: $($_.Exception.Message)" -Component "Report" -Type 3
+            #CMTraceLog -LogFile $CMTraceLog -Message "Failed to parse the JSON file: $($_.Exception.Message)" -Component "Report" -Type 3
             }
         }
     }
     catch
     {
-    CMTraceLog -LogFile $CMTraceLog -Message "NO JSON report." -Component "Report" -Type 1
+    #CMTraceLog -LogFile $CMTraceLog -Message "NO JSON report." -Component "Report" -Type 1
     }
 }
