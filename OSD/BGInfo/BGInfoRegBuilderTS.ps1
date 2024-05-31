@@ -51,79 +51,82 @@ if ($CurrentVersion.EditionID -match "WindowsPE"){$InWinPE = $true}
 $ComputerName = hostname
 
 try {
-$tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
-$InWinPE = $tsenv.value('_SMSTSInWinPE')
-$OSDisk = $tsenv.value('OSDisk')
-$SMSTSMP = $tsenv.value('SMSTSMP')
-$SMSTSMake = $tsenv.value('_SMSTSMake')
-$SMSTSModel = $tsenv.value('_SMSTSModel')
-$OSDComputerName = $tsenv.value('OSDComputerName')
-$SMSTSPackageName = $tsenv.value('_SMSTSPackageName')
-$SMSTSPackageID = $tsenv.value('_SMSTSPackageID')
-$IsBDE = $tsenv.value('IsBDE')
-$IsDesktop = $tsenv.value('IsDesktop')
-$IsLaptop = $tsenv.value('IsLaptop')
-$IsServer = $tsenv.value('IsServer')
-$IsVM = $tsenv.value('IsVM')
-$IsOnBattery = $tsenv.value('IsOnBattery')
-$UniqueID = $tsenv.value('MachineMatchID')
-$Product = $tsenv.value('Product')
-$SystemSKUNumber = $tsenv.value('SystemSKUNumber')
-$BIOSVersion = $tsenv.value('BIOSVersion')
-$SerialNumber = $tsenv.value('SerialNumber')
-
-
-if ($InWinPE){Write-Output "Running Script in WinPE Mode"}
-#Unique ID is now being pulled from MachineMatchID in Johan's Gather Script.
-if ($SMSTSMake -eq "LENOVO"){
-    #$UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
-    $ModelFriendly = (Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version 
+    $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
+}
+catch{
+    Write-Output "Not in TS"
     }
-elseif($SMSTSMake -match "Dell"){
-    #$UniqueID = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
-    $ModelFriendly = $SMSTSModel
-    }
-elseif(($SMSTSMake -match "HP") -or ($SMSTSMake -match "Hewlett")){
-    #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
-    $ModelFriendly = $SMSTSModel
-    }
-else{
-    #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
-    $ModelFriendly = $SMSTSModel
-    }
+if ($tsenv){
+    $InWinPE = $tsenv.value('_SMSTSInWinPE')
+    $OSDisk = $tsenv.value('OSDisk')
+    $SMSTSMP = $tsenv.value('SMSTSMP')
+    $SMSTSMake = $tsenv.value('_SMSTSMake')
+    $SMSTSModel = $tsenv.value('_SMSTSModel')
+    $OSDComputerName = $tsenv.value('OSDComputerName')
+    $SMSTSPackageName = $tsenv.value('_SMSTSPackageName')
+    $SMSTSPackageID = $tsenv.value('_SMSTSPackageID')
+    $IsBDE = $tsenv.value('IsBDE')
+    $IsDesktop = $tsenv.value('IsDesktop')
+    $IsLaptop = $tsenv.value('IsLaptop')
+    $IsServer = $tsenv.value('IsServer')
+    $IsVM = $tsenv.value('IsVM')
+    $IsOnBattery = $tsenv.value('IsOnBattery')
+    $UniqueID = $tsenv.value('MachineMatchID')
+    $Product = $tsenv.value('Product')
+    $SystemSKUNumber = $tsenv.value('SystemSKUNumber')
+    $BIOSVersion = $tsenv.value('BIOSVersion')
+    $SerialNumber = $tsenv.value('SerialNumber')
 
-$Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
 
-if ($IsOnBattery -eq "TRUE"){$PowerSource = "Battery"}
-else {$PowerSource = "AC Adapter"}
+    if ($InWinPE){Write-Output "Running Script in WinPE Mode"}
+    #Unique ID is now being pulled from MachineMatchID in Johan's Gather Script.
+    if ($SMSTSMake -eq "LENOVO"){
+        #$UniqueID = ((Get-WmiObject -Class Win32_ComputerSystemProduct | Select-Object -ExpandProperty Name).SubString(0, 4)).Trim()
+        $ModelFriendly = (Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version 
+        }
+    elseif($SMSTSMake -match "Dell"){
+        #$UniqueID = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+        $ModelFriendly = $SMSTSModel
+        }
+    elseif(($SMSTSMake -match "HP") -or ($SMSTSMake -match "Hewlett")){
+        #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+        $ModelFriendly = $SMSTSModel
+        }
+    else{
+        #$UniqueID = (Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard).Product
+        $ModelFriendly = $SMSTSModel
+        }
 
-if ($IsDesktop -eq "TRUE"){$FormFactor = "Desktop"}
-elseif ($IsLaptop -eq "TRUE"){$FormFactor = "Laptop"}
-elseif ($IsServer -eq "TRUE"){$FormFactor = "Server"}
-elseif ($IsVM -eq "TRUE"){$FormFactor = "Virtual Machine"}
-else {$FormFactor = "Unknown"}
+    $Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
 
-#Write to Registry
-$Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMake -Value $SMSTSMake -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name OSDComputerName -Value $OSDComputerName -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name SMSTSPackageName -Value $SMSTSPackageName -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name SMSTSPackageID -Value $SMSTSPackageID -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name UniqueID -Value $UniqueID -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name ModelFriendly -Value $ModelFriendly -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name PowerSource -Value $PowerSource -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name FormFactor -Value $FormFactor -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name Product -Value $Product -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name SystemSKUNumber -Value $SystemSKUNumber -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name BIOSVersion -Value $BIOSVersion -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name SerialNumber -Value $SerialNumber -PropertyType String -Force
-$Null = New-ItemProperty -Path $RegistryPath -Name DiskInfo -Value "$($Disk[0].Model) $($Disk[0].BusType)" -PropertyType String -Force
+    if ($IsOnBattery -eq "TRUE"){$PowerSource = "Battery"}
+    else {$PowerSource = "AC Adapter"}
+
+    if ($IsDesktop -eq "TRUE"){$FormFactor = "Desktop"}
+    elseif ($IsLaptop -eq "TRUE"){$FormFactor = "Laptop"}
+    elseif ($IsServer -eq "TRUE"){$FormFactor = "Server"}
+    elseif ($IsVM -eq "TRUE"){$FormFactor = "Virtual Machine"}
+    else {$FormFactor = "Unknown"}
+
+    #Write to Registry
+    $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMake -Value $SMSTSMake -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name OSDComputerName -Value $OSDComputerName -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSPackageName -Value $SMSTSPackageName -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSPackageID -Value $SMSTSPackageID -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name UniqueID -Value $UniqueID -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name ModelFriendly -Value $ModelFriendly -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name PowerSource -Value $PowerSource -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name FormFactor -Value $FormFactor -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name Product -Value $Product -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name SMSTSMP -Value $SMSTSMP -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name SystemSKUNumber -Value $SystemSKUNumber -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name BIOSVersion -Value $BIOSVersion -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name SerialNumber -Value $SerialNumber -PropertyType String -Force
+    $Null = New-ItemProperty -Path $RegistryPath -Name DiskInfo -Value "$($Disk[0].Model) $($Disk[0].BusType)" -PropertyType String -Force
+
 }
 
-catch{
-Write-Output "Not in TS"
-    }
 
 $exitCode = 0
 
