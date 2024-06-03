@@ -1,5 +1,10 @@
 <# Gary Blok @gwblok GARYTOWN.COM
 Based on https://github.com/AdamGrossTX/FU.WhyAmIBlocked/blob/master/Get-SafeguardHoldInfo.ps1 by Adam Gross
+
+Modify Export-FUXMLFromSDB.ps1 file, update this line
+$SDBFiles = Get-ChildItem -Path "$($AppraiserDataPath)\*.sdb" -ErrorAction SilentlyContinue
+to this:
+$SDBFiles = Get-ChildItem -Path "$($AppraiserDataPath)\*.sdb" -Recurse | Where-Object {$_.Name -notmatch "backup"} -ErrorAction SilentlyContinue
 #>
 
 <#
