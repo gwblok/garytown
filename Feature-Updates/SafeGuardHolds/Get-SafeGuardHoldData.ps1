@@ -8,8 +8,7 @@ $SDBFiles = Get-ChildItem -Path "$($AppraiserDataPath)\*.sdb" -Recurse | Where-O
 #>
 
 <#
-
-requires -modules FU.WhyAmIBlocked
+requires -modules FU.WhyAmIBlocked - Modify based on notes above.
 Run CMPivot to pull this info from the registry & Add to "SettingsTable" anything that is missing.
 I typically copy and paste the results from CMPivot into Excel only keeping the two columns "ALTERNATEDATALINK & ALTERNATEDATAVERSION"
   While in Excel, delete duplicates (Data Tab), then Sort on Version
@@ -42,6 +41,9 @@ Registry('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Targ
 23.11.20 - Added more rows for Lookup
 24.3.4 - Added more rows for Lookup
 24.3.4 - Added count per row as verification it is doing something. :-)
+24.6.3 - Modified FU.WhyAmIBlocked Function Export-FUXMLFromSDB.ps1 to ignore SDB files named backup, this resolved errors I was seeing
+ - Also updated script to work on first pass correctly
+ - Added about 5 more lines in the Settings table.
 
 #>
 
@@ -103,7 +105,9 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_03_01_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2555'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_04_20_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2559'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2568'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_18_06_01_AMD64.cab'; ALTERNATEDATAVERSION = '2582'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2585'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2591'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_10_27_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2614'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_10_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2616'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_14_04_03_AMD64.cab'; ALTERNATEDATAVERSION = '2643'}
@@ -125,6 +129,11 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_06_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '26691'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '2670'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '26701'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_04_11_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '2674'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_04_25_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '2675'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_04_AMD64.cab'; ALTERNATEDATAVERSION = '2676'}
+
+	
 
 
 #Other:
@@ -167,8 +176,13 @@ ForEach ($Item in $SettingsTable){
     if (-Not $ExistingXMLS){
         write-host "Starting Function Export-FUXMLFromSDB $OutFilePath" -ForegroundColor Magenta
         Export-FUXMLFromSDB -AlternateSourcePath $OutFilePath -Path $AppriaserRoot
+        $ExistingXMLS = Get-ChildItem -Path $AppriaserRoot\*.xml -Recurse -File | Where-Object { $_.Name -like "*$AppraiserVersion*" } -ErrorAction SilentlyContinue
+        if (-Not $ExistingXMLS){
+            Write-Host -ForegroundColor Yellow "Did not find any XML files in this Group $AppraiserVersion"
+        }
     }
     foreach ($ExistingXML in $ExistingXMLS){
+        Write-Host -ForegroundColor Gray "  Searching XML File $($ExistingXML.fullName) for SafeGuard Info"
         $SafeGuardHoldDataWorking  = $null
         $DBBlocks = if ($ExistingXML) {
             [xml]$Content = Get-Content -Path $ExistingXML -Raw
