@@ -240,7 +240,9 @@ ForEach ($Item in $SettingsTable){
     }
 }
 Write-Host "Found $($SafeGuardHoldCombined.Count) Safeguard hold Items contained in the $TotalCount Appraiser DB Versions, exported to $Path\SafeGuardHoldCombinedDataBase.json" -ForegroundColor Green
-$SafeGuardHoldCombined | ConvertTo-Json | Out-File "$Path\SafeGuardHoldCombinedDataBase.json"
+#$SafeGuardHoldCombined | ConvertTo-Json | Out-File "$Path\SafeGuardHoldCombinedDataBase.json" -Encoding utf8
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+[System.IO.File]::WriteAllLines("$Path\SafeGuardHoldCombinedDataBase.json", ($SafeGuardHoldCombined | ConvertTo-Json), $Utf8NoBomEncoding)
 
 #Get Unique based on ID.  Assuming that all all safeguards with the same number are unique.
 Write-Host " Building Database of Unique Safeguard IDs...." -ForegroundColor Magenta
@@ -252,6 +254,17 @@ ForEach ($SafeGuardHoldID in $SafeGuardHoldIDs){
     $SafeGuardHoldDatabase += $SafeGuardHoldWorking 
 }
 
-$SafeGuardHoldDatabase | ConvertTo-Json | Out-File "$Path\SafeGuardHoldDataBase.json"
+#Export JSON as UTF8 without BOM
+#$SafeGuardHoldDatabase | ConvertTo-Json -Depth 10 | Out-File "$Path\SafeGuardHoldDataBase.json" -Encoding utf8
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+[System.IO.File]::WriteAllLines("$Path\SafeGuardHoldDataBase.json", ($SafeGuardHoldDatabase | ConvertTo-Json), $Utf8NoBomEncoding)
 
 Write-Host "Found $($SafeGuardHoldDatabase.Count) unique Safeguard hold Items, exported to $Path\SafeGuardHoldDataBase.json" -ForegroundColor Green
+
+#Compare
+Write-Host "Comparing Previous Online Output to this Run" -ForegroundColor Green
+$OnlineSafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldDataBase.json'
+$OnlineSafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
+$Compare = Compare-Object -ReferenceObject $OnlineSafeGuardData -DifferenceObject $SafeGuardHoldDatabase
+
+Write-Host "Previous Count: $($OnlineSafeGuardData.count) | Current Count: $($SafeGuardHoldDatabase.Count)" -ForegroundColor Green
