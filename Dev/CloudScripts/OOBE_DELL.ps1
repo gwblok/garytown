@@ -11,13 +11,14 @@ if ($Manufacturer -match "Dell"){
     $DellEnterprise = Test-DCUSupport
     if ($DellEnterprise -eq $true) {
         Write-Host -ForegroundColor Green "Dell System Supports Dell Command Update"
+        Write-Host -ForegroundColor Green " Enabling Dell Functions: https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1"
         Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1')
     }
     if ($env:SystemDrive -eq 'X:') {
         $WindowsPhase = 'WinPE'
     }
     else {
-        {$WindowsPhase = 'Windows'}
+        $WindowsPhase = 'Windows'
     }
     write-output "Running in Windows Phase: $WindowsPhase"
 
