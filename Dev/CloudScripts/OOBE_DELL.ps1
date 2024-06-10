@@ -1,8 +1,9 @@
 $ScriptName = 'dell.garytown.com'
-$ScriptVersion = '24.05.23.01'
+$ScriptVersion = '24.06.10.01'
 
 #region Initialize
 
+Write-Host "Running $ScriptName - $ScriptVersion" -ForegroundColor Green
 $Manufacturer = (Get-CimInstance -Class:Win32_ComputerSystem).Manufacturer
 $Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model
 $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
