@@ -34,7 +34,6 @@ Get-SoftpaqList #(uses the current OS & Build of the platform it is running on)
 # Get List of Softpaq Updates for a specific platform and specific OS & Build
 Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
 
-
 #Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6):
 $Platform = '8549'
 $MaxOSSupported = ((Get-HPDeviceDetails -platform $Platform -oslist).OperatingSystem | Where-Object {$_ -notmatch "LTSB"}| Select-Object -Unique| Measure-Object -Maximum).Maximum
@@ -106,3 +105,56 @@ else {$MaxOS = "Win10"}
 New-HPDriverPack -Platform $Platform -Os $MaxOS -OSVer $MaxOSVer -Path $BuildPath
 #endregion
 
+
+#Region BIOS
+
+<#
+There are two different Functions for BIOS Updates, Get-HPBIOSUpdates and Get-HPBIOSWindowsUpdate.
+Get-HPBIOSUpdates is for getting the BIOS updates and flashing them
+- Pulls directly from HP's BIOS Update Catalog
+- If BIOS Security is enabled, you will need to provide a Password or Sure Admin payload file
+- provides parameters to suspend Bitlocker
+- Typically updates are available in the HP Catalog before the Microsoft Catalog
+
+Get-HPBIOSWindowsUpdate is for getting the BIOS updates and flashing them using the Windows Update method.
+- Downloads from Microsoft Catalog
+- Bypasses BIOS Security (Passwords and Sure Admin)
+- Automatically will suspend bitlocker
+- Typically takes longer for updates to be available in the Microsoft Catalog
+  - This can be a good thing, as by the time it will show up in WU, it will have had longer time for testing and validation
+#>
+
+#Get Current BIOS Information on Current Machine
+Get-HPBIOSVersion
+
+#Get Current Machine if BIOS Update Available
+# https://developers.hp.com/hp-client-management/doc/get-hpbiosupdates
+Get-HPBIOSUpdates -Check
+#True = BIOS Update Available
+#False = No BIOS Update Available
+
+#Update BIOS on Current Machine
+Get-HPBIOSUpdates -Flash
+
+#Downgrade BIOS on Current Machine
+Get-HPBIOSUpdates -Flash -Version "01.26.00" -Force
+#NOTE, you can use Get-HPBIOSUpdates -Check to see what versions are available to downgrade to, and it will prompt user to approve upon reboot.
+
+# There are several ways to get the latest BIOS for a device and update it
+$Platform = '8881' #(HP EliteDesk 805 G8 Desktop Mini PC)
+
+#Get List of BIOS Updates for a device
+Get-HPBIOSUpdates -Platform $Platform
+
+#Updating BIOS with Encpassulated update (Get-HPBIOSWindowsUpdate)
+# https://developers.hp.com/hp-client-management/doc/get-hpbioswindowsupdate
+
+#Get List of BIOS Updates for a device
+Get-HPBIOSWindowsUpdate
+
+#Update BIOS on Current Machine
+Get-HPBIOSWindowsUpdate -Flash
+
+
+
+#endregion
