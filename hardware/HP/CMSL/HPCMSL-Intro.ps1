@@ -18,6 +18,13 @@ To do automation, you'll need to know the Platform for the different devices you
 # Getting Information about the device it runs on
 Get-HPDeviceDetails
 
+#Find the Platform Code for the device based on Model Name
+Get-HPDeviceDetails -Like "*EliteBook*G11*"
+Get-HPDeviceDetails -like "ProDesk*400*G5*"
+
+#Get all HP Comercial Devices in a List
+Get-HPDeviceDetails -Like "*"
+
 # Get List of Windows Builds support by device
 Get-HPDeviceDetails -OSList
 
