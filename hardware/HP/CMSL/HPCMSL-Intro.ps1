@@ -115,6 +115,7 @@ Get-HPBIOSUpdates is for getting the BIOS updates and flashing them
 - If BIOS Security is enabled, you will need to provide a Password or Sure Admin payload file
 - provides parameters to suspend Bitlocker
 - Typically updates are available in the HP Catalog before the Microsoft Catalog
+- Uses HP Platform Code (Baseboard Product) to find BIOS updates
 
 Get-HPBIOSWindowsUpdate is for getting the BIOS updates and flashing them using the Windows Update method.
 - Downloads from Microsoft Catalog
@@ -122,6 +123,8 @@ Get-HPBIOSWindowsUpdate is for getting the BIOS updates and flashing them using 
 - Automatically will suspend bitlocker
 - Typically takes longer for updates to be available in the Microsoft Catalog
   - This can be a good thing, as by the time it will show up in WU, it will have had longer time for testing and validation
+- Is based on the BIOS Family, not the Platform Code
+  - Get-HPDeviceFamilyPlatformDetails will give you the Family for a Platform Code
 #>
 
 #Get Current BIOS Information on Current Machine
