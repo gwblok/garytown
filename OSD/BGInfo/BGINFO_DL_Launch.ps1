@@ -26,7 +26,9 @@ Start-Process -FilePath $BGinfoPath -ArgumentList $BGInfoArgs -PassThru
 
 #Fix Refresh on 24H2 Boot Image
 if (get-process -name WallpaperHost -ErrorAction SilentlyContinue) {
+    Start-Sleep -Milliseconds 300
     Stop-Process -Name WallpaperHost -Force
+    Start-Sleep -Milliseconds 300
     if (Test-Path -Path $env:SystemRoot\System32\WallpaperHost.exe) {
         Start-Process -FilePath $env:SystemRoot\System32\WallpaperHost.exe -PassThru
     }
