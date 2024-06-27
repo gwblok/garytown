@@ -23,3 +23,14 @@ $BGInfoArgs = "$env:TEMP\WinPE_BGInfo.bgi /nolicprompt /silent /timer:0"
 
 #Start BG Info
 Start-Process -FilePath $BGinfoPath -ArgumentList $BGInfoArgs -PassThru
+
+#Fix Refresh on 24H2 Boot Image
+if (get-process -name WallpaperHost -ErrorAction SilentlyContinue) {
+    Stop-Process -Name WallpaperHost -Force
+    if (Test-Path -Path $env:SystemRoot\System32\WallpaperHost.exe) {
+        Start-Process -FilePath $env:SystemRoot\System32\WallpaperHost.exe -PassThru
+    }
+    else {
+        Start-Process -FilePath $env:SystemRoot\System32\WallpaperHost.exe -PassThru
+    }
+}
