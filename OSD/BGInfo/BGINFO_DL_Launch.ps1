@@ -30,7 +30,4 @@ if (get-process -name WallpaperHost -ErrorAction SilentlyContinue) {
     if (Test-Path -Path $env:SystemRoot\System32\WallpaperHost.exe) {
         Start-Process -FilePath $env:SystemRoot\System32\WallpaperHost.exe -PassThru
     }
-    else {
-        Start-Process -FilePath $env:SystemRoot\System32\WallpaperHost.exe -PassThru
-    }
 }
