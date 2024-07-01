@@ -839,7 +839,7 @@ Write-Host -ForegroundColor Green "[+] Function Get-HPOSSupport"
 Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqListLatest"
 Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqItems"
 Write-Host -ForegroundColor Green "[+] Function Get-HPDriverPackLatest"
-iex (https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Test-HPIASupport.ps1)
+iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Test-HPIASupport.ps1)
 
 #Install-ModuleHPCMSL
 Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
