@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.5.21.1'
+$ScriptVersion = '24.7.1.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -834,6 +834,12 @@ Write-Host -ForegroundColor Green "[+] Function Get-HPIAJSONResult"
 
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/HPIA/HPIA-Functions.ps1)
 
+#HP CMSL WinPE replacement
+Write-Host -ForegroundColor Green "[+] Function Get-HPOSSupport"
+Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqListLatest"
+Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqItems"
+Write-Host -ForegroundColor Green "[+] Function Get-HPDriverPackLatest"
+iex (https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Test-HPIASupport.ps1)
 
 #Install-ModuleHPCMSL
 Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
