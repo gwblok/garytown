@@ -1,6 +1,6 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'win11.garytown.com'
-$ScriptVersion = '24.7.4.3'
+$ScriptVersion = '24.7.4.4'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 #iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -104,9 +104,9 @@ if (Test-DISMFromOSDCloudUSB){
 #>
 
 #Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
-#$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-#write-output "Updating $OfflineModulePath using $ModulePath"
-#copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
+$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+write-output "Updating $OfflineModulePath using $ModulePath"
+copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
 
 #Copy CMTrace Local:
 if (Test-path -path "x:\windows\system32\cmtrace.exe"){
