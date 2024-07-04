@@ -17,6 +17,7 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
+$Model = (Get-MyComputerModel)
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
 $OSReleaseID = '23H2' #Used to Determine Driver Pack
@@ -69,8 +70,8 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    #if ($Product -ne '83B2'){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
-    {$Global:MyOSDCloud.HPIAALL = [bool]$true}
+    if ($Product -ne '83B2' -and $Model -match "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
     #Set HP BIOS Settings to what I want:
