@@ -68,6 +68,7 @@ function Get-HPDockUpdateDetails {
     24.07.01.01 - added logic for CMSL to find latest supported OS to be able to better find softpaqs
     24.07.01.02 - now also looks for Thunderbolt Contoller driver info in Windows and compares to Softpaq Driver and recommends update if found
     24.07.01.03 - added UpdateControllerDriver switch, which will also update the controller driver using CMSL
+    24.07.11.01 - modified the process for the USB-C G4 docks, cleaned it up a bit.
    .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
     Logging created by this line: Start-Transcript -Path "$OutFilePath\$SPNumber.txt" - which should be like: "C:\swsetup\dockfirmware\sp144502-DATE.txt"
@@ -445,7 +446,8 @@ function Get-HPDockUpdateDetails {
                       if (($DebugOut) -or ($Transcript)) {Write-Host " Update Needed (according to the Registry): $PackageVersion" -ForegroundColor Magenta}
                       Try {
                           $Error.Clear()
-                          $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -PassThru -Wait -NoNewWindow
+                          $Output = "$OutFilePath\$SPNumber\FirmwareUpdateLog.txt"
+                          $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -PassThru -Wait -NoNewWindow -RedirectStandardOutput $OutPut
                           New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
                       } 
                       Catch {
@@ -453,22 +455,41 @@ function Get-HPDockUpdateDetails {
                           Stop-Transcript
                           return -5
                       }
-                      if ($HPFirmwareTest.ExitCode -eq 0){
+                      $LogContent = Get-Content -Path $Output -ReadCount 1 -Tail 2
+                      if ($LogContent -match "Current firmware is the latest one"){
                           New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
                           New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
                           New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                          if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware is now updated" -ForegroundColor Green}
+                          if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware is already current" -ForegroundColor Green}
                           if (($DebugOut) -or ($Transcript)) {Write-Host " Installed Version: $PackageVersion" -ForegroundColor Green}
                           $script:UpdateRequired = $false
                           $script:InstalledFirmwareVersion = $PackageVersion
-                          if (($DebugOut) -or ($Transcript)) {Write-Host " Update Successful: Exit 0" -ForegroundColor Green}
+                          if (($DebugOut) -or ($Transcript)) {Write-Host " No Update Needed: Exit 1" -ForegroundColor Green}
                       }
                       else {
-                          New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
-                          New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
-                          New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
-                          if (($DebugOut) -or ($Transcript)) {Write-Host " Update Failed: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red}
-                      }
+                          if ($HPFirmwareTest.ExitCode -eq 0){
+                              New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
+                              New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                              New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                              if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware is now updated" -ForegroundColor Green}
+                              if (($DebugOut) -or ($Transcript)) {Write-Host " Installed Version: $PackageVersion" -ForegroundColor Green}
+                              $script:UpdateRequired = $false
+                              $script:InstalledFirmwareVersion = $PackageVersion
+                              if (($DebugOut) -or ($Transcript)) {Write-Host " Update Successful: Exit 0" -ForegroundColor Green}
+                          }
+                          elseif ($HPFirmwareTest.ExitCode -eq 1){
+                              New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
+                              New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                              New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "NA" -PropertyType string -Force | Out-Null
+                              if (($DebugOut) -or ($Transcript)) {Write-Host " Update Status Unknown: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red}
+                          }
+                          else {
+                              New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
+                              New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                              New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
+                              if (($DebugOut) -or ($Transcript)) {Write-Host " Update Failed: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red}
+                          }
+                    }
 
                   }
                   else {
