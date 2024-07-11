@@ -70,6 +70,7 @@ function Get-HPDockUpdateDetails {
     24.07.01.03 - added UpdateControllerDriver switch, which will also update the controller driver using CMSL
     24.07.11.01 - modified the process for the USB-C G4 docks, cleaned it up a bit.
     24.07.11.02 - added a few write-hosts around the TB Controller driver update process.
+
    .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
     Logging created by this line: Start-Transcript -Path "$OutFilePath\$SPNumber.txt" - which should be like: "C:\swsetup\dockfirmware\sp144502-DATE.txt"
@@ -156,7 +157,7 @@ function Get-HPDockUpdateDetails {
     $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*"  }
     if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)){
         if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion){
-          write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"
+          if (!(($DebugOut) -or ($Transcript))){write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"}
           if ($UpdateControllerDriver){
             write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
           }
