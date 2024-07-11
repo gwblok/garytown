@@ -10,3 +10,8 @@ $SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Obje
 $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
 $BinFiles = Get-ChildItem -LiteralPath $SystemVolume.path -Recurse | Where-Object {$_.name -match "bin"}
 $BinFiles
+#$BinFiles | Remove-Item
+
+$FontFolder = Get-ChildItem -LiteralPath $SystemVolume.path -Recurse | Where-Object {$_.name -match "Font"}
+$FontFolder | Get-ChildItem
+#$FontFolder | Get-ChildItem | Remove-Item -Force
