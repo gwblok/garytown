@@ -190,9 +190,13 @@ function Get-HPDockUpdateDetails {
       #USB-C Dock G4
       $Url_UsbG4 = 'ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
 
+      #Elite USB-C Dock
+      $Url_UsbElite = 'https://ftp.hp.com/pub/softpaq/sp83501-84000/sp83851.exe'     #  1.00 Rev.B | Dec 12, 2017
+
       #E24d G4 FHD Docking Monitor
       $Url_E24D = 'ftp.hp.com/pub/softpaq/sp145501-146000/sp145577.exe'   #  1.0.17.0 | Mar 28, 2023
 
+      
       #######################################################################################
       $Dock_Attached = 0      # default: no dock found
       $Dock_ProductName = $null
@@ -205,6 +209,7 @@ function Get-HPDockUpdateDetails {
                   '*PID_0488*' { $Dock_Attached = 1 ; $Dock_ProductName = 'HP Thunderbolt Dock G4' ; $Dock_Url = $Url_TBG4 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe'}
                   '*PID_0667*' { $Dock_Attached = 2 ; $Dock_ProductName = 'HP Thunderbolt Dock G2' ; $Dock_Url = $Url_TBG2 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
                   '*PID_484A*' { $Dock_Attached = 3 ; $Dock_ProductName = 'HP USB-C Dock G4' ; $Dock_Url = $Url_UsbG4 ; $FirmwareInstaller = 'HP_USB-C_Dock_G4_FW_Update_Tool_Console.exe' }
+                  '*PID_046A*' { $Dock_Attached = 3 ; $Dock_ProductName = 'HP Elite USB-C Dock' ; $Dock_Url = $Url_UsbElite ; $FirmwareInstaller = 'HP Elite USB-C Dock FW Update Tool.exe' }
                   '*PID_046B*' { $Dock_Attached = 4 ; $Dock_ProductName = 'HP USB-C Dock G5' ; $Dock_Url = $Url_UsbG5  ; $FirmwareInstaller = 'HPFirmwareInstaller.exe'}
                   #'*PID_600A*' { $Dock_Attached = 5 ; $Dock_ProductName = 'HP USB-C Universal Dock' }
                   '*PID_0A6B*' { $Dock_Attached = 6 ; $Dock_ProductName = 'HP USB-C Universal Dock G2' ; $Dock_Url = $Url_UniG2 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
