@@ -69,6 +69,7 @@ function Get-HPDockUpdateDetails {
     24.07.01.02 - now also looks for Thunderbolt Contoller driver info in Windows and compares to Softpaq Driver and recommends update if found
     24.07.01.03 - added UpdateControllerDriver switch, which will also update the controller driver using CMSL
     24.07.11.01 - modified the process for the USB-C G4 docks, cleaned it up a bit.
+    24.07.11.02 - added a few write-hosts around the TB Controller driver update process.
    .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
     Logging created by this line: Start-Transcript -Path "$OutFilePath\$SPNumber.txt" - which should be like: "C:\swsetup\dockfirmware\sp144502-DATE.txt"
@@ -153,18 +154,23 @@ function Get-HPDockUpdateDetails {
     #Write-Output "Max OS Supported: $MaxOSSupported $MaxOSVer"
     $ThunderBoltDriver = Get-SoftpaqList -Category Driver -Os $MaxOS -OsVer $MaxOSVer | Where-Object { $_.Name -match 'Thunderbolt' -and $_.Name -notmatch "Audio" }
     $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*"  }
-    if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion){
-      #Driver Already Current
-    }
-    else {
-      #Driver Update Needed
-      write-host -ForegroundColor Yellow "TB Driver Update Available: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"
-      write-host -ForegroundColor Yellow "Recommend updating with $($ThunderBoltDriver.Name) | $($ThunderBoltDriver.id)"
-      $DriverUpdateAvailable = $ThunderBoltDriver.id
-      if ($UpdateControllerDriver){
-        Write-Host -ForegroundColor Green " UpdateControllerDriver Switch Enabled... Updating driver now..."
-        Get-Softpaq -Number $ThunderBoltDriver.id -SaveAs "c:\swsetup\$($ThunderBoltDriver.id).exe" -Action silentinstall -Overwrite yes
-      }
+    if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)){
+        if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion){
+          write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"
+          if ($UpdateControllerDriver){
+            write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
+          }
+        }
+        else {
+          #Driver Update Needed
+          write-host -ForegroundColor Yellow "TB Driver Update Available: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"
+          write-host -ForegroundColor Yellow "Recommend updating with $($ThunderBoltDriver.Name) | $($ThunderBoltDriver.id)"
+          $DriverUpdateAvailable = $ThunderBoltDriver.id
+          if ($UpdateControllerDriver){
+            Write-Host -ForegroundColor Green " UpdateControllerDriver Switch Enabled... Updating driver now..."
+            Get-Softpaq -Number $ThunderBoltDriver.id -SaveAs "c:\swsetup\$($ThunderBoltDriver.id).exe" -Action silentinstall -Overwrite yes
+          }
+        }
     }
 
   }
