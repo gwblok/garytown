@@ -157,7 +157,7 @@ function Get-HPDockUpdateDetails {
     $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*"  }
     if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)){
         if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion){
-          if (!(($DebugOut) -or ($Transcript))){write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"}
+          if (($DebugOut) -or ($Transcript)){write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"}
           if ($UpdateControllerDriver){
             write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
           }
