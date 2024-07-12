@@ -25,10 +25,11 @@ Write-Host -ForegroundColor Green "[+] Function Invoke-HPTPMEXEInstall"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Get-HPTPMDetermine.ps1)
 
 Write-Host -ForegroundColor Cyan " ** Other Functions for HP **"
-Write-Host -ForegroundColor Green "[+] Function Manage-HPBiosSettings"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
 Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)
+Write-Host -ForegroundColor Green "[+] Function Manage-HPBiosSettings [https://www.configjon.com/hp-bios-settings-management]"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
+
 #Install-ModuleHPCMSL
 Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Install-ModuleHPCMSL.ps1)
