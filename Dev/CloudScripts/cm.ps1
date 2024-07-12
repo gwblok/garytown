@@ -1,37 +1,53 @@
-#Functions for HP Computers
+#Functions for ConfigMgr Endpoints
 
 #HP CMSL WinPE replacement
-Write-Host -ForegroundColor Cyan " ** Custom CMSL Functions for WinPE **"
-Write-Host -ForegroundColor Green "[+] Function Get-HPOSSupport"
-Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqListLatest"
-Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqItems"
-Write-Host -ForegroundColor Green "[+] Function Get-HPDriverPackLatest"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Test-HPIASupport.ps1)
+Write-Host -ForegroundColor Cyan " ** Custom Functions for ConfigMgr Endpoints **"
+Write-Host -ForegroundColor Green "[+] Function Get-CCMDTSJobsActive"
+Write-Host -ForegroundColor Green "[+] Function Get-CCMDTSJobs"
 
-Write-Host -ForegroundColor Cyan " ** HPIA Functions **"
-Write-Host -ForegroundColor Green "[+] Function Get-HPIALatestVersion"
-Write-Host -ForegroundColor Green "[+] Function Install-HPIA"
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPIA"
-Write-Host -ForegroundColor Green "[+] Function Get-HPIAXMLResult"
-Write-Host -ForegroundColor Green "[+] Function Get-HPIAJSONResult"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Invoke-HPIA.ps1)
+Write-Host -ForegroundColor Cyan " ** Task Sequences **"
+Write-Host -ForegroundColor Green "[+] Function Get-TSInfo "
+Write-Host -ForegroundColor Green "[+] Function Start-TaskSequence"
+Write-Host -ForegroundColor Green "[+] Function Get-TaskSequenceInfo "
+Write-Host -ForegroundColor Green "[+] Function Get-TaskSequenceExecutionRequest"
+Write-Host -ForegroundColor Green "[+] Function Reset-TaskSequence "
+Write-Host -ForegroundColor Green "[+] Function Get-TSExecutionHistoryStatus "
+Write-Host -ForegroundColor Green "[+] Function Get-TSExecutionHistoryStartTime "
+Write-Host -ForegroundColor Green "[+] Function Set-TSExecutionHistory "
+Write-Host -ForegroundColor Green "[+] Function Remove-TSExecutionHistory "
+Write-Host -ForegroundColor Green "[+] Function Get-TaskSequenceReferenceInfo "
 
-Write-Host -ForegroundColor Cyan " ** HP TPM Functions **"
-Write-Host -ForegroundColor Green "[+] Function Get-HPTPMDetermine"
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPTPMDownload"
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPTPMDowngrade"
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPTPMEXEDownload"
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPTPMEXEInstall"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Get-HPTPMDetermine.ps1)
+Write-Host -ForegroundColor Cyan " ** CM Content Functions **"
+Write-Host -ForegroundColor Green "[+] Function Get-CMPackages "
+Write-Host -ForegroundColor Green "[+] Function Start-PackageCommandLine  "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCacheInfo "
+Write-Host -ForegroundColor Green "[+] Function Remove-CCMCacheItem "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCacheSizeInfo "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCachePackages "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCachePackageInfo "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCacheUpgradeMediaPackageInfo "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCacheSoftwareUpdates "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCacheApps "
+Write-Host -ForegroundColor Green "[+] Function Get-BITSThrottlingPolicy "
+Write-Host -ForegroundColor Green "[+] Function Set-BITSMaintenancePolicy "
+Write-Host -ForegroundColor Green "[+] Function Get-CCMCachePackages "
 
-Write-Host -ForegroundColor Cyan " ** Other Functions for HP **"
-Write-Host -ForegroundColor Green "[+] Function Manage-HPBiosSettings"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-HPBiosSettings.ps1)
-Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)
-#Install-ModuleHPCMSL
-Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Install-ModuleHPCMSL.ps1)
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPAnalyzer"
-Write-Host -ForegroundColor Green "[+] Function Invoke-HPDriverUpdate"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Invoke-HPDriverUpdate.ps1)
+Write-Host -ForegroundColor Cyan " ** CM Other Functions **"
+Write-Host -ForegroundColor Green "[+] Function Set-LogPropertiesBitsLogMaxSize "
+Write-Host -ForegroundColor Green "[+] Function Get-CMClientLogging "
+Write-Host -ForegroundColor Green "[+] Function Set-CMClientLogging "
+Write-Host -ForegroundColor Green "[+] Function Test-PendingReboot "
+Write-Host -ForegroundColor Green "[+] Function Get-SetupCommandLine "
+Write-Host -ForegroundColor Green "[+] Function Get-WMIRepo "
+
+Write-Host -ForegroundColor Cyan " ** CM Baselines **"
+Write-Host -ForegroundColor Green "[+] Function Get-Baselines "
+Write-Host -ForegroundColor Green "[+] Function Invoke-Baseline"
+
+Write-Host -ForegroundColor Cyan " ** CM Evals **"
+Write-Host -ForegroundColor Green "[+] Function Invoke-CMClientMachinePolicy "
+Write-Host -ForegroundColor Green "[+] Function Invoke-CMClientHWInv "
+Write-Host -ForegroundColor Green "[+] Function Invoke-CMClientHWInvFull "
+
+
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/CM_PowerShell_Snips/CM_Functions.ps1)
