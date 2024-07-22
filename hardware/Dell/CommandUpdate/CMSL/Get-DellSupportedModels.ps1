@@ -127,7 +127,7 @@ Function Install-DCU {
 }
 
 function Set-DCUSettings {
-    
+    [CmdletBinding()]
 
     param (
         [ValidateSet('Enable','Disable')]
@@ -167,12 +167,14 @@ Else{
 if ($advancedDriverRestore){
     $advancedDriverRestoreVar = "-advancedDriverRestore=$advancedDriverRestore -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
     $ArgList = "/configure $advancedDriverRestoreVar"
-    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru
+    Write-Verbose $ArgList
+    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
 }
 if ($autoSuspendBitLocker){ 
     $autoSuspendBitLockerVar = "-autoSuspendBitLocker=$autoSuspendBitLocker -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
     $ArgList = "/configure $autoSuspendBitLockerVar"
-    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru
+    Write-Verbose $ArgList
+    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
 }
 if ($installationDeferral -eq 'Enable'){
     $installationDeferralVar = "-installationDeferral=$installationDeferral"
@@ -189,7 +191,8 @@ if ($installationDeferral -eq 'Enable'){
         $deferralInstallCountVar = "-deferralInstallCount=5"
     }
     $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
-    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru
+    Write-Verbose $ArgList
+    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
     
 }
 else {
@@ -207,8 +210,8 @@ if ($scheduleAuto){
 }
 
 
-$ArgList = "/configure $advancedDriverRestoreVar $autoSuspendBitLockerVar $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar  -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
-Write-Host $ArgList
+#$ArgList = "/configure $advancedDriverRestoreVar $autoSuspendBitLockerVar $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar  -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
+#Write-Host $ArgList
 #$DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru
 
 
