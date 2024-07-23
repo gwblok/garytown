@@ -394,9 +394,6 @@ function Invoke-DCU {
     [CmdletBinding()]
     
     param (
-
-    [switch]$scan,
-    [switch]$applyUpdates,
     [ValidateSet('security','critical','recommended','optional')]
     [String[]]$updateSeverity,
     [ValidateSet('bios','firmware','driver','application','others')]
@@ -408,8 +405,9 @@ function Invoke-DCU {
     [ValidateSet('Enable','Disable')]
     [string]$reboot = 'Disable',
     [ValidateSet('Enable','Disable')]
-    [string]$forceupdate = 'Disable'
-    
+    [string]$forceupdate = 'Disable',
+    [switch]$scan,
+    [switch]$applyUpdates
     )
     $DCUPath = (Get-DCUInstallDetails).DCUPath
     $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
