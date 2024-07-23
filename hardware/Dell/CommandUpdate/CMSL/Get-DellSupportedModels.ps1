@@ -1,6 +1,43 @@
+<#Gary Blok - @gwblok - GARYTOWN.COM
 #https://dl.dell.com/content/manual13608255-dell-command-update-version-5-x-reference-guide.pdf?language=en-us
 
+# Summary of Functions:
 
+# 1. Get-DellSupportedModels:
+#    - Retrieves a list of supported Dell models from the Dell Command Update XML catalog.
+#    - Returns an array of objects containing system ID, model name, URL, and date.
+
+# 2. Get-DCUVersion:
+#    - Retrieves the version of Dell Command Update (DCU) installed on the system.
+#    - Returns the DCU version as a string or $false if DCU is not installed.
+
+# 3. Get-DCUInstallDetails:
+#    - Retrieves installation details of Dell Command Update (DCU) from the registry.
+#    - Returns an object containing version, app type (Universal or Classic), and DCU path.
+
+# 4. Get-DCUExitInfo:
+#    - Retrieves information about Dell Command Update (DCU) exit codes.
+#    - Takes an optional parameter for the DCU exit code to get specific information.
+#    - Returns an array of objects containing exit code, description, and resolution.
+
+# 5. Install-DCU: 
+#    - Downloads and installs the latest version of Dell Command Update (DCU) for the system.
+#    - Checks for the latest DCU version available for the system model.
+#    - Downloads the DCU installer and installs it silently.
+#    - Displays information about the update if a new version is available.
+
+# 6. Set-DCUSettings:
+#    - Configures settings for Dell Command Update (DCU) using the dcu-cli.exe utility.
+#    - Supports settings like advancedDriverRestore, autoSuspendBitLocker, installationDeferral, systemRestartDeferral, scheduleAction, and scheduleAuto.
+#    - Writes logs for each configuration change.
+
+# 7. Invoke-DCU:
+#    - Invokes Dell Command Update (DCU) actions like scanning for updates or applying updates.
+#    - Supports parameters for updateSeverity, updateType, updateDeviceCategory, autoSuspendBitLocker, reboot, forceupdate, scan, and applyUpdates.
+#    - Builds the argument list based on the selected parameters and executes the DCU action.
+
+
+#>
 function Get-DellSupportedModels {
     [CmdletBinding()]
     
