@@ -44,7 +44,7 @@ Registry('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Targ
 24.6.3 - Modified FU.WhyAmIBlocked Function Export-FUXMLFromSDB.ps1 to ignore SDB files named backup, this resolved errors I was seeing
  - Also updated script to work on first pass correctly
  - Added about 5 more lines in the Settings table.
-
+24.7.23 - Added 4 lines thanks to @PatchThatBadBoi
 #>
 
 $SettingsTable = @(
@@ -105,7 +105,11 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_03_01_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2555'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_04_20_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2559'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2568'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_12_14_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2580'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_04_02_01_AMD64.cab'; ALTERNATEDATAVERSION = '2581'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_18_06_01_AMD64.cab'; ALTERNATEDATAVERSION = '2582'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_01_25_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2583'}
+
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2585'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2591'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_10_27_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2614'}
@@ -131,7 +135,8 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '26701'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_04_11_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '2674'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_04_25_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '2675'}
-@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_04_AMD64.cab'; ALTERNATEDATAVERSION = '2676'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_02_AMD64.cab'; ALTERNATEDATAVERSION = '2676'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_04_AMD64.cab'; ALTERNATEDATAVERSION = '26761'}
 
 	
 
