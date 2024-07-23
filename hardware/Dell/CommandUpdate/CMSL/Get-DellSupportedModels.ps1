@@ -1,9 +1,12 @@
+#https://dl.dell.com/content/manual13608255-dell-command-update-version-5-x-reference-guide.pdf?language=en-us
+
+
 function Get-DellSupportedModels {
     [CmdletBinding()]
     
     $CabPathIndex = "$env:ProgramData\CMSL\DellCabDownloads\CatalogIndexPC.cab"
     $DellCabExtractPath = "$env:ProgramData\CMSL\DellCabDownloads\DellCabExtract"
-
+    
     # Pull down Dell XML CAB used in Dell Command Update ,extract and Load
     if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
     Write-Verbose "Downloading Dell Cab"
@@ -14,11 +17,11 @@ function Get-DellSupportedModels {
     $null = New-Item -Path $DellCabExtractPath -ItemType Directory
     Write-Verbose "Expanding the Cab File..." 
     $null = expand $CabPathIndex $DellCabExtractPath\CatalogIndexPC.xml
-
+    
     Write-Verbose "Loading Dell Catalog XML.... can take awhile"
     [xml]$XMLIndex = Get-Content "$DellCabExtractPath\CatalogIndexPC.xml"
-
-
+    
+    
     $SupportedModels = $XMLIndex.ManifestIndex.GroupManifest
     $SupportedModelsObject = @()
     foreach ($SupportedModel in $SupportedModels){
@@ -41,7 +44,33 @@ Function Get-DCUVersion {
     }
     return $DCU
 }
-
+Function Get-DCUInstallDetails {
+    #Declare Variables for Universal app if RegKey AppCode is Universal or if Regkey AppCode is Classic and declares their variables otherwise reports not installed
+    If((Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode -ErrorAction SilentlyContinue) -eq "Universal"){
+        $Version = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name ProductVersion -ErrorAction SilentlyContinue
+        $AppType = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode -ErrorAction SilentlyContinue
+        #Add DCU-CLI.exe as Environment Variable for Universal app type
+        $DCUPath = 'C:\Program Files\Dell\CommandUpdate\'
+    }
+    ElseIf((Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode -ErrorAction SilentlyContinue) -eq "Classic"){
+        
+        $Version = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name ProductVersion
+        $AppType = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode
+        #Add DCU-CLI.exe as Environment Variable for Classic app type
+        $DCUPath = 'C:\Program Files (x86)\Dell\CommandUpdate\'
+    }
+    Else{
+        $DCU =  "DCU is not installed"
+    }
+    if ($Version){
+        $DCU = [PSCustomObject]@{
+            Version = $Version
+            AppType = $AppType
+            DCUPath = $DCUPath
+        }
+    }
+    return $DCU
+}
 Function Install-DCU {
     
     $temproot = "$env:windir\temp"
@@ -53,13 +82,13 @@ Function Install-DCU {
     $CabPathIndexModel = "$temproot\DellCabDownloads\CatalogIndexModel.cab"
     $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
     $DCUVersionInstalled = Get-DCUVersion
-
+    
     if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
-
+    
     #Create Folders
     if (!(Test-Path -Path $LogFilePath)){New-Item -Path $LogFilePath -ItemType Directory -Force | Out-Null}        
     if (!(Test-Path -Path $DellCabExtractPath)){New-Item -Path $DellCabExtractPath -ItemType Directory -Force | Out-Null}  
-
+    
     $DellModelLatest = Get-DellSupportedModels | Where-Object {$_.URL -match "Latitude"} |  Sort-Object -Descending -Property Date | Select-Object -first 1 
     $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
     if (Test-Path $CabPathIndexModel){Remove-Item -Path $CabPathIndexModel -Force}
@@ -67,7 +96,7 @@ Function Install-DCU {
     if (Test-Path $CabPathIndexModel){
         $null = expand $CabPathIndexModel $DellCabExtractPath\CatalogIndexPCModel.xml
         [xml]$XMLIndexCAB = Get-Content "$DellCabExtractPath\CatalogIndexPCModel.xml"
-
+        
         $DCUAppsAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "APAC"}
         #$AppNames = $DCUAppsAvailable.name.display.'#cdata-section' | Select-Object -Unique
         
@@ -90,7 +119,7 @@ Function Install-DCU {
                 if ($CurrentVersion -eq 0.0.0.0){[String]$CurrentVersion = "Not Installed"}
                 Write-Output "New Update available: Installed = $CurrentVersion DCU = $DCUVersion"
                 Write-Output "Title: $($DellItem.Name.Display.'#cdata-section')"
-                Write-Output "----------------------------" -ForegroundColor Cyan
+                Write-Output "----------------------------"
                 Write-Output "Severity: $($DellItem.Criticality.Display.'#cdata-section')"
                 Write-Output "FileName: $TargetFileName"
                 Write-Output "Release Date: $DCUReleaseDate"
@@ -98,7 +127,7 @@ Function Install-DCU {
                 Write-Output "Link: $TargetLink"
                 Write-Output "Info: $($DellItem.ImportantInfo.URL)"
                 Write-Output "Version: $DCUVersion "
-
+                
                 #Build Required Info to Download and Update CM Package
                 $TargetFilePathName = "$($DellCabExtractPath)\$($TargetFileName)"
                 #Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
@@ -128,93 +157,135 @@ Function Install-DCU {
 
 function Set-DCUSettings {
     [CmdletBinding()]
-
+    
     param (
-        [ValidateSet('Enable','Disable')]
-        [string]$advancedDriverRestore,
-        [ValidateSet('Enable','Disable')]
-        [string]$autoSuspendBitLocker = 'Enable',
-        [ValidateSet('Enable','Disable')]
-        [string]$installationDeferral = 'Enable',
-        [ValidateRange(0,99)]
-        [int]$deferralInstallInterval = 3,
-        [ValidateRange(0,9)]
-        [int]$deferralInstallCount = 5,
-        #[ValidateSet('Enable','Disable')]
-        #[string]$reboot = 'Disable',
-        [ValidateSet('NotifyAvailableUpdates','DownloadAndNotify','DownloadInstallAndNotify')]
-        [string]$scheduleAction = 'DownloadInstallAndNotify',
-        [switch]$scheduleAuto    
+    [ValidateSet('Enable','Disable')]
+    [string]$advancedDriverRestore,
+    [ValidateSet('Enable','Disable')]
+    [string]$autoSuspendBitLocker = 'Enable',
+    [ValidateSet('Enable','Disable')]
+    [string]$installationDeferral = 'Enable',
+    [ValidateRange(0,99)]
+    [int]$deferralInstallInterval = 3,
+    [ValidateRange(0,9)]
+    [int]$deferralInstallCount = 5,
+    #[ValidateSet('Enable','Disable')]
+    #[string]$reboot = 'Disable',
+    [ValidateSet('NotifyAvailableUpdates','DownloadAndNotify','DownloadInstallAndNotify')]
+    [string]$scheduleAction = 'DownloadInstallAndNotify',
+    [switch]$scheduleAuto    
     )
-    #Declare Variables for Universal app if RegKey AppCode is Universal or if Regkey AppCode is Classic and declares their variables otherwise reports not installed
-If((Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode -ErrorAction SilentlyContinue) -eq "Universal"){
-    $Version = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name ProductVersion -ErrorAction SilentlyContinue
-    $AppType = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode -ErrorAction SilentlyContinue
-    #Add DCU-CLI.exe as Environment Variable for Universal app type
-    $DCUPath = 'C:\Program Files\Dell\CommandUpdate\'
-}
-ElseIf((Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode -ErrorAction SilentlyContinue) -eq "Classic"){
+    
+    $DCUPath = Get-DCUInstallDetails.DCUPath
 
-    $Version = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name ProductVersion
-    $AppType = Get-ItemPropertyValue HKLM:\SOFTWARE\DELL\UpdateService\Clients\CommandUpdate\Preferences\Settings -Name AppCode
-    #Add DCU-CLI.exe as Environment Variable for Classic app type
-    $DCUPath = 'C:\Program Files (x86)\Dell\CommandUpdate\'
-}
-Else{
-        (Write-Output ("DCU is not installed"))
-}
-
-if ($advancedDriverRestore){
-    $advancedDriverRestoreVar = "-advancedDriverRestore=$advancedDriverRestore -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
-    $ArgList = "/configure $advancedDriverRestoreVar"
-    Write-Verbose $ArgList
-    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-}
-if ($autoSuspendBitLocker){ 
-    $autoSuspendBitLockerVar = "-autoSuspendBitLocker=$autoSuspendBitLocker -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
-    $ArgList = "/configure $autoSuspendBitLockerVar"
-    Write-Verbose $ArgList
-    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-}
-if ($installationDeferral -eq 'Enable'){
-    $installationDeferralVar = "-installationDeferral=$installationDeferral"
-    if ($deferralInstallInterval){
-        $deferralInstallIntervalVar = "-deferralInstallInterval=$deferralInstallInterval"
+    if ($advancedDriverRestore){
+        $advancedDriverRestoreVar = "-advancedDriverRestore=$advancedDriverRestore -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        $ArgList = "/configure $advancedDriverRestoreVar"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+    }
+    if ($autoSuspendBitLocker){ 
+        $autoSuspendBitLockerVar = "-autoSuspendBitLocker=$autoSuspendBitLocker -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        $ArgList = "/configure $autoSuspendBitLockerVar"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+    }
+    #This section isn't working.  I think it's DCU's fault and not mine.
+    if ($installationDeferral -eq 'Enable'){
+        $installationDeferralVar = "-installationDeferral=$installationDeferral"
+        if ($deferralInstallInterval){
+            $deferralInstallIntervalVar = "-deferralInstallInterval=$deferralInstallInterval"
+        }
+        else {
+            $deferralInstallIntervalVar = "-deferralInstallInterval=5"
+        }
+        if ($deferralInstallCount){
+            $deferralInstallCountVar = "-deferralInstallCount=$deferralInstallCount"
+        }
+        else {
+            $deferralInstallCountVar = "-deferralInstallCount=5"
+        }
+        $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+        
     }
     else {
-        $deferralInstallIntervalVar = "-deferralInstallInterval=5"
+        $installationDeferralVar = "-installationDeferral=$installationDeferral"
+        $ArgList = "/configure $installationDeferralVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
     }
-    if ($deferralInstallCount){
-        $deferralInstallCountVar = "-deferralInstallCount=$deferralInstallCount"
+    
+    if ($scheduleAction){
+        $scheduleActionVar = "-scheduleAction=$scheduleAction"
+        $ArgList = "/configure $scheduleActionVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
     }
-    else {
-        $deferralInstallCountVar = "-deferralInstallCount=5"
+    if ($scheduleAuto){
+        $scheduleAutoVar = "-scheduleAuto"
+        $ArgList = "/configure $scheduleAutoVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
     }
-    $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
-    Write-Verbose $ArgList
-    $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+    
+    #$ArgList = "/configure $advancedDriverRestoreVar $autoSuspendBitLockerVar $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar  -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
+    #Write-Host $ArgList
+    #$DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru
+    
+    
+    #dcu-cli.exe /configure -autoSuspendBitLocker=enable -scheduledReboot=60 -silent
     
 }
-else {
-    $installationDeferralVar = "-installationDeferral=$installationDeferral"
-}
 
-if ($reboot){
-    $rebootVar = "-reboot=$reboot"
-}
-if ($scheduleAction){
-    $scheduleActionVar = "-scheduleAction=$scheduleAction"
-}
-if ($scheduleAuto){
-    $scheduleAutoVar = "-scheduleAuto"
-}
+function Invoke-DCU {
+    [CmdletBinding()]
+    
+    param (
+
+    [switch]$scan,
+    [switch]$applyUpdates,
+    [ValidateSet('security','critical','recommended','optional')]
+    [String[]]$updateSeverity,
+    [ValidateSet('bios','firmware','driver','application','others')]
+    [String[]]$updateType,
+    [ValidateSet('audio','video','network','chipset','storage','input','others')]
+    [String[]]$updateDeviceCategory,
+    [ValidateSet('Enable','Disable')]
+    [string]$autoSuspendBitLocker = 'Enable',
+    [ValidateSet('Enable','Disable')]
+    [string]$reboot = 'Disable',
+    [ValidateSet('Enable','Disable')]
+    [string]$forceupdate = 'Disable'
+    
+    )
+    $DCUPath = Get-DCUInstallDetails.DCUPath
+    #Build Argument Strings for each parameter
+    if ($updateSeverity){
+        [String]$updateSeverity = $($updateSeverity -join ",").ToString()
+        $updateSeverityVar = "-updateSeverity=$updateSeverity"
+    }
+    if ($updateType){
+        [String]$updateType = $($updateType -join ",").ToString()
+        $updateTypeVar = "-updateType=$updateType"
+    }
+    if ($updateDeviceCategory){
+        [String]$updateDeviceCategory = $($updateDeviceCategory -join ",").ToString()
+        $updateDeviceCategoryVar = "-updateDeviceCategory=$updateDeviceCategory"
+    }
+
+    #Pick Action, Scan or ApplyUpdates if both are selected, ApplyUpdates will be the action, if neither are selected, Scan will be the action
+    if ($scan){$ActionVar = "/scan"}
+    if ($applyUpdates){$ActionVar = "/applyUpdates"}
+    else {$ActionVar = "/scan"}
 
 
-#$ArgList = "/configure $advancedDriverRestoreVar $autoSuspendBitLockerVar $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar  -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log "
-#Write-Host $ArgList
-#$DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru
 
-
-#dcu-cli.exe /configure -autoSuspendBitLocker=enable -scheduledReboot=60 -silent
-
+    if ($scheduleAction){
+        $scheduleActionVar = "-scheduleAction=$scheduleAction"
+        $ArgList = "/configure $scheduleActionVar -outputlog=$env:systemdrive\CMSL\Logs\DCU-CLI.log"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+    }
 }
