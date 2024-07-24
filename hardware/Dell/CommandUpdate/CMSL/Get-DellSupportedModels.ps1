@@ -293,7 +293,9 @@ function Set-DCUSettings {
     )
     
     $DCUPath = (Get-DCUInstallDetails).DCUPath
+    Write-Verbose "DCU Path: $DCUPath"
     $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
+    Write-Verbose "Log Path: $LogPath"
     $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
     $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`""
 
@@ -480,4 +482,101 @@ function Invoke-DCU {
         Write-Verbose "Description: $($ExitInfo.Description)"
         Write-Verbose "Resolution: $($ExitInfo.Resolution)"
     }
+}
+
+function  Get-DCUUpdateList {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [ValidateSet('bios','firmware','driver','application')]
+        [String[]]$updateType,
+        [ValidateSet('audio','video','network','chipset','storage','BIOS','Application')]
+        [String[]]$updateDeviceCategory,
+        [switch]$RAWXML,
+        [switch]$TLDR
+    )
+
+    
+    $temproot = "$env:windir\temp"
+    #$SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+    $CabPathIndexModel = "$temproot\DellCabDownloads\CatalogIndexModel.cab"
+    $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
+
+    
+    
+    if (!($SystemSKUNumber)) {
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
+        $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    }
+    $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
+    if (!($DellSKU)){
+        return "System SKU not found"
+    }
+    if (Test-Path $CabPathIndexModel){Remove-Item -Path $CabPathIndexModel -Force}
+    Invoke-WebRequest -Uri "http://downloads.dell.com/$($DellSKU.URL)" -OutFile $CabPathIndexModel -UseBasicParsing
+    if (Test-Path $CabPathIndexModel){
+        $null = expand $CabPathIndexModel $DellCabExtractPath\CatalogIndexPCModel.xml
+        [xml]$XMLIndexCAB = Get-Content "$DellCabExtractPath\CatalogIndexPCModel.xml"
+        
+        #DCUAppsAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "APAC"}
+        #$AppNames = $DCUAppsAvailable.name.display.'#cdata-section' | Select-Object -Unique
+        $BaseURL = "https://$($XMLIndexCAB.Manifest.baseLocation)"
+        $Components = $XMLIndexCAB.Manifest.SoftwareComponent
+        if ($RAWXML){
+            return $Components
+        }
+        $ComponentsObject = @()
+        
+
+        foreach ($Component in $Components){
+            $Item = New-Object -TypeName PSObject
+            $Item | Add-Member -MemberType NoteProperty -Name "PackageID" -Value "$($Component.packageID)"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "Category" -Value "$($Component.Category.Display.'#cdata-section')"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($component.ComponentType.Display.'#cdata-section')"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($Component.Name.Display.'#cdata-section')" -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "ReleaseDate" -Value "$($Component.releaseDate)"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "DellVersion" -Value "$($Component.dellVersion)"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "PackageType" -Value "$($Component.packageType)"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "Path" -Value "$BaseURL/$($Component.path)" -Force		
+            $Item | Add-Member -MemberType NoteProperty -Name "Description" -Value "$($component.Description.Display.'#cdata-section')" -Force		
+            $ComponentsObject += $Item 
+        }
+        if ($updateType){
+            $ComponentsObject = $ComponentsObject | Where-Object {$_.Type -in $updateType}
+        }
+        if ($updateDeviceCategory){
+            $ComponentsObject = $ComponentsObject | Where-Object {$_.Category -in $updateDeviceCategory}
+        }
+        if ($TLDR) {
+            $ComponentsObject = $ComponentsObject | Select-Object -Property Name,ReleaseDate,DellVersion,Path
+        }
+        return $ComponentsObject
+    }
+}
+
+function Get-DellDeviceDetails {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [string]$ModelLike
+    )
+    
+    $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+    
+    if (!($SystemSKUNumber)) {
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
+        $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    }
+    if (!($ModelLike)){
+        $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
+    }
+    else {
+        $DellSKU = Get-DellSupportedModels | Where-Object { $_.Model -match $ModelLike}
+    }
+    return $DellSKU | Select-Object -Property SystemID,Model
 }
