@@ -503,6 +503,7 @@ function  Get-DCUUpdateList {
         [ValidateSet('audio','video','network','chipset','storage','BIOS','Application')]
         [String[]]$updateDeviceCategory,
         [switch]$RAWXML,
+        [switch]$Latest,
         [switch]$TLDR
     )
 
@@ -537,15 +538,13 @@ function  Get-DCUUpdateList {
             return $Components
         }
         $ComponentsObject = @()
-        
-
         foreach ($Component in $Components){
             $Item = New-Object -TypeName PSObject
             $Item | Add-Member -MemberType NoteProperty -Name "PackageID" -Value "$($Component.packageID)"  -Force
             $Item | Add-Member -MemberType NoteProperty -Name "Category" -Value "$($Component.Category.Display.'#cdata-section')"  -Force
             $Item | Add-Member -MemberType NoteProperty -Name "Type" -Value "$($component.ComponentType.Display.'#cdata-section')"  -Force
             $Item | Add-Member -MemberType NoteProperty -Name "Name" -Value "$($Component.Name.Display.'#cdata-section')" -Force
-            $Item | Add-Member -MemberType NoteProperty -Name "ReleaseDate" -Value "$($Component.releaseDate)"  -Force
+            $Item | Add-Member -MemberType NoteProperty -Name "ReleaseDate" -Value $([DateTime]($Component.releaseDate)) -Force
             $Item | Add-Member -MemberType NoteProperty -Name "DellVersion" -Value "$($Component.dellVersion)"  -Force
             $Item | Add-Member -MemberType NoteProperty -Name "PackageType" -Value "$($Component.packageType)"  -Force
             $Item | Add-Member -MemberType NoteProperty -Name "Path" -Value "$BaseURL/$($Component.path)" -Force		
@@ -560,6 +559,16 @@ function  Get-DCUUpdateList {
         }
         if ($TLDR) {
             $ComponentsObject = $ComponentsObject | Select-Object -Property Name,ReleaseDate,DellVersion,Path
+        }
+        if ($Latest){
+            $ComponentsObject = $ComponentsObject | Sort-Object -Property ReleaseDate -Descending
+            $hash = @{}
+            foreach ($ComponentObject in $ComponentsObject) {
+                if (-not $hash.ContainsKey($ComponentObject.Name)) {
+                    $hash[$ComponentObject.Name] = $ComponentObject
+                }
+            }
+            $ComponentsObject = $hash.Values 
         }
         return $ComponentsObject
     }
