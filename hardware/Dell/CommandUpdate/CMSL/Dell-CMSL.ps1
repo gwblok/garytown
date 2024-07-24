@@ -36,6 +36,14 @@
 #    - Supports parameters for updateSeverity, updateType, updateDeviceCategory, autoSuspendBitLocker, reboot, forceupdate, scan, and applyUpdates.
 #    - Builds the argument list based on the selected parameters and executes the DCU action.
 
+# 8. Get-DCUUpdateList:
+#    - Retrieves a list of available updates from Dell Command Update (DCU) for the system.
+#    - Supports filtering by updateType, and updateDeviceCategory.
+#    - Returns an array of objects containing update details like severity, type, category, name, and release date.
+
+# 9. Get-DellDeviceDetails:
+#    - Retrieves details of the Dell device like model, systemID.
+#    - Supports filtering by systemID and model name
 
 #>
 function Get-DellSupportedModels {
