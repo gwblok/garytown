@@ -222,6 +222,7 @@ Function Install-DCU {
             $AppDCU = $AppDCU | Select-Object -First 1
         }
         if ($AppDCU){
+            Write-Verbose $AppDCU
             $DellItem = $AppDCU
             If ($DCUVersionInstalled -ne $false){[Version]$CurrentVersion = $DCUVersionInstalled.Version}
             Else {[Version]$CurrentVersion = 0.0.0.0}
@@ -266,6 +267,9 @@ Function Install-DCU {
                     Write-Verbose " FAILED TO DOWNLOAD DCU"
                 }
             }
+        }
+        else {
+            Write-Verbose "No DCU Update Available"
         }
     }
 }
