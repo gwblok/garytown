@@ -46,7 +46,7 @@
 #    - Supports filtering by systemID and model name
 
 #>
-$ScriptVersion = '24.7.25.2'
+$ScriptVersion = '24.7.25.3'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -208,13 +208,16 @@ Function Install-DCU {
     if (!(Test-Path -Path $LogFilePath)){New-Item -Path $LogFilePath -ItemType Directory -Force | Out-Null}        
     if (!(Test-Path -Path $DellCabExtractPath)){New-Item -Path $DellCabExtractPath -ItemType Directory -Force | Out-Null}  
     
-    Write-Verbose "Using Dell Catalog to get Latest DCU Version - Generic"
-    $DellModelLatest = Get-DellSupportedModels | Where-Object {$_.URL -match "Latitude"} |  Sort-Object -Descending -Property Date | Select-Object -first 1
-    Write-Verbose "Using Catalog from $($DellModelLatest.Model)"
-    #$SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
-    #$DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
+    #Write-Verbose "Using Dell Catalog to get Latest DCU Version - Generic"
+    #$DellSKU = Get-DellSupportedModels | Where-Object {$_.URL -match "Latitude"} |  Sort-Object -Descending -Property Date | Select-Object -first 1
+    
+    $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    Write-Verbose "Using Dell Catalog to get Latest DCU Version - $SystemSKUNumber"
+    $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
+    Write-Verbose "Using Catalog from $($DellSKU.Model)"
     if (Test-Path $CabPathIndexModel){Remove-Item -Path $CabPathIndexModel -Force}
-    Invoke-WebRequest -Uri "http://downloads.dell.com/$($DellModelLatest.URL)" -OutFile $CabPathIndexModel -UseBasicParsing
+    Invoke-WebRequest -Uri "http://downloads.dell.com/$($DellSKU.URL)" -OutFile $CabPathIndexModel -UseBasicParsing
+
     if (Test-Path $CabPathIndexModel){
         Write-Verbose "Extracting Dell Catalog"
         $null = expand $CabPathIndexModel $DellCabExtractPath\CatalogIndexPCModel.xml
