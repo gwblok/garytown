@@ -188,8 +188,9 @@ Function Get-DCUExitInfo {
 }
 Function Install-DCU {
     [CmdletBinding()]
+    param()
     $temproot = "$env:windir\temp"
-    $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    
     $LogFilePath = "$env:ProgramData\CMSL\Logs"
     #$LogFile = "$LogFilePath\DCU-Install.log"
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
@@ -201,14 +202,19 @@ Function Install-DCU {
     if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
     
     #Create Folders
+    Write-Verbose "Creating Folders"
     if (!(Test-Path -Path $LogFilePath)){New-Item -Path $LogFilePath -ItemType Directory -Force | Out-Null}        
     if (!(Test-Path -Path $DellCabExtractPath)){New-Item -Path $DellCabExtractPath -ItemType Directory -Force | Out-Null}  
     
-    $DellModelLatest = Get-DellSupportedModels | Where-Object {$_.URL -match "Latitude"} |  Sort-Object -Descending -Property Date | Select-Object -first 1 
-    $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
+    Write-Verbose "Using Dell Catalog to get Latest DCU Version - Generic"
+    $DellModelLatest = Get-DellSupportedModels | Where-Object {$_.URL -match "Latitude"} |  Sort-Object -Descending -Property Date | Select-Object -first 1
+    Write-Verbose "Using Catalog from $($DellModelLatest.Model)"
+    #$SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    #$DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
     if (Test-Path $CabPathIndexModel){Remove-Item -Path $CabPathIndexModel -Force}
     Invoke-WebRequest -Uri "http://downloads.dell.com/$($DellModelLatest.URL)" -OutFile $CabPathIndexModel -UseBasicParsing
     if (Test-Path $CabPathIndexModel){
+        Write-Verbose "Extracting Dell Catalog"
         $null = expand $CabPathIndexModel $DellCabExtractPath\CatalogIndexPCModel.xml
         [xml]$XMLIndexCAB = Get-Content "$DellCabExtractPath\CatalogIndexPCModel.xml"
         
