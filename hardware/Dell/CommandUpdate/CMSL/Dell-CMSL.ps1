@@ -46,7 +46,7 @@
 #    - Supports filtering by systemID and model name
 
 #>
-$ScriptVersion = '24.7.25.3'
+$ScriptVersion = '24.7.25.4'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -346,6 +346,30 @@ function Set-DCUSettings {
             Write-Verbose "Resolution: $($ExitInfo.Resolution)"
         }
     }
+    if ($scheduleAction){
+        $scheduleActionVar = "-scheduleAction=$scheduleAction"
+        $ArgList = "/configure $scheduleActionVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-scheduleAction.log`""
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+        if ($DCUConfig.ExitCode -ne 0){
+            $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+            Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+            Write-Verbose "Description: $($ExitInfo.Description)"
+            Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+        }
+    }
+    if ($scheduleAuto){
+        $scheduleAutoVar = "-scheduleAuto"
+        $ArgList = "/configure $scheduleAutoVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-scheduleAuto.log`""
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+        if ($DCUConfig.ExitCode -ne 0){
+            $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+            Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+            Write-Verbose "Description: $($ExitInfo.Description)"
+            Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+        }
+    }
     #Installation Deferral
     if ($installationDeferral){
         if ($installationDeferral -eq 'Enable'){
@@ -426,30 +450,7 @@ function Set-DCUSettings {
             }
         }
     }
-    if ($scheduleAction){
-        $scheduleActionVar = "-scheduleAction=$scheduleAction"
-        $ArgList = "/configure $scheduleActionVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-scheduleAction.log`""
-        Write-Verbose $ArgList
-        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-        if ($DCUConfig.ExitCode -ne 0){
-            $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-            Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-            Write-Verbose "Description: $($ExitInfo.Description)"
-            Write-Verbose "Resolution: $($ExitInfo.Resolution)"
-        }
-    }
-    if ($scheduleAuto){
-        $scheduleAutoVar = "-scheduleAuto"
-        $ArgList = "/configure $scheduleAutoVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-scheduleAuto.log`""
-        Write-Verbose $ArgList
-        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-        if ($DCUConfig.ExitCode -ne 0){
-            $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-            Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-            Write-Verbose "Description: $($ExitInfo.Description)"
-            Write-Verbose "Resolution: $($ExitInfo.Resolution)"
-        }
-    }
+
 }
 
 function Invoke-DCU {
