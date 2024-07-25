@@ -46,6 +46,8 @@
 #    - Supports filtering by systemID and model name
 
 #>
+$ScriptVersion = '24.7.25.2'
+Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
     
