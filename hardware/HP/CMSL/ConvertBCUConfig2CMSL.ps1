@@ -1,37 +1,3 @@
-$DiscNumber = "5"
-$Path = "C:\Users\GaryBlok\OneDrive\SonosMusicLibrary\Adventures in Odyssey"
-$Folders = get-childitem -Path $Path -Recurse -Directory | Where-Object {$_.Attributes -match "Directory"}
-$Folders = $Folders | Where-Object {$_.Name -match "Hall of Faith Disc"}
-#$Files = get-childitem -Path $Path -Recurse -File | Where-Object {$_.Name -match ".mp3"}
-
-$DestinationPath = "C:\Users\GaryBlok\OneDrive\SonosMusicLibrary\Adventures in Odyssey\Hall of Faith Collection"
-
-Foreach ($Folder in $Folders){
-    $DiscNumber = $Folder.Name.remove(0, ($($Folder.Name).Length - 2))
-    $DiscNumber = $DiscNumber.Trim()
-    if ($DiscNumber.length -eq 1){
-        $DiscNumber = "0$DiscNumber"
-    }   
-    $Files = get-childitem -Path $Folder -Recurse -File | Where-Object {$_.Name -match ".mp3"}
-    foreach ($File in $Files){
-        Write-Output "$(($File.Name).Insert(0,"Disc $DiscNumber - "))"
-        Rename-Item -Path $File.FullName -NewName "$(($File.Name).Insert(0,"Disc $DiscNumber - "))"
-    }
-    $Files = get-childitem -Path $Folder -Recurse -File | Where-Object {$_.Name -match ".mp3"}
-    foreach ($File in $Files){
-        Write-Output "$DestinationPath\$($File.Name)"
-        Move-Item -Path $file.FullName -Destination "$DestinationPath\$($File.Name)"
-    }
-}
-
-$SettingsList = Get-CimInstance -Namespace root\hp\instrumentedBIOS -ClassName HP_BIOSEnumeration
-$SettingsList | Select-Object -Property Name, CurrentValue
-
-$SettingsList = Get-CimInstance -Namespace root\hp\instrumentedBIOS -ClassName HP_BIOSSetting
-$SettingsList | Select-Object -Property Name, CurrentValue, Value
-$SettingsList | Where-Object {$_.Name -match "Asset"}
-
-
 <#  BCU to HPCMSL converter Script
 You can get fancy and update the code to cycle through your BCU config files and add them into your $RAWConfigs Array, or manually add the files like I show with 2 config files
 This script will go config file by config file, grabbing the settings and create a "database" of settings and values
