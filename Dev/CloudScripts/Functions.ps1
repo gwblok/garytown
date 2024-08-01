@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.7.1.1'
+$ScriptVersion = '24.8.1.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -862,7 +862,10 @@ Write-Host -ForegroundColor Green "[+] Function Invoke-Debloat"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Set-ThisPC"
-function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/f64b267ba11c3a632ee0d19656875f93b715a989/OSD/CloudOSD/Set-ThisPC.ps1)}
+function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Set-ThisPC.ps1)}
+
+Write-Host -ForegroundColor Green "[+] Function Get-WindowsESDFileInfo"
+function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/Get-WindowsESDFileInfo.ps1)}
 
 Write-Host -ForegroundColor Green "[+] Function Check-ComplianceKB5025885"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-CheckCompliance.ps1)
