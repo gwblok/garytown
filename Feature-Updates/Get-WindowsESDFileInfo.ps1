@@ -1,3 +1,8 @@
+[CmdletBinding()]
+param(
+    [Switch]$Check
+)
+    
 $StagingFolder = "$env:TEMP\OSDStaging"
 if (!(Test-Path -Path $StagingFolder)){
     new-item -Path $StagingFolder -ItemType Directory | Out-Null
@@ -131,22 +136,25 @@ ForEach ($Option in $WindowsTable){
 #if FWLink cab doesn't match the Static, then they released an update.
 
 #Loop through the 2 Items in the MCT Table & Get the Hash of the Cab
-ForEach ($MCT in $WindowsMCTTable){
-    New-Variable -Name "$($MCT.Version)Change" -Value $true -Force
-    Invoke-WebRequest -Uri $MCT.URL -UseBasicParsing -OutFile "$StagingFolder\$($MCT.LocalCab)" -ErrorAction SilentlyContinue
-    $MD5HashMCT = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($MCT.LocalCab)"
-    #Compare the Hash to each of the 4 items in the CAB table, if there is a match to any, then we know there isn't a change
-    ForEach ($Option in $WindowsTable){
-        $MD5HashOption = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($Option.LocalCab)"
-        if ($MD5HashMCT.Hash -eq $MD5HashOption.Hash){
-            Set-Variable -Name "$($MCT.Version)Change" -Value $false
-            Write-Output "$($MCT.Version) Has not changed"
+if ($Check){
+    ForEach ($MCT in $WindowsMCTTable){
+        New-Variable -Name "$($MCT.Version)Change" -Value $true -Force
+        Invoke-WebRequest -Uri $MCT.URL -UseBasicParsing -OutFile "$StagingFolder\$($MCT.LocalCab)" -ErrorAction SilentlyContinue
+        $MD5HashMCT = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($MCT.LocalCab)"
+        #Compare the Hash to each of the 4 items in the CAB table, if there is a match to any, then we know there isn't a change
+        ForEach ($Option in $WindowsTable){
+            $MD5HashOption = Get-FileHash -Algorithm MD5 -Path "$StagingFolder\$($Option.LocalCab)"
+            if ($MD5HashMCT.Hash -eq $MD5HashOption.Hash){
+                Set-Variable -Name "$($MCT.Version)Change" -Value $false
+                Write-Output "$($MCT.Version) Has not changed"
+            }
         }
+        if ("$($MCT.Version)Change" -eq $true){Write-Output "$($MCT.Version) has changed"}
     }
-    if ("$($MCT.Version)Change" -eq $true){Write-Output "$($MCT.Version) has changed"}
 }
-
-#Clean Up Results
-$x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
-#$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}
-return $ESDInfo | Where-Object {$_.Architecture -eq "x64" -or $_.Architecture -eq "ARM64"}
+else {
+    #Clean Up Results
+    $x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
+    #$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}
+    return $ESDInfo | Where-Object {$_.Architecture -eq "x64" -or $_.Architecture -eq "ARM64"}
+}
