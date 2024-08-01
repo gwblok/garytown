@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.8.1.1'
+$ScriptVersion = '24.8.1.2'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -865,7 +865,7 @@ Write-Host -ForegroundColor Green "[+] Function Set-ThisPC"
 function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Set-ThisPC.ps1)}
 
 Write-Host -ForegroundColor Green "[+] Function Get-WindowsESDFileInfo"
-function Set-ThisPC {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/Get-WindowsESDFileInfo.ps1)}
+function Get-WindowsESDFileInfo {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/Get-WindowsESDFileInfo.ps1)}
 
 Write-Host -ForegroundColor Green "[+] Function Check-ComplianceKB5025885"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-CheckCompliance.ps1)
