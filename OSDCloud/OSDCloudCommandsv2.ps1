@@ -111,8 +111,11 @@ New-OSDCloudWorkSpaceSetupCompleteTemplate
 
 
 $templateName = "OSDCloud-24H2WinPE"
-$WorkSpacePath = "D:\$TemplateName"
+$WorkSpacePath = "C:\$TemplateName"
 $MountPath = "C:\Mount"
+
+New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "C:\Users\GaryBlok\Downloads\windows11.0-kb5040435-x64_eb3b8638c1576925800434522cbb112fd94aa379.msu" -Add7Zip 
+New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
@@ -141,6 +144,7 @@ Get-ChildItem "$(Get-OSDCloudWorkspace)\Media\EFI\Microsoft\Boot" | Where {$_.PS
 
 New-OSDCloudWorkSpaceSetupCompleteTemplate
 Edit-OSDCloudWinPE -DriverPath "C:\OSDCloudARM64\WinPEDrivers\SurfaceProX\FileRepository"
+Edit-OSDCloudWinPE -DriverPath "C:\swsetup\Dock"
 #Create Cloud USB
 New-OSDCloudUSB
 
