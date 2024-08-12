@@ -3,7 +3,7 @@
 $BusType = 'NVMe'
 $Disks = Get-Disk | Where-Object {$_.BusType -Match $BusType}
 #If Non-Found, just use the smallest disk size:
-if (!($disk)){
+if (!($Disks)){
     $DiskNumber = (get-disk | Where-Object {$_.size -eq ((get-disk | Where-Object {$_.BusType -notmatch "USB"}).size | measure -Minimum).Minimum}).Number
 }
 #If found, get the smallest one (just incase there is more than one)
