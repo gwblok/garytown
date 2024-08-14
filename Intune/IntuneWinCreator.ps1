@@ -1,11 +1,21 @@
 #Gary Blok
+
+
+
 #Build CMClient App Intune Installer
-$IntuneAppRootPath = "C:\IntuneApps"
+$IntuneAppRootPath = "\\nas\openshare\IntuneApps"
 
 #Path to App Folder you want to Convert
-$SourceAppPath = "C:\IntuneApps\Sources\WorkElevate\WorkElevateStub"
-$OutputAppPath = $SourceAppPath.Replace("Sources","Output")
+$SourceAppPathRoot = "$IntuneAppRootPath\Sources"
 
+#++++++++++++++++++++++++++
+#!!!Change These!!!
+$CustomAppNameManf = "2Pint"
+$SourceAppPath = "$SourceAppPathRoot\$CustomAppNameManf\Agent\2.10.10714.1630"
+
+#++++++++++++++++++++++++++
+
+$OutputAppPath = $SourceAppPath.Replace("Sources","Output")
 $IntuneUtilFolderPath = "$IntuneAppRootPath\Microsoft-Win32-Content-Prep-Tool"
 $IntuneUtilPath = "$IntuneUtilFolderPath\IntuneWinAppUtil.exe"
 $IntuneUtilURL = "https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool/raw/master/IntuneWinAppUtil.exe"
@@ -15,6 +25,12 @@ $IntuneUtilURL = "https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool
 
 
 #Test Folder Structure and Build if needed
+if (!(Test-Path -Path $SourceAppPath)){
+    New-item -Path $SourceAppPath -ItemType Directory -Force | Out-Null
+    Write-Host "Created $SourceAppPath" -ForegroundColor Green
+    Write-Host "Place your SOURCE HERE!!!" -ForegroundColor Red
+}
+
 if (!(Test-Path -Path $OutputAppPath)){
     New-item -Path $OutputAppPath -ItemType Directory -Force | Out-Null
     Write-Host "Created $OutputAppPath" -ForegroundColor Green
@@ -31,7 +47,6 @@ if (!(Test-Path -Path $IntuneUtilPath)){
 
 
 $App = get-item -Path $SourceAppPath
-
 $SetupEXE = Get-ChildItem -Path $App.FullName -Filter *.exe
 if (!($SetupEXE)){$SetupEXE = Get-ChildItem -Path $App.FullName -Filter *.msi}
 $SetupFolder = $App.FullName
