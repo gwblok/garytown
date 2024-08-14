@@ -79,7 +79,10 @@ if (Test-HPIASupport){
     Manage-HPBiosSettings -SetSettings
 }
 
-
+if ($Manufacturer -match "Lenovo") {
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-LenovoBiosSettings.ps1)
+    Manage-LenovoBIOSSettings -SetSettings
+}
 
 
 #write variables to console
