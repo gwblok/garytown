@@ -9,6 +9,7 @@ $Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model
 $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
 if ($Manufacturer -match "Dell"){
     $Manufacturer = "Dell"
+    <#
     $DellEnterprise = Test-DCUSupport
     if ($DellEnterprise -eq $true) {
         Write-Host "Running $ScriptName - $ScriptVersion" -ForegroundColor Green
@@ -37,4 +38,7 @@ if ($Manufacturer -match "Dell"){
         osdcloud-DCUAutoUpdate
     }
     #endregion
+    #>
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/master/hardware/Dell/CommandUpdate/CMSL/Dell-CMSL.ps1')
+    
 }
