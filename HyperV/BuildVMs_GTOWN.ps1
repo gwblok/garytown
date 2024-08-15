@@ -8,9 +8,9 @@ This script will...
   - Check if available names are available in CM
   - Find the numbers of Names you want based on your Desired VMs, leveraging the Starting Number & EndNumber
   - Create VMs in $VMPath
-    - Starting RAM = 2048 - Changed from 1024 after Memory issues during OSD
-    - Dynamic Memory, 1024 - 2048
-    - Two Logical Processors
+    - Starting RAM = 4098 - Changed from 1024 after Memory issues during OSD
+    - Dynamic Memory, 4 - 6 GB
+    - 4 Logical Processors
     - Adds Network of $VMSwitch
     - Adds Boot ISO
     - Will set the Boot Order to ISO (I currently have commented out so It will PXE Boot)
@@ -26,12 +26,13 @@ This script will...
 
 
 # REQUIRED INPUT VARIABLES:
-[int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
+[int]$DesiredVMs = 3  #The Number of VMs that are going to be created this run.
 
 [int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB
 [int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB
 [int64]$DynamicMemoryHigh = 6 * 1024 * 1024 * 1024 #6GB
 [int64]$DriveSize = 100 * 1024 * 1024 * 1024 #100GB
+[int]$ProcessorCount = 4
 
 $VMPath = "D:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
 $VMNamePreFix = "VM-CM-"  #The VM will start with this name
@@ -44,8 +45,8 @@ try {
 catch {throw}
 
 #$BootISO = "$ISOFolderPath\Boot_image_x64.iso"  #If you're booting to an ISO, put the location here.
-$ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
-$BootISO = $ISList[0].FullName
+#$ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
+#$BootISO = $ISList[0].FullName
 
 #$VirtualNameAdapterName = "192.168.1.X Lab Network" #The Actual Name of the Hyper-V Virtual Network you want to assign to the VM.
 $RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collection you deployed the Task Sequence too
@@ -54,7 +55,7 @@ $RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collecti
 [int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
 $SiteCode = "MCM" #ConfigMgr Site Code
 $ProviderMachineName = "CM.lab.garytown.com" #ConfigMgr Provider Machine
-$CMModulePath = "E:\HyperVLab\CMConsolePosh\ConfigurationManager.psd1"
+$CMModulePath = "\\nas\openshare\CMConsolePosh\ConfigurationManager.psd1"
 $CMConnected = $null
 
 $Purpose = "AutoPilot", "ConfigMgr", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
@@ -70,13 +71,13 @@ if (!(Test-Path -Path $VMPath))
     Write-Host "HyperV Path not Set correctly!" -ForegroundColor Red
     Throw "Stopping"
     }
-
+<#
 elseif (!(Test-Path -Path $BootISO))
     {
     Write-Host "Boot ISO Path not Set correctly!"  -ForegroundColor Red
     Throw "Stopping"
     }
-
+#>
 elseif ((!(Test-Path -Path $CMModulePath)) -and $Purpose -eq "ConfigMgr")
     {
     if ($Purpose -eq "ConfigMgr"){
@@ -228,8 +229,8 @@ else
         Set-VMSecurity -VMName $VMName -VirtualizationBasedSecurityOptOut:$false
         Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
         Enable-VMTPM -VMName $VMName}
-        Write-Host "  Setting Processors to Two" -ForegroundColor Green
-        Set-VMProcessor -VMName $VMName -Count 2        
+        Write-Host "  Setting Processors to $ProcessorCount" -ForegroundColor Green
+        Set-VMProcessor -VMName $VMName -Count $ProcessorCount        
         Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
         Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1280 -VerticalResolution 800
 
