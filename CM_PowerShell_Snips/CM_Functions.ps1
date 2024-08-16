@@ -1125,6 +1125,7 @@ Function Invoke-Baseline{
 		    [Parameter(Mandatory=$true)]
             #[ValidateSet("WaaS 20H2 Pre-Assessment","WaaS 20H2 Pre-Assessment Pre-Prod","WaaS W10 TS Self-Service Notification","WaaS 1909 Pre-Assessment Legacy","SDE Pulse Recent Connection")]
 		    $BaselineName
+    )
 
 
 #Invoke Machine Policy
