@@ -199,6 +199,7 @@ Function Install-DCU {
     #$CabPathIndex = "$temproot\DellCabDownloads\CatalogIndexPC.cab"
     $CabPathIndexModel = "$temproot\DellCabDownloads\CatalogIndexModel.cab"
     $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
+    if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
     $DCUVersionInstalled = Get-DCUVersion
     
     if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
@@ -529,7 +530,7 @@ function  Get-DCUUpdateList {
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
     $CabPathIndexModel = "$temproot\DellCabDownloads\CatalogIndexModel.cab"
     $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
-
+    if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
     
     
     if (!($SystemSKUNumber)) {
@@ -541,6 +542,8 @@ function  Get-DCUUpdateList {
         return "System SKU not found"
     }
     if (Test-Path $CabPathIndexModel){Remove-Item -Path $CabPathIndexModel -Force}
+    
+
     Invoke-WebRequest -Uri "http://downloads.dell.com/$($DellSKU.URL)" -OutFile $CabPathIndexModel -UseBasicParsing
     if (Test-Path $CabPathIndexModel){
         $null = expand $CabPathIndexModel $DellCabExtractPath\CatalogIndexPCModel.xml
