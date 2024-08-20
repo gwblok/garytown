@@ -14,7 +14,7 @@ Cert Setup (after using the guide above to setup DC & PKI):
 
 https://anthonyfontanez.com/index.php/2021/05/28/migrating-configmgr-to-https-only/#clientcerts
 
-SQL SPN Kerberos Tool: 
+SQL SPN Kerberos Tool: Use this after you install SQL, before you install ConfigMgr
 
 https://www.microsoft.com/en-US/download/details.aspx?id=39046
 
