@@ -4,14 +4,17 @@ These are scripts and files I use in my own personal lab, stored here for whenev
 
 
 ## Links
-
+Because I always forget where I got things from, so now on my 4th or 5th time, I'm just documnenting it here.
 
 Guide:
 
 https://www.recastsoftware.com/resources/building-a-configmgr-lab-from-scratch/
 
-Cert Setup: 
+Cert Setup (after using the guide above to setup DC & PKI): 
 
 https://anthonyfontanez.com/index.php/2021/05/28/migrating-configmgr-to-https-only/#clientcerts
 
+SQL SPN Kerberos Tool: 
+
+https://www.microsoft.com/en-US/download/details.aspx?id=39046
 
