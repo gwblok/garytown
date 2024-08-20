@@ -86,8 +86,8 @@ $ADUsers = @(
 @{Name = "CM_CP_Workstations"; GivenName = "ConfigMgr"; Surname = "ClientPush Workstations" ; Description = "Client Push Workstations"; Group = "Local Admins Workstations"}
 
 #SQL Accounts
-@{Name = "SQLCMAgent"; GivenName = "SQL"; Surname = "CM Agent" ; Description = "SQL Agent in ConfigMgr Service Account"; LogonWorkstations = "Null"}
-@{Name = "SQLCMSvc"; GivenName = "SQL"; Surname = "CM Service" ; Description = "SQL Service in ConfigMgr Service Account"; LogonWorkstations = "Null"}
+@{Name = "SQLCMAgent"; GivenName = "SQL"; Surname = "CM Agent" ; Description = "SQL Agent in ConfigMgr Service Account"}
+@{Name = "SQLCMSvc"; GivenName = "SQL"; Surname = "CM Service" ; Description = "SQL Service in ConfigMgr Service Account"}
 
 #Test Accounts:
 #@{Name = "Gary.Blok"; GivenName = "Gary"; Surname = "Blok" ; Description = "ME"; Group = @("Local Admins Workstations","Domain Admins", "CM Full Admins","CM App Deploy Users")}
