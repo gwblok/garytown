@@ -18,3 +18,9 @@ SQL SPN Kerberos Tool: Use this after you install SQL, before you install Config
 
 https://www.microsoft.com/en-US/download/details.aspx?id=39046
 
+
+## Things I often forget
+Add SYSTEM to SRC Share with full rights, otherwise issues with BootMedia (and other things)
+
+If anything goes wrong with modifing a WIM or adding Boot Media, etc... it's probably the source share permissions
+
