@@ -28,3 +28,13 @@ If anything goes wrong with modifing a WIM or adding Boot Media, etc... it's pro
 Edit a couple .NET config files if you're not installing CM to C:\ 
 
 https://www.prajwaldesai.com/fatal-msi-error-bgbisapi-msi-could-not-be-installed/
+
+## Installers
+
+.Net 4.8.1
+
+https://learn.microsoft.com/en-us/dotnet/framework/install/on-server-2022
+
+C++  (x86 + x64) to upgrade the ones that SQL or something else put there.
+
+https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
