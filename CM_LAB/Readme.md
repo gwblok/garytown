@@ -24,6 +24,7 @@ Add SYSTEM to SRC Share with full rights, otherwise issues with BootMedia (and o
 
 If anything goes wrong with modifing a WIM or adding Boot Media, etc... it's probably the source share permissions
 
-#Post Setup
+## Post Setup
 Edit a couple .NET config files if you're not installing CM to C:\ 
+
 https://www.prajwaldesai.com/fatal-msi-error-bgbisapi-msi-could-not-be-installed/
