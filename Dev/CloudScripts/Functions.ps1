@@ -704,6 +704,13 @@ function Set-APEnterprise {
     Set-ExecutionPolicy Bypass -Force
     Get-WindowsAutopilotInfo -Online -GroupTag Enterprise -Assign
 }
+function Set-APHub {
+    Install-Nuget
+    Install-PackageManagement
+    Install-script -name Get-WindowsAutoPilotInfo -Force
+    Set-ExecutionPolicy Bypass -Force
+    Get-WindowsAutopilotInfo -Online -GroupTag HUB -Assign
+}
 
 Write-Host -ForegroundColor Green "[+] Function Install-23H2EnablementPackage"
 function Install-23H2EnablementPackage {
