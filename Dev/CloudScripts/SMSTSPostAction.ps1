@@ -10,3 +10,5 @@ Start-WindowsUpdate
 Invoke-UpdateScanMethodMSStore
 
 Stop-Transcript
+
+Restart-Computer
