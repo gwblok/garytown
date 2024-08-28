@@ -110,16 +110,18 @@ New-OSDCloudWorkSpaceSetupCompleteTemplate
 #>
 
 
-$templateName = "OSDCloud-24H2WinPE"
+$templateName = "OSDCloud-22H2WinPE"
 $WorkSpacePath = "C:\$TemplateName"
 $MountPath = "C:\Mount"
 
-New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "C:\Users\GaryBlok\Downloads\windows11.0-kb5040435-x64_eb3b8638c1576925800434522cbb112fd94aa379.msu" -Add7Zip 
+$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
+
+New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "C:\Users\GaryBlok\Downloads\windows11.0-kb5041587-x64_7ac0f48e6f3852a44dce48c384c3202561b4570f.msu" -Add7Zip 
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
-Edit-OSDCloudWinPE -CloudDriver HP,USB
+Edit-OSDCloudWinPE -CloudDriver HP,USB -DriverPath $DisplayLinkDriverPath -Add7Zip -PSModuleInstall HPCMSL
 
 #Added HPCMSL into WinPE
 Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
@@ -132,9 +134,10 @@ New-OSDCloudISO
 Set-OSDCloudTemplate -Name OSDCloudARM64
 New-OSDCloudWorkspace -WorkspacePath $OSDCloudWorkspaceARM64
 #Cleanup
-$Folders = get-childitem -path "$OSDCloudWorkspaceARM64\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
-$Folders | Remove-Item -Force -Recurse
-
+if (Test-Path -Path "$(Get-OSDCloudWorkspace)\Media"){
+    $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
+    $Folders | Remove-Item -Force -Recurse
+}
 #Cleanup Languages
 $KeepTheseDirs = @('boot','efi','en-us','sources','fonts','resources')
 Get-ChildItem "$(Get-OSDCloudWorkspace)\Media" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
