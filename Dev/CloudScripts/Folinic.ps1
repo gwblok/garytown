@@ -1,13 +1,34 @@
 <#
 
-OSDCloud Wrapper Script
+OSDCloud Wrapper Script Example Script
 This will set the variables used by OSDCloud, update the MS Surface Drivers Catalog, then start OSDCloud, along with do a few things after
 
 you can edit your OSDCloud Boot Media to automatically start this by hosting this on GitHub, and modifying your boot image like:
 
 
-Edit-OSDCloudWinPE -StartURL "https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Hope.ps1"
+Edit-OSDCloudWinPE -StartURL "https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Folinic.ps1"
 
+
+3 Regions in script
+
+Pre OSDCloud
+Start OSDCloud
+Post OSDCloud
+
+Pre OSDCloud is for setting variables, updating BIOS Settings, etc
+
+Start OSDCloud, you can change your command line, but really nothing to do here
+
+Post OSDCloud, this is where you can do a lot of extra customization to your Offline Windows, call scripts to remove AppX packages, slip in a CU, inject files,
+ - Add Additional PowerShell Modules
+ - Add a custom SetupComplete file (do not overwrite the one OSDCloud creates, use the custom path that OSDCloud would trigger)
+ - Add OEM Specific stuff
+ - Remove built in Items
+ - Apply CU / SSU / etc offline before rebooting
+ - Add Custom wallpapers
+ - Edit the Offline Registry
+ - SO MANY THINGS
+ - Finally reboot
 
 
 #>
@@ -18,6 +39,7 @@ write-host "-------------------------------------------------" -ForegroundColor 
 Write-Host ""
 
 
+#region Tasks to run in WinPE before triggering OSD Cloud
 
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
@@ -56,6 +78,10 @@ iex (irm "https://raw.githubusercontent.com/everydayintech/OSDCloud-Public/main/
 Update-OSDCloudSurfaceDriverCatalogJustInTime
 
 
+#endregion
+
+#region OSDCloud
+
 #Launch OSDCloud
 Write-Host "Starting OSDCloud on $Manufacturer $Model $Product" -ForegroundColor Green
 write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage" -ForegroundColor Green
@@ -64,12 +90,23 @@ Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation
 
 write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
 
+#endregion
 
+#region Post OSDCloud, do more things in WinPE before you reboot.
 
 #Copy CMTrace Local:(I always add CMTrace to my boot images)
 if (Test-path -path "x:\windows\system32\cmtrace.exe"){
     copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe" -verbose
 }
 
+#If Lenovo, add the Lenovo Module
+if ($Manufacturer -match "Lenovo") {
+    $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
+    Write-Host "Copy-PSModuleToFolder -Name LSUClient to $PowerShellSavePath\Modules"
+    Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
+}
+
 #Restart Computer After OSDCloud is complete in WinPE
 Restart-Computer
+
+#endregion
