@@ -72,7 +72,8 @@ function Get-HPDockUpdateDetails {
     24.07.11.02 - added a few write-hosts around the TB Controller driver update process.
     24.07.18.01 - updated logic to check for OSVers supported by CMSL and limit the MaxOSVer to the highest supported by CMSL.
     24.07.18.02 - updated softpaqs info for USB-C G5, USB-C G5 Essential, USB-C Universal Dock G2, and Thunderbolt G4
-    
+    24.09.05.01 - adding switch for IntuneApp to assist in deploying the updates via Intune.
+
     .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
     Logging created by this line: Start-Transcript -Path "$OutFilePath\$SPNumber.txt" - which should be like: "C:\swsetup\dockfirmware\sp144502-DATE.txt"
@@ -117,566 +118,610 @@ function Get-HPDockUpdateDetails {
     .Example
     # Update the Dock's firmware to the latest version HPCMSL (if installed) will find completely silent to end user - Stage the content on the dock to install at disconnect
     Get-HPDockUpdateDetails -Update -stage -UIExperience Silent
+
+    .Example 
+    # Intune App Example
+    # Update the Dock's firmware to the latest version looking for the softpaqs in the same directory as the script installer, completely silent to end user - Stage the content on the dock to install at disconnect
+    Get-HPDockUpdateDetails -IntuneApp -Update -stage -UIExperience Silent
+    
     #>
+
     [CmdletBinding()]
     param(
-    [Parameter(Mandatory = $false, HelpMessage="Only matters when used with -Update, determine if user will see dialog or not")][ValidateSet('NonInteractive', 'Silent')][String]$UIExperience,
-    [Parameter(Mandatory = $false, HelpMessage="Number between 60 and 600 for seconds to wait for a dock to be connected before exiting automatically")][ValidateRange(60,600)][int]$WaitTimer,
-    [switch]$CMPackage, #This requires that you have a download step in the TS that downloads the Dock Firmware Softpaqs and places in variable HPDOCK (%HPDOCK01%)
-    [switch]$BypassHPCMSL,
-    [switch]$Transcript,
-    [switch]$Update,
-    [switch]$Stage,
-    [switch]$DebugOut,
-    [switch]$UpdateControllerDriver
+        [Parameter(Mandatory = $false, HelpMessage = "Only matters when used with -Update, determine if user will see dialog or not")][ValidateSet('NonInteractive', 'Silent')][String]$UIExperience,
+        [Parameter(Mandatory = $false, HelpMessage = "Number between 60 and 600 for seconds to wait for a dock to be connected before exiting automatically")][ValidateRange(60, 600)][int]$WaitTimer,
+        [switch]$CMPackage, #This requires that you have a download step in the TS that downloads the Dock Firmware Softpaqs and places in variable HPDOCK (%HPDOCK01%)
+        [switch]$IntuneApp, #Assumes you have the Softpaqs downloaded and in the same folder as the script and that the softpaqs match the info in Get-HPDockInfo function 
+        [switch]$BypassHPCMSL,
+        [switch]$Transcript,
+        [switch]$Update,
+        [switch]$Stage,
+        [switch]$DebugOut,
+        [switch]$UpdateControllerDriver
     
     ) # param
     
     $ScriptVersion = '23.09.07.03'
     
     # check for CMSL
-    if ($CMPackage -ne $true) {
+    if (($CMPackage -eq $true) -or ($IntuneApp -eq $true)) {
+        #Assumes the process will be done offline and skips use of HPCMSL
+        $CMSL = $false
+    }
+    else{
         Try {
             $HPDeviceDetails = Get-HPDeviceDetails -ErrorAction SilentlyContinue
             $HPDeviceDetails | Out-Null
             $CMSL = $true
         }
         catch {
-            $BypassHPCMSL = $true }
-            
-            $AdminRights = ([Security.Principal.WindowsPrincipal] `
-            [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-            if ( $DebugOut ) { Write-Host "--Admin rights:"$AdminRights }
+            $BypassHPCMSL = $true 
         }
-        if ($BypassHPCMSL -eq $true) {
-            $CMSL = $false
-        }
-        if ($CMSL){
-            #Get The OS Versions supported by HPCMSL
-            $SPL = Get-Command Get-SoftpaqList -ShowCommandInfo
-            $SPLValidSet = ($SPL.ParameterSets.Parameters | Where-Object {$_.Name -match "OSVer"}).ValidParamSetValues | Select-Object -Unique
-            #$SPLMaxOSVer = ($SPLValidSet | Measure-Object -Maximum).Maximum
             
-            #Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6):
-            $MaxOSSupported = ((Get-HPDeviceDetails -oslist).OperatingSystem | Where-Object {$_ -notmatch "LTSB"}| Select-Object -Unique| Measure-Object -Maximum).Maximum
-            #$MaxOSVer = ((Get-HPDeviceDetails -oslist | Where-Object {$_.OperatingSystem -eq "$MaxOSSupported"}).OperatingSystemRelease | Measure-Object -Maximum).Maximum
+        $AdminRights = ([Security.Principal.WindowsPrincipal] `
+                [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+        if ( $DebugOut ) { Write-Host "--Admin rights:"$AdminRights }
+    }
+    if ($BypassHPCMSL -eq $true) {
+        $CMSL = $false
+    }
+    if ($CMSL) {
+        #Get The OS Versions supported by HPCMSL
+        $SPL = Get-Command Get-SoftpaqList -ShowCommandInfo
+        $SPLValidSet = ($SPL.ParameterSets.Parameters | Where-Object { $_.Name -match "OSVer" }).ValidParamSetValues | Select-Object -Unique
+        #$SPLMaxOSVer = ($SPLValidSet | Measure-Object -Maximum).Maximum
             
-            #Get the MAX OS Ver Supported for the OS that is also supported by CMSL
-            $MaxOSVer = ((Get-HPDeviceDetails -oslist | Where-Object {$_.OperatingSystem -eq "$MaxOSSupported"}).OperatingSystemRelease | Where-Object {$_ -in $SPLValidSet} | Measure-Object -Maximum).Maximum
+        #Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6):
+        $MaxOSSupported = ((Get-HPDeviceDetails -oslist).OperatingSystem | Where-Object { $_ -notmatch "LTSB" } | Select-Object -Unique | Measure-Object -Maximum).Maximum
+        #$MaxOSVer = ((Get-HPDeviceDetails -oslist | Where-Object {$_.OperatingSystem -eq "$MaxOSSupported"}).OperatingSystemRelease | Measure-Object -Maximum).Maximum
             
-            if ($MaxOSSupported -Match "11"){$MaxOS = "Win11"}
-            else {$MaxOS = "Win10"}
-            #Write-Output "Max OS Supported: $MaxOSSupported $MaxOSVer"
+        #Get the MAX OS Ver Supported for the OS that is also supported by CMSL
+        $MaxOSVer = ((Get-HPDeviceDetails -oslist | Where-Object { $_.OperatingSystem -eq "$MaxOSSupported" }).OperatingSystemRelease | Where-Object { $_ -in $SPLValidSet } | Measure-Object -Maximum).Maximum
+            
+        if ($MaxOSSupported -Match "11") { $MaxOS = "Win11" }
+        else { $MaxOS = "Win10" }
+        #Write-Output "Max OS Supported: $MaxOSSupported $MaxOSVer"
 
-            #Get ThunderBolt Driver Information
-            $ThunderBoltDriver = Get-SoftpaqList -Category Driver -Os $MaxOS -OsVer $MaxOSVer | Where-Object { $_.Name -match 'Thunderbolt' -and $_.Name -notmatch "Audio" }
-            $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*"  }
-            if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)){
-                if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion){
-                    if (($DebugOut) -or ($Transcript)){write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"}
-                    if ($UpdateControllerDriver){
-                        write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
-                    }
-                }
-                else {
-                    #Driver Update Needed
-                    write-host -ForegroundColor Yellow "TB Driver Update Available: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"
-                    write-host -ForegroundColor Yellow "Recommend updating with $($ThunderBoltDriver.Name) | $($ThunderBoltDriver.id)"
-                    #$DriverUpdateAvailable = $ThunderBoltDriver.id
-                    if ($UpdateControllerDriver){
-                        Write-Host -ForegroundColor Green " UpdateControllerDriver Switch Enabled... Updating driver now..."
-                        Get-Softpaq -Number $ThunderBoltDriver.id -SaveAs "c:\swsetup\$($ThunderBoltDriver.id).exe" -Action silentinstall -Overwrite yes
-                    }
-                }
-            }
-            
-        }
-        function Get-HPDockInfo {
-            [CmdletBinding()]
-            param($pPnpSignedDrivers)
-            
-            # **** Hardcode URLs in case of no CMSL installed: ****
-            #USB-C G5 Essential Dock
-            $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp152001-152500/sp152201.exe'  #  01.00.12.00 | April 16, 2024
-            
-            #Thunderbolt G4
-            $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151930.exe'   #  1.5.22.0 | Mar 25, 2024
-            
-            #Thunderbolt G2
-            $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  1.0.71.1 | Dec 15, 2022
-            
-            #USB-C Dock G5
-            $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151931.exe'  #  1.0.20.0 | Mar 25, 2024
-            
-            #USB-C Universal Dock G2
-            $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151932.exe'  #  1.0.20.0 | Mar 25, 2024
-            
-            #USB-C Dock G4
-            $Url_UsbG4 = 'https://ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
-            
-            #Elite USB-C Dock
-            $Url_UsbElite = 'https://ftp.hp.com/pub/softpaq/sp83501-84000/sp83851.exe'     #  1.00 Rev.B | Dec 12, 2017
-            
-            #E24d G4 FHD Docking Monitor
-            $Url_E24D = 'https://ftp.hp.com/pub/softpaq/sp145501-146000/sp145577.exe'   #  1.0.17.0 | Mar 28, 2023
-            
-            
-            #######################################################################################
-            $Dock_Attached = 0      # default: no dock found
-            $Dock_ProductName = $null
-            $Dock_Url = $null   
-            # Find out if a Dock is connected - assume a single dock, so stop at first find
-            foreach ( $iDriver in $pPnpSignedDrivers ) {
-                $f_InstalledDeviceID = "$($iDriver.DeviceID)"   # analyzing current device
-                if ( ($f_InstalledDeviceID -match "HID\\VID_03F0") -or ($f_InstalledDeviceID -match "USB\\VID_17E9") ) {
-                    switch -Wildcard ( $f_InstalledDeviceID ) {
-                        '*PID_0488*' { $Dock_Attached = 1 ; $Dock_ProductName = 'HP Thunderbolt Dock G4' ; $Dock_Url = $Url_TBG4 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe'}
-                        '*PID_0667*' { $Dock_Attached = 2 ; $Dock_ProductName = 'HP Thunderbolt Dock G2' ; $Dock_Url = $Url_TBG2 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
-                        '*PID_484A*' { $Dock_Attached = 3 ; $Dock_ProductName = 'HP USB-C Dock G4' ; $Dock_Url = $Url_UsbG4 ; $FirmwareInstaller = 'HP_USB-C_Dock_G4_FW_Update_Tool_Console.exe' }
-                        '*PID_046A*' { $Dock_Attached = 3 ; $Dock_ProductName = 'HP Elite USB-C Dock' ; $Dock_Url = $Url_UsbElite ; $FirmwareInstaller = 'HP Elite USB-C Dock FW Update Tool.exe' }
-                        '*PID_046B*' { $Dock_Attached = 4 ; $Dock_ProductName = 'HP USB-C Dock G5' ; $Dock_Url = $Url_UsbG5  ; $FirmwareInstaller = 'HPFirmwareInstaller.exe'}
-                        #'*PID_600A*' { $Dock_Attached = 5 ; $Dock_ProductName = 'HP USB-C Universal Dock' }
-                        '*PID_0A6B*' { $Dock_Attached = 6 ; $Dock_ProductName = 'HP USB-C Universal Dock G2' ; $Dock_Url = $Url_UniG2 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
-                        '*PID_056D*' { $Dock_Attached = 7 ; $Dock_ProductName = 'HP E24d G4 FHD Docking Monitor'; $Dock_Url = $Url_E24D ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
-                        '*PID_016E*' { $Dock_Attached = 8 ; $Dock_ProductName = 'HP E27d G4 QHD Docking Monitor' }
-                        '*PID_379D*' { $Dock_Attached = 9 ; $Dock_ProductName = 'HP USB-C G5 Essential Dock' ; $Dock_Url =  $Url_EssG5 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
-                    } # switch -Wildcard ( $f_InstalledDeviceID )
-                } # if ( $f_InstalledDeviceID -match "VID_03F0")
-                if ( $Dock_Attached -gt 0 ) { break }
-            } # foreach ( $iDriver in $gh_PnpSignedDrivers )
-            #######################################################################################
-            
-            return @(
-            @{Dock_Attached = $Dock_Attached ;  Dock_ProductName = $Dock_ProductName  ;  Dock_Url = $Dock_Url;  Dock_InstallerName = $FirmwareInstaller}
-            )
-        } # function Get-HPDockInfo
-        
-        function Get-PackageVersion {
-            [CmdletBinding()]param( $pDocknum, $pCheckFile ) # param
-            
-            if (Test-Path -Path $pCheckFile){
-                $TestInfo = Get-Content -Path $pCheckFile
-            }
-            if ( $pDocknum -eq 9 ) {       
-                [String]$InstalledVersion = $TestInfo | Select-String -Pattern 'installed' -SimpleMatch
-                $InstalledVersion = $InstalledVersion.Split(":") | Select-Object -Last 1            
-            } 
-            elseif ( $pDocknum -in (1,2)){
-                $TBDockPath = "HKLM:\SOFTWARE\HP\HP Firmware Installer"
-                if (Test-Path -Path $TBDockPath) {
-                    $TBDockKeyChildren = Get-ChildItem -Path $TBDockPath -Recurse
-                    foreach ($Children in $TBDockKeyChildren){
-                        if ($Children.Name -match "Thunder"){
-                            $InstalledPackageVersion = $Children.GetValue('InstalledPackageVersion')    
-                            if ($InstalledPackageVersion){$InstalledVersion = $InstalledPackageVersion}
-                        }
-                    }
+        #Get ThunderBolt Driver Information
+        $ThunderBoltDriver = Get-SoftpaqList -Category Driver -Os $MaxOS -OsVer $MaxOSVer | Where-Object { $_.Name -match 'Thunderbolt' -and $_.Name -notmatch "Audio" }
+        $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*" }
+        if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)) {
+            if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion) {
+                if (($DebugOut) -or ($Transcript)) { write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)" }
+                if ($UpdateControllerDriver) {
+                    write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
                 }
             }
             else {
-                [String]$InstalledVersion = $TestInfo | Select-String -Pattern 'Package' -SimpleMatch
-                $InstalledVersion = $InstalledVersion.Split(":") | Select-Object -Last 1
-            }
-            return $InstalledVersion
-        } # function Get-PackageVersion
-        
-        #########################################################################################
-        
-        #'-- Reading signed drivers list - use to scan for attached HP docks'
-        $PnpSignedDrivers = Get-CimInstance win32_PnpSignedDriver 
-        
-        $Dock = Get-HPDockInfo $PnpSignedDrivers
-        if ( $DebugOut ) { Write-Host "--Dock detected:"$Dock.Dock_ProductName }
-        $HPFIrmwareUpdateReturnValues = @(
-        @{Code = "0" ;  Message = "Success"}
-        @{Code = "101" ;  Message = "Install or stage failed. One or more firmware failed to install."}
-        @{Code = "102" ;  Message = "Configuration file failed to be loaded.This may be because it could not be found or that it was not properly formatted."}
-        @{Code = "103" ;  Message = "One or more firmware packages specified in the configuration file could not be loaded."}
-        @{Code = "104" ;  Message = "No devices could be communicated with.This could be because necessary drivers are missing to detect the device."}
-        @{Code = "105" ;  Message = "Out - of - date firmware detected when running with 'check' flag."}
-        @{Code = "106" ;  Message = "An instance of HP Firmware Installer is already running"}
-        @{Code = "107" ;  Message = "Device not connected.This could be because PID or VID is not detected."}
-        @{Code = "108" ;  Message = "Force option disabled.Firmware downgrade or re - flash not possible on this device."}
-        @{Code = "109" ;  Message = "The host is not able to update firmware"}
-        )
-        # lop for up to 10 secs in case we just powered-on, or Dock detection takes a bit of time
-        [int]$Counter = 0
-        [int]$StepAmt = 20
-        if ( $Dock.Dock_Attached -eq 0 ) {
-            if ( $DebugOut ) { Write-Host "Waiting for Dock to be fully attached up to $WaitTimer seconds" -ForegroundColor Green }
-            do {
-                if ( $DebugOut ) { Write-Host " Waited $Counter Seconds Total.. waiting additional $StepAmt" -ForegroundColor Gray}
-                $counter += $StepAmt
-                Start-Sleep -Seconds $StepAmt
-                $PnpSignedDrivers = Get-CimInstance win32_PnpSignedDriver
-                $Dock = Get-HPDockInfo $PnpSignedDrivers
-                if ( $counter -eq $WaitTimer ) {
-                    if ( $DebugOut ) { Write-Host "Waited $WaitTimer Seconds, no dock found yet..." -ForegroundColor Red}
+                #Driver Update Needed
+                write-host -ForegroundColor Yellow "TB Driver Update Available: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)"
+                write-host -ForegroundColor Yellow "Recommend updating with $($ThunderBoltDriver.Name) | $($ThunderBoltDriver.id)"
+                #$DriverUpdateAvailable = $ThunderBoltDriver.id
+                if ($UpdateControllerDriver) {
+                    Write-Host -ForegroundColor Green " UpdateControllerDriver Switch Enabled... Updating driver now..."
+                    Get-Softpaq -Number $ThunderBoltDriver.id -SaveAs "c:\swsetup\$($ThunderBoltDriver.id).exe" -Action silentinstall -Overwrite yes
                 }
             }
-            while ( ($counter -lt $WaitTimer) -and ($Dock.Dock_Attached -eq "0") )
-        } # if ( $Dock.Dock_Attached -eq "0" )
+        }
+            
+    }
+    function Get-HPDockInfo {
+        [CmdletBinding()]
+        param($pPnpSignedDrivers)
+            
+        # **** Hardcode URLs in case of no CMSL installed: ****
+        #USB-C G5 Essential Dock
+        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp152001-152500/sp152201.exe'  #  01.00.12.00 | April 16, 2024
+            
+        #Thunderbolt G4
+        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153736.exe'   #  1.5.22.0 | July 22, 2024
+            
+        #Thunderbolt G2
+        $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  1.0.71.1 | Dec 15, 2022
+            
+        #USB-C Dock G5
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151931.exe'  #  1.0.20.0 | Mar 25, 2024
+            
+        #USB-C Universal Dock G2
+        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151932.exe'  #  1.0.20.0 | Mar 25, 2024
+            
+        #USB-C Dock G4
+        $Url_UsbG4 = 'https://ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
+            
+        #Elite USB-C Dock
+        $Url_UsbElite = 'https://ftp.hp.com/pub/softpaq/sp83501-84000/sp83851.exe'     #  1.00 Rev.B | Dec 12, 2017
+            
+        #E24d G4 FHD Docking Monitor
+        $Url_E24D = 'https://ftp.hp.com/pub/softpaq/sp145501-146000/sp145577.exe'   #  1.0.17.0 | Mar 28, 2023
+            
+            
+        #######################################################################################
+        $Dock_Attached = 0      # default: no dock found
+        $Dock_ProductName = $null
+        $Dock_Url = $null   
+        # Find out if a Dock is connected - assume a single dock, so stop at first find
+        foreach ( $iDriver in $pPnpSignedDrivers ) {
+            $f_InstalledDeviceID = "$($iDriver.DeviceID)"   # analyzing current device
+            if ( ($f_InstalledDeviceID -match "HID\\VID_03F0") -or ($f_InstalledDeviceID -match "USB\\VID_17E9") ) {
+                switch -Wildcard ( $f_InstalledDeviceID ) {
+                    '*PID_0488*' { $Dock_Attached = 1 ; $Dock_ProductName = 'HP Thunderbolt Dock G4' ; $Dock_Url = $Url_TBG4 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
+                    '*PID_0667*' { $Dock_Attached = 2 ; $Dock_ProductName = 'HP Thunderbolt Dock G2' ; $Dock_Url = $Url_TBG2 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
+                    '*PID_484A*' { $Dock_Attached = 3 ; $Dock_ProductName = 'HP USB-C Dock G4' ; $Dock_Url = $Url_UsbG4 ; $FirmwareInstaller = 'HP_USB-C_Dock_G4_FW_Update_Tool_Console.exe' }
+                    '*PID_046A*' { $Dock_Attached = 3 ; $Dock_ProductName = 'HP Elite USB-C Dock' ; $Dock_Url = $Url_UsbElite ; $FirmwareInstaller = 'HP Elite USB-C Dock FW Update Tool.exe' }
+                    '*PID_046B*' { $Dock_Attached = 4 ; $Dock_ProductName = 'HP USB-C Dock G5' ; $Dock_Url = $Url_UsbG5  ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
+                    #'*PID_600A*' { $Dock_Attached = 5 ; $Dock_ProductName = 'HP USB-C Universal Dock' }
+                    '*PID_0A6B*' { $Dock_Attached = 6 ; $Dock_ProductName = 'HP USB-C Universal Dock G2' ; $Dock_Url = $Url_UniG2 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
+                    '*PID_056D*' { $Dock_Attached = 7 ; $Dock_ProductName = 'HP E24d G4 FHD Docking Monitor'; $Dock_Url = $Url_E24D ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
+                    '*PID_016E*' { $Dock_Attached = 8 ; $Dock_ProductName = 'HP E27d G4 QHD Docking Monitor' }
+                    '*PID_379D*' { $Dock_Attached = 9 ; $Dock_ProductName = 'HP USB-C G5 Essential Dock' ; $Dock_Url = $Url_EssG5 ; $FirmwareInstaller = 'HPFirmwareInstaller.exe' }
+                } # switch -Wildcard ( $f_InstalledDeviceID )
+            } # if ( $f_InstalledDeviceID -match "VID_03F0")
+            if ( $Dock_Attached -gt 0 ) { break }
+        } # foreach ( $iDriver in $gh_PnpSignedDrivers )
+        #######################################################################################
+            
+        return @(
+            @{Dock_Attached = $Dock_Attached ; Dock_ProductName = $Dock_ProductName  ; Dock_Url = $Dock_Url; Dock_InstallerName = $FirmwareInstaller }
+        )
+    } # function Get-HPDockInfo
         
-        if ( $Dock.Dock_Attached -eq 0 ) {
-            Write-Host " No dock attached" -ForegroundColor Green
-        } else {
-            # NOW, let's get to work on the dock, if found
-            if ( ($BypassHPCMSL -eq $true) -or ($CMPackage -eq $true) ) {
+    function Get-PackageVersion {
+        [CmdletBinding()]param( $pDocknum, $pCheckFile ) # param
+            
+        if (Test-Path -Path $pCheckFile) {
+            $TestInfo = Get-Content -Path $pCheckFile
+        }
+        if ( $pDocknum -eq 9 ) {       
+            [String]$InstalledVersion = $TestInfo | Select-String -Pattern 'installed' -SimpleMatch
+            $InstalledVersion = $InstalledVersion.Split(":") | Select-Object -Last 1            
+        } 
+        elseif ( $pDocknum -in (1, 2)) {
+            $TBDockPath = "HKLM:\SOFTWARE\HP\HP Firmware Installer"
+            if (Test-Path -Path $TBDockPath) {
+                $TBDockKeyChildren = Get-ChildItem -Path $TBDockPath -Recurse
+                foreach ($Children in $TBDockKeyChildren) {
+                    if ($Children.Name -match "Thunder") {
+                        $InstalledPackageVersion = $Children.GetValue('InstalledPackageVersion')    
+                        if ($InstalledPackageVersion) { $InstalledVersion = $InstalledPackageVersion }
+                    }
+                }
+            }
+        }
+        else {
+            [String]$InstalledVersion = $TestInfo | Select-String -Pattern 'Package' -SimpleMatch
+            $InstalledVersion = $InstalledVersion.Split(":") | Select-Object -Last 1
+        }
+        return $InstalledVersion
+    } # function Get-PackageVersion
+        
+    #########################################################################################
+        
+    #'-- Reading signed drivers list - use to scan for attached HP docks'
+    $PnpSignedDrivers = Get-CimInstance win32_PnpSignedDriver 
+        
+    $Dock = Get-HPDockInfo $PnpSignedDrivers
+    if ( $DebugOut ) { Write-Host "--Dock detected:"$Dock.Dock_ProductName }
+    $HPFIrmwareUpdateReturnValues = @(
+        @{Code = "0" ; Message = "Success" }
+        @{Code = "101" ; Message = "Install or stage failed. One or more firmware failed to install." }
+        @{Code = "102" ; Message = "Configuration file failed to be loaded.This may be because it could not be found or that it was not properly formatted." }
+        @{Code = "103" ; Message = "One or more firmware packages specified in the configuration file could not be loaded." }
+        @{Code = "104" ; Message = "No devices could be communicated with.This could be because necessary drivers are missing to detect the device." }
+        @{Code = "105" ; Message = "Out - of - date firmware detected when running with 'check' flag." }
+        @{Code = "106" ; Message = "An instance of HP Firmware Installer is already running" }
+        @{Code = "107" ; Message = "Device not connected.This could be because PID or VID is not detected." }
+        @{Code = "108" ; Message = "Force option disabled.Firmware downgrade or re - flash not possible on this device." }
+        @{Code = "109" ; Message = "The host is not able to update firmware" }
+    )
+    # lop for up to 10 secs in case we just powered-on, or Dock detection takes a bit of time
+    [int]$Counter = 0
+    [int]$StepAmt = 20
+    if ( $Dock.Dock_Attached -eq 0 ) {
+        if ( $DebugOut ) { Write-Host "Waiting for Dock to be fully attached up to $WaitTimer seconds" -ForegroundColor Green }
+        do {
+            if ( $DebugOut ) { Write-Host " Waited $Counter Seconds Total.. waiting additional $StepAmt" -ForegroundColor Gray }
+            $counter += $StepAmt
+            Start-Sleep -Seconds $StepAmt
+            $PnpSignedDrivers = Get-CimInstance win32_PnpSignedDriver
+            $Dock = Get-HPDockInfo $PnpSignedDrivers
+            if ( $counter -eq $WaitTimer ) {
+                if ( $DebugOut ) { Write-Host "Waited $WaitTimer Seconds, no dock found yet..." -ForegroundColor Red }
+            }
+        }
+        while ( ($counter -lt $WaitTimer) -and ($Dock.Dock_Attached -eq "0") )
+    } # if ( $Dock.Dock_Attached -eq "0" )
+        
+    if ( $Dock.Dock_Attached -eq 0 ) {
+        Write-Host " No dock attached" -ForegroundColor Green
+    }
+    else {
+        # NOW, let's get to work on the dock, if found
+        if ( ($BypassHPCMSL -eq $true) -or ($CMPackage -eq $true) -or ($IntuneApp -eq $true) ) {
+            $URL = $Dock.Dock_Url
+            if ( $DebugOut ) { Write-Host "--Dock detected Url - hardcoded:"$Dock.Dock_Url }
+        }
+        else {
+            try {
+                $URL = (Get-SoftpaqList -Os $MaxOS -OsVer $MaxOSVer -Category Dock -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
+            }
+            catch {
+                $URL = (Get-SoftpaqList -Category Dock -Platform 8870 -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
+            }
+            if ((!($URL)) -or ($URL -eq "")) {
+                #Fall back
                 $URL = $Dock.Dock_Url
                 if ( $DebugOut ) { Write-Host "--Dock detected Url - hardcoded:"$Dock.Dock_Url }
-            } else {
+            }
+        } # else if ( $BypassHPCMSL )
+            
+        $SPEXE = ($URL.Split("/") | Select-Object -Last 1)
+        $SPNumber = ($URL.Split("/") | Select-Object -Last 1).replace(".exe", "")
+        if ( $DebugOut ) { Write-Host "--Dock detected firmware Softpaq:"$SPEXE }
+            
+        # Create Required Folders
+        $OutFilePath = "$env:SystemDrive\swsetup\dockfirmware"
+        $ExtractPath = "$OutFilePath\$SPNumber"
+            
+            
+        if ($Transcript) {
+            $Date = Get-Date -Format yyyyMMdd
+            Start-Transcript -Path "$OutFilePath\$($SPNumber)-$($Date).txt"
+        }
+        if (($DebugOut) -or ($Transcript)) { write-Host $ScriptVersion }
+        if (!(($CMPackage) -or ($IntuneApp -eq $true))) { if (($DebugOut) -or ($Transcript)) { write-Host "  Running script with CMSL ="(-not $BypassHPCMSL) -ForegroundColor Gray } }
+        if ( $Update ) {
+            if (($DebugOut) -or ($Transcript)) { write-Host "  Executing a dock firmware update" -ForegroundColor Cyan }
+        }
+        else {
+            if (($DebugOut) -or ($Transcript)) { write-Host "  Executing a check of the dock firmware version. Use -Update to update the firmware" -ForegroundColor Cyan }
+        }
+        try {
+            [void][System.IO.Directory]::CreateDirectory($OutFilePath)
+            [void][System.IO.Directory]::CreateDirectory($ExtractPath)
+        }
+        catch { 
+            if ( $DebugOut ) { Write-Host "--Error creating folder"$ExtractPath }
+            throw 
+        }
+        # Download Softpaq EXE
+        if ($CMPackage) {
+            #USE CM PACKAGE
+            try {
+                #Connect to TS Environment
+                $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
+            }
+                
+            catch { Write-Output "Not in TS" }
+            if ($tsenv) {
+                $CMPackagePath = $tsenv.value("HPDOCK01") #Make sure you have a step to download the package into the CCMCache before you run this... store the patch in HPDOCK variable
+                if (($DebugOut) -or ($Transcript)) { write-Host " CMPackagePath =  $CMPackagePath" -ForegroundColor Cyan }
+                Copy-Item -Path "$CMPackagePath\$SPEXE" -Destination "$OutFilePath\$SPEXE"
+                if (!(Test-Path "$OutFilePath\$SPEXE")) {
+                    if (($DebugOut) -or ($Transcript)) { write-Host "  Failed to Copy $SPEXE to $OutFilePath from CCMCache: $CMPackagePath" -ForegroundColor Red }
+                }
+                else {
+                    if (($DebugOut) -or ($Transcript)) { write-Host "  Successfully Copied $SPEXE to $OutFilePath from CCMCache: $CMPackagePath" -ForegroundColor Cyan }
+                }
+            }
+        }
+        elseif ($IntuneApp -eq $true){
+            $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+            $IntuneAppPath = Split-Path $Invocation.MyCommand.Path
+            if (($DebugOut) -or ($Transcript)) { write-Host " IntuneAppPath =  $IntuneAppPath" -ForegroundColor Cyan }
+            Copy-Item -Path "$IntuneAppPath\$SPEXE" -Destination "$OutFilePath\$SPEXE"
+            if (!(Test-Path "$OutFilePath\$SPEXE")) {
+                if (($DebugOut) -or ($Transcript)) { write-Host "  Failed to Copy $SPEXE to $OutFilePath from CCMCache: $IntuneAppPath" -ForegroundColor Red }
+            }
+            else {
+                if (($DebugOut) -or ($Transcript)) { write-Host "  Successfully Copied $SPEXE to $OutFilePath from CCMCache: $IntuneAppPath" -ForegroundColor Cyan }
+            }
+        }
+        else {
+            if ( !(Test-Path "$OutFilePath\$SPEXE") ) { 
                 try {
-                    $URL = (Get-SoftpaqList -Os $MaxOS -OsVer $MaxOSVer -Category Dock -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
+                    $Error.Clear()
+                    if (($DebugOut) -or ($Transcript)) { Write-Host "  Starting Download of $URL to $OutFilePath\$SPEXE" -ForegroundColor Magenta }
+                    Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "$OutFilePath\$SPEXE"
                 }
                 catch {
-                    $URL = (Get-SoftpaqList -Category Dock -Platform 8870 -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $dock.Dock_ProductName -and ($_.Name -match 'firmware') }).Url
-                }
-                if ((!($URL))-or ($URL -eq "")){ #Fall back
-                    $URL = $Dock.Dock_Url
-                    if ( $DebugOut ) { Write-Host "--Dock detected Url - hardcoded:"$Dock.Dock_Url }
-                }
-            } # else if ( $BypassHPCMSL )
-            
-            $SPEXE = ($URL.Split("/") | Select-Object -Last 1)
-            $SPNumber = ($URL.Split("/") | Select-Object -Last 1).replace(".exe","")
-            if ( $DebugOut ) { Write-Host "--Dock detected firmware Softpaq:"$SPEXE }
-            
-            # Create Required Folders
-            $OutFilePath = "$env:SystemDrive\swsetup\dockfirmware"
-            $ExtractPath = "$OutFilePath\$SPNumber"
-            
-            
-            if ($Transcript) {
-                $Date = Get-Date -Format yyyyMMdd
-                Start-Transcript -Path "$OutFilePath\$($SPNumber)-$($Date).txt"
-            }
-            if (($DebugOut) -or ($Transcript)) {write-Host $ScriptVersion}
-            if (!($CMPackage)){ if (($DebugOut) -or ($Transcript)) {write-Host "  Running script with CMSL ="(-not $BypassHPCMSL) -ForegroundColor Gray}}
-            if ( $Update ) {
-                if (($DebugOut) -or ($Transcript)) {write-Host "  Executing a dock firmware update" -ForegroundColor Cyan}
-            } else {
-                if (($DebugOut) -or ($Transcript)) {write-Host "  Executing a check of the dock firmware version. Use -Update to update the firmware" -ForegroundColor Cyan}
-            }
-            try {
-                [void][System.IO.Directory]::CreateDirectory($OutFilePath)
-                [void][System.IO.Directory]::CreateDirectory($ExtractPath)
-            } catch { 
-                if ( $DebugOut ) { Write-Host "--Error creating folder"$ExtractPath }
-                throw 
-            }
-            # Download Softpaq EXE
-            if ($CMPackage){ #USE CM PACKAGE
-                try { #Connect to TS Environment
-                    $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
-                }
-                
-                catch{Write-Output "Not in TS"}
-                if ($tsenv) {
-                    $CMPackagePath = $tsenv.value("HPDOCK01") #Make sure you have a step to download the package into the CCMCache before you run this... store the patch in HPDOCK variable
-                    Copy-Item -Path "$CMPackagePath\$SPEXE" -Destination "$OutFilePath\$SPEXE"
-                    if (!(Test-Path "$OutFilePath\$SPEXE")){
-                        if (($DebugOut) -or ($Transcript)) {write-Host "  Failed to Copy $SPEXE to $OutFilePath from CCMCache: $CMPackagePath" -ForegroundColor Red}
-                    }
-                    else {
-                        if (($DebugOut) -or ($Transcript)) {write-Host "  Successfully Copied $SPEXE to $OutFilePath from CCMCache: $CMPackagePath" -ForegroundColor Cyan}
-                    }
+                    if (($DebugOut) -or ($Transcript)) { Write-Host "!!!Failed to download Softpaq!!!" -ForegroundColor red }
+                    if ($Transcript) { Stop-Transcript }
+                    return -1
                 }
             }
             else {
-                if ( !(Test-Path "$OutFilePath\$SPEXE") ) { 
-                    try {
-                        $Error.Clear()
-                        if (($DebugOut) -or ($Transcript)) {Write-Host "  Starting Download of $URL to $OutFilePath\$SPEXE" -ForegroundColor Magenta}
-                        Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile "$OutFilePath\$SPEXE"
-                    } catch {
-                        if (($DebugOut) -or ($Transcript)) {Write-Host "!!!Failed to download Softpaq!!!" -ForegroundColor red}
-                        if ($Transcript){ Stop-Transcript}
-                        return -1
-                    }
-                } else {
-                    if (($DebugOut) -or ($Transcript)) {Write-Host "  Softpaq already downloaded to $OutFilePath\$SPEXE" -ForegroundColor Gray}
-                }
+                if (($DebugOut) -or ($Transcript)) { Write-Host "  Softpaq already downloaded to $OutFilePath\$SPEXE" -ForegroundColor Gray }
             }
-            # Extract Softpaq EXE
-            $FirmwareInstallerName = $Dock.Dock_InstallerName
-            if ( Test-Path "$OutFilePath\$SPEXE" ) {     
-                if (!(Test-Path "$OutFilePath\$SPNumber\$FirmwareInstallerName")){
-                    if (($DebugOut) -or ($Transcript)) {Write-Host "  Extracting to $ExtractPath" -ForegroundColor Magenta}
-                    if ( $AdminRights -or $CMPackage ) {
-                        $Extract = Start-Process -FilePath $OutFilePath\$SPEXE -ArgumentList "/s /e /f $ExtractPath" -NoNewWindow -PassThru -Wait
-                    } else {
-                        if (($DebugOut) -or ($Transcript)) {Write-Host "  Admin rights require to extract to $ExtractPath" -ForegroundColor Red}
-                        Stop-Transcript
-                        return -1
-                    }           
-                } else {
-                    if (($DebugOut) -or ($Transcript)) {Write-Host "  Softpaq already Extracted to $ExtractPath" -ForegroundColor Gray}
+        }
+        # Extract Softpaq EXE
+        $FirmwareInstallerName = $Dock.Dock_InstallerName
+        if ( Test-Path "$OutFilePath\$SPEXE" ) {     
+            if (!(Test-Path "$OutFilePath\$SPNumber\$FirmwareInstallerName")) {
+                if (($DebugOut) -or ($Transcript)) { Write-Host "  Extracting to $ExtractPath" -ForegroundColor Magenta }
+                if ( $AdminRights -or $CMPackage -or $IntuneApp ) {
+                    $Extract = Start-Process -FilePath $OutFilePath\$SPEXE -ArgumentList "/s /e /f $ExtractPath" -NoNewWindow -PassThru -Wait
+                    if (($DebugOut) -or ($Transcript)) { Write-Host "  Extracted Softpaq to $ExtractPath exitcode: $($Extract.ExitCode)" -ForegroundColor Cyan }
                 }
-            } else {
-                if (($DebugOut) -or ($Transcript)) {Write-Host "  Failed to find $OutFilePath\$SPEXE" -ForegroundColor Red}
-                if ($Transcript){ Stop-Transcript}
-                return -1
+                else {
+                    if (($DebugOut) -or ($Transcript)) { Write-Host "  Admin rights require to extract to $ExtractPath" -ForegroundColor Red }
+                    Stop-Transcript
+                    return -1
+                }           
             }
+            else {
+                if (($DebugOut) -or ($Transcript)) { Write-Host "  Softpaq already Extracted to $ExtractPath" -ForegroundColor Gray }
+            }
+        }
+        else {
+            if (($DebugOut) -or ($Transcript)) { Write-Host "  Failed to find $OutFilePath\$SPEXE" -ForegroundColor Red }
+            if ($Transcript) { Stop-Transcript }
+            return -1
+        }
             
-            # Get package version from downloaded Softpaq configuration file
-            $ConfigFile = "$OutFilePath\$SPNumber\HPFIConfig.xml"       # All docks except Essential
-            $ConfigFileEssential = "$OutFilePath\$SPNumber\config.ini"  # Essential dock
-            $ReadmeFileUSBCGen4 = "$OutFilePath\$SPNumber\HP_USB-C_Dock_G4_FW_Update_Tool_readme.txt"
-            if ( Test-Path $ConfigFile ) {
-                $xmlConfigContent = [xml](Get-Content -Path $ConfigFile)
-                $PackageVersion = $xmlConfigContent.SelectNodes("FirmwareCollectionPackage/PackageVersion").'#Text'
-                $ModelName = $xmlConfigContent.SelectNodes("FirmwareCollectionPackage/Name").'#Text'
-                if (($DebugOut) -or ($Transcript)) {Write-Host "  Extracted Softpaq Info file: $ConfigFile" -ForegroundColor Cyan}
-            } elseif ( Test-Path $ConfigFileEssential ) {    
-                $ConfigInfo = Get-Content -Path $ConfigFileEssential
-                [String]$PackageVersion = $ConfigInfo | Select-String -Pattern 'PackageVersion' -CaseSensitive -SimpleMatch
-                [String]$ToolVersion = $ConfigInfo | Select-String -Pattern 'ToolVersion' -CaseSensitive -SimpleMatch
-                if($PackageVersion){$PackageVersion = $PackageVersion.Split("=") | Select-Object -Last 1}
-                if ($ToolVersion){$PackageVersion = $ToolVersion.Split("=") | Select-Object -Last 1}
-                [String]$ModelName = $ConfigInfo | Select-String -Pattern 'ModelName' -CaseSensitive -SimpleMatch
-                $ModelName = $ModelName.Split("=") | Select-Object -Last 1
-                if (($DebugOut) -or ($Transcript)) {Write-Host "  Extracted Softpaq Info file: $ConfigFileEssential" -ForegroundColor Cyan}
-            } # elseif ( Test-Path $ConfigFileEssential )
+        # Get package version from downloaded Softpaq configuration file
+        $ConfigFile = "$OutFilePath\$SPNumber\HPFIConfig.xml"       # All docks except Essential
+        $ConfigFileEssential = "$OutFilePath\$SPNumber\config.ini"  # Essential dock
+        #$ReadmeFileUSBCGen4 = "$OutFilePath\$SPNumber\HP_USB-C_Dock_G4_FW_Update_Tool_readme.txt"
+        if ( Test-Path $ConfigFile ) {
+            $xmlConfigContent = [xml](Get-Content -Path $ConfigFile)
+            $PackageVersion = $xmlConfigContent.SelectNodes("FirmwareCollectionPackage/PackageVersion").'#Text'
+            $ModelName = $xmlConfigContent.SelectNodes("FirmwareCollectionPackage/Name").'#Text'
+            if (($DebugOut) -or ($Transcript)) { Write-Host "  Extracted Softpaq Info file: $ConfigFile" -ForegroundColor Cyan }
+        }
+        elseif ( Test-Path $ConfigFileEssential ) {    
+            $ConfigInfo = Get-Content -Path $ConfigFileEssential
+            [String]$PackageVersion = $ConfigInfo | Select-String -Pattern 'PackageVersion' -CaseSensitive -SimpleMatch
+            [String]$ToolVersion = $ConfigInfo | Select-String -Pattern 'ToolVersion' -CaseSensitive -SimpleMatch
+            if ($PackageVersion) { $PackageVersion = $PackageVersion.Split("=") | Select-Object -Last 1 }
+            if ($ToolVersion) { $PackageVersion = $ToolVersion.Split("=") | Select-Object -Last 1 }
+            [String]$ModelName = $ConfigInfo | Select-String -Pattern 'ModelName' -CaseSensitive -SimpleMatch
+            $ModelName = $ModelName.Split("=") | Select-Object -Last 1
+            if (($DebugOut) -or ($Transcript)) { Write-Host "  Extracted Softpaq Info file: $ConfigFileEssential" -ForegroundColor Cyan }
+        } # elseif ( Test-Path $ConfigFileEssential )
             
-            if (($DebugOut) -or ($Transcript)) {Write-Host "  Softpaq for Device: $ModelName" -ForegroundColor Gray}
-            if (($DebugOut) -or ($Transcript)) {Write-Host "  Softpaq Version: $PackageVersion" -ForegroundColor Gray}
-            $script:SoftpaqSupportedDevice = $ModelName
-            $script:SoftPaqVersion = $PackageVersion
-            $DockRegPath = 'HKLM:\SOFTWARE\HP\HP Firmware Installer'
-            [string]$MACAddress = (Get-WmiObject win32_networkadapterconfiguration | Where-Object {$_.Description -match "Realtek USB GbE Family Controller"}).MACAddress
-            $MACAddress = $MACAddress.Trim()
-            if (Test-Path "$OutFilePath\$SPNumber\$FirmwareInstallerName") { # Run Test only - Check if Update Required
-                Set-Location -Path "$OutFilePath\$SPNumber"
-                if (($DebugOut) -or ($Transcript)) {Write-Host " Running HP Firmware Check... please, wait" -ForegroundColor Magenta}
-                # HP USB-C Dock G4 Special Process
-                if ($Dock.Dock_ProductName -eq "HP USB-C Dock G4"){
-                    $DockG4RegPath = "$DockRegPath\HP USB-C Dock G4"
-                    if (!(Test-Path -path $DockG4RegPath)){
-                        if (($DebugOut) -or ($Transcript)) {Write-Host " Creating $DockG4RegPath Key" -ForegroundColor green}
-                        New-Item -Path $DockG4RegPath -Force | Out-Null
-                    }
-                    New-ItemProperty -Path $DockG4RegPath -Name 'AvailablePackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
-                    New-ItemProperty -Path $DockG4RegPath -Name 'LastChecked' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
+        if (($DebugOut) -or ($Transcript)) { Write-Host "  Softpaq for Device: $ModelName" -ForegroundColor Gray }
+        if (($DebugOut) -or ($Transcript)) { Write-Host "  Softpaq Version: $PackageVersion" -ForegroundColor Gray }
+        $script:SoftpaqSupportedDevice = $ModelName
+        $script:SoftPaqVersion = $PackageVersion
+        $DockRegPath = 'HKLM:\SOFTWARE\HP\HP Firmware Installer'
+        [string]$MACAddress = (Get-WmiObject win32_networkadapterconfiguration | Where-Object { $_.Description -match "Realtek USB GbE Family Controller" }).MACAddress
+        $MACAddress = $MACAddress.Trim()
+        if (Test-Path "$OutFilePath\$SPNumber\$FirmwareInstallerName") {
+            # Run Test only - Check if Update Required
+            Set-Location -Path "$OutFilePath\$SPNumber"
+            if (($DebugOut) -or ($Transcript)) { Write-Host " Running HP Firmware Check... please, wait" -ForegroundColor Magenta }
+            # HP USB-C Dock G4 Special Process
+            if ($Dock.Dock_ProductName -eq "HP USB-C Dock G4") {
+                $DockG4RegPath = "$DockRegPath\HP USB-C Dock G4"
+                if (!(Test-Path -path $DockG4RegPath)) {
+                    if (($DebugOut) -or ($Transcript)) { Write-Host " Creating $DockG4RegPath Key" -ForegroundColor green }
+                    New-Item -Path $DockG4RegPath -Force | Out-Null
+                }
+                New-ItemProperty -Path $DockG4RegPath -Name 'AvailablePackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
+                New-ItemProperty -Path $DockG4RegPath -Name 'LastChecked' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
                     
-                    New-ItemProperty -Path $DockG4RegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
-                    $DockG4RegItem = Get-Item -Path $DockG4RegPath
-                    if ($DockG4RegItem.GetValue('InstalledPackageVersion') -eq $PackageVersion){
-                        $script:UpdateRequired = $false
-                        if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware Already Current (according to the Registry): $PackageVersion" -ForegroundColor Green}
-                    }
-                    else {
-                        if ($Update){
-                            if (($DebugOut) -or ($Transcript)) {Write-Host " Update Needed (according to the Registry): $PackageVersion" -ForegroundColor Magenta}
-                            Try {
-                                $Error.Clear()
-                                $Output = "$OutFilePath\$SPNumber\FirmwareUpdateLog.txt"
-                                $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -PassThru -Wait -NoNewWindow -RedirectStandardOutput $OutPut
-                                New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
-                            } 
-                            Catch {
-                                if (($DebugOut) -or ($Transcript)) {write-Host $error[0].exception}
-                                Stop-Transcript
-                                return -5
-                            }
-                            $LogContent = Get-Content -Path $Output -ReadCount 1 -Tail 2
-                            if ($LogContent -match "Current firmware is the latest one"){
+                New-ItemProperty -Path $DockG4RegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
+                $DockG4RegItem = Get-Item -Path $DockG4RegPath
+                if ($DockG4RegItem.GetValue('InstalledPackageVersion') -eq $PackageVersion) {
+                    $script:UpdateRequired = $false
+                    if (($DebugOut) -or ($Transcript)) { Write-Host " Firmware Already Current (according to the Registry): $PackageVersion" -ForegroundColor Green }
+                }
+                else {
+                    if ($Update) {
+                        if (($DebugOut) -or ($Transcript)) { Write-Host " Update Needed (according to the Registry): $PackageVersion" -ForegroundColor Magenta }
+                        Try {
+                            $Error.Clear()
+                            $Output = "$OutFilePath\$SPNumber\FirmwareUpdateLog.txt"
+                            $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -PassThru -Wait -NoNewWindow -RedirectStandardOutput $OutPut
+                            New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
+                        } 
+                        Catch {
+                            if (($DebugOut) -or ($Transcript)) { write-Host $error[0].exception }
+                            Stop-Transcript
+                            return -5
+                        }
+                        $LogContent = Get-Content -Path $Output -ReadCount 1 -Tail 2
+                        if ($LogContent -match "Current firmware is the latest one") {
+                            New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
+                            New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                            New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                            if (($DebugOut) -or ($Transcript)) { Write-Host " Firmware is already current" -ForegroundColor Green }
+                            if (($DebugOut) -or ($Transcript)) { Write-Host " Installed Version: $PackageVersion" -ForegroundColor Green }
+                            $script:UpdateRequired = $false
+                            $script:InstalledFirmwareVersion = $PackageVersion
+                            if (($DebugOut) -or ($Transcript)) { Write-Host " No Update Needed: Exit 1" -ForegroundColor Green }
+                        }
+                        else {
+                            if ($HPFirmwareTest.ExitCode -eq 0) {
                                 New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
                                 New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
                                 New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                                if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware is already current" -ForegroundColor Green}
-                                if (($DebugOut) -or ($Transcript)) {Write-Host " Installed Version: $PackageVersion" -ForegroundColor Green}
+                                if (($DebugOut) -or ($Transcript)) { Write-Host " Firmware is now updated" -ForegroundColor Green }
+                                if (($DebugOut) -or ($Transcript)) { Write-Host " Installed Version: $PackageVersion" -ForegroundColor Green }
                                 $script:UpdateRequired = $false
                                 $script:InstalledFirmwareVersion = $PackageVersion
-                                if (($DebugOut) -or ($Transcript)) {Write-Host " No Update Needed: Exit 1" -ForegroundColor Green}
+                                if (($DebugOut) -or ($Transcript)) { Write-Host " Update Successful: Exit 0" -ForegroundColor Green }
+                            }
+                            elseif ($HPFirmwareTest.ExitCode -eq 1) {
+                                New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
+                                New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                                New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "NA" -PropertyType string -Force | Out-Null
+                                if (($DebugOut) -or ($Transcript)) { Write-Host " Update Status Unknown: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red }
                             }
                             else {
-                                if ($HPFirmwareTest.ExitCode -eq 0){
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                                    if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware is now updated" -ForegroundColor Green}
-                                    if (($DebugOut) -or ($Transcript)) {Write-Host " Installed Version: $PackageVersion" -ForegroundColor Green}
-                                    $script:UpdateRequired = $false
-                                    $script:InstalledFirmwareVersion = $PackageVersion
-                                    if (($DebugOut) -or ($Transcript)) {Write-Host " Update Successful: Exit 0" -ForegroundColor Green}
-                                }
-                                elseif ($HPFirmwareTest.ExitCode -eq 1){
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "NA" -PropertyType string -Force | Out-Null
-                                    if (($DebugOut) -or ($Transcript)) {Write-Host " Update Status Unknown: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red}
-                                }
-                                else {
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
-                                    New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
-                                    if (($DebugOut) -or ($Transcript)) {Write-Host " Update Failed: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red}
-                                }
+                                New-ItemProperty -Path $DockG4RegPath -Name 'InstalledPackageVersion' -Value "NA" -PropertyType string -Force | Out-Null
+                                New-ItemProperty -Path $DockG4RegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                                New-ItemProperty -Path $DockG4RegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
+                                if (($DebugOut) -or ($Transcript)) { Write-Host " Update Failed: Exit $($HPFirmwareTest.ExitCode)" -ForegroundColor Red }
                             }
+                        }
                             
+                    }
+                    else {
+                        $script:UpdateRequired = $true
+                    }
+                }
+            } #IF "HP USB-C Dock G4"
+                
+            else {
+                Try {
+                    $Error.Clear()
+                    $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -ArgumentList "-C" -PassThru -Wait -NoNewWindow
+                }
+                Catch {
+                    if (($DebugOut) -or ($Transcript)) { write-Host $error[0].exception }
+                    Stop-Transcript
+                    return -5
+                }
+                if ( $Dock.Dock_Attached -eq 9 ) {
+                    # Essential dock found
+                    $VersionFile = "$OutFilePath\$SPNumber\HPFI_Version_Check.txt"
+                }
+                else {
+                    $VersionFile = ".\HPFI_Version_Check.txt"
+                }
+                    
+                    
+                    
+                switch ( $HPFirmwareTest.ExitCode ) {
+                    0 { 
+                        if (($DebugOut) -or ($Transcript)) { Write-Host " Firmware is up to date" -ForegroundColor Green }
+                        $InstalledVersion = Get-PackageVersion $Dock.Dock_Attached $VersionFile
+                        if (($DebugOut) -or ($Transcript)) { Write-Host " Installed Version: $InstalledVersion" -ForegroundColor Green }
+                        $script:UpdateRequired = $false
+                        $script:InstalledFirmwareVersion = $InstalledVersion
+                    } # 0
+                    105 {
+                        if (!($UIExperience)) { $UIExperience = 'NonInteractive' }
+                        $Mode = switch ($UIExperience) {
+                            "NonInteractive" { "-ni" }
+                            "Silent" { "-s" }
+                            "Check" { "-C" }
+                            "Force" { "-f" }
+                        }
+                        if (($DebugOut) -or ($Transcript)) { Write-Host " Update Required" -ForegroundColor Yellow }
+                        $InstalledVersion = Get-PackageVersion $Dock.Dock_Attached $VersionFile
+                        if (($DebugOut) -or ($Transcript)) { Write-Host " Installed Version: $InstalledVersion" -ForegroundColor Yellow }
+                            
+                        $script:InstalledFirmwareVersion = $InstalledVersion
+                        if ($InstalledVersion -eq $PackageVersion) {
+                            if (($DebugOut) -or ($Transcript)) { Write-Host " Exit Code 105, but Versions already match, skipping Update" -ForegroundColor Yellow }
+                            $script:UpdateRequired = $false
                         }
                         else {
                             $script:UpdateRequired = $true
-                        }
-                    }
-                } #IF "HP USB-C Dock G4"
-                
-                else {
-                    Try {
-                        $Error.Clear()
-                        $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -ArgumentList "-C" -PassThru -Wait -NoNewWindow
-                    } Catch {
-                        if (($DebugOut) -or ($Transcript)) {write-Host $error[0].exception}
-                        Stop-Transcript
-                        return -5
-                    }
-                    if ( $Dock.Dock_Attached -eq 9 ) {  # Essential dock found
-                        $VersionFile = "$OutFilePath\$SPNumber\HPFI_Version_Check.txt"
-                    } else {
-                        $VersionFile = ".\HPFI_Version_Check.txt"
-                    }
-                    
-                    
-                    
-                    switch ( $HPFirmwareTest.ExitCode ) {
-                        0   { 
-                            if (($DebugOut) -or ($Transcript)) {Write-Host " Firmware is up to date" -ForegroundColor Green}
-                            $InstalledVersion = Get-PackageVersion $Dock.Dock_Attached $VersionFile
-                            if (($DebugOut) -or ($Transcript)) {Write-Host " Installed Version: $InstalledVersion" -ForegroundColor Green}
-                            $script:UpdateRequired = $false
-                            $script:InstalledFirmwareVersion = $InstalledVersion
-                        } # 0
-                        105 {
-                            if (!($UIExperience)){$UIExperience = 'NonInteractive'}
-                            $Mode = switch ($UIExperience)
-                            {
-                                "NonInteractive" {"-ni"}
-                                "Silent" {"-s"}
-                                "Check" {"-C"}
-                                "Force" {"-f"}
-                            }
-                            if (($DebugOut) -or ($Transcript)) {Write-Host " Update Required" -ForegroundColor Yellow}
-                            $InstalledVersion = Get-PackageVersion $Dock.Dock_Attached $VersionFile
-                            if (($DebugOut) -or ($Transcript)) {Write-Host " Installed Version: $InstalledVersion" -ForegroundColor Yellow}
-                            
-                            $script:InstalledFirmwareVersion = $InstalledVersion
-                            if ($InstalledVersion -eq $PackageVersion){
-                                if (($DebugOut) -or ($Transcript)) {Write-Host " Exit Code 105, but Versions already match, skipping Update" -ForegroundColor Yellow}
-                                $script:UpdateRequired = $false
-                            }
-                            else {
-                                $script:UpdateRequired = $true
-                                if ( $Update ) {          
-                                    $FirmwareArgList = "$Mode"
-                                    if (($Dock.Dock_ProductName -eq "HP Thunderbolt Dock G4") -or ($Dock.Dock_ProductName -eq "HP USB-C Dock G5") -or ($Dock.Dock_ProductName -eq "HP USB-C Universal Dock G2")){
-                                        if ($stage){
-                                            $FirmwareArgList = "$Mode -stage"
-                                        }
-                                    }
-                                    if (($DebugOut) -or ($Transcript)) {Write-Host " Starting Dock Firmware Update" -ForegroundColor Magenta}
-                                    
-                                    $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
-                                    $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
-                                    if ($ExitInfo.Code -eq "0"){
-                                        if (($DebugOut) -or ($Transcript)) {Write-Host " Update Successful!" -ForegroundColor Green}
-                                    } else {
-                                        if (($DebugOut) -or ($Transcript)) {Write-Host " Update Failed" -ForegroundColor Red}
-                                        if (($DebugOut) -or ($Transcript)) {Write-Host " Exit Code: $($ExitInfo.Code)" -ForegroundColor Gray}
-                                        if (($DebugOut) -or ($Transcript)) {Write-Host " $($ExitInfo.Message)" -ForegroundColor Gray}
+                            if ( $Update ) {          
+                                $FirmwareArgList = "$Mode"
+                                if (($Dock.Dock_ProductName -eq "HP Thunderbolt Dock G4") -or ($Dock.Dock_ProductName -eq "HP USB-C Dock G5") -or ($Dock.Dock_ProductName -eq "HP USB-C Universal Dock G2")) {
+                                    if ($stage) {
+                                        $FirmwareArgList = "$Mode -stage"
                                     }
                                 }
-                            } # if ( $Update )
-                        } # 105
-                    }
-                } # Not HP USB-C Dock G4
-                # HP USB-C G5 Essential Dock Registry Items
-                if ($Dock.Dock_ProductName -eq "HP USB-C G5 Essential Dock"){
-                    $DockEssentialRegPath = "$DockRegPath\HP USB-C G5 Essential Dock"
-                    if (!(Test-Path -path $DockEssentialRegPath)){
-                        if (($DebugOut) -or ($Transcript)) {Write-Host " Creating $DockEssentialRegPath Key" -ForegroundColor green}
-                        New-Item -Path $DockEssentialRegPath -Force | Out-Null
-                    }
-                    New-ItemProperty -Path $DockEssentialRegPath -Name 'AvailablePackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
-                    New-ItemProperty -Path $DockEssentialRegPath -Name 'LastChecked' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
-                    New-ItemProperty -Path $DockEssentialRegPath -Name 'InstalledPackageVersion' -Value $InstalledVersion -PropertyType string -Force | Out-Null
-                    New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
-                    New-ItemProperty -Path $DockEssentialRegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
-                    if ($HPFirmwareTest.ExitCode -eq "0"){
-                        New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                    }
-                    elseif ($HPFirmwareTest.ExitCode -eq "105"){
-                        if ($update) {
-                            New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
-                            if ($ExitInfo.Code -eq "0"){
-                                New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $ExitInfo.Code -PropertyType dword -Force | Out-Null
-                                New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                                New-ItemProperty -Path $DockEssentialRegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
+                                if (($DebugOut) -or ($Transcript)) { Write-Host " Starting Dock Firmware Update" -ForegroundColor Magenta }
+                                    
+                                $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
+                                $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
+                                if ($ExitInfo.Code -eq "0") {
+                                    if (($DebugOut) -or ($Transcript)) { Write-Host " Update Successful!" -ForegroundColor Green }
+                                }
+                                else {
+                                    if (($DebugOut) -or ($Transcript)) { Write-Host " Update Failed" -ForegroundColor Red }
+                                    if (($DebugOut) -or ($Transcript)) { Write-Host " Exit Code: $($ExitInfo.Code)" -ForegroundColor Gray }
+                                    if (($DebugOut) -or ($Transcript)) { Write-Host " $($ExitInfo.Message)" -ForegroundColor Gray }
+                                }
                             }
-                            else {
-                                New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $ExitInfo.Code -PropertyType dword -Force | Out-Null
-                                New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
-                            }
+                        } # if ( $Update )
+                    } # 105
+                }
+            } # Not HP USB-C Dock G4
+            # HP USB-C G5 Essential Dock Registry Items
+            if ($Dock.Dock_ProductName -eq "HP USB-C G5 Essential Dock") {
+                $DockEssentialRegPath = "$DockRegPath\HP USB-C G5 Essential Dock"
+                if (!(Test-Path -path $DockEssentialRegPath)) {
+                    if (($DebugOut) -or ($Transcript)) { Write-Host " Creating $DockEssentialRegPath Key" -ForegroundColor green }
+                    New-Item -Path $DockEssentialRegPath -Force | Out-Null
+                }
+                New-ItemProperty -Path $DockEssentialRegPath -Name 'AvailablePackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
+                New-ItemProperty -Path $DockEssentialRegPath -Name 'LastChecked' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
+                New-ItemProperty -Path $DockEssentialRegPath -Name 'InstalledPackageVersion' -Value $InstalledVersion -PropertyType string -Force | Out-Null
+                New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                New-ItemProperty -Path $DockEssentialRegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
+                if ($HPFirmwareTest.ExitCode -eq "0") {
+                    New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                }
+                elseif ($HPFirmwareTest.ExitCode -eq "105") {
+                    if ($update) {
+                        New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
+                        if ($ExitInfo.Code -eq "0") {
+                            New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $ExitInfo.Code -PropertyType dword -Force | Out-Null
+                            New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                            New-ItemProperty -Path $DockEssentialRegPath -Name 'InstalledPackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
                         }
                         else {
-                            New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "UpdateRequired" -PropertyType string -Force | Out-Null
-                            
+                            New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $ExitInfo.Code -PropertyType dword -Force | Out-Null
+                            New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
                         }
                     }
+                    else {
+                        New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "UpdateRequired" -PropertyType string -Force | Out-Null
+                            
+                    }
+                }
                     
-                } #HP USB-C G5 Essential Dock
+            } #HP USB-C G5 Essential Dock
                 
-                #HP E24d G4 FHD Docking Monitor
-                if ($Dock.Dock_ProductName -eq "HP E24d G4 FHD Docking Monitor"){
-                    [version]$Installed = $script:InstalledFirmwareVersion
-                    [version]$Available = $script:SoftPaqVersion
-                    if ($Available -gt $Installed){
-                        $script:UpdateRequired = $true
-                    }
-                } #HP E24d G4 FHD Docking Monitor
+            #HP E24d G4 FHD Docking Monitor
+            if ($Dock.Dock_ProductName -eq "HP E24d G4 FHD Docking Monitor") {
+                [version]$Installed = $script:InstalledFirmwareVersion
+                [version]$Available = $script:SoftPaqVersion
+                if ($Available -gt $Installed) {
+                    $script:UpdateRequired = $true
+                }
+            } #HP E24d G4 FHD Docking Monitor
                 
-                # HP Thunderbolt Dock G2 Registry Items
-                if ($Dock.Dock_ProductName -eq "HP Thunderbolt Dock G2"){
-                    $DockTB2RegPath = "$DockRegPath\HP Thunderbolt Dock G2"
-                    if (!(Test-Path -path $DockTB2RegPath)){
-                        if (($DebugOut) -or ($Transcript)) {Write-Host " Creating $DockTB2RegPath Key" -ForegroundColor green}
-                        New-Item -Path $DockTB2RegPath -Force | Out-Null
-                    }
-                    New-ItemProperty -Path $DockTB2RegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
-                    if ($HPFirmwareTest.ExitCode -eq "0"){
-                        New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                    }
-                    elseif ($HPFirmwareTest.ExitCode -eq "105"){
-                        if ($update) {
-                            New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
-                            if ($ExitInfo.Code -eq "0"){
-                                New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                                #Run Check to update Current Registry Values
-                                $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -ArgumentList "-C" -PassThru -Wait -NoNewWindow
-                            }
-                            else {
-                                New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
-                            }
+            # HP Thunderbolt Dock G2 Registry Items
+            if ($Dock.Dock_ProductName -eq "HP Thunderbolt Dock G2") {
+                $DockTB2RegPath = "$DockRegPath\HP Thunderbolt Dock G2"
+                if (!(Test-Path -path $DockTB2RegPath)) {
+                    if (($DebugOut) -or ($Transcript)) { Write-Host " Creating $DockTB2RegPath Key" -ForegroundColor green }
+                    New-Item -Path $DockTB2RegPath -Force | Out-Null
+                }
+                New-ItemProperty -Path $DockTB2RegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
+                if ($HPFirmwareTest.ExitCode -eq "0") {
+                    New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                }
+                elseif ($HPFirmwareTest.ExitCode -eq "105") {
+                    if ($update) {
+                        New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
+                        if ($ExitInfo.Code -eq "0") {
+                            New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                            #Run Check to update Current Registry Values
+                            $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -ArgumentList "-C" -PassThru -Wait -NoNewWindow
                         }
                         else {
-                            if ($script:UpdateRequired -eq $true){
-                                New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "UpdateRequired" -PropertyType string -Force | Out-Null
-                            }
-                            else {
-                                New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
-                                New-ItemProperty -Path $DockTB2RegPath -Name 'ErrorCode' -Value 0 -PropertyType dword -Force | Out-Null
-                            }
-                            
+                            New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Fail" -PropertyType string -Force | Out-Null
                         }
                     }
-                }#HP Thunderbolt Dock G2
-            } # if (Test-Path "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe")
-            if ($Transcript) {Stop-Transcript}
-            $Return = @(
-            @{Dock = "$($Dock.Dock_ProductName)"; InstalledFirmware = $script:InstalledFirmwareVersion ; SoftpaqFirmware = $script:SoftPaqVersion ; UpdateRequired = $script:UpdateRequired ; SoftpaqNumber = $SPNumber}
-            )
-            if (!($Update)){Return $Return}
-            else {
-                if (!(($DebugOut) -or ($Transcript))){Write-Output "$($ExitInfo.Message)"}
-            }   
-        }
+                    else {
+                        if ($script:UpdateRequired -eq $true) {
+                            New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "UpdateRequired" -PropertyType string -Force | Out-Null
+                        }
+                        else {
+                            New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
+                            New-ItemProperty -Path $DockTB2RegPath -Name 'ErrorCode' -Value 0 -PropertyType dword -Force | Out-Null
+                        }
+                            
+                    }
+                }
+            }#HP Thunderbolt Dock G2
+        } # if (Test-Path "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe")
+        if ($Transcript) { Stop-Transcript }
+        $Return = @(
+            @{Dock = "$($Dock.Dock_ProductName)"; InstalledFirmware = $script:InstalledFirmwareVersion ; SoftpaqFirmware = $script:SoftPaqVersion ; UpdateRequired = $script:UpdateRequired ; SoftpaqNumber = $SPNumber }
+        )
+        if (!($Update)) { Return $Return }
+        else {
+            if (!(($DebugOut) -or ($Transcript))) { Write-Output "$($ExitInfo.Message)" }
+        }   
     }
+}
