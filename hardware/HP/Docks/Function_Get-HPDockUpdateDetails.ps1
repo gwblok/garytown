@@ -410,10 +410,10 @@ function Get-HPDockUpdateDetails {
             if (($DebugOut) -or ($Transcript)) { write-Host " IntuneAppPath =  $IntuneAppPath" -ForegroundColor Cyan }
             Copy-Item -Path "$IntuneAppPath\$SPEXE" -Destination "$OutFilePath\$SPEXE"
             if (!(Test-Path "$OutFilePath\$SPEXE")) {
-                if (($DebugOut) -or ($Transcript)) { write-Host "  Failed to Copy $SPEXE to $OutFilePath from CCMCache: $IntuneAppPath" -ForegroundColor Red }
+                if (($DebugOut) -or ($Transcript)) { write-Host "  Failed to Copy $SPEXE to $OutFilePath from IntuneTemp: $IntuneAppPath" -ForegroundColor Red }
             }
             else {
-                if (($DebugOut) -or ($Transcript)) { write-Host "  Successfully Copied $SPEXE to $OutFilePath from CCMCache: $IntuneAppPath" -ForegroundColor Cyan }
+                if (($DebugOut) -or ($Transcript)) { write-Host "  Successfully Copied $SPEXE to $OutFilePath from IntuneTemp: $IntuneAppPath" -ForegroundColor Cyan }
             }
         }
         else {
