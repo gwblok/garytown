@@ -4,6 +4,13 @@ Tested with Dell PS Provder 2.8.0 on Dell Latitude E5750
 
 #>
 
+[CmdletBinding()]
+param (
+[string]$BootMode,
+[string]$BIOSPASS
+)
+
+
 $Settings = @(
 #TPM
 @{Name = "TpmActivation"; DesiredValue = "Enabled" ; Location =	"DellSmbios:\TPMSecurity"}
@@ -24,18 +31,22 @@ $Settings = @(
 @{Name = "WakeOnAc"; DesiredValue = "Enabled" ; Location =	"DellSmbios:\PowerManagement"}
 @{Name = "PrimaryBattChargeCfg"; DesiredValue = "PrimAcUse" ; Location =	"DellSmbios:\PowerManagement"}
 
+
+#Boot & Secure Boot
+@{Name = "BootList"; DesiredValue = "Uefi" ; Location =	"DellSmbios:\BootSequence"}
+@{Name = "LegacyOrom"; DesiredValue = "Disabled" ; Location =	"DellSmbios:\AdvancedBootOptions"}
+@{Name = "AttemptLegacyBoot"; DesiredValue = "Disabled" ; Location =	"DellSmbios:\AdvancedBootOptions"}
+@{Name = "SecureBoot"; DesiredValue = "Enabled" ; Location =	"DellSmbios:\SecureBoot"}
+@{Name = "Fastboot"; DesiredValue = "Thorough" ; Location =	"DellSmbios:\POSTBehavior"}
+
 #Other
 @{Name = "Virtualization"; DesiredValue = "Enabled" ; Location =	"DellSmbios:\VirtualizationSupport"}
 
 @{Name = "UefiNwStack"; DesiredValue = "Enabled" ; Location =	"DellSmbios:\SystemConfiguration"}
 @{Name = "EmbNic1"; DesiredValue = "EnabledPxe" ; Location =	"DellSmbios:\SystemConfiguration"}
 
-@{Name = "LegacyOrom"; DesiredValue = "Disabled" ; Location =	"DellSmbios:\AdvancedBootOptions"}
-@{Name = "AttemptLegacyBoot"; DesiredValue = "Disabled" ; Location =	"DellSmbios:\AdvancedBootOptions"}
-
 @{Name = "CapsuleFirmwareUpdate"; DesiredValue = "Enabled" ; Location =	"DellSmbios:\Security"}
 )
-
 
 
 
@@ -49,8 +60,21 @@ if ((Get-Location) -ne "DellSmbios:\"){
     Set-Location -Path DellSmbios:\
 }
 
-$PasswordValue = 'P@ssw0rd'
+if ($BIOSPASS){$PasswordValue = $BIOSPASS}
+else {$PasswordValue = 'P@ssw0rd'}
 
+#Test BootList to ensure UEFI
+$CurrentValue = (Get-Item -Path "DellSmbios:\BootSequence\BootList").CurrentValue
+if ($CurrentValue -notmatch "UEFI"){
+    $BIOSModeSwitch = $true
+    #Test if Boot Mode was PXE, if so, force reboot to PXE (Based on _SMSTSLaunchMode)
+    if ($BootMode -eq 'PXE'){
+        Set-Item -Path "DellSmbios:\SystemConfiguration\ForcePxeNextBoot" -Value 'Enabled' -PassThru -Password $PasswordValue
+    }
+
+}
+
+#Set all the Settings
 foreach ($Setting in $Settings){
     Write-Output "Starting $($Setting.Name)"
     $CurrentValue = (Get-Item -Path "$($Setting.Location)\$($Setting.Name)").CurrentValue
@@ -61,4 +85,9 @@ foreach ($Setting in $Settings){
     else {
         Write-Output "$($Setting.Name) already set Correctly, ($($Setting.DesiredValue)), No change needed"
     }
+}
+
+if (($BootMode -eq 'PXE') -and ($BIOSModeSwitch -eq $true)){
+    Write-Output "Rebooting to PXE to restart process, this time in UEFI mode in 2 Minutes... I hope you're watching the logs..."
+    Start-Sleep -Seconds 120
 }
