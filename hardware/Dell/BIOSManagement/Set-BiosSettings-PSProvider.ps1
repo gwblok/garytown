@@ -1,3 +1,4 @@
+
 <#Requires the PS Provider already installed.
 
 Tested with Dell PS Provder 2.8.0 on Dell Latitude E5750
@@ -6,7 +7,6 @@ Tested with Dell PS Provder 2.8.0 on Dell Latitude E5750
 
 [CmdletBinding()]
 param (
-[string]$BootMode,
 [string]$BIOSPASS
 )
 
@@ -63,15 +63,14 @@ if ((Get-Location) -ne "DellSmbios:\"){
 if ($BIOSPASS){$PasswordValue = $BIOSPASS}
 else {$PasswordValue = 'P@ssw0rd'}
 
-#Test BootList to ensure UEFI
+#Test BootList to ensure UEFI - I don't think you'll even be booting Legacy, but I added this anyway
 $CurrentValue = (Get-Item -Path "DellSmbios:\BootSequence\BootList").CurrentValue
 if ($CurrentValue -notmatch "UEFI"){
-    $BIOSModeSwitch = $true
+    Write-Output "Device is currently in Legacy Mode, switching to UEFI which requires restarting the entire process"
     #Test if Boot Mode was PXE, if so, force reboot to PXE (Based on _SMSTSLaunchMode)
     if ($BootMode -eq 'PXE'){
         Set-Item -Path "DellSmbios:\SystemConfiguration\ForcePxeNextBoot" -Value 'Enabled' -PassThru -Password $PasswordValue
     }
-
 }
 
 #Set all the Settings
@@ -87,7 +86,3 @@ foreach ($Setting in $Settings){
     }
 }
 
-if (($BootMode -eq 'PXE') -and ($BIOSModeSwitch -eq $true)){
-    Write-Output "Rebooting to PXE to restart process, this time in UEFI mode in 2 Minutes... I hope you're watching the logs..."
-    Start-Sleep -Seconds 120
-}
