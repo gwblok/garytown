@@ -12,6 +12,10 @@ Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwb
 
 if ($Manufacturer -match "Dell"){
     $Manufacturer = "Dell"
+    
+    write-output $Manufacturer
+    write-output $Model
+    write-output $SystemSKUNumber
     <#
     $DellEnterprise = Test-DCUSupport
     if ($DellEnterprise -eq $true) {
