@@ -605,10 +605,11 @@ function Get-DellDeviceDetails {
     
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
     
-    if (!($SystemSKUNumber)) {
+    if ((!($SystemSKUNumber)) -and (!($ModelLike))) {
         if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
         $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     }
+
     if (!($ModelLike)){
         $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
     }
