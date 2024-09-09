@@ -45,8 +45,13 @@
 #    - Retrieves details of the Dell device like model, systemID.
 #    - Supports filtering by systemID and model name
 
+
+# Change Log
+
+24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
+
 #>
-$ScriptVersion = '24.7.25.4'
+$ScriptVersion = '24.9.9.1'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
