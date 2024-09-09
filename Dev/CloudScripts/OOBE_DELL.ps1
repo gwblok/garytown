@@ -7,6 +7,9 @@ $ScriptVersion = '24.06.10.01'
 $Manufacturer = (Get-CimInstance -Class:Win32_ComputerSystem).Manufacturer
 $Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model
 $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+
+Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/master/hardware/Dell/CommandUpdate/CMSL/Dell-CMSL.ps1')
+
 if ($Manufacturer -match "Dell"){
     $Manufacturer = "Dell"
     <#
@@ -39,6 +42,6 @@ if ($Manufacturer -match "Dell"){
     }
     #endregion
     #>
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/master/hardware/Dell/CommandUpdate/CMSL/Dell-CMSL.ps1')
+    
     
 }
