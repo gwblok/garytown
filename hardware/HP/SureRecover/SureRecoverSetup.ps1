@@ -55,7 +55,7 @@ $HPProdCode = '83B2'# For if you want to create an image per device... I'm optin
 
 #Build Basics
 #Host Drive Location
-$HostRoot = "C:\HP"
+$HostRoot = "\\nas\openshare\2Pint"
 $SureRecoverRoot = "$HostRoot\SureRecover" #Root location of where you are going to be building things
 $SourceMedia = "$SureRecoverRoot\Sources"
 $SourceOS = "$SourceMedia\OSImages\$Build"
@@ -73,13 +73,17 @@ $AgentPath = "$SureRecoverWorkingpath\SRAgent"
 #Set Variables for the certs.
 $OpenSLLFilePath = 'C:\Program Files\OpenSSL-Win64\bin\openssl.exe'
 $CertPswd = 'P@ssw0rd'
-$EndorsementKeyFile = "$KeyPath\Secure Platform-Endorsement Key.pfx"  #Created & downloaded from HP Connect
-$SigningKeyFile = "$KeyPath\Secure Platform-Signing Key.pfx"  #Created & downloaded from HP Connect
+$EndorsementKeyFile = "$KeyPath\Secure Platform Certs-Endorsement Key.pfx"  #Created & downloaded from HP Connect
+$SigningKeyFile = "$KeyPath\Secure Platform Certs-Signing Key.pfx"  #Created & downloaded from HP Connect
 $CertSubject = "/C=US/ST=MN/L=Glenwood/O=GARYTOWN/OU=IT/CN=lab.garytown.com"
 $OSImageCertFile = "$KeyPath\os.pfx"
 $AgentImageCertFile = "$KeyPath\re.pfx"
 $OpenSSLPath = "C:\Program Files\OpenSSL-Win64\bin"
-Set-Location $OpenSSLPath  #Needs to be in this path to allow the openssl to create the certs.
+if (Test-Path -Path $OpenSLLFilePath){
+    Set-Location $OpenSSLPath  #Needs to be in this path to allow the openssl to create the certs.
+}
+
+Test-Path -Path $EndorsementKeyFile
 
 #Create Folder Structure
 if (!(Test-Path -path $HostRoot)){new-item -Path $HostRoot -ItemType Directory -Force | Out-Null}
@@ -125,6 +129,7 @@ if (!(Test-Path -Path "$KeyPath\re.key")){ #Only Create Once
 #$AgentPublicKeyFile  = "$KeyPath\hpsr_agent_public_key.pem" #Default Signing Key for Default Agent
 
 
+#region Custom Image
 #Create the Custom Image
 
 #Split the WIM File (per docs recommendations)
@@ -161,10 +166,12 @@ $encoding = New-Object System.Text.UTF8Encoding $False
 #Sign Image Manfiest Files
 .\openssl dgst -sha256 -sign $OSImageCertFile -passin pass:$CertPswd -out "$ImagePath\$sigFilename" "$ImagePath\$mftFilename" 
 
+#endregion
 
 #Copy to Production WebServer Folder: - Do Manually for Azure Cloud Blob Storage
 #copy-item $ImagePath\* -Destination $ProdWebServerImagePath -Force -Verbose
 
+#region Agent
 
 #AGENT:
 #Building Agent Manifest File:
@@ -199,6 +206,7 @@ $content, $encoding)
 # You can sign the agent manifest with this command
 .\openssl dgst -sha256 -sign $AgentImageCertFile -passin pass:$CertPswd -out "$AgentPath\$sigFilename" "$AgentPath\$mftFilename" 
 
+#endregion
 
 #Increment this number each time you make a change to the Payload file (like change the URL).  It does NOT need to be changed if you update an image or agent media.  Only if you change certificates or URLs.
 [int16]$Version = 8
@@ -217,3 +225,7 @@ New-HPSureRecoverImageConfigurationPayload -Image agent -SigningKeyFile $Signing
 #Create Deprovisioning Payloads - For when you want to change your Sure Recover Settings, you need to deprovision first (or at least I've had to in my test machine)
 New-HPSureRecoverDeprovisionPayload -SigningKeyFile $SigningKeyFile -SigningKeyPassword $CertPswd -OutputFile "$PayloadFiles\SureRecoverDeprovision.dat"
 New-HPSecurePlatformDeprovisioningPayload -Verbose -EndorsementKeyFile $EndorsementKeyFile -EndorsementKeyPassword $CertPswd -OutputFile "$PayloadFiles\SecurePlatformDeprovision.dat"
+
+
+Set-HPSecurePlatformPayload -PayloadFile "$PayloadFiles\SPEndorsementKeyPP.dat"
+Set-HPSecurePlatformPayload -PayloadFile "$PayloadFiles\SPSigningKeyPP.dat"
