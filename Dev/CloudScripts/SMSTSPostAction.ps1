@@ -2,6 +2,8 @@
 Start-Transcript -Path C:\windows\CCM\logs\smstspostaction.txt
 
 iex (irm functions.garytown.com)
+Install-Nuget
+Install-PackageManagement
 Install-Module -Name OSD
 Install-ModuleHPCMSL
 Set-ThisPC
