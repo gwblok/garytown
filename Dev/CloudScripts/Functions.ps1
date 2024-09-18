@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.8.1.2'
+$ScriptVersion = '24.9.18.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -892,4 +892,13 @@ if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Dell"
 	Write-Host -ForegroundColor Green "[+] Function OSDCloud-DCU..."
 	iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/devicesdell.psm1)
 }
+
+write-host "Branch Cache 2Pint Scripts" -ForegroundColor Cyan
+
+Write-Host -ForegroundColor Green "[+] Function Setup-BranchCache"
+function Enable-BranchCache {
+	iex (irm https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/MAIN_REMEDIATE.ps1)
+ 	iex (irm https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/CacheSize_REMEDIATE.ps1)
+ }
+
 
