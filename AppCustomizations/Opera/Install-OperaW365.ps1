@@ -2,7 +2,7 @@
 
 $BuildPath = 'c:\OperaBuild'
 $CustomConfigsPath = 'c:\OperaBuild\CustomConfigs'
-$InstallPath = "$BuildLocation\Opera"
+$InstallPath = "$BuildPath\Opera"
 $OperaInstallerPath = "$BuildPath\OperaInstaller.exe"
 $URL = "https://net.geo.opera.com/opera_portable/stable/windows"
 
