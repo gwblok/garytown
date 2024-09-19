@@ -1,3 +1,4 @@
+#region Functions
 Function Remove-OldOSDModulesLocalMachine {
     #Clean Up OSD Modules - Non-Current on Local Machine
     $Folder = Get-ChildItem 'C:\Program Files\WindowsPowerShell\Modules\OSD'
@@ -48,7 +49,6 @@ Function Get-7ZipIntoPE {
     #Dismount - Save
     Dismount-WindowsImage -Path $MountPath -Save
 }
-
 Function Remove-OldOSDModulesInWinPE {
 #Custom Changes to Boot.Wim
     param (
@@ -76,7 +76,12 @@ Function Remove-OldOSDModulesInWinPE {
     Dismount-WindowsImage -Path $MountPath -Save
 }
 
+#endregion
+
+
+$IsTemplateWinRE = $true
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
+
 $ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
     Write-Host "NO ADK Found, resolve and try again" -ForegroundColor Red
@@ -94,14 +99,20 @@ Write-Host "$($ADKWinPEInfo.ImageName)" -ForegroundColor Green
 
 $Mappings = @(
 
-@{ Build = '10.0.26100.1'; OSName = "Windows 11 24H2 x64"}
-@{ Build = '10.0.22621.1'; OSName = "Windows 11 22H2 x64"}
-@{ Build = '10.0.19045.1'; OSName = "Windows 10 22H2 x64"}
+@{ Build = '10.0.26100.1'; OSName = "Windows 11 24H2 x64" ; OSDisplay="Win1124H2"}
+@{ Build = '10.0.22621.1'; OSName = "Windows 11 22H2 x64" ; OSDisplay="Win1122H2"}
+@{ Build = '10.0.19045.1'; OSName = "Windows 10 22H2 x64" ; OSDisplay="Win1022H2"}
 
 )
 $OSNameNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Version}).OSName
+$OSDisplayNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Version}).OSDisplay
 $Lang = ($ADKWinPE.FullName | Split-Path) | Split-Path -Leaf
 
+
+try {
+    [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\Patches\CU\$OSNameNeeded")
+}
+catch {throw}
 
 $CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
 if ($CU_MSU){
@@ -127,10 +138,18 @@ $OSDLocalModule = "$($LocalModuleFolder.FullName)"
 copy-item "$GitHubFolder\OSD\*"   "$OSDLocalModule" -Force -Verbose -Recurse
 #>
 
-#Make Sure you're running 24.3.20.1
-Update-Module -name OSD -Force
+$CurrentModule = Get-InstalledModule -name OSD -ErrorAction SilentlyContinue
+if ($CurrentModule){
+    $AvailbleModule = Find-Module -Name "OSD"
+    if ([VERSION]$CurrentModule.Version -lt [VERSION]$AvailbleModule.Version){
+        Update-Module -name OSD -Force
+        
+        #Restart PowerShell after OSD has been updated (if it needed to be updated)
 
-#Restart PowerShell after OSD has been updated (if it needed to be updated)
+    }
+}
+
+
 
 <#
 #Setup WorkSpace Location
@@ -155,18 +174,27 @@ New-OSDCloudWorkSpaceSetupCompleteTemplate
 #>
 
 
-$templateName = "OSDCloud-22H2WinPE"
+if ($IsTemplateWinRE){
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-WinRE"
+    $WinRE = $True
+}
+else{
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-WinPE"
+    $WinRE = $false
+}
+
 $WorkSpacePath = "C:\$TemplateName"
 $MountPath = "C:\Mount"
 
-$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
+#$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
 
 if ($AvailableCU){
-    New-OSDCloudTemplate -Name $templateName -CumulativeUpdate $AvailableCU -Add7Zip
+    New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip -WinRE:$WinRE
 }
 else {
-    New-OSDCloudTemplate -Name $templateName -Add7Zip
+    New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
 }
+
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
