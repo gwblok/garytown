@@ -75,6 +75,51 @@ Function Remove-OldOSDModulesInWinPE {
     #Dismount - Save
     Dismount-WindowsImage -Path $MountPath -Save
 }
+
+$OSDCloudRootPath = "C:\OSDCloud-ROOT"
+$ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
+if (!($ADKPaths)){
+    Write-Host "NO ADK Found, resolve and try again" -ForegroundColor Red
+    break
+}
+$ADKPath = $ADKPaths.PathWinPE
+$ADKWinPE = Get-ChildItem -Path $ADKPaths.PathWinPE -Filter *.wim -Recurse
+$ADKWinPEInfo = Get-WindowsImage -ImagePath $ADKWinPE.FullName -Index 1
+
+Write-Host "ADK WinPE Version:       " -ForegroundColor Cyan -NoNewline
+Write-Host "$($ADKWinPEInfo.Version)" -ForegroundColor Green
+Write-Host "ADK WinPE Architecture:  " -ForegroundColor Cyan -NoNewline
+Write-Host "$($ADKWinPEInfo.ImageName)" -ForegroundColor Green
+
+
+$Mappings = @(
+
+@{ Build = '10.0.26100.1'; OSName = "Windows 11 24H2 x64"}
+@{ Build = '10.0.22621.1'; OSName = "Windows 11 22H2 x64"}
+@{ Build = '10.0.19045.1'; OSName = "Windows 10 22H2 x64"}
+
+)
+$OSNameNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Version}).OSName
+$Lang = ($ADKWinPE.FullName | Split-Path) | Split-Path -Leaf
+
+
+$CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
+if ($CU_MSU){
+    if ($CU_MSU.count -gt 1){
+        $CU_MSU = $CU_MSU | Sort-Object -Property Name | Select-Object -Last 1
+    }
+    $PatchPath = $CU_MSU.FullName
+    If ($PatchPath) {
+        $AvailableCU = $PatchPath
+        Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
+        #Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
+        #Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+    }
+}
+else {
+    write-host "No CU's found to apply to OS $OSNameNeeded"
+}
+
 <#
 $GitHubFolder = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBook"
 $LocalModuleFolder = Get-ChildItem 'C:\Program Files\WindowsPowerShell\Modules\OSD'
@@ -116,12 +161,18 @@ $MountPath = "C:\Mount"
 
 $DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
 
-New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "C:\Users\GaryBlok\Downloads\windows11.0-kb5041587-x64_7ac0f48e6f3852a44dce48c384c3202561b4570f.msu" -Add7Zip 
+if ($AvailableCU){
+    New-OSDCloudTemplate -Name $templateName -CumulativeUpdate $AvailableCU -Add7Zip
+}
+else {
+    New-OSDCloudTemplate -Name $templateName -Add7Zip
+}
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
-Edit-OSDCloudWinPE -CloudDriver HP,USB -DriverPath $DisplayLinkDriverPath -Add7Zip -PSModuleInstall HPCMSL
+#Edit-OSDCloudWinPE -CloudDriver HP,USB -Add7Zip -PSModuleInstall HPCMSL #7Zip is already in template now
+Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL
 
 #Added HPCMSL into WinPE
 Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
@@ -133,6 +184,8 @@ New-OSDCloudISO
 
 Set-OSDCloudTemplate -Name OSDCloudARM64
 New-OSDCloudWorkspace -WorkspacePath $OSDCloudWorkspaceARM64
+
+
 #Cleanup
 if (Test-Path -Path "$(Get-OSDCloudWorkspace)\Media"){
     $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
