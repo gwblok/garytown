@@ -34,7 +34,7 @@ if (Test-Path -Path $InstallPath){
     Get-ChildItem -path "$InstallPath\$($OperaInfo.VersionInfo.ProductVersion)\localization" | Where-Object {$_.name -ne "en-US.pak"} | Remove-Item
 
     #Cleanup AutoUpdater
-    Remove-Item -Path "$InstallFolder\autoupdate" -Force -Recurse
+    Remove-Item -Path "$InstallPath\autoupdate" -Force -Recurse
     
 }
 
