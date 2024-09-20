@@ -29,6 +29,14 @@
 
    .LINK
     https://2pintsoftware.com
+
+
+    WHAT YOU NEED TO DO
+    Manage the script with some variables below, look for:
+    - $StifleR = $true #this will add the content from your StifleRSource folder and enable that awesome 2Pint Magic
+       - if you set it to false, you just get BC, which is still something.
+    - $SkipOptionalComponents = $false #you'll typically want to leave this false unless you're doing some random testing
+    - $WinPEBuilderPath = Path for where everything happens, this is set automatically based on where the script is running from
 #>
 
 #Random Notes
@@ -125,8 +133,30 @@ function Get-AdkPaths {
 
 #endregion 
 
+
+#region Readme Files
+$BuildsReadme = "This is where WinPE builds will get staged once they are built."
+
+$OSDToolKitReadme = "For release changes please go to: https://docs.2pintsoftware.com/osd-toolkit/release-notes
+
+For documentation please go to: https://docs.2pintsoftware.com/osd-toolkit/
+	
+Note: 	The binaries in the Tools in this folder is aldready included in the WinPEGen.exe binary, 
+	but are available here here for your convinience when distributing to full OS machines. 
+	Please review the documentation for guidanace on that.
+"
+
+$PatchesReadme = "Place the patch(es) you would like to apply to WinPE in this directory. Make sure they match the OS and architecture of the WinPE you are building."
+
+
+$StifleRSourceReadme = "Place the StifleR source directory in this folder if incorporating the StifleR client into the WinPE build."
+
+#endregion
+
 $StifleR = $true
-$SkipOptionalComponents = $true
+$BranchCache = $true
+$SkipOptionalComponents = $false
+
 
 # Check for elevation (admin rights)
 If ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
@@ -143,7 +173,8 @@ else
 # Parameters region BEGIN
 #
 
-#WinPEBuilder directory
+#WinPEBuilder directory  - THIS IS WHERE EVERYTHING WILL BE BUILT.  Feel Free to customize, or it will use the folder based on where you saved the script.. which might not be the best, so plan ahead
+#AKA, create a folder c:\WinPEBuilder\ and save this script to that location, then run it.
 If ($psISE)
 {
     $WinPEBuilderPath = Split-Path -Path $psISE.CurrentFile.FullPath        
@@ -178,12 +209,36 @@ $Mappings = @(
 $OSNameNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Version}).OSName
 $Lang = ($ADKWinPE.FullName | Split-Path) | Split-Path -Leaf
 
-#Create Location to Save MSU (CU) Files for the OS
+#Create Folder Structure - ASSUMES everything based on the location you're running this script from.
 try {
-    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Patches\CU\$OSNameNeeded")
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Builds") #This is where WinPE builds will get staged once they are built.
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Drivers") #Future Version with DISM these in automatically.
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\ExtraFiles") #Files get copied into the boot WIM (Folder Structure Matters)
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\ExtraFiles\ProgramData") #Files get copied into the boot WIM (Folder Structure Matters)
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\ExtraFiles\Windows\System32") #Files get copied into the boot WIM (Folder Structure Matters)
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\OSSource\$OSNameNeeded") #Location for the Install.wim file from the Full OS
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Patches\CU\$OSNameNeeded") #Location to save your .msu CU files
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Scratch") #Temp location, has nothing to do with scratching of the itchy kind
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\StifleRSource") #Place the StifleR source directory in this folder if incorporating the StifleR client into the WinPE build.
+    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\OSDToolkit") #Place OSDToolkit extract here
 }
 catch {throw}
+#Build Readme Files
+if (!(Test-Path "$WinPEBuilderPath\Builds\Readme.txt")){
+    $BuildsReadme | Out-File -FilePath "$WinPEBuilderPath\Builds\Readme.txt" -Encoding utf8
+}
+if (!(Test-Path "$WinPEBuilderPath\OSDToolkit\Readme.txt")){
+    $OSDToolKitReadme | Out-File -FilePath "$WinPEBuilderPath\OSDToolkit\Readme.txt" -Encoding utf8
+}
+if (!(Test-Path "$WinPEBuilderPath\Patches\Readme.txt")){
+    $PatchesReadme | Out-File -FilePath "$WinPEBuilderPath\Patches\Readme.txt" -Encoding utf8
+}
+if (!(Test-Path "$WinPEBuilderPath\StifleRSource\Readme.txt")){
+    $StifleRSourceReadme | Out-File -FilePath "$WinPEBuilderPath\StifleRSource\Readme.txt" -Encoding utf8
+}
 
+
+#Check for Install.WIM, make sure one is already there, if not, it will try to download / build one for you
 if (Test-Path -Path "$WinPEBuilderPath\OSSource\install.wim"){
     $WinInfo = Get-WindowsImage -ImagePath "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"
     $ProIndex = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Pro"}).ImageIndex
@@ -310,42 +365,6 @@ $MountPath = "$WinPEBuilderPath\mount"
 #$Cert = "E:\Setup\Cert\ViaMonstraRootCA.cer"
 #
 # Parameters region END
-#
-
-#
-# Functions region BEGIN
-#
-
-Function Test-ADK {
-    #Not currently used - needs work
-    $ARP = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    $ADK = "Windows Assessment and Deployment Kit"
-    $ADKPE = "Windows Assessment and Deployment Kit Windows Preinstallation Environment*"
-    # Get the registry key for ADK
-    $regKey = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows Kits\Installed Roots"
-    # Check if the key exists
-    If (Test-Path $regKey) {
-        # Get the installed version of ADK
-        $installedVersion = (Get-ItemProperty $regKey).KitsRoot10
-
-        # Compare the installed version to the OSSource version to ensure they match
-        If ($installedVersion -like "*$latestVersion*") {
-            # Return true and the installed version of ADK
-            return $true, "The installed version of Windows Assessment and Deployment Kit: $installedVersion matches the OSSource version."
-        }
-        else {
-            # Return false and the installed version and the latest version of ADK
-            return $false, "The installed version of Windows Assessment and Deployment Kit: $installedVersion does not match the OSSource version."
-        }
-    }
-    else {
-        # Return false and a message that ADK is not installed
-        return $false, "Windows Assessment and Deployment Kit is not installed on this computer. You can download it from [this page](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install)."
-    }
-}
-
-#
-# Functions region END
 #
 
 
