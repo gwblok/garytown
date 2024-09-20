@@ -1,10 +1,32 @@
-    
-#My HP Models (Platforms) that support Windows 11 23H2
-#Get-HPDeviceDetails -oslist -Platform XXXXA
-$SupportedDevices = @('871A','83EF','896D','83F3')
+<# Gary Blok - GARYTOWN.COM 
+HP Offline Repo for File Share Script
 
+WHAT YOU NEED TO DO:
+!! Update $DevicePlatforms with the HP Platform (Product Code) you want to build your repo for
+!! Set the $OS & OSVer Variables for the OS you plan to deploy.
+!! Set the RepoHostLocation to where you want it built.  Feel free to build locally and copy, or just build it on your share... whatever floats your boat.
+
+
+Script is defaulted for Example to: Windows 11 23H2 Repo for 4 models with 1 model not supporting that OS to show how it will exclude it.
+
+To get a list of OS's a specifc platform supports:
+Get-HPDeviceDetails -oslist -Platform XXXX
+
+#>    
+
+
+#Change these 4 items to fit your every dream and desire (for the offline repo)
+$DevicePlatforms = @('871A','83EF','896D','83F3')
+
+#OS Options
 $OS = 'Win11'
 $OSVer = '23H2'
+
+#NAS Location of Offline Repo
+$RepoHostLocation = "\\nas\osd\HPIARepo\$OSVer\Dev"
+
+
+# Don't change anything below here (unless you really want to, but you don't need to)
 
 if ($OS = 'Win10'){$OSFull = 'Microsoft Windows 10'}
 if ($OS = 'Win11'){$OSFull = 'Microsoft Windows 11'}
@@ -13,7 +35,7 @@ if ($OS = 'Win11'){$OSFull = 'Microsoft Windows 11'}
 #Rebuild Supported Devices based on if they support the OS & OSVer requested
 Write-Host "Confirming Model Selections are supported by $OS & $OSVer options" -ForegroundColor Cyan
 $SupportedPlatforms = @()
-foreach ($Platform in $SupportedDevices){
+foreach ($Platform in $DevicePlatforms){
     $OSListOSMatch = Get-HPDeviceDetails -Platform $Platform -OSList | Where-Object {$_.OperatingSystem -eq $OSFull}
     if ($OSListOSMatch){
         $OSListOSRMatch = Get-HPDeviceDetails -Platform $Platform -OSList | Where-Object {$_.OperatingSystemRelease -eq $OSVer}
@@ -27,8 +49,7 @@ foreach ($Platform in $SupportedDevices){
     }
 }
 
-#NAS Location of Offline Repo
-$RepoHostLocation = "\\nas\osd\HPIARepo\$OSVer\Dev"
+
 if (!(Test-Path -Path $RepoHostLocation)){
     Write-Host "Creating Repo Folder $RepoHostLocation" -ForegroundColor Green
     New-Item -Path $RepoHostLocation -ItemType Directory -Force | Out-Null
