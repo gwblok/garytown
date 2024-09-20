@@ -1,7 +1,8 @@
     
 #My HP Models (Platforms) that support Windows 11 23H2
-#Get-HPDeviceDetails -oslist -Platform XXXX
-$SupportedDevices = @('8870','83EF','857F','8711','859C')
+#Get-HPDeviceDetails -oslist -Platform XXXXA
+$SupportedDevices = @('871A','83EF','83F3','896D')
+
 $OS = 'Win11'
 $OSVer = '23H2'
     
@@ -19,12 +20,26 @@ write-host "  Creating Offline Repo $RepoHostLocation" -ForegroundColor Green
 Initialize-Repository #https://developers.hp.com/hp-client-management/doc/initialize-repository
 Set-RepositoryConfiguration -setting OfflineCacheMode -Cachevalue Enable #https://developers.hp.com/hp-client-management/doc/set-repositoryconfiguration
 
-    
+#Repo Cleanup of Models
+$CurrentFilters = (Get-RepositoryInfo).Filters
+if ($CurrentFilters){
+    ForEach ($Filter in $CurrentFilters){
+        if ($Filter.Platform -notin $SupportedDevices){
+            $Platform = $Filter.Platform
+            $OS = ($Filter.operatingSystem).Split(":")| Select-Object -First 1
+            $OSVer = ($Filter.operatingSystem).Split(":")| Select-Object -Last 1
+            $Friendly = (Get-HPDeviceDetails -Platform $Platform).Name | Select-Object -First 1
+            Write-Host "$($Filter.Platform) | ? $Friendly ?, removing it from the Repository Filter" -ForegroundColor Yellow
+            Write-Host "Remove-RepositoryFilter -Platform $Platform -Os $OS -OsVer $OSVer" -ForegroundColor Gray
+            Remove-RepositoryFilter -Platform $Platform -Os $OS -OsVer $OSVer -Yes
+        }
+    }
+}
+
 foreach ($Platform in $SupportedDevices){
 
 	Write-Host "  Creating Offline Repo Filter to Support: $Platform | $OS | $OSVer" -ForegroundColor Cyan    
     Add-RepositoryFilter -Platform $Platform -Os $OS -OsVer $OSVer #https://developers.hp.com/hp-client-management/doc/Add-RepositoryFilter
-
 }
 
 #Start Building (downloading) Offline Repo Content
