@@ -1,11 +1,32 @@
     
 #My HP Models (Platforms) that support Windows 11 23H2
 #Get-HPDeviceDetails -oslist -Platform XXXXA
-$SupportedDevices = @('871A','83EF','83F3','896D')
+$SupportedDevices = @('871A','83EF','896D','83F3')
 
 $OS = 'Win11'
 $OSVer = '23H2'
-    
+
+if ($OS = 'Win10'){$OSFull = 'Microsoft Windows 10'}
+if ($OS = 'Win11'){$OSFull = 'Microsoft Windows 11'}
+
+
+#Rebuild Supported Devices based on if they support the OS & OSVer requested
+Write-Host "Confirming Model Selections are supported by $OS & $OSVer options" -ForegroundColor Cyan
+$SupportedPlatforms = @()
+foreach ($Platform in $SupportedDevices){
+    $OSListOSMatch = Get-HPDeviceDetails -Platform $Platform -OSList | Where-Object {$_.OperatingSystem -eq $OSFull}
+    if ($OSListOSMatch){
+        $OSListOSRMatch = Get-HPDeviceDetails -Platform $Platform -OSList | Where-Object {$_.OperatingSystemRelease -eq $OSVer}
+    }
+    if ($OSListOSRMatch){
+        $SupportedPlatforms += $Platform
+    }
+    else{
+        Write-Host "$Platform does NOT support $OS & $OSVer" -ForegroundColor Red
+        Write-Host "To see what $Platform does support, use command | Get-HPDeviceDetails -Platform $Platform -OSList" -ForegroundColor Red
+    }
+}
+
 #NAS Location of Offline Repo
 $RepoHostLocation = "\\nas\osd\HPIARepo\$OSVer\Dev"
 if (!(Test-Path -Path $RepoHostLocation)){
@@ -24,7 +45,7 @@ Set-RepositoryConfiguration -setting OfflineCacheMode -Cachevalue Enable #https:
 $CurrentFilters = (Get-RepositoryInfo).Filters
 if ($CurrentFilters){
     ForEach ($Filter in $CurrentFilters){
-        if ($Filter.Platform -notin $SupportedDevices){
+        if ($Filter.Platform -notin $SupportedPlatforms){
             $Platform = $Filter.Platform
             $OS = ($Filter.operatingSystem).Split(":")| Select-Object -First 1
             $OSVer = ($Filter.operatingSystem).Split(":")| Select-Object -Last 1
@@ -36,7 +57,7 @@ if ($CurrentFilters){
     }
 }
 
-foreach ($Platform in $SupportedDevices){
+foreach ($Platform in $SupportedPlatforms){
 
 	Write-Host "  Creating Offline Repo Filter to Support: $Platform | $OS | $OSVer" -ForegroundColor Cyan    
     Add-RepositoryFilter -Platform $Platform -Os $OS -OsVer $OSVer #https://developers.hp.com/hp-client-management/doc/Add-RepositoryFilter
