@@ -22,7 +22,7 @@ https://www.recastsoftware.com/resources/building-a-configmgr-lab-from-scratch/
 
 Cert Setup (after using the guide above to setup DC & PKI): 
 
-https://anthonyfontanez.com/index.php/2021/05/28/migrating-configmgr-to-https-only/#clientcerts
+Watch Justin's YouTube Video https://www.youtube.com/watch?v=nChKKM9APAQ
 
 SQL SPN Kerberos Tool: Use this after you install SQL, before you install ConfigMgr
 
