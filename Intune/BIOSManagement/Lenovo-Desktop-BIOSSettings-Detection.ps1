@@ -4,7 +4,7 @@ Script to update BIOS Settings for Lenovo Desktop Devices by Gary Blok
 Additional References: 
 https://www.configjon.com/lenovo-bios-settings-management/
 https://docs.lenovocdrt.com/ref/bios/sdbm/#wmi-in-system-deployment-boot-mode
-
+https://github.com/svenriebedell/Intune/tree/main/Remediation
 
 Version Changes
 

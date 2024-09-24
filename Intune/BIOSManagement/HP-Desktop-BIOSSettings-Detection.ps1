@@ -1,9 +1,14 @@
 <#
 Script to update BIOS Settings for HP Desktop Devices by Gary Blok
 
+Script Code References:
+https://github.com/svenriebedell/Intune/tree/main/Remediation
+https://garytown.com/hp-bcu-to-hp-cmsl
+
 Version Changes
 
     24.09.24 - Gary Blok Initial Version
+
 
 
 .Synopsis
