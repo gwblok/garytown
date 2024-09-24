@@ -1,15 +1,15 @@
 <#
 Script to update BIOS Settings for Lenovo Desktop Devices by Gary Blok
-Reference:
+
+Additional References: 
+https://www.configjon.com/lenovo-bios-settings-management/
 https://docs.lenovocdrt.com/ref/bios/sdbm/#wmi-in-system-deployment-boot-mode
 
-<#Version Changes
+
+Version Changes
 
     24.09.24 - Gary Blok Initial Version
 
-#>
-
-<#
 .Synopsis
     This PowerShell is checking BIOS setting are compliant to IT requirements
     IMPORTANT: This script does not reboot the system to apply or query system.

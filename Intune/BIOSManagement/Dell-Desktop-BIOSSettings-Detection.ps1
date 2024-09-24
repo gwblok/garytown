@@ -20,9 +20,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-#>
 
-<#Version Changes
+Version Changes
 
     1.0.0    inital version
     24.09.24 - Gary Blok Mods 
@@ -32,9 +31,7 @@ limitations under the License.
     - Add Transcription Log Location
     - Add PreChecks for Manufacturer and Chassis
 
-#>
 
-<#
 .Synopsis
     This PowerShell is checking BIOS setting are compliant to IT requirements
     IMPORTANT: WMI BIOS is supported only on devices which developt after 2018, older devices does not supported by this powershell
@@ -478,7 +475,7 @@ $BIOSCompliant = @(
     [PSCustomObject]@{BIOSSettingName = "WakeOnLan"; BIOSSettingValue = "LanOnly"; WMIClass = "EnumerationAttribute" }  
     [PSCustomObject]@{BIOSSettingName = "NumLockLed"; BIOSSettingValue = "Enabled"; WMIClass = "EnumerationAttribute" }  
 )
-$BIOSPWD = "P@ssw0rd"
+
 $Manufacturer = Get-Manufacturer
 $ChassisType = Get-ChassisType
 $IntendedManufacturer = "Dell"

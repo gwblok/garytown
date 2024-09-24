@@ -1,13 +1,11 @@
 <#
 Script to update BIOS Settings for HP Desktop Devices by Gary Blok
 
-<#Version Changes
+Version Changes
 
     24.09.24 - Gary Blok Initial Version
 
-#>
 
-<#
 .Synopsis
     This PowerShell is checking BIOS setting are compliant to IT requirements
     IMPORTANT: This script does not reboot the system to apply or query system.
