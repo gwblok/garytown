@@ -1,5 +1,7 @@
 <#
 Script to update BIOS Settings for Lenovo Desktop Devices by Gary Blok
+Reference:
+https://docs.lenovocdrt.com/ref/bios/sdbm/#wmi-in-system-deployment-boot-mode
 
 <#Version Changes
 
@@ -77,14 +79,13 @@ Function Get-Manufacturer {
 ####                                    Varible Section                                              ####
 #########################################################################################################
 
-#Password Portion
-$BIOSPassword = 'P@ssw0rd' #Set your Password here - if using a TS, I recommend a hidden variable
 
+$Compliance = $True
 $TranscriptPath = "$env:SystemDrive\Windows\Temp\BIOSManagement-Remediation.log"
 $BIOSCompliant = @(
     [PSCustomObject]@{BIOSSettingName = "AfterPowerLoss"; BIOSSettingValue = "Power On" }
     [PSCustomObject]@{BIOSSettingName = "EnhancedPowerSavingMode"; BIOSSettingValue = "Disabled" }
-    [PSCustomObject]@{BIOSSettingName = "FastBoot"; BIOSSettingValue = "Enable" }  
+    [PSCustomObject]@{BIOSSettingName = "FastBoot"; BIOSSettingValue = "Enabled" }  
     [PSCustomObject]@{BIOSSettingName = "WakeonLAN"; BIOSSettingValue = "Automatic" }
     [PSCustomObject]@{BIOSSettingName = "WakeUponAlarm"; BIOSSettingValue = "Daily Event" }
 )
@@ -93,8 +94,6 @@ $Manufacturer = Get-Manufacturer
 $ChassisType = Get-ChassisType
 $IntendedManufacturer = "Lenovo"
 $IntendedChassisType = "Desktop"
-$SaveRequired = $false
-
 
 #########################################################################################################
 ####                                    Program Section                                              ####
@@ -119,43 +118,6 @@ if ($ChassisType -ne $IntendedChassisType) {
 
 
 #Connect to WMI Interface
-
-#Connect to the Lenovo_SetBiosSetting WMI class
-$Interface = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_SetBiosSetting
-
-#Connect to the Lenovo_SaveBiosSettings WMI class
-$SaveSettings = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_SaveBiosSettings
-
-#Connect to the Lenovo_BiosPasswordSettings WMI class
-$PasswordSettings = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_BiosPasswordSettings
-
-#Connect to the Lenovo_SetBiosPassword WMI class
-#$PasswordSet = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_SetBiosPassword #Not used in this script
-
-
-Switch($PasswordSettings.PasswordState)
-{
-	{$_ -eq 0}
-	{
-		Write-Output "No passwords are currently set"
-	}
-	{($_ -eq 2) -or ($_ -eq 3) -or ($_ -eq 6) -or ($_ -eq 7) -or ($_ -eq 66) -or ($_ -eq 67) -or ($_ -eq 70) -or ($_-eq 71)}
-	{
-		$SvpSet = $true
-		Write-Output "The supervisor password is set"
-	}
-	{($_ -eq 64) -or ($_ -eq 65) -or ($_ -eq 66) -or ($_ -eq 67) -or ($_ -eq 68) -or ($_ -eq 69) -or ($_ -eq 70) -or ($_-eq 71)}
-	{
-		$SmpSet = $true
-		Write-Output  "The system management password is set"
-	}
-	default
-	{
-	}
-}
-
-
-
 #Connect to the Lenovo_BiosSetting WMI class
 $SettingList = (Get-CimInstance -Namespace root\wmi -ClassName Lenovo_BiosSetting).CurrentSetting | Where-Object {$_ -ne ""}
 
@@ -194,49 +156,55 @@ catch {
     Exit 1
 }
 
+# check setting compliants
+[array]$SettingCompliant = @()
+
 foreach ($Status in $BIOSCompliantStatus) {
         
+    $TempSettingCompliant = New-Object -TypeName psobject
+
     ForEach ($Compliant in $BIOSCompliant) {
-        If ($Compliant.BIOSSettingName -eq $Status.Name) {                 
+        If ($Compliant.BIOSSettingName -eq $Status.Name) {
+                        
+
             If ($Compliant.BIOSSettingValue -eq $Status.CurrentValue) {
-                Write-Host $Status.Name "setting not changed"
+                $TempSettingCompliant | Add-Member -MemberType NoteProperty -Name Name -Value $Status.Name
+                $TempSettingCompliant | Add-Member -MemberType NoteProperty -Name Compliant -Value $true
+
             }
             else {
-                $SaveRequired = $true
-                $SettingName = $Status.Name
-                $SettingValue = $Compliant.BIOSSettingValue
-                if ($SvpSet){
-                    $Result = $Interface | Invoke-CimMethod -MethodName SetBIOSSetting -Arguments @{ parameter = "$SettingName,$SettingValue,$BIOSPassword,ascii,us" }
-                }
-                else {
-                    $Result = $Interface | Invoke-CimMethod -MethodName SetBIOSSetting -Arguments @{ parameter = "$SettingName,$SettingValue" }
-                }
-                
-                If ($result.ReturnValue -eq $true) {
-                    Write-Host $Status.Name "setting is changed" -ForegroundColor Green
-                }
-                else {
-                    Write-Host "BIOS setting failed wrong parameter or wrong BIOS Password" -ForegroundColor Red
-                    Stop-Transcript
-                    Exit 1
-                }
+                $TempSettingCompliant | Add-Member -MemberType NoteProperty -Name Name -Value $Status.Name
+                $TempSettingCompliant | Add-Member -MemberType NoteProperty -Name Compliant -Value $false
             }
         }    	
     }
+    $SettingCompliant += $TempSettingCompliant
 }
-if ($SaveRequired -and $SvpSet){
-    $Result = $SaveSettings  | Invoke-CimMethod -MethodName SaveBiosSettings -Arguments @{ parameter = "$BIOSPassword,ascii,us" }
-    If ($result.ReturnValue -eq $true) {
-        Write-Host "Successfully Committed Changes" -ForegroundColor Green
+
+
+
+# if one or more settings not compliant Exit 1 other otherwise Exit 0
+
+foreach ($Compliant in $SettingCompliant) {
+    if ($Compliant.Compliant -eq $true) {
+        Write-Host $Compliant.Name "is compliant" -ForegroundColor Green
+    }
+    else {   
+        $Compliance = $False
+        Write-Host $Compliant.Name "is NOT compliant" -ForegroundColor Red
+
     }
 }
-
-
-Write-Host "Remediation script successful"
-Stop-Transcript
-Exit 0
-
-
+if ($Compliance -eq $False) {
+    Write-Host "BIOS settings are not compliant" -ForegroundColor Red
+    Stop-Transcript
+    Exit 1
+}
+else {
+    Write-Host "BIOS settings are compliant" -ForegroundColor Green
+    Stop-Transcript
+    Exit 0
+}
 #########################################################################################################
 ####                                    END                                                          ####
 #########################################################################################################

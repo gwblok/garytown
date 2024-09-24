@@ -82,19 +82,18 @@ $BIOSPassword = 'P@ssw0rd' #Set your Password here - if using a TS, I recommend 
 
 $TranscriptPath = "$env:SystemDrive\Windows\Temp\BIOSManagement-Remediation.log"
 $BIOSCompliant = @(
-    [PSCustomObject]@{BIOSSettingName = "AfterPowerLoss"; BIOSSettingValue = "Power On" }
-    [PSCustomObject]@{BIOSSettingName = "EnhancedPowerSavingMode"; BIOSSettingValue = "Disabled" }
-    [PSCustomObject]@{BIOSSettingName = "FastBoot"; BIOSSettingValue = "Enable" }  
-    [PSCustomObject]@{BIOSSettingName = "WakeonLAN"; BIOSSettingValue = "Automatic" }
-    [PSCustomObject]@{BIOSSettingName = "WakeUponAlarm"; BIOSSettingValue = "Daily Event" }
+    [PSCustomObject]@{BIOSSettingName = "Fast Boot"; BIOSSettingValue = "Enable" }
+    [PSCustomObject]@{BIOSSettingName = "Startup Delay (sec.)"; BIOSSettingValue = "0" }
+    [PSCustomObject]@{BIOSSettingName = "S5 Maximum Power Savings"; BIOSSettingValue = "Disable" }  
+    [PSCustomObject]@{BIOSSettingName = "After Power Loss"; BIOSSettingValue = "Power On" }
+    [PSCustomObject]@{BIOSSettingName = "Wake On LAN"; BIOSSettingValue = "Boot to Hard Drive" }
+    [PSCustomObject]@{BIOSSettingName = "NumLock on at boot"; BIOSSettingValue = "Enable" }  
 )
 
 $Manufacturer = Get-Manufacturer
 $ChassisType = Get-ChassisType
-$IntendedManufacturer = "Lenovo"
+$IntendedManufacturer = "HP"
 $IntendedChassisType = "Desktop"
-$SaveRequired = $false
-
 
 #########################################################################################################
 ####                                    Program Section                                              ####
@@ -130,10 +129,10 @@ $SaveSettings = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_SaveBiosSe
 $PasswordSettings = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_BiosPasswordSettings
 
 #Connect to the Lenovo_SetBiosPassword WMI class
-#$PasswordSet = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_SetBiosPassword #Not used in this script
+$PasswordSet = Get-CimInstance -Namespace root\wmi -ClassName Lenovo_SetBiosPassword
 
 
-Switch($PasswordSettings.PasswordState)
+witch($PasswordSettings.PasswordState)
 {
 	{$_ -eq 0}
 	{
@@ -202,18 +201,15 @@ foreach ($Status in $BIOSCompliantStatus) {
                 Write-Host $Status.Name "setting not changed"
             }
             else {
-                $SaveRequired = $true
-                $SettingName = $Status.Name
-                $SettingValue = $Compliant.BIOSSettingValue
                 if ($SvpSet){
-                    $Result = $Interface | Invoke-CimMethod -MethodName SetBIOSSetting -Arguments @{ parameter = "$SettingName,$SettingValue,$BIOSPassword,ascii,us" }
+                    $Result = $Interface | Invoke-CimMethod -MethodName SetBIOSSetting -Arguments @{ parameter = "$SettingName,$SettingValue,$BIOSPass,ascii,us" }
                 }
                 else {
                     $Result = $Interface | Invoke-CimMethod -MethodName SetBIOSSetting -Arguments @{ parameter = "$SettingName,$SettingValue" }
                 }
                 
                 If ($result.ReturnValue -eq $true) {
-                    Write-Host $Status.Name "setting is changed" -ForegroundColor Green
+                    Write-Host $Status.Name "setting is changed"
                 }
                 else {
                     Write-Host "BIOS setting failed wrong parameter or wrong BIOS Password" -ForegroundColor Red
@@ -225,10 +221,7 @@ foreach ($Status in $BIOSCompliantStatus) {
     }
 }
 if ($SaveRequired -and $SvpSet){
-    $Result = $SaveSettings  | Invoke-CimMethod -MethodName SaveBiosSettings -Arguments @{ parameter = "$BIOSPassword,ascii,us" }
-    If ($result.ReturnValue -eq $true) {
-        Write-Host "Successfully Committed Changes" -ForegroundColor Green
-    }
+    $Results = $SaveSettings  | Invoke-CimMethod -MethodName SaveBiosSettings -Arguments @{ parameter = "$BIOSPass,ascii,us" }
 }
 
 
