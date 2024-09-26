@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.9.18.2'
+$ScriptVersion = '24.9.26.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -549,6 +549,12 @@ function Install-PackageManagement {
         }
     }
 }
+
+Write-Host -ForegroundColor Green "[+] Install-WMIExplorer"
+function Install-WMIExplorer {
+	iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-WMIExplorer-Remediate.ps1)
+}
+
 Write-Host -ForegroundColor Green "[+] Install-CMTrace"
 function Install-CMTrace {
 
