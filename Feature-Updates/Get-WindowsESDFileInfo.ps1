@@ -149,7 +149,7 @@ if ($Check){
                 Write-Output "$($MCT.Version) Has not changed"
             }
         }
-        if ("$($MCT.Version)Change" -eq $true){Write-Output "$($MCT.Version) has changed"}
+        if ((Get-Variable -name $("$($MCT.Version)Change")).Value -eq $true){Write-Output "$($MCT.Version) has changed"}
     }
 }
 else {
