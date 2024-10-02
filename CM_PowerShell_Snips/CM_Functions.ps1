@@ -244,6 +244,8 @@ Function Reset-TaskSequence {
     restart-service ccmexec -force -ErrorAction SilentlyContinue
     Start-Process -FilePath C:\windows\ccm\CcmEval.exe
     start-sleep -Seconds 15
+    if (get-process -name TSManager -ErrorAction SilentlyContinue){Get-Process -name TSManager | Stop-Process -force}
+    if (get-process -name TsProgressUI -ErrorAction SilentlyContinue){Get-Process -name TsProgressUI | Stop-Process -force}
     #Invoke Machine Policy
     Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000021}" |Out-Null
     Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule "{00000000-0000-0000-0000-000000000022}" |Out-Null
