@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '24.9.26.1'
+$ScriptVersion = '24.10.1.1'
 Set-ExecutionPolicy Bypass -Force
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -109,6 +109,29 @@ Function Start-DISMFromOSDCloudUSB {
         Write-Output "Skipping Start-DISMFromOSDCloudUSB Function, not running in WinPE"
     }
 }
+Write-Host -ForegroundColor Green "[+] Function Get-HyperVName"
+function Get-HyperVName {
+    [CmdletBinding()]
+    param ()
+    if ($WindowsPhase -eq 'WinPE'){
+        Write-host "Unable to get HyperV Name in WinPE"
+    }
+    else{
+        if (((Get-CimInstance Win32_ComputerSystem).Model -eq "Virtual Machine") -and ((Get-CimInstance Win32_ComputerSystem).Manufacturer -eq "Microsoft Corporation")){
+            $HyperVName = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Virtual Machine\Guest\Parameters' -Name "VirtualMachineName" -ErrorAction SilentlyContinue
+        }
+    return $HyperVName
+    }
+}
+Write-Host -ForegroundColor Green "[+] Function Set-HyperVName"
+function Set-HyperVName {
+    [CmdletBinding()]
+    param ()
+    $HyperVName = Get-HyperVName
+    Write-Output "Renaming Computer to $HyperVName"
+    Rename-Computer -NewName $HyperVName -Force 
+}
+
 
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
 Function Get-MyComputerInfoBasic {
