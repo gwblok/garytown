@@ -51,7 +51,7 @@
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 
 #>
-$ScriptVersion = '24.9.9.1'
+$ScriptVersion = '24.10.3.2'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -510,6 +510,87 @@ function Invoke-DCU {
         Write-Verbose "Exit: $($DCUApply.ExitCode)"
         Write-Verbose "Description: $($ExitInfo.Description)"
         Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+    }
+}
+
+function Invoke-DCUBITS {
+    [CmdletBinding()]
+    
+    param (
+    [ValidateSet('security','critical','recommended','optional')]
+    [String[]]$updateSeverity,
+    [ValidateSet('bios','firmware','driver','application','others')]
+    [String[]]$updateType,
+    [ValidateSet('audio','video','network','chipset','storage','input','others')]
+    [String[]]$updateDeviceCategory,
+    [ValidateSet('Enable','Disable')]
+    [string]$autoSuspendBitLocker = 'Enable',
+    [ValidateSet('Enable','Disable')]
+    [string]$reboot = 'Disable',
+    [ValidateSet('Enable','Disable')]
+    [string]$forceupdate = 'Disable',
+    [switch]$scan,
+    [switch]$applyUpdates,
+    [switch]$DownloadOnly
+    )
+    $DCUPath = (Get-DCUInstallDetails).DCUPath
+    $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
+    $DownloadPath = "$env:SystemDrive\Users\Dell\CMSL\Downloads"
+    $DellDLRootURL = "https://dl.dell.com"
+    [void][System.IO.Directory]::CreateDirectory($LogPath)
+    [void][System.IO.Directory]::CreateDirectory($DownloadPath)
+
+    #Build Argument Strings for each parameter
+    if ($updateSeverity){
+        [String]$updateSeverity = $($updateSeverity -join ",").ToString()
+        $updateSeverityVar = "-updateSeverity=$updateSeverity"
+    }
+    if ($updateType){
+        [String]$updateType = $($updateType -join ",").ToString()
+        $updateTypeVar = "-updateType=$updateType"
+    }
+    if ($updateDeviceCategory){
+        [String]$updateDeviceCategory = $($updateDeviceCategory -join ",").ToString()
+        $updateDeviceCategoryVar = "-updateDeviceCategory=$updateDeviceCategory"
+    }
+
+    #Pick Action, Scan or ApplyUpdates if both are selected, ApplyUpdates will be the action, if neither are selected, Scan will be the action
+    $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    #Set Everything to SCAN so DCU will scan and create the report which we'll then go through and download the updates or install them
+    if ($scan){$ActionVar = "/scan"}
+    if ($DownloadOnly){$ActionVar = "/scan"}
+    if ($applyUpdates){$ActionVar = "/scan"}
+    else {$ActionVar = "/scan"}
+    $Action = $ActionVar -replace "/",""
+
+    #Create Arugment List for Dell Command Update CLI
+    $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`" -report=$LogPath"
+    Write-Verbose $ArgList
+    $DCUApply = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+    if ($DCUApply.ExitCode -ne 0){
+        $ExitInfo = Get-DCUExitInfo -DCUExit $DCUApply.ExitCode
+        Write-Verbose "Exit: $($DCUApply.ExitCode)"
+        Write-Verbose "Description: $($ExitInfo.Description)"
+        Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+    }
+    #If DCU was to SCAN, then we're done!
+    if ($scan){return}
+
+    #Start to download
+    if (Test-Path -Path $LogPath\DCUApplicableUpdates.xml){
+        [xml]$DCUApplicableUpdates = Get-Content -Path $LogPath\DCUApplicableUpdates.xml
+        $Updates = $DCUApplicableUpdates.updates.update
+        foreach ($Update in $Updates){
+            $URL = "$DellDLRootURL/$($Update.file)"
+            $Description = "$($Update.version) from $($update.date) | Type: $($Update.type) | Category: $($update.category) | Severity: $($Update.urgency)"
+            Write-Host "Downloading $URL"
+            $Transfer = Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose -CustomHeaders "User-Agent:Bob"
+        }
+
+    }
+    else {
+        Write-Verbose "No Applicable Updates Found"
+        return
     }
 }
 
