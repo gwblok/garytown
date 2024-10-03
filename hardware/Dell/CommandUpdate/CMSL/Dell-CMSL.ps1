@@ -51,7 +51,7 @@
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 
 #>
-$ScriptVersion = '24.10.3.4'
+$ScriptVersion = '24.10.3.5'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -587,7 +587,7 @@ function Invoke-DCUBITS {
             $URL = "$DellDLRootURL/$($Update.file)"
             $Description = "$($Update.version) from $($update.date) | Type: $($Update.type) | Category: $($update.category) | Severity: $($Update.urgency)"
             Write-Host "Downloading $URL"
-            #Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose -CustomHeaders "User-Agent:Bob"
+            Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose -CustomHeaders "User-Agent:Bob"
         }
         Write-Host"============================================================================" -ForegroundColor Cyan
         Write-Host "Starting Installation of Updates" -ForegroundColor Cyan
