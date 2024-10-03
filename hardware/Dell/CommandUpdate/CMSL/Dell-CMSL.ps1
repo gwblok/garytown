@@ -51,7 +51,7 @@
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 
 #>
-$ScriptVersion = '24.10.3.6'
+$ScriptVersion = '24.10.3.7'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -569,20 +569,12 @@ function Invoke-DCUBITS {
     }
     #If DCU was to SCAN, then we're done!
     if ($scan){return}
-
+    Write-Host ""
     #Start to download
     if (Test-Path -Path $LogPath\DCUApplicableUpdates.xml){
         
         [xml]$DCUApplicableUpdates = Get-Content -Path $LogPath\DCUApplicableUpdates.xml
         $Updates = $DCUApplicableUpdates.updates.update
-        if ($scan){
-            Write-Host "============================================================================" -ForegroundColor Cyan
-            Write-Host "Applicable Updates Found" -ForegroundColor Cyan
-            Write-Host "============================================================================" -ForegroundColor Cyan
-            foreach ($Update in $Updates){
-                Write-Host "$($Update.name) | $($Update.version) | $($update.date) | Type: $($Update.type) | Category: $($update.category) | Severity: $($Update.urgency)"
-            }
-        }
         if ($DownloadOnly -or $applyUpdates){
             Write-Host "============================================================================" -ForegroundColor Cyan
             Write-Host "Downloading Updates to Download Folder $DownloadPath" -ForegroundColor Cyan
@@ -591,7 +583,7 @@ function Invoke-DCUBITS {
                 $URL = "$DellDLRootURL/$($Update.file)"
                 $Description = "$($Update.version) from $($update.date) | Type: $($Update.type) | Category: $($update.category) | Severity: $($Update.urgency)"
                 Write-Host "Downloading $URL"
-                Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose -CustomHeaders "User-Agent:Bob"
+                Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60 -CustomHeaders "User-Agent:Bob"
             }
             Write-Host "============================================================================" -ForegroundColor Cyan
             Write-Host "Starting Installation of Updates" -ForegroundColor Cyan
