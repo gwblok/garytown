@@ -495,15 +495,14 @@ function Invoke-DCU {
     }
 
     #Pick Action, Scan or ApplyUpdates if both are selected, ApplyUpdates will be the action, if neither are selected, Scan will be the action
+    $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
     if ($scan){$ActionVar = "/scan"}
     if ($applyUpdates){$ActionVar = "/applyUpdates"}
     else {$ActionVar = "/scan"}
     $Action = $ActionVar -replace "/",""
 
-
-
-    $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`""
+    #Create Arugment List for Dell Command Update CLI
+    $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`" -report=$LogPath"
     Write-Verbose $ArgList
     $DCUApply = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
     if ($DCUApply.ExitCode -ne 0){
