@@ -584,7 +584,7 @@ function Invoke-DCUBITS {
             $URL = "$DellDLRootURL/$($Update.file)"
             $Description = "$($Update.version) from $($update.date) | Type: $($Update.type) | Category: $($update.category) | Severity: $($Update.urgency)"
             Write-Host "Downloading $URL"
-            $Transfer = Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose -CustomHeaders "User-Agent:Bob"
+            $Transfer = Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose #-CustomHeaders "User-Agent:Bob"
         }
 
     }
