@@ -51,7 +51,7 @@
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 
 #>
-$ScriptVersion = '24.10.3.3'
+$ScriptVersion = '24.10.3.4'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -580,13 +580,31 @@ function Invoke-DCUBITS {
     if (Test-Path -Path $LogPath\DCUApplicableUpdates.xml){
         [xml]$DCUApplicableUpdates = Get-Content -Path $LogPath\DCUApplicableUpdates.xml
         $Updates = $DCUApplicableUpdates.updates.update
+        Write-Host"============================================================================" -ForegroundColor Cyan
+        Write-Host "Downloading Updates to Download Folder $DownloadPath" -ForegroundColor Cyan
+        Write-Host"============================================================================" -ForegroundColor Cyan
         foreach ($Update in $Updates){
             $URL = "$DellDLRootURL/$($Update.file)"
             $Description = "$($Update.version) from $($update.date) | Type: $($Update.type) | Category: $($update.category) | Severity: $($Update.urgency)"
             Write-Host "Downloading $URL"
-            $Transfer = Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose #-CustomHeaders "User-Agent:Bob"
+            #Start-BitsTransfer -DisplayName $Update.name -Source $URL -Destination $DownloadPath -Description $Description  -RetryInterval 60  -Verbose -CustomHeaders "User-Agent:Bob"
         }
-
+        Write-Host"============================================================================" -ForegroundColor Cyan
+        Write-Host "Starting Installation of Updates" -ForegroundColor Cyan
+        Write-Host"============================================================================" -ForegroundColor Cyan
+        if ($applyUpdates){
+            foreach ($Update in $Updates){
+                $Filename = $Update.file -split "/" | Select-Object -Last 1
+                if (Test-Path -Path "$DownloadPath\$Filename"){
+                    Write-Host "Installing $Filename"
+                    $InstallUpdate = Start-Process -FilePath "$DownloadPath\$Filename" -ArgumentList "/s" -Wait -PassThru
+                    Write-Host "Exit Code: $($InstallUpdate.ExitCode)"
+                }
+                else {
+                    Write-Host "File Not Found: $Filename"
+                }
+            }
+        }
     }
     else {
         Write-Verbose "No Applicable Updates Found"
