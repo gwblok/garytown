@@ -1,4 +1,120 @@
 #region Functions
+
+Function Set-WiFi {
+    #https://www.cyberdrain.com/automating-with-powershell-deploying-wifi-profiles/
+    param(
+        [string]$SSID,
+        [string]$PSK,
+        [string]$SaveProfilePath
+    )
+    $guid = New-Guid
+    $HexArray = $ssid.ToCharArray() | foreach-object { [System.String]::Format("{0:X}", [System.Convert]::ToUInt32($_)) }
+    $HexSSID = $HexArray -join ""
+@"
+<?xml version="1.0"?>
+<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
+    <name>$($SSID)</name>
+    <SSIDConfig>
+        <SSID>
+            <hex>$($HexSSID)</hex>
+            <name>$($SSID)</name>
+        </SSID>
+    </SSIDConfig>
+    <connectionType>ESS</connectionType>
+    <connectionMode>auto</connectionMode>
+    <MSM>
+        <security>
+            <authEncryption>
+                <authentication>WPA2PSK</authentication>
+                <encryption>AES</encryption>
+                <useOneX>false</useOneX>
+            </authEncryption>
+            <sharedKey>
+                <keyType>passPhrase</keyType>
+                <protected>false</protected>
+                <keyMaterial>$($PSK)</keyMaterial>
+            </sharedKey>
+        </security>
+    </MSM>
+    <MacRandomization xmlns="http://www.microsoft.com/networking/WLAN/profile/v3">
+        <enableRandomization>false</enableRandomization>
+        <randomizationSeed>1451755948</randomizationSeed>
+    </MacRandomization>
+</WLANProfile>
+"@ | out-file "$($ENV:TEMP)\$guid.SSID"
+    
+    
+    if ($SaveProfilePath){
+        Copy-Item "$($ENV:TEMP)\$guid.SSID" -Destination $SaveProfilePath -Force
+    }
+    else{
+        netsh wlan add profile filename="$($ENV:TEMP)\$guid.SSID" user=all
+    }
+    remove-item "$($ENV:TEMP)\$guid.SSID" -Force
+}
+
+Function Add-Opera {
+
+    #Builds Custom Opera Install and sets things how I want them to be
+    [CmdletBinding()]
+        param (
+            [string]$MountPath,
+            [string]$BuildPath
+        )
+
+    #$BuildPath = 'c:\OperaBuild'
+    $CustomConfigsPath = "$BuildPath\CustomConfigs"
+    $InstallPath = "$BuildPath\Opera"
+    $OperaInstallerPath = "$BuildPath\OperaInstaller.exe"
+    $URL = "https://net.geo.opera.com/opera_portable/stable/windows"
+
+    $ConfigFiles = @(
+    @{FileName = 'installer_prefs.json' ;URL = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/AppCustomizations/Opera/W365/installer_prefs.json'; InstallPath = "$InstallPath"}
+    @{FileName = 'Local State' ;URL = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/AppCustomizations/Opera/W365/Local%20State'; InstallPath = "$InstallPath\profile\data"}
+    @{FileName = 'Preferences' ;URL = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/AppCustomizations/Opera/W365/Preferences'; InstallPath = "$InstallPath\profile\data\Default"}
+    )
+
+    try {
+        [void][System.IO.Directory]::CreateDirectory($BuildPath)
+        [void][System.IO.Directory]::CreateDirectory($CustomConfigsPath)
+    }
+    catch {throw}
+
+    write-host "Adding Opera Browser to Boot Media" -ForegroundColor Cyan
+    Write-Host " Starting Download..."
+    Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $OperaInstallerPath
+
+    Write-Host " Starting creation of Portable Setup"
+    $OperaArgs = "/singleprofile=1 /copyonly=1 /enable-stats=0 /enable-installer-stats=0 /launchbrowser=0 /installfolder=$InstallPath /allusers=0 /run-at-startup=0 /import-browser-data=0 /setdefaultbrowser=0 /language=en /personalized-ads=0 /personalized-content=0 /general-location=0 /consent-given=0 /silent"
+    $InstallOpera = Start-Process -FilePath $OperaInstallerPath -ArgumentList $OperaArgs -PassThru -Wait -NoNewWindow
+
+    Start-Sleep -Seconds 30
+
+    #Confirm Opera Path for Install is there
+    if (Test-Path -Path $InstallPath){
+    
+        #Cleanup Localizations
+        $OperaInfo = Get-Item -Path "$InstallPath\opera.exe"
+        Get-ChildItem -path "$InstallPath\$($OperaInfo.VersionInfo.ProductVersion)\localization" | Where-Object {$_.name -ne "en-US.pak"} | Remove-Item
+
+        #Cleanup AutoUpdater
+        Remove-Item -Path "$InstallPath\autoupdate" -Force -Recurse
+    
+    }
+
+    #Setup Config Files
+    foreach ($ConfigFile in $ConfigFiles){
+    
+        #Download ConfigFile to ConfigFiles Staging
+        Invoke-WebRequest -UseBasicParsing -Uri $ConfigFile.URL -OutFile "$CustomConfigsPath\$($ConfigFile.FileName)"
+
+        #Copy Config File to proper Location
+        Copy-Item -Path "$CustomConfigsPath\$($ConfigFile.FileName)" -Destination $ConfigFile.InstallPath -Force
+    }
+    Write-Host " Copying Opera Portable to $MountPath"
+    Copy-Item -Path $InstallPath -Destination $MountPath -Recurse
+}
+
 Function Remove-OldOSDModulesLocalMachine {
     #Clean Up OSD Modules - Non-Current on Local Machine
     $Folder = Get-ChildItem 'C:\Program Files\WindowsPowerShell\Modules\OSD'
@@ -185,6 +301,14 @@ else{
 
 $WorkSpacePath = "C:\$TemplateName"
 $MountPath = "C:\Mount"
+# Clean up and create Mount directory
+If (Test-Path $MountPath) {
+    Write-Host "Cleaning up previous run: $MountPath" -ForegroundColor DarkGray
+    Remove-Item $MountPath -Force -Verbose -Recurse | Out-Null    
+}
+Write-Host "Creating New Folder: $MountPath" -ForegroundColor DarkGray
+New-Item $MountPath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+
 
 #$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
 
@@ -200,11 +324,17 @@ New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
 #Edit-OSDCloudWinPE -CloudDriver HP,USB -Add7Zip -PSModuleInstall HPCMSL #7Zip is already in template now
-Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL
+Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL -DriverPath "C:\WinPEBuilder\Drivers\WiFi"
 
 #Added HPCMSL into WinPE
-Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
-
+if ($WinRE){
+    #Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WirelessConnect
+    Set-WiFi -SSID PXE -PSK 6122500648 -SaveProfilePath C:\OSDCloud-ROOT\Lab-WifiProfile.xml
+    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WifiProfile C:\OSDCloud-ROOT\Lab-WifiProfile.xml
+}
+else{
+    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
+}
 New-OSDCloudISO
 
 
@@ -242,6 +372,8 @@ Update-OSDCloudUSB -PSUpdate
 write-host "Mounting: $(Get-OSDCloudWorkspace)\Media\sources\boot.wim"  -ForegroundColor Green
 Mount-WindowsImage -Path $MountPath -ImagePath "$(Get-OSDCloudWorkspace)\Media\sources\boot.wim" -Index 1
 
+
+Add-Opera -MountPath "$MountPath" -BuildPath "c:\windows\temp\Opera"
 
 #Copy Development Files - Overwrite production
 $GitHubFolder = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBook"
