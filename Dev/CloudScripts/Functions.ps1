@@ -113,7 +113,7 @@ Write-Host -ForegroundColor Green "[+] Function Get-HyperVName"
 function Get-HyperVName {
     [CmdletBinding()]
     param ()
-    if ($WindowsPhase -eq 'WinPE'){
+    if ($env:SystemDrive -eq 'X:'){
         Write-host "Unable to get HyperV Name in WinPE"
     }
     else{
@@ -123,6 +123,23 @@ function Get-HyperVName {
     return $HyperVName
     }
 }
+
+Write-Host -ForegroundColor Green "[+] Function Get-HyperVHostName"
+function Get-HyperVHostName {
+    [CmdletBinding()]
+    param ()
+    if ($env:SystemDrive -eq 'X:'){
+        Write-host "Unable to get HyperV Name in WinPE"
+    }
+    else{
+        if (((Get-CimInstance Win32_ComputerSystem).Model -eq "Virtual Machine") -and ((Get-CimInstance Win32_ComputerSystem).Manufacturer -eq "Microsoft Corporation")){
+            $HyperVHostName = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Virtual Machine\Guest\Parameters' -Name "HostName" -ErrorAction SilentlyContinue
+        }
+    return $HyperVHostName
+    }
+
+}
+
 Write-Host -ForegroundColor Green "[+] Function Set-HyperVName"
 function Set-HyperVName {
     [CmdletBinding()]
