@@ -7,6 +7,7 @@ Used to backup VMs to Network (and Local Server)
 $HostName = $env:computername
 if ($HostName -eq "UGreen"){
     $BackupDrivePath = "G:\HyperVBackups"
+    
 }
 else{
     $BackupURLPathRoot = "\\UGreen\HyperVBackups$"
@@ -18,9 +19,12 @@ else{
     else{Write-Host "Mapped Drive $BackupDrivePath to $BackupURLPathRoot" -ForegroundColor Green}
 }
 
+$LogPath = "$BackupDrivePath\Logs"
 $GetDate = Get-Date -Format "yyyy-MM-dd"
 $VMs = Get-VM
 $VMs2Backup = @()
+Start-Transcript -Path "$LogPath\$($HostName)-$($GetDate).log"
+
 Foreach ($VM in $VMs){
     $WorkingVM = Get-VM -Name $VM.Name
     $Notes = $WorkingVM.Notes -split "`n"
@@ -63,7 +67,9 @@ Foreach ($VM in $VMs2Backup){
         if ($HostName -eq "UGreen"){
             $Destination = "$BackupDrivePath\$HostName\$($VMName)\$GetDate"
             [void][System.IO.Directory]::CreateDirectory($Destination)
+            Write-Host "Exporting VM $($VMName) to $TempLocation" -ForegroundColor Cyan
             export-vm -VM $VM -Path $Destination
+            Write-Host "Starting VM $($VMName)" -ForegroundColor Cyan
             Start-VM -VM $VM
         }
         else{
@@ -83,3 +89,4 @@ Foreach ($VM in $VMs2Backup){
         }
     }
 }
+Stop-Transcript
