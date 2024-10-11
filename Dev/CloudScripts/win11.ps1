@@ -1,6 +1,6 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 $ScriptName = 'win11.garytown.com'
-$ScriptVersion = '24.7.4.4'
+$ScriptVersion = '24.10.11.1'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 #iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -20,8 +20,8 @@ $Product = (Get-MyComputerProduct)
 $Model = (Get-MyComputerModel)
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '23H2' #Used to Determine Driver Pack
-$OSName = 'Windows 11 23H2 x64'
+$OSReleaseID = '24H2' #Used to Determine Driver Pack
+$OSName = 'Windows 11 24H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'en-us'
@@ -70,7 +70,7 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
 if (Test-HPIASupport){
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
-    if ($Product -ne '83B2' -or $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
+    if ($Product -ne '83B2' -and $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
     #{$Global:MyOSDCloud.HPIAALL = [bool]$true}
     $Global:MyOSDCloud.HPBIOSUpdate = [bool]$true
     $Global:MyOSDCloud.HPCMSLDriverPackLatest = [bool]$true #In Test 
