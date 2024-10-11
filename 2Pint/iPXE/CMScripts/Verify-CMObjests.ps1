@@ -1,13 +1,12 @@
 <# 
     2Pint functions to Verify the CM Objects Status
-    Version:        24.10.10.2
+    Version:        24.10.10
     Author:         @ 2Pint Software
     Creation Date:  2023-02-03
     Purpose/Change: Initial script development
     
 
     Remember to update $scriptPath (GARY, you like to forget)
-    Note, I've disabled the remove for testing
 #>
 
 
@@ -61,9 +60,10 @@ Function Verify-CMObjectUnknwon {
 
         #region Load External support functions
 
-        $scriptPath = "C:\Program Files\2Pint Software\iPXE AnywhereWS\Scripts"
+        #$scriptPath = "C:\Program Files\2Pint Software\iPXE AnywhereWS\Scripts"
+        #$CMFile = "$scriptPath\ConfigMgr\Shared\Manage-CMObjects.ps1" 
 
-        $CMFile = "$scriptPath\ConfigMgr\Shared\Manage-CMObjects.ps1" 
+        $CMFile = "$PSScriptRoot\Manage-CMObjects.ps1"
 
         if((Test-Path $CMFile) -eq $false)
         {
@@ -118,6 +118,12 @@ shell
                 elseif ($devicelookupSMBIOS -ne $false )
                 {
                     
+                    $errorData += @"
+#!ipxe
+echo Failed to delete the record
+
+"@
+
                     foreach ( $dlSMBIOS in $devicelookupSMBIOS ) {
                         
                         write-verbose "FOUND:  $( $dlSMBIOS.SMS_Unique_Identifier0.ToString() )"
@@ -132,18 +138,22 @@ shell
                         }
                         else
                         {
-                            $errorData = @"
-#!ipxe
-echo Failed to delete the record
+                            $errorData += @"
 echo ID $( $dlSMBIOS.SMS_Unique_Identifier0.ToString() )
+
+"@
+
+                            
+                        }
+                        
+                        
+                    }
+                            $errorData += @"
+echo Please contact the Configuration Manager team with these details
 shell
 "@
 
-                            return $errorData;
-                        }
-
-                        
-                    }
+                    return $errorData;
                     
                 }
 
@@ -222,7 +232,7 @@ return $true
 Set-Alias Verify-CMObjectUnknown Verify-CMObjectUnknwon
 
 #Verify-CMObjectUnknwon -SMBIOSGUID "10251B42-E829-F830-D924-225491D13C84" -MACAddress "00:50:56:9B:17:29"
-#Verify-CMObjectUnknwon -SMBIOSGUID "1AA087CA-C1B2-4974-A29E-05B60378AFCE" -MACAddress "00:15:5D:14:4B:0B"
+Verify-CMObjectUnknwon -SMBIOSGUID "1AA087CA-C1B2-4974-A29E-05B60378AFCE" -MACAddress "00:15:5D:14:4B:0B"
 
 #$SMBIOSGUID = "1AA087CA-C1B2-4974-A29E-05B60378AFCE"
 #$MACAddress = "00:15:5D:14:4B:0B"
