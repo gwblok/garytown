@@ -1,6 +1,6 @@
 <# 
     2Pint functions to Verify the CM Objects Status
-    Version:        24.10.10
+    Version:        24.10.10.2
     Author:         @ 2Pint Software
     Creation Date:  2023-02-03
     Purpose/Change: Initial script development
@@ -18,6 +18,7 @@ $CMSites = @(
         SQL = '2CM.2p.garytown.com'
     }
 )
+
 
 
 Function Verify-CMObjectUnknwon {
@@ -73,9 +74,9 @@ Function Verify-CMObjectUnknwon {
 
         #endregion 
 
-        foreach ( $CMSite in $CMSites )
+        foreach ( $CMSite in $CMSites ) 
         {
-            #Write-Host "Site: $($CMSite.Site)"
+        Write-Host "Site: $($CMSite.site)"
 
             foreach ( $Provider in $CMSite.Providers ) 
             {
@@ -112,70 +113,41 @@ shell
                     # No record to delete return $true
                     break # COntinue with next server
                 }
-                elseif(((($devicelookupMAC -is [array]) -eq $false) -and (($devicelookupMAC -is [array]) -eq $false) -and ($devicelookupSMBIOS.ResourceId -eq $devicelookupMAC.ResourceId)) -or ($devicelookupSMBIOS.ResourceID -and $devicelookupMAC -eq $false))
+
+                elseif ($devicelookupSMBIOS -ne $false )
                 {
-                    #Single reuturn from both resources that matches
-                    $UUID = $devicelookupSMBIOS.SMSUniqueIdentifier.ToString();
-                    #This means we dont have any client in there with the UUID or MAC, good to go, machine is unknown
                     
-                    #$removeRecord = Remove-CMObject -KeyIdentifier UUID -Value $UUID -UseWMI -CMServerFQDN $adminsvc -SQLServerFQDN $SQLServerFQDN -SiteDB $SiteDB -SiteCode $SiteCode
-                    
-                    #Write-Host "Reached the Remove-CMObject section"
-                    
-                    #              "Remove-CMObject -KeyIdentifier UUID -Value $UUID -UseWMI -CMServerFQDN $adminsvc -SQLServerFQDN $SQLServerFQDN -SiteDB $SiteDB -SiteCode $SiteCode" | out-file "c:\temp\ws\cmd.txt"
-                    if($removeRecord -eq $true)
-                    {
-                        #Success
-                        break # COntinue with next server
-                    }
-                    else
-                    {
-                        $errorData = @"
-#!ipxe
-echo Failed to delete the record
-shell
-"@
+                    foreach ( $dlSMBIOS in $devicelookupSMBIOS ) {
+                        
+                        write-verbose "FOUND:  $( $dlSMBIOS.SMS_Unique_Identifier0.ToString() )"
 
-                        return $errorData;
-                    }
-                }
+                        $UUID = $dlSMBIOS.SMS_Unique_Identifier0.ToString();
+                        #$removeRecord = Remove-CMObject -KeyIdentifier UUID -Value $UUID -UseWMI -CMServerFQDN $adminsvc -SQLServerFQDN $SQLServerFQDN -SiteDB $SiteDB -SiteCode $SiteCode
 
-                elseif ( (($devicelookupMAC -is [array]) -eq $true) -and (($devicelookupSMBIOS -is [array]) -eq $false) )
-                {
-
-                    foreach ( $dlMAC in $devicelookupMAC ) {
-                        foreach ( $dlSMBIOS in $devicelookupSMBIOS ) {
-
-                            if ( $dlSMBIOS.SMSUniqueIdentifier -eq $dlMAC.SMSUniqueIdentifier ) {
-                                write-verbose "FOUND:  $( $devicelookupMAC.SMSUniqueIdentifier.ToString() )  and $( $devicelookupSMBIOS.SMSUniqueIdentifier.ToString()  )"
-
-                                $UUID = $devicelookupSMBIOS.SMSUniqueIdentifier.ToString();
-                                #$removeRecord = Remove-CMObject -KeyIdentifier UUID -Value $UUID -UseWMI -CMServerFQDN $adminsvc -SQLServerFQDN $SQLServerFQDN -SiteDB $SiteDB -SiteCode $SiteCode
-
-                                if($removeRecord -eq $true)
-                                {
-                                    #Success
-                                    break # COntinue with next server
-                                }
-                                else
-                                {
-                                    $errorData = @"
-#!ipxe
-echo Failed to delete the record
-shell
-"@
-
-                                    return $errorData;
-                                }
-
-                            }
+                        if($removeRecord -eq $true)
+                        {
+                            #Success
+                            break # Continue with next server
                         }
+                        else
+                        {
+                            $errorData = @"
+#!ipxe
+echo Failed to delete the record
+echo ID $( $dlSMBIOS.SMS_Unique_Identifier0.ToString() )
+shell
+"@
+
+                            return $errorData;
+                        }
+
+                        
                     }
+                    
                 }
 
                 elseif(($devicelookupSMBIOS[0].ResourceId -eq $null) -and ($devicelookupMAC[0].ResourceId -eq $null))
                 {
-
                             $errorData = @"
 #!ipxe
 echo Too many records to deal with!
@@ -246,15 +218,10 @@ return $true
 }
 
 # create alias to deal with typo
-#Set-Alias Verify-CMObjectUnknown Verify-CMObjectUnknwon
-
-
-#For Testing
+Set-Alias Verify-CMObjectUnknown Verify-CMObjectUnknwon
 
 #Verify-CMObjectUnknwon -SMBIOSGUID "10251B42-E829-F830-D924-225491D13C84" -MACAddress "00:50:56:9B:17:29"
-
 #Verify-CMObjectUnknwon -SMBIOSGUID "1AA087CA-C1B2-4974-A29E-05B60378AFCE" -MACAddress "00:15:5D:14:4B:0B"
- 
 
 #$SMBIOSGUID = "1AA087CA-C1B2-4974-A29E-05B60378AFCE"
 #$MACAddress = "00:15:5D:14:4B:0B"
