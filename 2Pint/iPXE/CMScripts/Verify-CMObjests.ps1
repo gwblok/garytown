@@ -7,6 +7,7 @@
     
 
     Remember to update $scriptPath (GARY, you like to forget)
+    Note, I've disabled the remove for testing
 #>
 
 
