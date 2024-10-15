@@ -195,7 +195,7 @@ Function Remove-OldOSDModulesInWinPE {
 #endregion
 
 
-$IsTemplateWinRE = $true
+$IsTemplateWinRE = $false
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
 
 
@@ -319,10 +319,20 @@ New-Item $MountPath -ItemType Directory -Force -ErrorAction SilentlyContinue | O
 #$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
 
 if ($AvailableCU){
-    New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip -WinRE:$WinRE
+    if ($WinRE){
+        New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip -WinRE:$WinRE
+    }
+    else{
+        New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip
+    }
 }
 else {
-    New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
+    if ($WinRE){
+        New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
+    }
+    else{
+        New-OSDCloudTemplate -Name $templateName -Add7Zip
+    }
 }
 
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
@@ -330,16 +340,17 @@ New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 
 #Edit-OSDCloudWinPE -CloudDriver HP,USB -Add7Zip -PSModuleInstall HPCMSL #7Zip is already in template now
-Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL -DriverPath "C:\WinPEBuilder\Drivers\WiFi"
+
 
 #Added HPCMSL into WinPE
 if ($WinRE){
+    Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL -DriverPath "C:\WinPEBuilder\Drivers\WiFi"
     #Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WirelessConnect
     Set-WiFi -SSID PXE -PSK 6122500648 -SaveProfilePath C:\OSDCloud-ROOT\Lab-WifiProfile.xml
     Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WifiProfile C:\OSDCloud-ROOT\Lab-WifiProfile.xml
 }
 else{
-    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
+    Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL
 }
 New-OSDCloudISO
 
