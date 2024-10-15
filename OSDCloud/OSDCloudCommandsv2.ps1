@@ -198,6 +198,22 @@ Function Remove-OldOSDModulesInWinPE {
 $IsTemplateWinRE = $true
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
 
+
+$CurrentModule = Get-InstalledModule -name OSD -ErrorAction SilentlyContinue
+if ($CurrentModule){
+    $AvailbleModule = Find-Module -Name "OSD"
+    if ([VERSION]$CurrentModule.Version -lt [VERSION]$AvailbleModule.Version){
+        Update-Module -name OSD -Force
+        
+        #Restart PowerShell after OSD has been updated (if it needed to be updated)
+
+    }
+
+}
+else{
+        Install-Module -name OSD -Force
+}
+
 $ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
     Write-Host "NO ADK Found, resolve and try again" -ForegroundColor Red
@@ -254,16 +270,6 @@ $OSDLocalModule = "$($LocalModuleFolder.FullName)"
 copy-item "$GitHubFolder\OSD\*"   "$OSDLocalModule" -Force -Verbose -Recurse
 #>
 
-$CurrentModule = Get-InstalledModule -name OSD -ErrorAction SilentlyContinue
-if ($CurrentModule){
-    $AvailbleModule = Find-Module -Name "OSD"
-    if ([VERSION]$CurrentModule.Version -lt [VERSION]$AvailbleModule.Version){
-        Update-Module -name OSD -Force
-        
-        #Restart PowerShell after OSD has been updated (if it needed to be updated)
-
-    }
-}
 
 
 
