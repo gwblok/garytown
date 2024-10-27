@@ -609,6 +609,46 @@ function Invoke-DCUBITS {
     }
 }
 
+function New-DCUCatalogFile {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [string]$CatalogXMLOutputFolderPath
+    )
+    
+    $temproot = "$env:windir\temp"
+    #$SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+    $CabPathIndexModel = "$temproot\DellCabDownloads\CatalogIndexModel.cab"
+    $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
+    if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
+    
+    
+    if (!($SystemSKUNumber)) {
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
+        $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    }
+    $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
+    if (!($DellSKU)){
+        return "System SKU not found"
+    }
+    if (Test-Path $CabPathIndexModel){Remove-Item -Path $CabPathIndexModel -Force}
+    
+
+    Invoke-WebRequest -Uri "http://downloads.dell.com/$($DellSKU.URL)" -OutFile $CabPathIndexModel -UseBasicParsing
+    if (Test-Path $CabPathIndexModel){
+        $null = expand $CabPathIndexModel $DellCabExtractPath\CatalogIndexPCModel.xml
+        if ($CatalogXMLOutputFolderPath){
+            if (!(Test-Path -Path $CatalogXMLOutputFolderPath)){
+                [void][System.IO.Directory]::CreateDirectory($CatalogXMLOutputFolderPath)
+            }
+            $CatalogName = "DellDCUCatalog_$($DellSKU.SystemID)_$($DellSKU.Date).xml"
+            Copy-Item -Path $DellCabExtractPath\CatalogIndexPCModel.xml -Destination $CatalogXMLOutputFolderPath\$CatalogName -Force
+        }
+    }
+}
 function  Get-DCUUpdateList {
     [CmdletBinding()]
     param (
