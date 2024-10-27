@@ -643,9 +643,14 @@ function New-DCUOfflineCatalog {
         $UpdateFileLocalPath = $UpdateFileLocalPath -replace "/","\"
         $UpdateFileLocalFolderPath = $UpdateFileLocalPath | Split-Path
         [void][System.IO.Directory]::CreateDirectory($UpdateFileLocalFolderPath)
-        Write-Host "Downloading $UpdateFileLocalPath"
-        
-        Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdateFileURL -Destination $UpdateFileLocalPath -Description "Downloading $UpdateFileName" -RetryInterval 60 -CustomHeaders "User-Agent:Bob" 
+        Write-Host " Downloading $UpdateFileURL" -ForegroundColor Green
+        Write-Host "   Local Path: $UpdateFileLocalPath" -ForegroundColor Green
+        if (Test-Path -path $UpdateFileLocalPath){
+            Write-Host "   File Already Exists, Continuing to next Update.." -ForegroundColor Green
+        }
+        else {
+            Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdateFileURL -Destination $UpdateFileLocalPath -Description "Downloading $UpdateFileURL" -RetryInterval 60 #-CustomHeaders "User-Agent:Bob" 
+        }
     }
 }
 function New-DCUCatalogFile {
