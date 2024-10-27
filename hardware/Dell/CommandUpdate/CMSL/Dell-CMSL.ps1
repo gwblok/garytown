@@ -608,11 +608,50 @@ function Invoke-DCUBITS {
         return
     }
 }
+function New-DCUOfflineCatalog {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$True)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [Parameter(Mandatory=$True)]
+        [string]$OfflineRepoDownloadPath, #Location to download the repo to on the local machine (then copy to source server or endpoint)
+        [string]$OfflineRepoDCUInstallPath #Location you plan to copy the repo on the local machine for DCU to call
+    ) 
+    if (!($OfflineRepoDCUInstallPath)){
+        $OfflineRepoDCUInstallPath = "C:\Drivers\DCURepo"
+    }
+    $OfflineRepoDownloadPath = "$OfflineRepoDownloadPath\$SystemSKUNumber"
+    $CatalogFile = New-DCUCatalogFile -SystemSKUNumber $SystemSKUNumber -CatalogXMLOutputFolderPath $OfflineRepoDownloadPath
+    [xml]$XMLIndex = Get-Content $CatalogFile
+    $BaseLocation = $XMLIndex.Manifest.baseLocation
+    Write-Host "Current Repo Base Location: $BaseLocation"
+    Write-Host "Updating to location local path on endpoint: $OfflineRepoDCUInstallPath"
+    $XMLIndex.Manifest.SetAttribute("baseLocation","$OfflineRepoDCUInstallPath")
+    Write-Host "Saving XML File $($CatalogFile)"
+    $XMLIndex.Save($CatalogFile)
 
+    $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType driver
+    $UpdateNames = $Updates.Name | Select-Object -Unique
+    Foreach ($UpdateName in $UpdateNames)   {
+        #Get the latest update for each driver
+        Write-Host -ForegroundColor Cyan "Getting Latest Update for $UpdateName"
+        $UpdateFile = $Updates | Where-Object {$_.Name -eq $UpdateName} | Sort-Object -Property ReleaseDate | Select-Object -Last 1
+        $UpdateFileURL = $UpdateFile.Path
+        $UpdateFileName = $UpdateFileURL -split "/" | Select-Object -Last 1
+        $UpdateFileLocalPath = ($UpdateFile.Path) -replace "https://downloads.dell.com","$OfflineRepoDownloadPath"
+        $UpdateFileLocalPath = $UpdateFileLocalPath -replace "/","\"
+        $UpdateFileLocalFolderPath = $UpdateFileLocalPath | Split-Path
+        [void][System.IO.Directory]::CreateDirectory($UpdateFileLocalFolderPath)
+        Write-Host "Downloading $UpdateFileLocalPath"
+        
+        Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdateFileURL -Destination $UpdateFileLocalPath -Description "Downloading $UpdateFileName" -RetryInterval 60 -CustomHeaders "User-Agent:Bob" 
+    }
+}
 function New-DCUCatalogFile {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$False)]
+        #[Parameter(Mandatory=$True)]
         [ValidateLength(4,4)]    
         [string]$SystemSKUNumber,
         [string]$CatalogXMLOutputFolderPath
@@ -646,6 +685,7 @@ function New-DCUCatalogFile {
             }
             $CatalogName = "DellDCUCatalog_$($DellSKU.SystemID)_$($DellSKU.Date).xml"
             Copy-Item -Path $DellCabExtractPath\CatalogIndexPCModel.xml -Destination $CatalogXMLOutputFolderPath\$CatalogName -Force
+            return "$CatalogXMLOutputFolderPath\$CatalogName"
         }
     }
 }
