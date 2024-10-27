@@ -1,5 +1,5 @@
 $ScriptName = 'dell.garytown.com'
-$ScriptVersion = '24.06.10.01'
+$ScriptVersion = '24.10.27.01'
 
 #region Initialize
 
@@ -23,6 +23,7 @@ Write-Host -ForegroundColor Green "[+] Function: Get-DCUExitInfo"
 Write-Host -ForegroundColor Green "[+] Function: Install-DCU"
 Write-Host -ForegroundColor Green "[+] Function: Invoke-DCU"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
-Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDetails"
+Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
+Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
 
 
