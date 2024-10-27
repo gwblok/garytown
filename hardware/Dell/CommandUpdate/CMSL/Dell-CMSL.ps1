@@ -45,6 +45,21 @@
 #    - Retrieves details of the Dell device like model, systemID.
 #    - Supports filtering by systemID and model name
 
+# 10. New-DCUCatalogFile
+#    - Downloads the Dell Command Update (DCU) catalog file for the system model.
+#    - Supports filtering by systemID
+#    - Returns the path of the downloaded catalog file.
+#    - This is designed to create snapshots of the DCU catalog so you can point DCU at this file enabling ring rollouts
+#    - By default, this will have the updates pull from downloads.dell.com 
+#    - This function is leveraged by the New-DCUOfflineCatalog function to create a catalog file that pulls from a local repository
+
+# 11. New-DCUOfflineCatalog:
+#    - Downloads the Dell Command Update (DCU) catalog file for the system model.
+#    - Supports filtering by systemID
+#    - Currently it will limit the catalog to the latest version of the drivers available for the system
+#    - Provides the Catalog XML file and will update the baselocation in the XML to the path you provide or defaults to "C:\Drivers\DCURepo"
+#       - The baselocation is where the DCU will look for the drivers when you run DCU pointing to the XML file.
+
 
 # Change Log
 
