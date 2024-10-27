@@ -73,6 +73,7 @@ function Get-HPDockUpdateDetails {
     24.07.18.01 - updated logic to check for OSVers supported by CMSL and limit the MaxOSVer to the highest supported by CMSL.
     24.07.18.02 - updated softpaqs info for USB-C G5, USB-C G5 Essential, USB-C Universal Dock G2, and Thunderbolt G4
     24.09.05.01 - adding switch for IntuneApp to assist in deploying the updates via Intune.
+    24.10.27.01 - updated USB-C G5 Dock Firmware
 
     .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -217,10 +218,10 @@ function Get-HPDockUpdateDetails {
         $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153736.exe'   #  1.5.22.0 | July 22, 2024
             
         #Thunderbolt G2
-        $Url_TBG2 = 'ftp.hp.com/pub/softpaq/sp143501-144000/sp143977.exe'   #  1.0.71.1 | Dec 15, 2022
+        $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153736.exe'   #  1.0.71.1 RevD | July 29, 2024
             
         #USB-C Dock G5
-        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151931.exe'  #  1.0.20.0 | Mar 25, 2024
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153754.exe'  #  1.0.22.0 | July 22, 2024
             
         #USB-C Universal Dock G2
         $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151932.exe'  #  1.0.20.0 | Mar 25, 2024
