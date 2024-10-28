@@ -831,7 +831,7 @@ Function Get-DellBIOSUpdates {
         [switch]$Check, #This will find the latest BIOS update and compare it to the current BIOS version
         [switch]$Flash,
         [string]$Password,
-        [switch]$DownloadPath
+        [string]$DownloadPath
 
     )
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
