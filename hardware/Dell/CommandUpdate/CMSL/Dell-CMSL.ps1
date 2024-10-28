@@ -818,3 +818,39 @@ function Get-DellDeviceDetails {
     }
     return $DellSKU | Select-Object -Property SystemID,Model
 }
+<# Placeholders for future functions
+
+#Function to get a specific Update with options to download, install or extract
+#Similar to the Get-Softpaq function in HPCMSL
+Function Get-DCUUpdate {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [String[]]$UpdateID,
+        [ValidateSet('install','silentinstall')]
+        [String]$Action,
+        [String]$DownloadPath,
+        [String]$ExtractPath,
+        [switch]$Overwrite,
+    )
+
+}
+
+#Function to get a list of BIOS updates for a SKU, install, or download
+#Similar to the Get-HPBIOSUpdate function in HPCMSL
+Function Get-DellBIOSUpdates {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [switch]$Latest,
+        [switch]$Check #This will find the latest BIOS update and compare it to the current BIOS version
+        [switch]$Flash
+        [switch]$DownloadPath
+
+    )
+}
+
+
+#>
