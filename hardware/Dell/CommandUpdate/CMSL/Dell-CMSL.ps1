@@ -806,7 +806,7 @@ function Get-DellDeviceDetails {
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
     
     if ((!($SystemSKUNumber)) -and (!($ModelLike))) {
-        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems, or please provide a SKU"}
         $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     }
 
@@ -818,6 +818,55 @@ function Get-DellDeviceDetails {
     }
     return $DellSKU | Select-Object -Property SystemID,Model
 }
+
+#Function to get a list of BIOS updates for a SKU, install, or download
+#Similar to the Get-HPBIOSUpdate function in HPCMSL
+Function Get-DellBIOSUpdates {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [switch]$Latest,
+        [switch]$Check, #This will find the latest BIOS update and compare it to the current BIOS version
+        [switch]$Flash,
+        [switch]$DownloadPath
+
+    )
+    $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+    if (!($SystemSKUNumber)) {
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems, or please provide a SKU"}
+        $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    }
+    
+    if ($Check){
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
+        else{
+            [Version]$CurrentBIOSVersion = (Get-CimInstance -ClassName Win32_BIOS).SMBIOSBIOSVersion
+            [version]$LatestVersion = (Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest).DellVersion
+            if ($CurrentBIOSVersion -lt $LatestVersion){
+                #Write-Output "Current BIOS Version: $CurrentBIOSVersion"
+                #Write-Output "Latest BIOS Version: $LatestVersion"
+                #Write-Output "New BIOS Update Available"
+                return $false
+            }
+            else {
+                #Write-Output "Current BIOS Version: $CurrentBIOSVersion"
+                #Write-Output "Latest BIOS Version: $LatestVersion"
+                #Write-Output "No New BIOS Update Available"
+                return $true
+            }
+        }
+    }
+    if ($Latest){
+        $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest
+    }
+    else {
+        $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS
+    }
+    return $Updates |Select-Object -Property "PackageID","Name","ReleaseDate","DellVersion" | Sort-Object -Property ReleaseDate -Descending
+}
+
 <# Placeholders for future functions
 
 #Function to get a specific Update with options to download, install or extract
@@ -836,21 +885,7 @@ Function Get-DCUUpdate {
 
 }
 
-#Function to get a list of BIOS updates for a SKU, install, or download
-#Similar to the Get-HPBIOSUpdate function in HPCMSL
-Function Get-DellBIOSUpdates {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$False)]
-        [ValidateLength(4,4)]    
-        [string]$SystemSKUNumber,
-        [switch]$Latest,
-        [switch]$Check #This will find the latest BIOS update and compare it to the current BIOS version
-        [switch]$Flash
-        [switch]$DownloadPath
 
-    )
-}
 
 
 #>
