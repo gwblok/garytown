@@ -830,6 +830,7 @@ Function Get-DellBIOSUpdates {
         [switch]$Latest,
         [switch]$Check, #This will find the latest BIOS update and compare it to the current BIOS version
         [switch]$Flash,
+        [string]$Password,
         [switch]$DownloadPath
 
     )
@@ -857,6 +858,47 @@ Function Get-DellBIOSUpdates {
                 return $true
             }
         }
+    }
+    if ($Flash){
+        #Test for Bitlocker
+        $BitlockerStatus = Get-BitLockerVolume -MountPoint $env:SystemDrive
+        if ($BitlockerStatus -ne $null){
+            if ($BitlockerStatus.ProtectionStatus -eq "On"){
+                Write-Host "Bitlocker is On, Please Suspend Bitlocker before Flashing BIOS"
+                return
+            }
+        }
+        #https://www.dell.com/support/kbdoc/en-us/000136752/command-line-switches-for-dell-bios-updates
+        $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest
+        $Update = $Updates | Select-Object -First 1
+        $UpdatePath = $Update.Path
+        $UpdateFileName = $UpdatePath -split "/" | Select-Object -Last 1
+        $UpdateLocalPath = "$env:windir\temp\$UpdateFileName"
+        Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdatePath -Destination $UpdateLocalPath -Description "Downloading $UpdateFileName" -RetryInterval 60 #-CustomHeaders "User-Agent:Bob" 
+        if (Test-Path -Path $UpdateLocalPath){
+            Write-Host "Installing $UpdateFileName"
+            if ($Password){
+                $BIOSArgs = "/s /l=$env:windir\temp\$UpdateFileName.log /p=$Password"
+            }
+            else {
+                $BIOSArgs = "/s /l=$env:windir\temp\$UpdateFileName.log"
+            }
+            $InstallUpdate = Start-Process -FilePath $UpdateLocalPath -ArgumentList $BIOSArgs -Wait -PassThru
+            Write-Host "Exit Code: $($InstallUpdate.ExitCode)"
+        }
+        else {
+            Write-Host "File Not Found: $UpdateFileName"
+        }
+    }
+    if ($DownloadPath){
+        [void][System.IO.Directory]::CreateDirectory($DownloadPath)
+        $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest
+        $Update = $Updates | Select-Object -First 1
+        $UpdatePath = $Update.Path
+        $UpdateFileName = $UpdatePath -split "/" | Select-Object -Last 1
+        $UpdateLocalPath = "$DownloadPath\$UpdateFileName"
+        Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdatePath -Destination $UpdateLocalPath -Description "Downloading $UpdateFileName" -RetryInterval 60 #-CustomHeaders "User-Agent:Bob"
+        return $UpdateLocalPath
     }
     if ($Latest){
         $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest
