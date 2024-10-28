@@ -900,7 +900,7 @@ Function Get-DellBIOSUpdates {
         $UpdateLocalPath = "$env:windir\temp\$UpdateFileName"
         Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdatePath -Destination $UpdateLocalPath -Description "Downloading $UpdateFileName" -RetryInterval 60 #-CustomHeaders "User-Agent:Bob" 
         if (Test-Path -Path $UpdateLocalPath){
-            Write-Host "Installing $UpdateFileName, logfile: $($UpdateLocalPath.log)"
+            Write-Host "Installing $UpdateFileName, logfile: $($UpdateLocalPath).log"
             if ($Password){
                 $BIOSArgs = "/s /l=$UpdateLocalPath.log /p=$Password"
             }
@@ -911,9 +911,9 @@ Function Get-DellBIOSUpdates {
             Write-Host "Exit Code: $($InstallUpdate.ExitCode)"
             if ($InstallUpdate.ExitCode -ne 0){
                 $ExitInfo = Get-DUPExitInfo -DUPExit $InstallUpdate.ExitCode
-                Write-Verbose "Exit: $($DCUApply.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.DisplayName)"
-                Write-Verbose "Resolution: $($ExitInfo.Description)"
+                Write-Host "Exit: $($InstallUpdate.ExitCode)"
+                Write-Host "Description: $($ExitInfo.DisplayName)"
+                Write-Host "Resolution: $($ExitInfo.Description)"
             }
             return
         }
