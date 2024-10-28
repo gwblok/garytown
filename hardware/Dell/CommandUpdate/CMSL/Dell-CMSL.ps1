@@ -208,6 +208,30 @@ Function Get-DCUExitInfo {
     )
     $DCUExitInfo | Where-Object {$_.ExitCode -eq $DCUExit}
 }
+#https://www.dell.com/support/kbdoc/en-us/000148745/dup-bios-updates
+Function Get-DUPExitInfo {
+    [CmdletBinding()]
+    param(
+        [ValidateRange(0,4000)]
+        [int]$DUPExit
+    )
+    $DUPExitInfo = @(
+        # Generic application return codes
+        @{ExitCode = -1; DisplayName = "Unsuccessful"; Description = "DCU terminating the BIOS execution due to timeout."}
+        @{ExitCode = 0; DisplayName = "Success"; Description = "The operation completed successfully."}
+        @{ExitCode = 1; DisplayName = "Unsuccessful"; Description = "An error occurred during the update process; the update was not successful."}
+        @{ExitCode = 2; DisplayName = "Reboot required"; Description = "Reboot the system to complete the operation."}
+        @{ExitCode = 3; DisplayName = "Soft dependency error"; Description = "You attempted to update to the same version of the software or You tried to downgrade to a previous version of the software."}
+        @{ExitCode = 4; DisplayName = "Hard dependency error"; Description = "The required prerequisite software was not found on your computer."}
+        @{ExitCode = 5; DisplayName = "Qualification error"; Description = "A QUAL_HARD_ERROR cannot be suppressed by using the /f switch."}
+        @{ExitCode = 6; DisplayName = "Rebooting computer"; Description = "The computer is being rebooted."}
+        @{ExitCode = 7; DisplayName = "Password validation error"; Description = "Password not provided or incorrect password provided for BIOS execution"}
+        @{ExitCode = 8; DisplayName = "Requested Downgrade is not allowed."; Description = "Downgrading the BIOS to the version run is not allowed."}
+        @{ExitCode = 8; DisplayName = "RPM verification has failed"; Description = "The Linux DUP framework uses RPM verification to ensure the security of all DUP-dependent Linux utilities. If security is compromised, the framework displays a message and an RPM Verify Legend, and then exits with exit code 9."}
+        @{ExitCode = 8; DisplayName = "Some other error"; Description = "This exit code is for all errors that have not been specified in BIOS exit codes 0-9. That is, battery error, EC error, HW failure, so forth."}
+        )
+    $DUPExitInfo | Where-Object {$_.ExitCode -eq $DUPExit}
+}
 Function Install-DCU {
     [CmdletBinding()]
     param()
@@ -876,18 +900,26 @@ Function Get-DellBIOSUpdates {
         $UpdateLocalPath = "$env:windir\temp\$UpdateFileName"
         Start-BitsTransfer -DisplayName $UpdateFileName -Source $UpdatePath -Destination $UpdateLocalPath -Description "Downloading $UpdateFileName" -RetryInterval 60 #-CustomHeaders "User-Agent:Bob" 
         if (Test-Path -Path $UpdateLocalPath){
-            Write-Host "Installing $UpdateFileName"
+            Write-Host "Installing $UpdateFileName, logfile: $($UpdateLocalPath.log)"
             if ($Password){
-                $BIOSArgs = "/s /l=$env:windir\temp\$UpdateFileName.log /p=$Password"
+                $BIOSArgs = "/s /l=$UpdateLocalPath.log /p=$Password"
             }
             else {
-                $BIOSArgs = "/s /l=$env:windir\temp\$UpdateFileName.log"
+                $BIOSArgs = "/s /l=$UpdateLocalPath.log"
             }
             $InstallUpdate = Start-Process -FilePath $UpdateLocalPath -ArgumentList $BIOSArgs -Wait -PassThru
             Write-Host "Exit Code: $($InstallUpdate.ExitCode)"
+            if ($InstallUpdate.ExitCode -ne 0){
+                $ExitInfo = Get-DUPExitInfo -DUPExit $InstallUpdate.ExitCode
+                Write-Verbose "Exit: $($DCUApply.ExitCode)"
+                Write-Verbose "Description: $($ExitInfo.DisplayName)"
+                Write-Verbose "Resolution: $($ExitInfo.Description)"
+            }
+            return
         }
         else {
             Write-Host "File Not Found: $UpdateFileName"
+            return
         }
     }
     if ($DownloadPath){
