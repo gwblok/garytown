@@ -1,7 +1,7 @@
 <# Gary Blok @gwblok GARYTOWN.COM
 Based on https://github.com/AdamGrossTX/FU.WhyAmIBlocked/blob/master/Get-SafeguardHoldInfo.ps1 by Adam Gross
 
-Modify Export-FUXMLFromSDB.ps1 file, update this line
+Modify Export-FUXMLFromSDB.ps1 file, update this line (should be line 96)
 $SDBFiles = Get-ChildItem -Path "$($AppraiserDataPath)\*.sdb" -ErrorAction SilentlyContinue
 to this:
 $SDBFiles = Get-ChildItem -Path "$($AppraiserDataPath)\*.sdb" -Recurse | Where-Object {$_.Name -notmatch "backup"} -ErrorAction SilentlyContinue
@@ -45,6 +45,7 @@ Registry('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Targ
  - Also updated script to work on first pass correctly
  - Added about 5 more lines in the Settings table.
 24.7.23 - Added 4 lines thanks to @PatchThatBadBoi
+24.10.24 - Added 2 lines thanks to @marceldk
 #>
 
 $SettingsTable = @(
@@ -112,6 +113,7 @@ $SettingsTable = @(
 
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_02_22_03_01_AMD64.cab'; ALTERNATEDATAVERSION = '2585'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_01_AMD64.cab'; ALTERNATEDATAVERSION = '2591'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2606'} # From Marcel @marceldk
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_10_27_03_02_AMD64.cab'; ALTERNATEDATAVERSION = '2614'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2022_11_10_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2616'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_11_14_04_03_AMD64.cab'; ALTERNATEDATAVERSION = '2643'}
@@ -137,8 +139,8 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_04_25_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '2675'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_02_AMD64.cab'; ALTERNATEDATAVERSION = '2676'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_04_AMD64.cab'; ALTERNATEDATAVERSION = '26761'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2691'} # From Marcel @marceldk
 
-	
 
 
 #Other:
@@ -269,7 +271,7 @@ Write-Host "Found $($SafeGuardHoldDatabase.Count) unique Safeguard hold Items, e
 #Compare
 Write-Host "Comparing Previous Online Output to this Run" -ForegroundColor Green
 $OnlineSafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldDataBase.json'
-$OnlineSafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
+$OnlineSafeGuardData = (Invoke-WebRequest -URI $OnlineSafeGuardJSONURL).content | ConvertFrom-Json
 $Compare = Compare-Object -ReferenceObject $OnlineSafeGuardData -DifferenceObject $SafeGuardHoldDatabase
 
 Write-Host "Previous Count: $($OnlineSafeGuardData.count) | Current Count: $($SafeGuardHoldDatabase.Count)" -ForegroundColor Green
