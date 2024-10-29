@@ -357,7 +357,8 @@ function Set-DCUSettings {
     #[string]$reboot = 'Disable',
     [ValidateSet('NotifyAvailableUpdates','DownloadAndNotify','DownloadInstallAndNotify')]
     [string]$scheduleAction = 'DownloadInstallAndNotify',
-    [switch]$scheduleAuto    
+    [switch]$scheduleAuto,
+    [string]$CustomCatalogPath #Path to a custom catalog file for Offline DCU or just to lock in a specific catalog 
     )
     
     $DCUPath = (Get-DCUInstallDetails).DCUPath
@@ -365,7 +366,7 @@ function Set-DCUSettings {
     $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
     Write-Verbose "Log Path: $LogPath"
     $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`""
+    #$ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`""
 
     if ($advancedDriverRestore){
         $advancedDriverRestoreVar = "-advancedDriverRestore=$advancedDriverRestore -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-advancedDriverRestore.log`""
@@ -495,7 +496,18 @@ function Set-DCUSettings {
             }
         }
     }
-
+    if ($CustomCatalogPath){
+        $CustomCatalogPathVar = "-catalogLocation=`"$CustomCatalogPath`" -allowXML=enable"
+        $ArgList = "/configure $CustomCatalogPathVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-CustomCatalogPath.log`""
+        Write-Verbose $ArgList
+        $DCUConfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+        if ($DCUConfig.ExitCode -ne 0){
+            $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+            Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+            Write-Verbose "Description: $($ExitInfo.Description)"
+            Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+        }
+    }
 }
 
 function Invoke-DCU {
@@ -912,8 +924,8 @@ Function Get-DellBIOSUpdates {
             if ($InstallUpdate.ExitCode -ne 0){
                 $ExitInfo = Get-DUPExitInfo -DUPExit $InstallUpdate.ExitCode
                 Write-Host "Exit: $($InstallUpdate.ExitCode)"
-                Write-Host "Description: $($ExitInfo.DisplayName)"
-                Write-Host "Resolution: $($ExitInfo.Description)"
+                Write-Host "Code Name: $($ExitInfo.DisplayName)"
+                Write-Host "Description: $($ExitInfo.Description)"
             }
             return
         }
