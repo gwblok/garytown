@@ -332,7 +332,6 @@ Function Install-DCU {
 
 function Set-DCUSettings {
     [CmdletBinding()]
-    
     param (
     [ValidateSet('Enable','Disable')]
     [string]$advancedDriverRestore,
@@ -351,7 +350,6 @@ function Set-DCUSettings {
     [int]$deferralRestartInterval = 3,
     [ValidateRange(0,9)]
     [int]$deferralRestartCount = 5,
-
 
     #[ValidateSet('Enable','Disable')]
     #[string]$reboot = 'Disable',
@@ -547,13 +545,13 @@ function Invoke-DCU {
 
     #Pick Action, Scan or ApplyUpdates if both are selected, ApplyUpdates will be the action, if neither are selected, Scan will be the action
     $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    if ($scan){$ActionVar = "/scan"}
+    if ($scan){$ActionVar = "/scan -report=$LogPath"}
     if ($applyUpdates){$ActionVar = "/applyUpdates"}
-    else {$ActionVar = "/scan"}
+    else {$ActionVar = "/scan -report=$LogPath"}
     $Action = $ActionVar -replace "/",""
 
     #Create Arugment List for Dell Command Update CLI
-    $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`" -report=$LogPath"
+    $ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`""
     Write-Verbose $ArgList
     $DCUApply = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
     if ($DCUApply.ExitCode -ne 0){
