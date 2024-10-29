@@ -21,9 +21,10 @@ Write-Host -ForegroundColor Green "[+] Function: Get-DCUVersion"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUInstallDetails"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUExitInfo"
 Write-Host -ForegroundColor Green "[+] Function: Install-DCU"
+Write-Host -ForegroundColor Green "[+] Function: Set-DCUSettings"
 Write-Host -ForegroundColor Green "[+] Function: Invoke-DCU"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
 Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
 Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
-
+Write-Host -ForegroundColor Green "[+] Function: Get-DellBIOSUpdates"
 
