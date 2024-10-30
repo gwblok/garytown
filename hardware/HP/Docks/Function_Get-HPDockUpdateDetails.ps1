@@ -218,7 +218,7 @@ function Get-HPDockUpdateDetails {
         $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153736.exe'   #  1.5.22.0 | July 22, 2024
             
         #Thunderbolt G2
-        $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153736.exe'   #  1.0.71.1 RevD | July 29, 2024
+        $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153722.exe'   #  1.0.71.1 RevD | July 29, 2024
             
         #USB-C Dock G5
         $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153754.exe'  #  1.0.22.0 | July 22, 2024
