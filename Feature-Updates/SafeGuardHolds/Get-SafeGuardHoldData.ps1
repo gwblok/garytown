@@ -139,8 +139,11 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_04_25_02_04_AMD64.cab'; ALTERNATEDATAVERSION = '2675'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_02_AMD64.cab'; ALTERNATEDATAVERSION = '2676'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_05_16_01_04_AMD64.cab'; ALTERNATEDATAVERSION = '26761'}
-@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '2691'} # From Marcel @marceldk
-
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_01_AMD64.cab'; ALTERNATEDATAVERSION = '2691'} 
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_02_AMD64.cab'; ALTERNATEDATAVERSION = '26912'} # From Marcel @marceldk
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_03_AMD64.cab'; ALTERNATEDATAVERSION = '26913'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_04_AMD64.cab'; ALTERNATEDATAVERSION = '26914'}
+@{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2024_10_24_04_05_AMD64.cab'; ALTERNATEDATAVERSION = '26915'}
 
 
 #Other:
@@ -155,6 +158,60 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_05_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
 )
+
+<#Experimental
+$GuessingTable = @() 
+#StartDate
+[int]$URLYear = 2024
+[int]$URLMonth = 5
+[int]$URLDay = 16
+[int]$URLExtra1 = 1
+[int]$URLExtra2 = 1
+
+[int]$MaxDay = 31
+[int]$MaxMonth = 12
+[int]$MaxYear = [INT](Get-Date -Format yyyy) + 1
+[int]$MaxExtra1 = 13
+[int]$MaxExtra2 = 5
+
+$FullDate = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)"
+$StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
+$DateStop = get-date -Format yyyy_MM_dd
+
+do {
+    $URLExtra2++
+    $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
+    if ($URLExtra2 -gt $MaxExtra2){
+        $URLExtra2 = 1
+        $URLExtra1++
+        $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
+        if ($URLExtra1 -gt $MaxExtra1){
+            $URLExtra1 = 1
+            $URLDay++
+            $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
+            if ($URLDay -gt $MaxDay){
+                $URLDay = 1
+                $URLMonth++
+                $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
+                if ($URLMonth -gt $MaxMonth){
+                    $URLMonth = 1
+                    $URLYear++
+                    $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
+                }
+            }
+        }
+    }
+    Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow
+    if (test-webconnection -uri "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ErrorAction SilentlyContinue){
+        Write-Host "Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor cyan
+        $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$StartURL_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
+    }
+    $FullDate = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)"
+
+} 
+while ($FullDate -lt $DateStop)
+#while ($URLYear -lt $MaxYear)
+#>
 
 $Path = "C:\Temp"
 $AppriaserRoot = $Path
