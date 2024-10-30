@@ -162,9 +162,9 @@ $SettingsTable = @(
 <#Experimental
 $GuessingTable = @() 
 #StartDate
-[int]$URLYear = 2024
-[int]$URLMonth = 5
-[int]$URLDay = 16
+[int]$URLYear = 2022
+[int]$URLMonth = 1
+[int]$URLDay = 1
 [int]$URLExtra1 = 1
 [int]$URLExtra2 = 1
 
@@ -204,7 +204,7 @@ do {
     Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow
     if (test-webconnection -uri "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ErrorAction SilentlyContinue){
         Write-Host "Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor cyan
-        $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$StartURL_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
+        $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
     }
     $FullDate = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)"
 
