@@ -177,7 +177,7 @@ $SettingsTable = @(
 <#Experimental - Run 1 Time Only to create the JSON file on GitHub
 $GuessingTable = @() 
 #StartDate
-[int]$URLYear = 2022
+[int]$URLYear = 2018
 [int]$URLMonth = 1
 [int]$URLDay = 1
 [int]$URLExtra1 = 1
@@ -201,6 +201,7 @@ do {
         $URLExtra1++
         $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
         if ($URLExtra1 -gt $MaxExtra1){
+            Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow    
             $URLExtra1 = 1
             $URLDay++
             $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"

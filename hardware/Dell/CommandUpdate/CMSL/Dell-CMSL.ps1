@@ -657,6 +657,7 @@ function Invoke-DCUBITS {
         return
     }
 }
+#Note New-DCUOfflineCatalog, I have not tested or confirmed this is working, this is just a concept that I'm trying out ane HOPING it works.
 function New-DCUOfflineCatalog {
     [CmdletBinding()]
     param (
@@ -702,6 +703,7 @@ function New-DCUOfflineCatalog {
         }
     }
 }
+#Note New-DCUCatalogFile, I have not tested or confirmed this is working, this is just a concept that I'm trying out ane HOPING it works.
 function New-DCUCatalogFile {
     [CmdletBinding()]
     param (
