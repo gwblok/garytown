@@ -201,7 +201,7 @@ do {
             }
         }
     }
-    Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow
+    #Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow
     if (test-webconnection -uri "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ErrorAction SilentlyContinue){
         Write-Host "Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor cyan
         $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
@@ -210,7 +210,9 @@ do {
 
 } 
 while ($FullDate -lt $DateStop)
-#while ($URLYear -lt $MaxYear)
+$Path = "C:\Temp"
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+[System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
 #>
 
 $Path = "C:\Temp"
@@ -221,6 +223,9 @@ catch {throw}
 #Download all Appraiser CAB Files
 $SafeGuardHoldCombined = @()
 $Count = 0
+if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" -ErrorAction SilentlyContinue){
+    $SettingsTable = Get-Content -Path "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" | ConvertFrom-Json
+}
 $TotalCount = $SettingsTable.Count
 ForEach ($Item in $SettingsTable){  
     $Count = $Count + 1 
