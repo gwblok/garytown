@@ -9,45 +9,56 @@ $SDBFiles = Get-ChildItem -Path "$($AppraiserDataPath)\*.sdb" -Recurse | Where-O
 
 <#
 requires -modules FU.WhyAmIBlocked - Modify based on notes above.
-Run CMPivot to pull this info from the registry & Add to "SettingsTable" anything that is missing.
-I typically copy and paste the results from CMPivot into Excel only keeping the two columns "ALTERNATEDATALINK & ALTERNATEDATAVERSION"
-  While in Excel, delete duplicates (Data Tab), then Sort on Version
-  I then compare the item in Excel with the Settings Table and add anything new to the Settings Table.
-  If you find anything I don't have, please contact me on Twitter @gwblok or GMAIL - garywblok and send me the ones I don't have listed below.
+
+requires module OSD for the function Test-WebConnection - eventually I should remove this requirement.
+
+THIS IS NO LONGER RELEVANT, but I'm keeping it here for reference.
+        Run CMPivot to pull this info from the registry & Add to "SettingsTable" anything that is missing.
+        I typically copy and paste the results from CMPivot into Excel only keeping the two columns "ALTERNATEDATALINK & ALTERNATEDATAVERSION"
+        While in Excel, delete duplicates (Data Tab), then Sort on Version
+        I then compare the item in Excel with the Settings Table and add anything new to the Settings Table.
+        If you find anything I don't have, please contact me on Twitter @gwblok or GMAIL - garywblok and send me the ones I don't have listed below.
 
 
-#>
-#CMPIVOT Query
-<#
-Registry('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\TargetVersionUpgradeExperienceIndicators\*') | where Property == 'GatedBlockId' and Value != '' and Value != 'None'
-| join kind=inner (
-		Registry('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OneSettings\compat\appraiser\*') 
-		| where Property == 'ALTERNATEDATALINK')
-| join kind=inner (
-		Registry('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OneSettings\compat\appraiser\*') 
-		| where Property == 'ALTERNATEDATAVERSION')
-| project Device,GatedBlockID=Value,ALTERNATEDATALINK=Value1,ALTERNATEDATAVERSION=Value2
-#>
+        #>
+        #CMPIVOT Query
+        <#
+        Registry('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\TargetVersionUpgradeExperienceIndicators\*') | where Property == 'GatedBlockId' and Value != '' and Value != 'None'
+        | join kind=inner (
+                Registry('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OneSettings\compat\appraiser\*') 
+                | where Property == 'ALTERNATEDATALINK')
+        | join kind=inner (
+                Registry('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\OneSettings\compat\appraiser\*') 
+                | where Property == 'ALTERNATEDATAVERSION')
+        | project Device,GatedBlockID=Value,ALTERNATEDATALINK=Value1,ALTERNATEDATAVERSION=Value2
+        >
 
 
 <# Updates
 22.10.28 - Added more rows to the Lookup.
 22.11.22 - Added more rows to the Lookup
 22.11.22 - Rewrote process to be more efficent. 
-  - Removed Unused function
-  - Removed function and just incorporated the code into the script
-  - Skips Items that were already completed in a previous run
+- Removed Unused function
+- Removed function and just incorporated the code into the script
+- Skips Items that were already completed in a previous run
     - Skips downloading and extracting the XML, still parses XML and adds info to the Database.
 23.11.20 - Added more rows for Lookup
 24.3.4 - Added more rows for Lookup
 24.3.4 - Added count per row as verification it is doing something. :-)
 24.6.3 - Modified FU.WhyAmIBlocked Function Export-FUXMLFromSDB.ps1 to ignore SDB files named backup, this resolved errors I was seeing
- - Also updated script to work on first pass correctly
- - Added about 5 more lines in the Settings table.
+- Also updated script to work on first pass correctly
+- Added about 5 more lines in the Settings table.
 24.7.23 - Added 4 lines thanks to @PatchThatBadBoi
 24.10.24 - Added 2 lines thanks to @marceldk
+24.10.30 - reimagine of the idea.  Wrote a block of code that tests all URLS starting Jan 1 2020, to current date.  This will find all the URLs that are valid.  This will be used to update the SettingsTable.  
+- This is commented out by default, as it takes a long time to run.  I will run this once a month to update the SettingsTable.
+- This data has been exported and uploaded to the GitHub Repo.  This will be used to update the SettingsTable.
+- Still need to write code to start with the last date in the SettingsTable and go to current date to find any new URLs.
+    - This will be a future update. | Get Settings TABLE JSON from GitHub, get latest date in the table, start from that date to current date, find any new URLs, add to SettingsTable, export to GitHub.
 #>
 
+
+<# No longer using this method, as it required manual updating as new things were found.
 $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2020_02_20_06_05_AMD64.cab'; ALTERNATEDATAVERSION = '2360'}
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2020_05_07_07_02_AMD64.cab'; ALTERNATEDATAVERSION = '2369'}
@@ -159,7 +170,11 @@ $SettingsTable = @(
 @{ ALTERNATEDATALINK = 'http://adl.windows.com/appraiseradl/2023_08_30_03_05_AMD64.cab'; ALTERNATEDATAVERSION = '08300304'}
 )
 
-<#Experimental
+#>
+
+#This is the new Process to find all URLs that are valid.  This will be used to update the SettingsTable.
+
+<#Experimental - Run 1 Time Only to create the JSON file on GitHub
 $GuessingTable = @() 
 #StartDate
 [int]$URLYear = 2022
@@ -207,13 +222,15 @@ do {
         $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
     }
     $FullDate = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)"
-
 } 
 while ($FullDate -lt $DateStop)
 $Path = "C:\Temp"
 $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 [System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
 #>
+
+# Need to write code here to grab the latest version from GitHub, then start from that date to current date to find any new URLs. - Future Update
+
 
 $Path = "C:\Temp"
 $AppriaserRoot = $Path
@@ -224,7 +241,7 @@ catch {throw}
 $SafeGuardHoldCombined = @()
 $Count = 0
 if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" -ErrorAction SilentlyContinue){
-    $SettingsTable = Get-Content -Path "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" | ConvertFrom-Json
+    $SettingsTable = (Invoke-WebRequest -URI "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json").content | ConvertFrom-Json
 }
 $TotalCount = $SettingsTable.Count
 ForEach ($Item in $SettingsTable){  
