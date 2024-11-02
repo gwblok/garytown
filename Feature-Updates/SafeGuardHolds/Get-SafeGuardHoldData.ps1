@@ -175,6 +175,7 @@ $SettingsTable = @(
 #This is the new Process to find all URLs that are valid.  This will be used to update the SettingsTable.
 
 <#Experimental - Run 1 Time Only to create the JSON file on GitHub
+$Counter = 1
 $GuessingTable = @() 
 #StartDate
 [int]$URLYear = 2018
@@ -219,7 +220,8 @@ do {
     }
     #Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow
     if (test-webconnection -uri "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ErrorAction SilentlyContinue){
-        Write-Host "Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor cyan
+        Write-Host "$Counter Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor cyan
+        $Counter++
         $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
     }
     $FullDate = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)"
