@@ -153,7 +153,7 @@ $StifleRSourceReadme = "Place the StifleR source directory in this folder if inc
 
 #endregion
 
-$StifleR = $true
+$StifleR = $false
 $BranchCache = $true
 $SkipOptionalComponents = $false
 
@@ -183,6 +183,7 @@ else
 {
     $WinPEBuilderPath = $global:PSScriptRoot
 }
+$WinPEBuilderPath = 'C:\WinPEBuilder'
 
 $ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
