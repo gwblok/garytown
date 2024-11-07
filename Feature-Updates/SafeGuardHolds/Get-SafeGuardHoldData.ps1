@@ -190,6 +190,9 @@ $SettingsTable = @(
 if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" -ErrorAction SilentlyContinue){
     $OnlineSettingsTable = (Invoke-WebRequest -URI "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json").content | ConvertFrom-Json
 }
+#Grabbing Old Starting Point for Test
+#$OnlineSettingsTable = (Invoke-WebRequest -URI "https://raw.githubusercontent.com/gwblok/garytown/6ecdae08a9450982854f2ec3d592549644032c11/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json").content | ConvertFrom-Json
+
 if ($OnlineSettingsTable){
     $LatestURL = $OnlineSettingsTable | Sort-Object ALTERNATEDATAVERSION -Descending | Select-Object -First 1
 }
@@ -212,6 +215,7 @@ $FullDate = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDa
 $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
 $DateStop = get-date -Format yyyy_MM_dd
 
+write-host "Starting at $StartURL" -ForegroundColor Yellow
 do {
     $URLExtra2++
     $StartURL = "$($URLYear)_$('{0:d2}' -f [int]$URLMonth)_$('{0:d2}' -f [int]$URLDay)_$('{0:d2}' -f [int]$URLExtra1)_$('{0:d2}' -f [int]$URLExtra2)"
@@ -246,12 +250,17 @@ do {
 } 
 while ($FullDate -lt $DateStop)
 $Path = "C:\Temp"
+$GuessingTable += $OnlineSettingsTable
+$GuessingTable = $GuessingTable | Sort-Object ALTERNATEDATAVERSION -Descending
 $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 [System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
 $LocalGitHubPath = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBookStudio2Pint\garytown\Feature-Updates\SafeGuardHolds"
 if (Test-Path $LocalGitHubPath\SafeGuardHoldURLS.json){
     [System.IO.File]::WriteAllLines("$LocalGitHubPath\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
 }
+
+write-host "Previous Count of URLS: $($OnlineSettingsTable.Count)" -ForegroundColor Yellow
+write-host "Total Count of URLS: $($GuessingTable.Count)" -ForegroundColor Yellow
 #>
 
 # Need to write code here to grab the latest version from GitHub, then start from that date to current date to find any new URLs. - Future Update
