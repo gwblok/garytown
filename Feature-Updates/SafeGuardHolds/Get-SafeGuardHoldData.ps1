@@ -174,9 +174,9 @@ $SettingsTable = @(
 
 #This is the new Process to find all URLs that are valid.  This will be used to update the SettingsTable.
 
-<#Experimental - Run 1 Time Only to create the JSON file on GitHub
-$Counter = 1
-$GuessingTable = @() 
+<#Experimental - Run 1 Time Only to create the JSON file on GitHub - This will start at the beginning. Then skip the next section where it grabs info form GitHub
+
+
 #StartDate
 [int]$URLYear = 2018
 [int]$URLMonth = 1
@@ -184,9 +184,27 @@ $GuessingTable = @()
 [int]$URLExtra1 = 1
 [int]$URLExtra2 = 1
 
+#>
+#This will grab the latest URL from GitHub, and start from that date to current date to find any new URLs.
+
+if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" -ErrorAction SilentlyContinue){
+    $OnlineSettingsTable = (Invoke-WebRequest -URI "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json").content | ConvertFrom-Json
+}
+if ($OnlineSettingsTable){
+    $LatestURL = $OnlineSettingsTable | Sort-Object ALTERNATEDATAVERSION -Descending | Select-Object -First 1
+}
+$Counter = 1
+$GuessingTable = @() 
+
+#StartDate
+[int]$URLYear = $LatestURL.ALTERNATEDATAVERSION.Substring(0,4)
+[int]$URLMonth = $LatestURL.ALTERNATEDATAVERSION.Substring(4,2)
+[int]$URLDay = $LatestURL.ALTERNATEDATAVERSION.Substring(6,2)
+[int]$URLExtra1 = $LatestURL.ALTERNATEDATAVERSION.Substring(8,2)
+[int]$URLExtra2 = $LatestURL.ALTERNATEDATAVERSION.Substring(10,2)
+
 [int]$MaxDay = 31
 [int]$MaxMonth = 12
-[int]$MaxYear = [INT](Get-Date -Format yyyy) + 1
 [int]$MaxExtra1 = 13
 [int]$MaxExtra2 = 5
 
@@ -220,7 +238,7 @@ do {
     }
     #Write-Host "Checking http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor Yellow
     if (test-webconnection -uri "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ErrorAction SilentlyContinue){
-        Write-Host "$Counter Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab" -ForegroundColor cyan
+        Write-Host "$Counter Found http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab | $($StartURL.replace('_',''))" -ForegroundColor cyan
         $Counter++
         $GuessingTable += @{ ALTERNATEDATALINK = "http://adl.windows.com/appraiseradl/$($StartURL)_AMD64.cab"; ALTERNATEDATAVERSION = "$($StartURL.replace('_',''))" }
     }
@@ -230,6 +248,10 @@ while ($FullDate -lt $DateStop)
 $Path = "C:\Temp"
 $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 [System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
+$LocalGitHubPath = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBookStudio2Pint\garytown\Feature-Updates\SafeGuardHolds"
+if (Test-Path $LocalGitHubPath\SafeGuardHoldURLS.json){
+    [System.IO.File]::WriteAllLines("$LocalGitHubPath\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
+}
 #>
 
 # Need to write code here to grab the latest version from GitHub, then start from that date to current date to find any new URLs. - Future Update
