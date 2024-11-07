@@ -369,7 +369,9 @@ ForEach ($SafeGuardHoldID in $SafeGuardHoldIDs){
 #$SafeGuardHoldDatabase | ConvertTo-Json -Depth 10 | Out-File "$Path\SafeGuardHoldDataBase.json" -Encoding utf8
 $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
 [System.IO.File]::WriteAllLines("$Path\SafeGuardHoldDataBase.json", ($SafeGuardHoldDatabase | ConvertTo-Json), $Utf8NoBomEncoding)
-
+if (Test-Path $LocalGitHubPath\SafeGuardHoldDataBase.json){
+    [System.IO.File]::WriteAllLines("$LocalGitHubPath\SafeGuardHoldDataBase.json", ($SafeGuardHoldDatabase | ConvertTo-Json), $Utf8NoBomEncoding)
+}
 Write-Host "Found $($SafeGuardHoldDatabase.Count) unique Safeguard hold Items, exported to $Path\SafeGuardHoldDataBase.json" -ForegroundColor Green
 
 #Compare
