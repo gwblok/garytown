@@ -176,7 +176,12 @@ Function Remove-OldOSDModulesInWinPE {
     #Clear out Extra OSD modules
     $Folder = Get-ChildItem "$MountPath\Program Files\WindowsPowerShell\Modules\OSD"
     if ($Folder.Count -gt 1){
-        $LatestFolder = $Folder | Sort-Object -Property Name | Select-Object -Last 1
+        $Versions = @()
+        foreach ($Item in $Folder.Name){
+            $Versions += [Version]$Item
+        }
+        $LatestVersion = $Versions | Sort-Object | Select-Object -Last 1
+        $LatestFolder = $Folder | Where-Object {$_.Name -match $LatestVersion.ToString()}
         write-host "Latest Module: $($LatestFolder.Name)" -ForegroundColor Green
         Foreach ($Item in $Folder){
          if ( $Item.Name -ne $LatestFolder.Name){
