@@ -356,6 +356,7 @@ if ($WinRE){
 }
 else{
     Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL
+    Edit-OSDCloudWinPE -StartURL 'https://hope.garytown.com'
 }
 New-OSDCloudISO
 
