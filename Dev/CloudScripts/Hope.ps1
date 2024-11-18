@@ -75,6 +75,13 @@ if ($env:SystemDrive -eq 'X:') {
     Set-SetupCompleteCreateStartHOPEonUSB
     Write-Host -ForegroundColor Green "Mapping Drive W: to \\WD1TB\OSD"
     net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
+    start-sleep -s 2
+    if (Test-Path -Path W:\OSDCloud){
+        Write-Host -ForegroundColor Green "Successfully Mapped Drive"
+    }
+    else{
+        Write-Host -ForegroundColor Red "Failed to Map Drive"
+    }
     
     Write-Host -ForegroundColor Green "Starting win11.garytown.com"
     iex (irm win11.garytown.com)
