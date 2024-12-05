@@ -6,8 +6,8 @@ if ($Manufacturer -match "Lenovo"){
     Write-Host -ForegroundColor Green "[+] Function Set-LenovoVantage"
     Write-Host -ForegroundColor Green "[+] Function Install-LenovoSystemUpdater"
     Write-Host -ForegroundColor Green "[+] Function Invoke-LenovoSystemUpdater"
-    Write-Host -ForegroundColor Green "[+] Function Set-LenovoBackgoundMonitorDisabled"
-    Function Set-LenovoBackgoundMonitorDisabled {
+    Write-Host -ForegroundColor Green "[+] Function Set-LenovoBackgroundMonitorDisabled"
+    Function Set-LenovoBackgroundMonitorDisabled {
       $LenovoBackgroundTask = Get-ScheduledTask -TaskName "Background monitor" -ErrorAction SilentlyContinue
       if ($LenovoBackgroundTask){
           $LenovoBackgroundTask | Disable-ScheduledTask 

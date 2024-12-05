@@ -250,17 +250,23 @@ do {
 } 
 while ($FullDate -lt $DateStop)
 $Path = "C:\Temp"
-$GuessingTable += $OnlineSettingsTable
-$GuessingTable = $GuessingTable | Sort-Object ALTERNATEDATAVERSION -Descending
-$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-[System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
-$LocalGitHubPath = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBookStudio2Pint\garytown\Feature-Updates\SafeGuardHolds"
-if (Test-Path $LocalGitHubPath\SafeGuardHoldURLS.json){
-    [System.IO.File]::WriteAllLines("$LocalGitHubPath\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
+if ($GuessingTable.count -ge 1){
+    Write-Host "Found $($GuessingTable.Count) URLs" -ForegroundColor Green
+    Write-Host "Combining Previous SettingsTable with New URLs" -ForegroundColor Green
+    $GuessingTable += $OnlineSettingsTable
+    $GuessingTable = $GuessingTable | Sort-Object ALTERNATEDATAVERSION -Descending
+    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+    Write-Host "Exporting to SafeGuardHoldURLS.json File" -ForegroundColor Green
+    [System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
+    $LocalGitHubPath = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBookStudio2Pint\garytown\Feature-Updates\SafeGuardHolds"
+    if (Test-Path $LocalGitHubPath\SafeGuardHoldURLS.json){
+        Write-Host "Exporting to Local GitHub SafeGuardHoldURLS.json File" -ForegroundColor Green
+        [System.IO.File]::WriteAllLines("$LocalGitHubPath\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
+    }
 }
 
-write-host "Previous Count of URLS: $($OnlineSettingsTable.Count)" -ForegroundColor Yellow
-write-host "Total Count of URLS: $($GuessingTable.Count)" -ForegroundColor Yellow
+write-host "Previous Count of URLS: $($OnlineSettingsTable.Count)" -ForegroundColor Cyan
+write-host "Total Count of URLS: $($GuessingTable.Count)" -ForegroundColor Cyan
 #>
 
 # Need to write code here to grab the latest version from GitHub, then start from that date to current date to find any new URLs. - Future Update
@@ -277,11 +283,13 @@ $Count = 0
 if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" -ErrorAction SilentlyContinue){
     $SettingsTable = (Invoke-WebRequest -URI "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json").content | ConvertFrom-Json
 }
+$SettingsTable = $SettingsTable | Sort-Object -Property ALTERNATEDATAVERSION
 $TotalCount = $SettingsTable.Count
 ForEach ($Item in $SettingsTable){  
     $Count = $Count + 1 
     $AppraiserURL = $Item.ALTERNATEDATALINK
     $AppraiserVersion = $Item.ALTERNATEDATAVERSION
+    $AppraiserDate = $AppraiserVersion.Substring(0,4) + "-" + $AppraiserVersion.Substring(4,2) + "-" + $AppraiserVersion.Substring(6,2)
     Write-Host "---------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "Starting on Version $AppraiserVersion, $Count of $TotalCount Items" -ForegroundColor Magenta
     $OutFilePath = "$AppriaserRoot\AppraiserData\$AppraiserVersion"
@@ -311,6 +319,7 @@ ForEach ($Item in $SettingsTable){
             $GatedBlockOSU | ForEach-Object {
                 @{
                     AppName       = $_.App_Name.'#text'
+                    URLDate       = $AppraiserDate
                     BlockType     = $_.Data[0].Data_String.'#text'
                     SafeguardId   = $_.Data[1].Data_String.'#text'
                     NAME          = $_.NAME.'#text'
@@ -329,6 +338,7 @@ ForEach ($Item in $SettingsTable){
             $GatedBlockMIB | ForEach-Object {
                 @{
                     AppName         = $_.App_Name.'#text'
+                    URLDate         = $AppraiserDate
                     BlockType       = $_.Data[0].Data_String.'#text'
                     SafeguardId     = $_.Data[1].Data_String.'#text'
                     APP_NAME        = $_.APP_NAME.'#text'

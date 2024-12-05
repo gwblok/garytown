@@ -82,7 +82,13 @@ if (Test-HPIASupport){
 if ($Manufacturer -match "Lenovo") {
     #Set Lenovo BIOS Settings to what I want:
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/Manage-LenovoBiosSettings.ps1)
-    Manage-LenovoBIOSSettings -SetSettings
+    try {
+        Manage-LenovoBIOSSettings -SetSettings
+    }
+    catch {
+        <#Do this if a terminating exception happens#>
+    }
+    
 }
 
 
