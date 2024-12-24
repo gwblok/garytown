@@ -119,7 +119,9 @@ Function Remove-OldOSDModulesLocalMachine {
     #Clean Up OSD Modules - Non-Current on Local Machine
     $Folder = Get-ChildItem 'C:\Program Files\WindowsPowerShell\Modules\OSD'
     if ($Folder.Count -gt 1){
-        $LatestFolder = $Folder | Sort-Object -Property Name | Select-Object -Last 1
+        $LatestFolderVer = [VERSION[]]($Folder).Name | Sort-Object | Select-Object -Last 1
+        $LatestFolder = $Folder | Where-Object {$_.Name -match $LatestFolderVer.ToString()}
+
         write-host "Latest Module: $($LatestFolder.Name)" -ForegroundColor Green
         Foreach ($Item in $Folder){
          if ( $Item.Name -ne $LatestFolder.Name){
