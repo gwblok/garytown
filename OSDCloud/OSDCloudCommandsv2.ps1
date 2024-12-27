@@ -1,4 +1,11 @@
 #region Functions
+Function Remove-OSDCloudWorkSpaceMediaLanguageExtras {
+    if (Test-Path -Path "$(Get-OSDCloudWorkspace)\Media"){
+        $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
+        $Folders | Remove-Item -Force -Recurse
+    }
+}
+
 
 Function Set-WiFi {
     #https://www.cyberdrain.com/automating-with-powershell-deploying-wifi-profiles/
@@ -250,6 +257,8 @@ $Lang = ($ADKWinPE.FullName | Split-Path) | Split-Path -Leaf
 
 try {
     [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\Patches\CU\$OSNameNeeded")
+    [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\AKDWinPEWIM")
+    
 }
 catch {throw}
 
@@ -343,8 +352,10 @@ else {
 }
 
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
-
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
+Remove-OSDCloudWorkSpaceMediaLanguageExtras
+
+
 
 #Edit-OSDCloudWinPE -CloudDriver HP,USB -Add7Zip -PSModuleInstall HPCMSL #7Zip is already in template now
 
@@ -369,17 +380,17 @@ Set-OSDCloudTemplate -Name OSDCloudARM64
 New-OSDCloudWorkspace -WorkspacePath $OSDCloudWorkspaceARM64
 
 
-#Cleanup
-if (Test-Path -Path "$(Get-OSDCloudWorkspace)\Media"){
-    $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
-    $Folders | Remove-Item -Force -Recurse
-}
 #Cleanup Languages
+Remove-OSDCloudWorkSpaceMediaLanguageExtras
+
+
+#Cleanup Languages - Different Method
+<#
 $KeepTheseDirs = @('boot','efi','en-us','sources','fonts','resources')
 Get-ChildItem "$(Get-OSDCloudWorkspace)\Media" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
 Get-ChildItem "$(Get-OSDCloudWorkspace)\Media\Boot" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
 Get-ChildItem "$(Get-OSDCloudWorkspace)\Media\EFI\Microsoft\Boot" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
-
+#>
 
 New-OSDCloudWorkSpaceSetupCompleteTemplate
 Edit-OSDCloudWinPE -DriverPath "C:\OSDCloudARM64\WinPEDrivers\SurfaceProX\FileRepository"
@@ -418,3 +429,14 @@ Dismount-WindowsImage -Path $MountPath -Save
 
 #Update Flash Drive
 Update-OSDCloudUSB
+
+
+#Troubleshooting
+
+#Copy the default WinPE & Apply the CU
+Copy-Item -Path $ADKWinPE.FullName -Destination "$OSDCloudRootPath\AKDWinPEWIM\winpe.wim" -Force
+Mount-WindowsImage -Path $MountPath -ImagePath "$OSDCloudRootPath\AKDWinPEWIM\winpe.wim" -Index 1
+Add-WindowsPackage -PackagePath $PatchPath -Path $MountPath -LogLevel Debug -Verbose
+Dismount-WindowsImage -Path $MountPath -Save
+
+Get-WindowsImage -ImagePath "$OSDCloudRootPath\AKDWinPEWIM\winpe.wim" -Index 1
