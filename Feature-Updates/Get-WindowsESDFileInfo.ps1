@@ -162,7 +162,7 @@ if ($Check){
 }
 else {
     #Clean Up Results
-    $x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
+    #$x64ESDInfo = $ESDInfo | Where-Object {$_.Architecture -eq "x64"}
     #$x64ESDInfo = $x64ESDInfo | Where-Object {$_.Edition -eq "Professional" -or $_.Edition -eq "Education" -or $_.Edition -eq "Enterprise" -or $_.Edition -eq "Professional" -or $_.Edition -eq "HomePremium"}
     #return $ESDInfo | Where-Object {$_.Architecture -eq "x64" -or $_.Architecture -eq "ARM64"}
 }
