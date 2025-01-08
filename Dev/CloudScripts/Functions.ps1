@@ -594,8 +594,10 @@ Write-Host -ForegroundColor Green "[+] Install-WMIExplorer"
 function Install-WMIExplorer {
 	iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-WMIExplorer-Remediate.ps1)
 }
+Write-Host -ForegroundColor Green "[+] Install-ZoomIt"
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/Install-ZoomIt.ps1)
 
-Write-Host -ForegroundColor Green "[+] Install-CMTrace"
+    Write-Host -ForegroundColor Green "[+] Install-CMTrace"
 function Install-CMTrace {
 
     <#
