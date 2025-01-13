@@ -213,6 +213,8 @@ $IsTemplateWinRE = $false
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
 
 
+
+
 $CurrentModule = Get-InstalledModule -name OSD -ErrorAction SilentlyContinue
 if ($CurrentModule){
     $AvailbleModule = Find-Module -Name "OSD"
@@ -311,7 +313,6 @@ New-OSDCloudWorkSpaceSetupCompleteTemplate
 
 #>
 
-
 if ($IsTemplateWinRE){
     $templateName = "OSDCloud-$($OSDisplayNeeded)-WinRE"
     $WinRE = $True
@@ -321,8 +322,11 @@ else{
     $WinRE = $false
 }
 
+Write-Host -ForegroundColor Magenta "Template Name: $templateName"
 $WorkSpacePath = "C:\$TemplateName"
 $MountPath = "C:\Mount"
+
+
 # Clean up and create Mount directory
 If (Test-Path $MountPath) {
     Write-Host "Cleaning up previous run: $MountPath" -ForegroundColor DarkGray
@@ -334,7 +338,9 @@ New-Item $MountPath -ItemType Directory -Force -ErrorAction SilentlyContinue | O
 
 #$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
 
+Write-Host -ForegroundColor Magenta "Creating OSDCloud Template for $OSNameNeeded"
 if ($AvailableCU){
+    Write-Host "  Including CU & 7Zip in Boot Media" -ForegroundColor Cyan
     if ($WinRE){
         New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip -WinRE:$WinRE
     }
@@ -343,6 +349,7 @@ if ($AvailableCU){
     }
 }
 else {
+    Write-Host "  Including 7Zip in Boot Media" -ForegroundColor Cyan
     if ($WinRE){
         New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
     }
@@ -351,6 +358,7 @@ else {
     }
 }
 
+Write-Host "Creating OSDCloud WorkSpace: $WorkSpacePath" -ForegroundColor Magenta
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 Remove-OSDCloudWorkSpaceMediaLanguageExtras
@@ -412,7 +420,7 @@ Mount-WindowsImage -Path $MountPath -ImagePath "$(Get-OSDCloudWorkspace)\Media\s
 Add-Opera -MountPath "$MountPath" -BuildPath "c:\windows\temp\Opera"
 
 #Copy Development Files - Overwrite production
-$GitHubFolder = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBook"
+$GitHubFolder = "C:\Users\GaryBlok\OneDrive - garytown\GitHub"
 $OSDMountedModuleFolder = Get-ChildItem "$MountPath\Program Files\WindowsPowerShell\Modules\OSD"
 $OSDMountedModule = "$($OSDMountedModuleFolder.FullName)"
 
@@ -420,7 +428,9 @@ $OSDMountedModule = "$($OSDMountedModuleFolder.FullName)"
 write-host "Updating Module in Boot WIM from Dev Source" -ForegroundColor Green
 if (($GitHubFolder) -and ($OSDMountedModule) -and ($MountPath)){
     copy-item "$GitHubFolder\OSD\*"   "$OSDMountedModule" -Force -Recurse
-    Copy-Item "C:\OSDCloudWinPE\Config\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
+    if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
+        Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
+    }
 }
 #Update Local Module
 
