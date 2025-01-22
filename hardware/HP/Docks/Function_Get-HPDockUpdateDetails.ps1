@@ -74,6 +74,7 @@ function Get-HPDockUpdateDetails {
     24.07.18.02 - updated softpaqs info for USB-C G5, USB-C G5 Essential, USB-C Universal Dock G2, and Thunderbolt G4
     24.09.05.01 - adding switch for IntuneApp to assist in deploying the updates via Intune.
     24.10.27.01 - updated USB-C G5 Dock Firmware
+    25.01.21.01 - updated USB-C G5 Essential Dock Firmware, USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, and Thunderbolt G4 Firmware URLs
 
     .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -212,19 +213,19 @@ function Get-HPDockUpdateDetails {
             
         # **** Hardcode URLs in case of no CMSL installed: ****
         #USB-C G5 Essential Dock
-        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp152001-152500/sp152201.exe'  #  01.00.12.00 | April 16, 2024
+        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155374.exe'  #  01.00.12.00 Rev.C | Oct 9, 2024
             
         #Thunderbolt G4
-        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153736.exe'   #  1.5.22.0 | July 22, 2024
+        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155361.exe'   #  1.5.25.0 Rev.B | Oct 7, 2024
             
         #Thunderbolt G2
         $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153722.exe'   #  1.0.71.1 RevD | July 29, 2024
             
         #USB-C Dock G5
-        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153754.exe'  #  1.0.22.0 | July 22, 2024
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp156001-156500/sp156379.exe'  #  1.0.23.0 Rev.B | Dec 17, 2024
             
         #USB-C Universal Dock G2
-        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp151501-152000/sp151932.exe'  #  1.0.20.0 | Mar 25, 2024
+        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155388.exe'  #  1.1.22.0 Rev.B | Oct 8, 2024
             
         #USB-C Dock G4
         $Url_UsbG4 = 'https://ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
