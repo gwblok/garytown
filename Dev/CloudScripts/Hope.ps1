@@ -42,6 +42,39 @@ function Set-SetupCompleteCreateStartHOPEonUSB {
     Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
 }
 
+function Set-SetupCompleteCreateStartHOPEonCDrive {
+    
+    $SetupCompletePath = "C:\OSDCloud\Config\Scripts\SetupComplete"
+    $ScriptsPath = $SetupCompletePath
+
+    if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath -ItemType Directory -Force}
+
+    $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
+
+
+    Write-Output "Creating $($RunScript.Script) Files"
+
+    $BatFilePath = "$($RunScript.Path)\$($RunScript.batFile)"
+    $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
+            
+    #Create Batch File to Call PowerShell File
+    if (Test-Path -Path $PSFilePath){
+        copy-item $PSFilePath -Destination "$ScriptsPath\SetupComplete.ps1.bak"
+    }        
+    New-Item -Path $BatFilePath -ItemType File -Force
+    $CustomActionContent = New-Object system.text.stringbuilder
+    [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1')
+    Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
+
+    #Create PowerShell File to do actions
+
+    New-Item -Path $PSFilePath -ItemType File -Force
+    Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
+    Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+    Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
+    Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
+}
+
 Function Restore-SetupCompleteOriginal {
     $OSDCloudUSB = Get-Volume.usb | Where-Object {($_.FileSystemLabel -match 'OSDCloud') -or ($_.FileSystemLabel -match 'BHIMAGE')} | Select-Object -First 1
     $SetupCompletePath = "$($OSDCloudUSB.DriveLetter):\OSDCloud\Config\Scripts\SetupComplete"
@@ -72,7 +105,9 @@ Set-ExecutionPolicy Bypass -Force
 #WinPE Stuff
 if ($env:SystemDrive -eq 'X:') {
     #Create Custom SetupComplete on USBDrive, this will get copied and run during SetupComplete Phase thanks to OSD Function: Set-SetupCompleteOSDCloudUSB
-    Set-SetupCompleteCreateStartHOPEonUSB
+    
+    #Doing this now with a new process that will create the files right on C, skipping the need to use a USB Drive... not sure why I was doing that before.
+    #Set-SetupCompleteCreateStartHOPEonUSB
     Write-Host -ForegroundColor Green "Mapping Drive W: to \\WD1TB\OSD"
     net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
     start-sleep -s 2
@@ -88,7 +123,11 @@ if ($env:SystemDrive -eq 'X:') {
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
     #new-item -Path C:\OSDCloud\configs -Name hope.JSON -ItemType file
-    Restore-SetupCompleteOriginal
+    #Restore-SetupCompleteOriginal
+    
+    #Just go ahead and create the Setup Complete files on the C Drive in the correct Location now that OSDCloud is done in WinPE
+    Set-SetupCompleteCreateStartHOPEonCDrive
+
     restart-computer
 }
 

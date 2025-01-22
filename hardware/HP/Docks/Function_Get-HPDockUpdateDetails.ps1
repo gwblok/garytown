@@ -115,7 +115,7 @@ function Get-HPDockUpdateDetails {
     
     .Example
     # Use Script with Task Sequence
-    Get-HPDockUpdateDetails -CMPackage -Update - This will look for a Package that was downloaded and stored in Varaible HPDOCK
+    Get-HPDockUpdateDetails -CMPackage -Update - This will look for a Package that was downloaded and stored in Variable HPDOCK
     
     .Example
     # Update the Dock's firmware to the latest version HPCMSL (if installed) will find completely silent to end user - Stage the content on the dock to install at disconnect
