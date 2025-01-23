@@ -26,6 +26,11 @@
 #    - Downloads the DCU installer and installs it silently.
 #    - Displays information about the update if a new version is available.
 
+# 5.5 Get-DCUAppUpdates:
+#    - Updated Replacement for Install-DCU
+#    - Checks for DCU Application Updates in Catalog & Provides Updates
+#    - with -Install, it will install the latest once it found.
+
 # 6. Set-DCUSettings:
 #    - Configures settings for Dell Command Update (DCU) using the dcu-cli.exe utility.
 #    - Supports settings like advancedDriverRestore, autoSuspendBitLocker, installationDeferral, systemRestartDeferral, scheduleAction, and scheduleAuto.
