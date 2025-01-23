@@ -271,9 +271,9 @@ Function Install-DCU {
         $DCUAppsAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "APAC"}
         #$AppNames = $DCUAppsAvailable.name.display.'#cdata-section' | Select-Object -Unique
         
-        #Using Universal Version:
-        $AppDCUVersion = ([Version[]]$Version = ($DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.path -match 'universal'}).vendorVersion) | Sort-Object | Select-Object -Last 1
-        $AppDCU = $DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.path -match 'universal' -and $_.vendorVersion -eq $AppDCUVersion}
+        #Using Universal Version: - REmoved Requirement on Universal Version, as it wasn't staying as updated. 25.1.23
+        $AppDCUVersion = ([Version[]]$Version = ($DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64"}).vendorVersion) | Sort-Object | Select-Object -Last 1
+        $AppDCU = $DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.vendorVersion -eq $AppDCUVersion}
         if ($AppDCU.Count -gt 1){
             $AppDCU = $AppDCU | Select-Object -First 1
         }
