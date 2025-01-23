@@ -162,7 +162,7 @@ if ($env:SystemDrive -eq 'X:') {
     
     #Doing this now with a new process that will create the files right on C, skipping the need to use a USB Drive... not sure why I was doing that before.
     #Set-SetupCompleteCreateStartHOPEonUSB
-    if (Test-NetConnection -ComputerName wd1tb -ErrorAction SilentlyContinue){
+    if (Test-Connection -ComputerName wd1tb -ErrorAction SilentlyContinue){
         Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
         net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
         start-sleep -s 2
