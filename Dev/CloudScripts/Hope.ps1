@@ -108,7 +108,7 @@ Function Restore-SetupCompleteOriginal {
 
 function Create-SetupCompleteOSDCloudFiles{
     
-    $SetupCompletePath = "C:\OSDCloud\Config\Scripts\SetupComplete"
+    $SetupCompletePath = "C:\OSDCloud\Scripts\SetupComplete"
     $ScriptsPath = $SetupCompletePath
 
     if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath -ItemType Directory -Force | Out-Null}
