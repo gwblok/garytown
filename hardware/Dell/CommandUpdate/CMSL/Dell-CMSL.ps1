@@ -271,7 +271,7 @@ Function Install-DCU {
         $DCUAppsAvailable = $XMLIndexCAB.Manifest.SoftwareComponent | Where-Object {$_.ComponentType.value -eq "APAC"}
         #$AppNames = $DCUAppsAvailable.name.display.'#cdata-section' | Select-Object -Unique
         
-        #Using Universal Version: - REmoved Requirement on Universal Version, as it wasn't staying as updated. 25.1.23
+        #Using Universal Version:
         $AppDCUVersion = ([Version[]]$Version = ($DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64"}).vendorVersion) | Sort-Object | Select-Object -Last 1
         $AppDCU = $DCUAppsAvailable | Where-Object {$_.path -match 'command-update' -and $_.SupportedOperatingSystems.OperatingSystem.osArch -match "x64" -and $_.vendorVersion -eq $AppDCUVersion}
         if ($AppDCU.Count -gt 1){
@@ -329,6 +329,82 @@ Function Install-DCU {
         }
     }
 }
+
+Function Get-DCUAppUpdates {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [switch]$Latest,
+        [switch]$Install
+    )
+    
+    $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+    if (!($SystemSKUNumber)) {
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
+        $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    }
+    
+    $Apps = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType application | Select-Object -Property PackageID, Name, ReleaseDate, DellVersion, VendorVersion, Path
+    $CommandUpdateApps = $Apps | Where-Object {$_.Name -like "*Command | Update*"} | Sort-Object -Property VendorVersion
+    $CommandUpdateAppsLatest = $CommandUpdateApps | Select-Object -Last 1
+    if ($CommandUpdateAppsLatest){
+        if ($Install){
+            [Version]$DCUVersion = $CommandUpdateAppsLatest.vendorVersion
+            Write-Output "Found DCU Version $DCUVersion"
+            $DCUVersionInstalled = Get-DCUVersion
+            If ($DCUVersionInstalled -ne $false){[Version]$CurrentVersion = $DCUVersionInstalled}
+            Else {[Version]$CurrentVersion = 0.0.0.0}
+            if ($DCUVersion -gt $CurrentVersion){
+                $temproot = "$env:windir\temp"
+                $DellCabDownloadsPath = "$temproot\DellCabDownloads"
+                if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
+                $LogFilePath = "$env:ProgramData\CMSL\Logs"
+                $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
+                $TargetLink = $CommandUpdateAppsLatest.path
+                $TargetFilePathName = "$($DellCabDownloadsPath)\$($TargetFileName)"
+
+                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if (!(Test-Path $TargetFilePathName)){
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                #Confirm Download
+                if (Test-Path $TargetFilePathName){
+                    $LogFileName = ($TargetFilePathName.replace(".exe",".log")).Replace(".EXE",".log")
+                    $Arguments = "/s /l=$LogFileName"
+                    Write-Output "Starting DCU Install"
+                    write-output "Log file = $LogFileName"
+                    $Process = Start-Process "$TargetFilePathName" $Arguments -Wait -PassThru
+                    write-output "Update Complete with Exitcode: $($Process.ExitCode)"
+                    If($Process -ne $null -and $Process.ExitCode -eq '2'){
+                        Write-Verbose "Reboot Required"
+                    }
+                }
+                else{
+                    Write-Verbose " FAILED TO DOWNLOAD DCU"
+                }
+            }
+            else{
+                Write-Output "Installed DCU: $CurrentVersion, Skipping Install"
+
+            }
+        }
+        else{
+            if ($Latest){
+                Return $CommandUpdateAppsLatest
+            }
+            else{
+                return $CommandUpdateApps
+            }
+        }
+    }
+    else{
+        return "No DCU Found"
+    }
+
+}
+
 
 function Set-DCUSettings {
     [CmdletBinding()]
