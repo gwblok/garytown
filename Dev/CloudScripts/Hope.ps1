@@ -6,6 +6,59 @@ Creates Setup Complete Files
 $ScriptName = 'hope.garytown.com'
 $ScriptVersion = '25.1.22.1'
 
+
+    #region Initialization
+    function Write-DarkGrayDate {
+        [CmdletBinding()]
+        param (
+            [Parameter(Position = 0)]
+            [System.String]
+            $Message
+        )
+        if ($Message) {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
+        }
+        else {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
+        }
+    }
+    function Write-DarkGrayHost {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $true, Position = 0)]
+            [System.String]
+            $Message
+        )
+        Write-Host -ForegroundColor DarkGray $Message
+    }
+    function Write-DarkGrayLine {
+        [CmdletBinding()]
+        param ()
+        Write-Host -ForegroundColor DarkGray '========================================================================='
+    }
+    function Write-SectionHeader {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $true, Position = 0)]
+            [System.String]
+            $Message
+        )
+        Write-DarkGrayLine
+        Write-DarkGrayDate
+        Write-Host -ForegroundColor Cyan $Message
+    }
+    function Write-SectionSuccess {
+        [CmdletBinding()]
+        param (
+            [Parameter(Position = 0)]
+            [System.String]
+            $Message = 'Success!'
+        )
+        Write-DarkGrayDate
+        Write-Host -ForegroundColor Green $Message
+    }
+    #endregion
+
 iex (irm functions.garytown.com)
 #region functions
 <#
@@ -89,8 +142,7 @@ function Create-SetupCompleteOSDCloudFiles{
 
 
 
-
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+Write-SectionHeader -Message "Starting $ScriptName $ScriptVersion"
 write-host "Added Function Create-SetupCompleteOSDCloudFiles" -ForegroundColor Green
 
 
@@ -110,17 +162,18 @@ if ($env:SystemDrive -eq 'X:') {
     
     #Doing this now with a new process that will create the files right on C, skipping the need to use a USB Drive... not sure why I was doing that before.
     #Set-SetupCompleteCreateStartHOPEonUSB
-    Write-Host -ForegroundColor Green "Mapping Drive W: to \\WD1TB\OSD"
-    net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
-    start-sleep -s 2
-    if (Test-Path -Path W:\OSDCloud){
-        Write-Host -ForegroundColor Green "Successfully Mapped Drive"
+    if (Test-NetConnection -ComputerName wd1tb -ErrorAction SilentlyContinue){
+        Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
+        net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
+        start-sleep -s 2
+        if (Test-Path -Path W:\OSDCloud){
+            Write-Host -ForegroundColor Green "Successfully Mapped Drive"
+        }
+        else{
+            Write-Host -ForegroundColor Red "Failed to Map Drive"
+        }
     }
-    else{
-        Write-Host -ForegroundColor Red "Failed to Map Drive"
-    }
-    
-    Write-Host -ForegroundColor Green "Starting win11.garytown.com"
+    Write-SectionHeader -Message "Starting win11.garytown.com"
     iex (irm win11.garytown.com)
 
     #Create Marker so it knows this is a "HOPE" computer - No longer need thanks to the custom setup complete above.
@@ -159,7 +212,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Set DO
     #Set-DOPoliciesGPORegistry
     
-    Write-Host -ForegroundColor Gray "**Running Test.garytown.com**" 
+    Write-SectionHeader -Message "**Running Test.garytown.com**" 
     iex (irm test.garytown.com)
      
     #Set Time Zone to Automatic Update
@@ -172,7 +225,7 @@ if ($env:SystemDrive -ne 'X:') {
     #Enable "Notify me when a restart is required to finish updating"
     New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name RestartNotificationsAllowed2 -PropertyType dword -Value 1
 
-    Write-Host -ForegroundColor Gray "**Setting Default Profile Personal Preferences**" 
+    Write-SectionHeader -Message  "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
     
     #Try to prevent crap from auto installing
@@ -184,6 +237,7 @@ if ($env:SystemDrive -ne 'X:') {
     Set-Win11ReqBypassRegValues
     
     #Windows Updates
+    Write-SectionHeader -Message "**Running MS Updates**"
     Write-Host -ForegroundColor Gray "**Running Defender Updates**"
     Update-DefenderStack
     Write-Host -ForegroundColor Gray "**Running Windows Updates**"
@@ -199,10 +253,10 @@ if ($env:SystemDrive -ne 'X:') {
     #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
     #Modified Version of Andrew's Debloat Script
-    Write-Host -ForegroundColor Gray "**Running Debloat Script**" 
+    Write-SectionHeader -Message "**Running Debloat Script**" 
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
-    #Lenovo Updates
+    #OEM Updates
     try {
         iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/LenovoUpdate.ps1)
     }
@@ -217,5 +271,5 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
 
-    Write-Host -ForegroundColor Gray "**Completed Hope.garytown.com sub script**" 
+    Write-SectionHeader -Message  "**Completed Hope.garytown.com sub script**" 
 }
