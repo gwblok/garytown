@@ -52,13 +52,13 @@ Function Restore-SetupCompleteOriginal {
     }
 }
 #>
-write-host "Added Function Set-SetupCompleteCreateStartHOPEonUSB" -ForegroundColor Green
+
 function Create-SetupCompleteOSDCloudFiles{
     
     $SetupCompletePath = "C:\OSDCloud\Config\Scripts\SetupComplete"
     $ScriptsPath = $SetupCompletePath
 
-    if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath -ItemType Directory -Force}
+    if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath -ItemType Directory -Force | Out-Null}
 
     $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
 
@@ -91,7 +91,7 @@ function Create-SetupCompleteOSDCloudFiles{
 
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
-
+write-host "Added Function Create-SetupCompleteOSDCloudFiles" -ForegroundColor Green
 
 
 <#
@@ -130,7 +130,7 @@ if ($env:SystemDrive -eq 'X:') {
     #Just go ahead and create the Setup Complete files on the C Drive in the correct Location now that OSDCloud is done in WinPE
     Create-SetupCompleteOSDCloudFiles
 
-    restart-computer
+    #restart-computer
 }
 
 #Non-WinPE
