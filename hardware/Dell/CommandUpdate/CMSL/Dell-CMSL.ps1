@@ -364,7 +364,7 @@ Function Get-DCUAppUpdates {
             if ($DCUVersion -gt $CurrentVersion){
                 $temproot = "$env:windir\temp"
                 $DellCabDownloadsPath = "$temproot\DellCabDownloads"
-                if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
+                if (!(Test-Path $DellCabDownloadsPath)){$null = New-Item -Path $DellCabDownloadsPath -ItemType Directory -Force}
                 $LogFilePath = "$env:ProgramData\CMSL\Logs"
                 $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
                 $TargetLink = $CommandUpdateAppsLatest.path
