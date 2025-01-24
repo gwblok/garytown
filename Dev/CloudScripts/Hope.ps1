@@ -115,8 +115,7 @@ function Create-SetupCompleteOSDCloudFiles{
 
     $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
 
-
-    Write-Output "Creating $($RunScript.Script) Files"
+    Write-Output "Creating $($RunScript.Script) Files in $SetupCompletePath"
 
     $BatFilePath = "$($RunScript.Path)\$($RunScript.batFile)"
     $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
@@ -139,9 +138,10 @@ function Create-SetupCompleteOSDCloudFiles{
     Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
 }
 #endregion
-
-
-
+if ($env:SystemDrive -eq 'X:') {
+    $LogName = "Hope-$((Get-Date).ToString('yyyy-MM-dd-HHmmss')).log"
+    Start-Transcript -Path $env:TEMP\$LogName -Append -Force
+}
 Write-SectionHeader -Message "Starting $ScriptName $ScriptVersion"
 write-host "Added Function Create-SetupCompleteOSDCloudFiles" -ForegroundColor Green
 
@@ -183,6 +183,10 @@ if ($env:SystemDrive -eq 'X:') {
     #Just go ahead and create the Setup Complete files on the C Drive in the correct Location now that OSDCloud is done in WinPE
     Create-SetupCompleteOSDCloudFiles
 
+    if (Test-Path -Path $env:TEMP\$LogName){
+        Stop-Transcript
+        Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
+    }
     #restart-computer
 }
 
