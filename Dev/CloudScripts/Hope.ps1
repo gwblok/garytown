@@ -181,9 +181,11 @@ if ($env:SystemDrive -eq 'X:') {
     #Restore-SetupCompleteOriginal
     
     #Just go ahead and create the Setup Complete files on the C Drive in the correct Location now that OSDCloud is done in WinPE
+    Write-SectionHeader -Message "Creating Custom SetupComplete Files for Hope"
     Create-SetupCompleteOSDCloudFiles
 
     if (Test-Path -Path $env:TEMP\$LogName){
+        Write-DarkGrayLine Copying Log to C:\OSDCloud\Logs
         Stop-Transcript
         Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
