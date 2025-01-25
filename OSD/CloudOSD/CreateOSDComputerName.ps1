@@ -95,6 +95,10 @@ else {
         $ComputerName = $Serial 
         }
     }
+
+if ($ComputerName -like '*(*'){
+    $ComputerName = $ComputerName.Replace('(',"-") 
+}
 Write-Output "====================================================="
 Write-Output "Setting OSDComputerName to $ComputerName"
 if ($tsenv){$tsenv.value('OSDComputerName') = $ComputerName}
