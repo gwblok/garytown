@@ -11,25 +11,23 @@ NOTES.. Computer name can NOT be longer than 15 charaters.  There is no checking
 
 try {
 $tsenv = new-object -comobject Microsoft.SMS.TSEnvironment
-    }
+}
 catch{
 Write-Output "Not in TS"
-    }
+}
 
 $Manufacturer = (Get-WmiObject -Class:Win32_ComputerSystem).Manufacturer
 $Model = (Get-WmiObject -Class:Win32_ComputerSystem).Model
 $CompanyName = "GARYTOWN"
 $Serial = (Get-WmiObject -class:win32_bios).SerialNumber
 
-if ($Manufacturer -match "Lenovo")
-    {
+if ($Manufacturer -match "Lenovo"){
     $Model = ((Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version).split(" ")[1]
     $ComputerName = "$($Manufacturer)-$($Model)"
-    }
+}
 elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
     $Manufacturer = "HP"
     $Generation = $Model.split(" ") | Where-Object {$_ -match "G"}
-
     if ($Model-match " Desktop PC"){$Model = $Model.replace(" Desktop PC","")}
     if ($Model-match " Desktop Mini PC"){$Model = $Model.replace(" Desktop Mini PC","")}
     if ($Model-match "EliteDesk"){$Model = $Model.replace("EliteDesk","ED")}
@@ -39,7 +37,7 @@ elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
         $Model = $Model.replace("Elite x360","EBX")
         $Size = $Model.Split(" ")[2]
         $Model = "$($Model.Substring(0,7))$($Size) $($Generation)"
-        }
+    }
     elseif($Model-match "ProDesk"){$Model = $Model.replace("ProDesk","PD")}
     elseif($Model-match "ProBook"){$Model = $Model.replace("ProBook","PB")}
     elseif($Model-match "ZBook"){$Model = $Model.replace("ZBook","ZB")}
@@ -48,12 +46,11 @@ elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
     if ($Model.Length -gt 15){$ComputerName = $Model.Substring(0,15)}
     else {$ComputerName = $Model}
     if ($ComputerName.Length -lt 15){
-    [int]$Extra = 15 - $ComputerName.Length -1
-    $LastXofSerial = $Serial.Substring($Serial.Length - $Extra, $Extra)
-    $ComputerName = "$($ComputerName)-$($LastXofSerial)"
+        [int]$Extra = 15 - $ComputerName.Length -1
+        $LastXofSerial = $Serial.Substring($Serial.Length - $Extra, $Extra)
+        $ComputerName = "$($ComputerName)-$($LastXofSerial)"
     }
-
-    }
+}
 elseif($Manufacturer -match "Dell"){
     $Manufacturer = "Dell"
     $Model = (Get-WmiObject -Class:Win32_ComputerSystem).Model
@@ -65,36 +62,32 @@ elseif($Manufacturer -match "Dell"){
         $Model = $Model.replace("Tower","T")
         $Keep = $Model.Split("-") | select -First 3
         $ComputerName = "$($Manufacturer)-$($Keep[0])-$($Keep[1])-$($Keep[2])"
-        }
-    else
-        {
+    }
+    else{
         $Keep = $Model.Split("-") | select -First 2
         $ComputerName = "$($Manufacturer)-$($Keep[0])-$($Keep[1])"
-        }
-    
     }
+    
+}
 elseif ($Manufacturer -match "Microsoft")
     {
-    if ($Model -match "Virtual")
-        {
+    if ($Model -match "Virtual"){
         $Random = Get-Random -Maximum 99999
         $ComputerName = "VM-$($CompanyName)-$($Random )"
         if ($ComputerName.Length -gt 15){
             $ComputerName = $ComputerName.Substring(0,15)
-            }
         }
     }
+}
 else {
     
-    if ($Serial.Length -ge 15)
-        {
+    if ($Serial.Length -ge 15){
         $ComputerName = $Serial.substring(0,15)
-        }
-    else
-        {
-        $ComputerName = $Serial 
-        }
     }
+    else{
+        $ComputerName = $Serial 
+    }
+}
 
 if ($ComputerName -like '*(*'){
     $ComputerName = $ComputerName.Replace('(',"") 
