@@ -28,6 +28,9 @@ if ($Manufacturer -match "Lenovo"){
 elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
     $Manufacturer = "HP"
     $Generation = $Model.split(" ") | Where-Object {$_ -match "G"}
+    $Extra = $Model.split(" ") | Where-Object {$_ -like "(*)"}
+    if ($Extra){$Model = $Model.replace("$Extra","")}
+    if ($Model-match " DM"){$Model = $Model.replace(" DM","")}
     if ($Model-match " Desktop PC"){$Model = $Model.replace(" Desktop PC","")}
     if ($Model-match " Desktop Mini PC"){$Model = $Model.replace(" Desktop Mini PC","")}
     if ($Model-match "EliteDesk"){$Model = $Model.replace("EliteDesk","ED")}
