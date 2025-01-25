@@ -97,8 +97,12 @@ else {
     }
 
 if ($ComputerName -like '*(*'){
-    $ComputerName = $ComputerName.Replace('(',"-") 
+    $ComputerName = $ComputerName.Replace('(',"") 
 }
+if ($ComputerName -like '*)*'){
+    $ComputerName = $ComputerName.Replace(')',"") 
+}
+
 Write-Output "====================================================="
 Write-Output "Setting OSDComputerName to $ComputerName"
 if ($tsenv){$tsenv.value('OSDComputerName') = $ComputerName}
