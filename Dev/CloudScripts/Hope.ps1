@@ -185,7 +185,7 @@ if ($env:SystemDrive -eq 'X:') {
     Create-SetupCompleteOSDCloudFiles
 
     if (Test-Path -Path $env:TEMP\$LogName){
-        Write-DarkGrayLine Copying Log to C:\OSDCloud\Logs
+        Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
         Stop-Transcript
         Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
