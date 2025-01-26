@@ -26,11 +26,6 @@
 #    - Downloads the DCU installer and installs it silently.
 #    - Displays information about the update if a new version is available.
 
-# 5.5 Get-DCUAppUpdates:
-#    - Updated Replacement for Install-DCU
-#    - Checks for DCU Application Updates in Catalog & Provides Updates
-#    - with -Install, it will install the latest once it found.
-
 # 6. Set-DCUSettings:
 #    - Configures settings for Dell Command Update (DCU) using the dcu-cli.exe utility.
 #    - Supports settings like advancedDriverRestore, autoSuspendBitLocker, installationDeferral, systemRestartDeferral, scheduleAction, and scheduleAuto.
@@ -71,7 +66,7 @@
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 
 #>
-$ScriptVersion = '25.1.24.2'
+$ScriptVersion = '24.10.3.7'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -106,6 +101,31 @@ function Get-DellSupportedModels {
     }
     return $SupportedModelsObject
 }
+
+
+function Get-DellDriverPackXML {
+    [CmdletBinding()]
+    
+    $CabPathIndex = "$env:ProgramData\CMSL\DellCabDownloads\CatalogIndexPC.cab"
+    $DellCabExtractPath = "$env:ProgramData\CMSL\DellCabDownloads\DellCabExtract"
+    
+    # Pull down Dell XML CAB used in Dell Command Update ,extract and Load
+    if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
+    Write-Verbose "Downloading Dell Cab"
+    Invoke-WebRequest -Uri "https://downloads.dell.com/catalog/DriverPackCatalog.cab" -OutFile $CabPathIndex -UseBasicParsing -Proxy $ProxyServer
+    If(Test-Path "$DellCabExtractPath\DellSDPCatalogPC.xml"){Remove-Item -Path "$DellCabExtractPath\DellSDPCatalogPC.xml" -Force}
+    Start-Sleep -Seconds 1
+    if (test-path $DellCabExtractPath){Remove-Item -Path $DellCabExtractPath -Force -Recurse}
+    $null = New-Item -Path $DellCabExtractPath -ItemType Directory
+    Write-Verbose "Expanding the Cab File..." 
+    $null = expand $CabPathIndex $DellCabExtractPath\DriverPackCatalog.xml
+    
+    Write-Verbose "Loading Dell Catalog XML.... can take awhile"
+    [xml]$XMLIndex = Get-Content "$DellCabExtractPath\DriverPackCatalog.xml"
+    
+    return $XMLIndex
+}
+
 
 Function Get-DCUVersion {
     $DCU=(Get-ItemProperty "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -ErrorVariable err -ErrorAction SilentlyContinue)
@@ -364,7 +384,7 @@ Function Get-DCUAppUpdates {
             if ($DCUVersion -gt $CurrentVersion){
                 $temproot = "$env:windir\temp"
                 $DellCabDownloadsPath = "$temproot\DellCabDownloads"
-                if (!(Test-Path $DellCabDownloadsPath)){$null = New-Item -Path $DellCabDownloadsPath -ItemType Directory -Force}
+                if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
                 $LogFilePath = "$env:ProgramData\CMSL\Logs"
                 $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
                 $TargetLink = $CommandUpdateAppsLatest.path
@@ -835,7 +855,7 @@ function New-DCUCatalogFile {
         }
     }
 }
-function  Get-DCUUpdateList {
+function Get-DCUUpdateList {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$False)]
@@ -931,19 +951,97 @@ function Get-DellDeviceDetails {
     
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
     
+    
     if ((!($SystemSKUNumber)) -and (!($ModelLike))) {
         if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems, or please provide a SKU"}
         $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     }
-
+    <#
     if (!($ModelLike)){
         $DellSKU = Get-DellSupportedModels | Where-Object {$_.systemID -match $SystemSKUNumber} | Select-Object -First 1
     }
     else {
         $DellSKU = Get-DellSupportedModels | Where-Object { $_.Model -match $ModelLike}
     }
+    
     return $DellSKU | Select-Object -Property SystemID,Model
+    #>
+    $MoreData = Get-DellDriverPackXML
+    if (!($ModelLike)){
+        $DrillDown = $MoreData.DriverPackManifest.DriverPackage.SupportedSystems.brand.model | Where-Object {$_.systemid -eq $SystemSKUNumber} | Select-Object -First 1
+        $RDSDate = [DATETIME]"$($DrillDown.rtsDate)"
+        $DeviceOutput = New-Object -TypeName PSObject
+        $DeviceOutput | Add-Member -MemberType NoteProperty -Name "SystemID" -Value "$($DrillDown.systemID)" -Force
+        $DeviceOutput | Add-Member -MemberType NoteProperty -Name "Model" -Value "$($DrillDown.name)"  -Force
+        $DeviceOutput | Add-Member -MemberType NoteProperty -Name "RTSDate" -Value $([DATETIME]$RDSDate) -Force
+        return $DeviceOutput		
+    }
+    else{
+        $DrillDown = $MoreData.DriverPackManifest.DriverPackage.SupportedSystems.brand.model | Where-Object {$_.name -match $ModelLike}
+        if ($DrillDown.count -gt 1){
+            $SystemIDs = $DrillDown.systemID | Select-Object -Unique
+            $DeviceOutputObject = @()
+            foreach ($SystemID in $SystemIDs){
+                $DrillDown = $MoreData.DriverPackManifest.DriverPackage.SupportedSystems.brand.model | Where-Object {$_.systemid -eq $SystemID}| Select-Object -First 1
+                $RDSDate = [DATETIME]"$($DrillDown.rtsDate)"
+                $DeviceOutput = New-Object -TypeName PSObject
+                $DeviceOutput | Add-Member -MemberType NoteProperty -Name "SystemID" -Value "$($DrillDown.systemID)" -Force
+                $DeviceOutput | Add-Member -MemberType NoteProperty -Name "Model" -Value "$($DrillDown.name)"  -Force
+                $DeviceOutput | Add-Member -MemberType NoteProperty -Name "RTSDate" -Value $([DATETIME]$RDSDate) -Force
+                $DeviceOutputObject += $DeviceOutput 
+            }
+            return $DeviceOutputObject | Sort-Object -Property RTSDate
+        }
+    }
 }
+
+function Get-DellDeviceDriverPack {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$False)]
+        [ValidateLength(4,4)]    
+        [string]$SystemSKUNumber,
+        [ValidateSet('Windows10','Windows11')]
+        [string]$OSVer
+    )
+    
+    $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+    
+    
+    if (!($SystemSKUNumber)) {
+        if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems, or please provide a SKU"}
+        $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
+    }
+
+    $MoreData = Get-DellDriverPackXML
+    $DriverPacks = $MoreData.DriverPackManifest.DriverPackage | Where-Object {$_.SupportedSystems.brand.model.systemid -eq $SystemSKUNumber}
+    $DeviceDetails = $MoreData.DriverPackManifest.DriverPackage.SupportedSystems.brand.model | Where-Object {$_.systemid -eq $SystemSKUNumber} | Select-Object -First 1
+    $DriverPacksOBject = @()
+    foreach ($DriverPack in $DriverPacks){
+        $URL = "http://$($MoreData.DriverPackManifest.baseLocation)/$($DriverPack.path)"
+        $FileName = $DriverPack.path -split "/" | Select-Object -Last 1
+        $DeviceDriverPack = New-Object -TypeName PSObject
+        $MetaDataVersion = $MoreData.DriverPackManifest.version
+        $SizeinMB = [Math]::Round($DriverPack.size/1MB,2)
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "SystemID" -Value "$($DeviceDetails.systemID)" -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "Model" -Value "$($DeviceDetails.name)"  -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "MetaDataVersion" -Value "$MetaDataVersion"  -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "FileName" -Value "$FileName"  -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "ReleaseID" -Value "$($DriverPack.releaseID)"  -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "URL" -Value "$URL"  -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "DateTime" -Value $([DATETIME]$DriverPack.dateTime) -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "hashMD5" -Value $($DriverPack.hashMD5) -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "SizeinMB" -Value $SizeinMB -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "OSSupported" -Value $($DriverPack.SupportedOperatingSystems.OperatingSystem.osCode) -Force
+        $DeviceDriverPack | Add-Member -MemberType NoteProperty -Name "OsArch" -Value $($DriverPack.SupportedOperatingSystems.OperatingSystem.osArch) -Force
+        $DriverPacksOBject += $DeviceDriverPack 
+    }
+    return $DriverPacksOBject 
+
+}
+
+
+
 
 #Function to get a list of BIOS updates for a SKU, install, or download
 #Similar to the Get-HPBIOSUpdate function in HPCMSL

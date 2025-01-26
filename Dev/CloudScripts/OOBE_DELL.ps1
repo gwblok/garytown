@@ -17,6 +17,7 @@ write-output "Model:           $Model"
 write-output "SystemSKUNumber: $SystemSKUNumber"
 
 Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDetails"
+Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDriverPack"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellSupportedModels"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUVersion"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUInstallDetails"
