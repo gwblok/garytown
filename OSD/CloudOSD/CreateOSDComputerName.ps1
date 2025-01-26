@@ -57,19 +57,13 @@ elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
 elseif($Manufacturer -match "Dell"){
     $Manufacturer = "Dell"
     $Model = (Get-WmiObject -Class:Win32_ComputerSystem).Model
-    if ($Model-match "Latitude"){$Model = $Model.replace("Latitude","L")}
-    elseif($Model-match "OptiPlex"){$Model = $Model.replace("OptiPlex","O")}
-    elseif($Model-match "Precision"){$Model = $Model.replace("Precision","P")}
+    $ModelNumber = $Model -replace "[^0-9]" , ''
+    if ($Model-match "Latitude"){$Model = "DL-$($ModelNumber)"}#{$Model = $Model.replace("Latitude","L")}
+    elseif($Model-match "OptiPlex"){$Model = "DO-$($ModelNumber)"}#{$Model = $Model.replace("OptiPlex","O")}
+    elseif($Model-match "Precision"){$Model = "DP-$($ModelNumber)"}#{$Model = $Model.replace("Precision","P")}
     $Model = $model.replace(" ","-")
-    if($Model-match "Tower"){
-        $Model = $Model.replace("Tower","T")
-        $Keep = $Model.Split("-") | select -First 3
-        $ComputerName = "$($Manufacturer)-$($Keep[0])-$($Keep[1])-$($Keep[2])"
-    }
-    else{
-        $Keep = $Model.Split("-") | select -First 2
-        $ComputerName = "$($Manufacturer)-$($Keep[0])-$($Keep[1])"
-    }
+
+    $ComputerName = "$($Model)-$($Serial)"
     
 }
 elseif ($Manufacturer -match "Microsoft")
@@ -92,11 +86,15 @@ else {
     }
 }
 
-if ($ComputerName -like '*(*'){
-    $ComputerName = $ComputerName.Replace('(',"") 
-}
-if ($ComputerName -like '*)*'){
-    $ComputerName = $ComputerName.Replace(')',"") 
+if ($ComputerName.Length -gt 15){
+    Write-Output "-------------------------------------------------------------------------------------------------------------------------------"
+    Write-Output "Computer Name is too long, can only be 15 characters."
+    Write-Output "Current Computer name is set to: $ComputerName, trimming to....."
+    $ComputerName = $ComputerName.Substring(0,15)
+    Write-Output "New Name = $ComputerName"
+    Write-Output "Your LOGIC Failed, you need to see why it was coming up longer than 15, so you can fix it, instead of having it use the bandaid"
+    Write-Output "-------------------------------------------------------------------------------------------------------------------------------"
+
 }
 
 Write-Output "====================================================="
