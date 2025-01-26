@@ -940,6 +940,7 @@ function Get-DCUUpdateList {
     }
 }
 
+#Future Enahncements, see if I can add a column for the OS's that Dell Supports on the specific hardware model - This assumes they releases driver packs for the OS supported.
 function Get-DellDeviceDetails {
     [CmdletBinding()]
     param (
@@ -995,6 +996,7 @@ function Get-DellDeviceDetails {
     }
 }
 
+#Add feature to download the driver pack, and have it default to the OS of the device it's running on, or allow the user to specify the OS they want to download the driver pack for.
 function Get-DellDeviceDriverPack {
     [CmdletBinding()]
     param (
