@@ -44,7 +44,8 @@
 
 #>
 
-
+$ScriptVersion = "25.01.27"
+Write-Output "Loading Lenovo Tools Script Version $ScriptVersion"
 
 Function Import-ModuleLenovoCMSL {
     #Function to download Lenovo CMSL to programdata\CMSL then import
