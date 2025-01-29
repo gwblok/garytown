@@ -14,7 +14,7 @@
 #region ----------------------------------------------- Parameters ------------------------------------------------
 $ProgressPreference = 'SilentlyContinue'
 # The local directory we'll use to download to
-$AppraiserWorkingDirectory = "E:\Temp\AppraiserDatabase"
+$AppraiserWorkingDirectory = "D:\SafeGuard\AppraiserDatabase"
 # A thread-safe (ish) object to use across runspaces
 $syncHash = [hashtable]::Synchronized(@{
     Semaphore = [System.Threading.SemaphoreSlim]::new(1,1)

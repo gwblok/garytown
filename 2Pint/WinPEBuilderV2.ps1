@@ -183,7 +183,7 @@ else
 {
     $WinPEBuilderPath = $global:PSScriptRoot
 }
-$WinPEBuilderPath = 'C:\WinPEBuilder'
+$WinPEBuilderPath = 'D:\WinPEBuilder'
 
 $ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
@@ -242,21 +242,21 @@ if (!(Test-Path "$WinPEBuilderPath\StifleRSource\Readme.txt")){
 #Check for Install.WIM, make sure one is already there, if not, it will try to download / build one for you
 if (Test-Path -Path "$WinPEBuilderPath\OSSource\install.wim"){
     $WinInfo = Get-WindowsImage -ImagePath "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"
-    $ProIndex = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Pro"}).ImageIndex
-    if ($ProIndex){
-        $ProIndexInfo = Get-WindowsImage -ImagePath "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim" -Index $ProIndex
+    $Index = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Enterprise"}).ImageIndex
+    if ($Index){
+        $IndexInfo = Get-WindowsImage -ImagePath "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim" -Index $Index
         #Confirm the Install WIM we have matches the ADK Version
         
-        if ($ProIndexInfo.Version -match  ($ADKWinPEInfo.Version).Replace(".1","")){
+        if ($IndexInfo.Version -match  ($ADKWinPEInfo.Version).Replace(".1","")){
             $WimDownload = $false
-            $ImageIndexNumber = $ProIndex
-            Write-Host "ADK Version: $($ADKWinPEInfo.Version) matches install.wim Version: $($ProIndexInfo.Version)" -ForegroundColor green
+            $ImageIndexNumber = $Index
+            Write-Host "ADK Version: $($ADKWinPEInfo.Version) matches install.wim Version: $($IndexInfo.Version)" -ForegroundColor green
         }
         else {
             $WimDownload = $true
             #Current install.wim file does not match ADK
             Write-Host "Removing $WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim" -ForegroundColor Yellow
-            Write-Host "ADK Version: $($ADKWinPEInfo.Version) vs install.wim Version: $($ProIndexInfo.Version)" -ForegroundColor Yellow
+            Write-Host "ADK Version: $($ADKWinPEInfo.Version) vs install.wim Version: $($IndexInfo.Version)" -ForegroundColor Yellow
             remove-item -path "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim" -Verbose
         }
     }
@@ -291,10 +291,10 @@ if ($WimDownload -eq $true){
     #Grab Index Info for Pro to pass along later into 
     if (Test-Path -Path "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"){
         $WinInfo = Get-WindowsImage -ImagePath "C:\OSDCloud\IPU\Media\$OSNameNeeded\sources\install.wim"
-        $ProIndex = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Pro"}).ImageIndex
-        if ($ProIndex){
+        $Index = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Pro"}).ImageIndex
+        if ($Index){
             $WimDownload = $false
-            $ImageIndexNumber = $ProIndex
+            $ImageIndexNumber = $Index
         }
         else {
         Write-Host "Unable to get OSSourceIndex Info for Pro" -ForegroundColor Red

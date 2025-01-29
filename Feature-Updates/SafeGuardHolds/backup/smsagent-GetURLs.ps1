@@ -4,7 +4,7 @@
 ###################################################################################################################
 
 # This script is based on the work of Gary Blok
-# It makes use of parallel procesing available in PowerShell Core to improve execution speed
+# It makes use of parallel processing available in PowerShell Core to improve execution speed
 # Run on a well-spec'd multi-core machine for best performance
 # To avoid port exhaustion it is recommended to set the following registry value and reboot first: HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters > TcpTimedWaitDelay [DWORD] > 2
 # > This will reduce the time a connection is in the 'TIME_WAIT' state to 2 seconds before it removes the connection, freeing the port
@@ -14,11 +14,11 @@
 
 #region ----------------------------------------------- Parameters ------------------------------------------------
 # The directory to output the resulting json file to
-$OutputDirectory = "E:\Temp\AppraiserDatabase"
+$OutputDirectory = "D:\SafeGuard\AppraiserDatabase"
 # The first date you wish to start searching for valid cab file URLs from
-# 20200109 is currently the date of the earliest dowloadable cab
+# 20200109 is currently the date of the earliest downloadable cab
 $StartDate = "20200109" # yyyyMMdd
-# Maximum number of parallel threads. The optimimum number depends on available system resources
+# Maximum number of parallel threads. The optimal number depends on available system resources
 $ThrottleLimit = 100
 #endregion --------------------------------------------------------------------------------------------------------
 
