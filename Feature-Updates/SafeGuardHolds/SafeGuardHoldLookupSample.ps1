@@ -11,6 +11,13 @@ $SafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFro
 $SafeGuardData | Where-Object {$_.SafeguardID -eq $ID}
 
 
+#Previous Backup of the JSON file
+$SafeGuardJSONBackupURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/backup/SafeGuardHoldDataBase.json'
+$SafeGuardDataBackup = (Invoke-WebRequest -URI $SafeGuardJSONBackupURL).content | ConvertFrom-Json
+
+$SafeGuardDataBackup | Where-Object {$_.SafeguardID -eq $ID}
+
+
 #Grab Recent SafeGuards new for upgrading to 11 23H2
 $23H2 = $SafeGuardData | Where-Object {$_.DEST_OS_GTE -match "23H2"}
 

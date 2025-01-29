@@ -54,11 +54,22 @@ Function Import-ModuleLenovoCMSL {
     #Function to download Lenovo CMSL to programdata\CMSL then import
     [CmdletBinding()]
     param ()
+    
+    try {
+        import-module -name Lenovo.Client.Scripting -ErrorAction SilentlyContinue
+    }
+    catch {
+        <#Do this if a terminating exception happens#>
+    }
+    if (get-module -name Lenovo.Client.Scripting -ListAvailable) {
+        Write-Verbose "Lenovo CMSL Module is already installed."
+        return
+    }
     $URL = "https://download.lenovo.com/cdrt/tools/Lenovo.Client.Scripting_2.1.0.zip"
     $FileName = $URL.Split("/")[-1]
-    $FolderName = $FileName.Replace(".zip","")
+    #$FolderName = $FileName.Replace(".zip","")
     $Destination = "$env:programdata\CMSL\$FileName"
-    $ExtractedFolder = "$env:programdata\CMSL\$FolderName"
+    $ExtractedFolder = "C:\Program Files\WindowsPowerShell\Modules"
 
 
     if (!(Test-Path -Path $ExtractedFolder)){
@@ -988,3 +999,51 @@ function Reset-LenovoVantageSettings {
         Remove-ItemProperty -Path $RegistryPath -Name $_ -Force -Verbose
     }
 }
+
+<# Still noodling on.
+function Get-LenovoDeviceDetails {
+    param (
+        [ValidateLength(4,4)][parameter(position = 0, Mandatory = $false, helpMessage = "Enter the four-character Machine Type to search for", ParameterSetName="MT")] [String] $MachineType
+    )
+    
+    Import-ModuleLenovoCMSL
+    $Manufacturer = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer
+    if ($Manufacturer -eq "LENOVO") {
+        $MachineType = Get-LnvMachineType
+    }
+    if (!($MachineType)){Write-Output "Machine Type not found.  Please provide one, or run on Lenovo Device"; return}
+
+    #Pull in Private Functions from Lenovo CMSL
+    $ModuleBase = (Get-Module Lenovo.Client.Scripting).ModuleBase
+    Get-ChildItem -Path "$ModuleBase\Private" | ForEach-Object {Import-Module $_.FullName}
+    if (-not[string]::IsNullOrWhiteSpace($MachineType)) {
+        $searchString = $MachineType.ToUpper().Trim()
+    } elseif (-not[string]::IsNullOrWhiteSpace($Bios)) {
+        $searchString = $Bios.ToUpper().Trim()
+    } else {
+        return
+    }
+
+    try {
+        [xml]$catalog = Get-LnvDATCatalog
+    }
+    catch {
+        Write-Output $_
+        return
+    }
+    $node = $catalog.ModelList.Model | Where-Object { ($_.Types.Type.Contains("$searchString")) -or ($_.BIOS.image.ToUpper() -eq $("$searchString")) }
+    if($null -eq $node)
+    {
+        Write-Output "No models were found with $searchString"
+        return
+    }
+    #Write-Output -InputObject ($node.name)
+    $DeviceOutput = New-Object -TypeName PSObject
+    $DeviceOutput | Add-Member -MemberType NoteProperty -Name "BIOS" -Value "$($node.BIOS.image)" -Force
+    $DeviceOutput | Add-Member -MemberType NoteProperty -Name "Model" -Value "$($node.name)"  -Force
+    $DeviceOutput | Add-Member -MemberType NoteProperty -Name "RTSDate" -Value $([DATETIME]$RDSDate) -Force
+    return $DeviceOutput
+
+}
+
+#>
