@@ -59,7 +59,6 @@ function Write-SectionSuccess {
 }
 #endregion
 
-Export-ModuleMember -Function Write-DarkGrayDate, Write-DarkGrayHost, Write-DarkGrayLine, Write-SectionHeader, Write-SectionSuccess
 
 iex (irm functions.garytown.com)
 #region functions
@@ -146,7 +145,6 @@ if ($env:SystemDrive -eq 'X:') {
 }
 Write-SectionHeader -Message "Starting $ScriptName1 $ScriptVersion1"
 write-host "Added Function New-SetupCompleteOSDCloudFiles" -ForegroundColor Green
-Export-ModuleMember -Function New-SetupCompleteOSDCloudFiles
 
 <#
 if ($env:SystemDrive -ne 'X:') {
