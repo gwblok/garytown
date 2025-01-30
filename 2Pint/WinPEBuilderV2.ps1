@@ -141,9 +141,9 @@ $OSDToolKitReadme = "For release changes please go to: https://docs.2pintsoftwar
 
 For documentation please go to: https://docs.2pintsoftware.com/osd-toolkit/
 	
-Note: 	The binaries in the Tools in this folder is aldready included in the WinPEGen.exe binary, 
-	but are available here here for your convinience when distributing to full OS machines. 
-	Please review the documentation for guidanace on that.
+Note: 	The binaries in the Tools in this folder is already included in the WinPEGen.exe binary, 
+	but are available here for your convenience when distributing to full OS machines. 
+	Please review the documentation for guidance on that.
 "
 
 $PatchesReadme = "Place the patch(es) you would like to apply to WinPE in this directory. Make sure they match the OS and architecture of the WinPE you are building."
@@ -153,10 +153,10 @@ $StifleRSourceReadme = "Place the StifleR source directory in this folder if inc
 
 #endregion
 
-$StifleR = $false
+$StifleR = $true
 $BranchCache = $true
 $SkipOptionalComponents = $false
-
+$WinPEBuilderPath = 'D:\WinPEBuilder'
 
 # Check for elevation (admin rights)
 If ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
@@ -175,15 +175,16 @@ else
 
 #WinPEBuilder directory  - THIS IS WHERE EVERYTHING WILL BE BUILT.  Feel Free to customize, or it will use the folder based on where you saved the script.. which might not be the best, so plan ahead
 #AKA, create a folder c:\WinPEBuilder\ and save this script to that location, then run it.
-If ($psISE)
-{
-    $WinPEBuilderPath = Split-Path -Path $psISE.CurrentFile.FullPath        
+if (!($WinPEBuilderPath)){
+    If ($psISE)
+    {
+        $WinPEBuilderPath = Split-Path -Path $psISE.CurrentFile.FullPath        
+    }
+    else
+    {
+        $WinPEBuilderPath = $global:PSScriptRoot
+    }
 }
-else
-{
-    $WinPEBuilderPath = $global:PSScriptRoot
-}
-$WinPEBuilderPath = 'D:\WinPEBuilder'
 
 $ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
@@ -279,7 +280,7 @@ if ($WimDownload -eq $true){
     }
     else {
         #Get Windows that matches the ADK
-        New-OSDCloudOSWimFile -OSName $OSNameNeeded -OSEdition Pro -OSLanguage $Lang -OSActivation Retail
+        New-OSDCloudOSWimFile -OSName $OSNameNeeded -OSEdition Enterprise -OSLanguage $Lang -OSActivation Volume
         if (Test-Path -Path "C:\OSDCloud\IPU\Media\$OSNameNeeded\sources\install.wim"){
             Copy-Item "C:\OSDCloud\IPU\Media\$OSNameNeeded\sources\install.wim" -Destination "$WinPEBuilderPath\OSSource\$OSNameNeeded"
         }
@@ -291,17 +292,16 @@ if ($WimDownload -eq $true){
     #Grab Index Info for Pro to pass along later into 
     if (Test-Path -Path "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"){
         $WinInfo = Get-WindowsImage -ImagePath "C:\OSDCloud\IPU\Media\$OSNameNeeded\sources\install.wim"
-        $Index = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Pro"}).ImageIndex
+        $Index = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Enterprise"}).ImageIndex
         if ($Index){
             $WimDownload = $false
             $ImageIndexNumber = $Index
         }
         else {
-        Write-Host "Unable to get OSSourceIndex Info for Pro" -ForegroundColor Red
+        Write-Host "Unable to get OSSourceIndex Info for Enterprise" -ForegroundColor Red
         break
         }
     }
-    
 }
 
 
@@ -376,13 +376,13 @@ If ($BranchCache -or $StifleR) {
     $WinPEGenVersion=(Get-ItemProperty "$OSDToolkitPath\x64\WinPEGen.exe").VersionInfo.FileVersion
     If ([Version]$WinPEGenVersion -lt [Version]"3.1.3.0"){Write-Warning "WinPEGen version too old. Aborting script...";Break}
     If (!(Test-Path $OSDToolkitPath)){Write-Warning "$OSDToolkitPath missing, aborting script...";Break}
-    }
+}
 If ($StifleR) {
     If (!(Test-Path $StifleRSource)){Write-Warning "$StifleRSource missing, aborting script...";Break}
     If (!(Test-Path $StifleRClientRules)){Write-Warning "$StifleRClientRules missing, aborting script...";Break}
     $StifleRClientVersion=(Get-ItemProperty "$StifleRSource\StifleR.ClientApp.exe").VersionInfo.FileVersion
     If ([version]$StifleRClientVersion -lt [version]"2.2.4.1"){Write-Warning "StifleR Client version too old. Aborting script...";Break}
-    }
+}
 
 # Set working directory to OSDToolkitPath, and start Running WinPEGen.exe
 Set-Location "$OSDToolkitPath\x64"

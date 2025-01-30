@@ -1,56 +1,56 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
 
-    #region Initialization
-    function Write-DarkGrayDate {
-        [CmdletBinding()]
-        param (
-            [Parameter(Position = 0)]
-            [System.String]
-            $Message
-        )
-        if ($Message) {
-            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
-        }
-        else {
-            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-        }
+#region Initialization
+function Write-DarkGrayDate {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [System.String]
+        $Message
+    )
+    if ($Message) {
+        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
     }
-    function Write-DarkGrayHost {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $true, Position = 0)]
-            [System.String]
-            $Message
-        )
-        Write-Host -ForegroundColor DarkGray $Message
+    else {
+        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
     }
-    function Write-DarkGrayLine {
-        [CmdletBinding()]
-        param ()
-        Write-Host -ForegroundColor DarkGray '========================================================================='
-    }
-    function Write-SectionHeader {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $true, Position = 0)]
-            [System.String]
-            $Message
-        )
-        Write-DarkGrayLine
-        Write-DarkGrayDate
-        Write-Host -ForegroundColor Cyan $Message
-    }
-    function Write-SectionSuccess {
-        [CmdletBinding()]
-        param (
-            [Parameter(Position = 0)]
-            [System.String]
-            $Message = 'Success!'
-        )
-        Write-DarkGrayDate
-        Write-Host -ForegroundColor Green $Message
-    }
-    #endregion
+}
+function Write-DarkGrayHost {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-Host -ForegroundColor DarkGray $Message
+}
+function Write-DarkGrayLine {
+    [CmdletBinding()]
+    param ()
+    Write-Host -ForegroundColor DarkGray '========================================================================='
+}
+function Write-SectionHeader {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-DarkGrayLine
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Cyan $Message
+}
+function Write-SectionSuccess {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [System.String]
+        $Message = 'Success!'
+    )
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Green $Message
+}
+#endregion
 
 $ScriptName = 'win11.garytown.com'
 $ScriptVersion = '25.01.22.1'

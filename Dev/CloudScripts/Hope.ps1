@@ -3,61 +3,63 @@ Loads Functions
 Creates Setup Complete Files
 #>
 
-$ScriptName = 'hope.garytown.com'
-$ScriptVersion = '25.1.22.1'
+$ScriptName1 = 'hope.garytown.com'
+$ScriptVersion1 = '25.1.22.1'
 
 
-    #region Initialization
-    function Write-DarkGrayDate {
-        [CmdletBinding()]
-        param (
-            [Parameter(Position = 0)]
-            [System.String]
-            $Message
-        )
-        if ($Message) {
-            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
-        }
-        else {
-            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-        }
+#region Initialization
+function Write-DarkGrayDate {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [System.String]
+        $Message
+    )
+    if ($Message) {
+        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
     }
-    function Write-DarkGrayHost {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $true, Position = 0)]
-            [System.String]
-            $Message
-        )
-        Write-Host -ForegroundColor DarkGray $Message
+    else {
+        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
     }
-    function Write-DarkGrayLine {
-        [CmdletBinding()]
-        param ()
-        Write-Host -ForegroundColor DarkGray '========================================================================='
-    }
-    function Write-SectionHeader {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $true, Position = 0)]
-            [System.String]
-            $Message
-        )
-        Write-DarkGrayLine
-        Write-DarkGrayDate
-        Write-Host -ForegroundColor Cyan $Message
-    }
-    function Write-SectionSuccess {
-        [CmdletBinding()]
-        param (
-            [Parameter(Position = 0)]
-            [System.String]
-            $Message = 'Success!'
-        )
-        Write-DarkGrayDate
-        Write-Host -ForegroundColor Green $Message
-    }
-    #endregion
+}
+function Write-DarkGrayHost {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-Host -ForegroundColor DarkGray $Message
+}
+function Write-DarkGrayLine {
+    [CmdletBinding()]
+    param ()
+    Write-Host -ForegroundColor DarkGray '========================================================================='
+}
+function Write-SectionHeader {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-DarkGrayLine
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Cyan $Message
+}
+function Write-SectionSuccess {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [System.String]
+        $Message = 'Success!'
+    )
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Green $Message
+}
+#endregion
+
+Export-ModuleMember -Function Write-DarkGrayDate, Write-DarkGrayHost, Write-DarkGrayLine, Write-SectionHeader, Write-SectionSuccess
 
 iex (irm functions.garytown.com)
 #region functions
@@ -106,7 +108,7 @@ Function Restore-SetupCompleteOriginal {
 }
 #>
 
-function Create-SetupCompleteOSDCloudFiles{
+function New-SetupCompleteOSDCloudFiles{
     
     $SetupCompletePath = "C:\OSDCloud\Scripts\SetupComplete"
     $ScriptsPath = $SetupCompletePath
@@ -142,9 +144,9 @@ if ($env:SystemDrive -eq 'X:') {
     $LogName = "Hope-$((Get-Date).ToString('yyyy-MM-dd-HHmmss')).log"
     Start-Transcript -Path $env:TEMP\$LogName -Append -Force
 }
-Write-SectionHeader -Message "Starting $ScriptName $ScriptVersion"
-write-host "Added Function Create-SetupCompleteOSDCloudFiles" -ForegroundColor Green
-
+Write-SectionHeader -Message "Starting $ScriptName1 $ScriptVersion1"
+write-host "Added Function New-SetupCompleteOSDCloudFiles" -ForegroundColor Green
+Export-ModuleMember -Function New-SetupCompleteOSDCloudFiles
 
 <#
 if ($env:SystemDrive -ne 'X:') {
@@ -172,6 +174,9 @@ if ($env:SystemDrive -eq 'X:') {
         else{
             Write-Host -ForegroundColor Red "Failed to Map Drive"
         }
+        else{
+            Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
+        }
     }
     Write-SectionHeader -Message "Starting win11.garytown.com"
     iex (irm win11.garytown.com)
@@ -182,7 +187,7 @@ if ($env:SystemDrive -eq 'X:') {
     
     #Just go ahead and create the Setup Complete files on the C Drive in the correct Location now that OSDCloud is done in WinPE
     Write-SectionHeader -Message "Creating Custom SetupComplete Files for Hope"
-    Create-SetupCompleteOSDCloudFiles
+    New-SetupCompleteOSDCloudFiles
 
     if (Test-Path -Path $env:TEMP\$LogName){
         Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
