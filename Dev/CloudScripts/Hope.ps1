@@ -172,9 +172,9 @@ if ($env:SystemDrive -eq 'X:') {
         else{
             Write-Host -ForegroundColor Red "Failed to Map Drive"
         }
-        else{
-            Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
-        }
+    }
+    else{
+        Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
     }
     Write-SectionHeader -Message "Starting win11.garytown.com"
     iex (irm win11.garytown.com)
