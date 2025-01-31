@@ -65,37 +65,7 @@ if ($env:SystemDrive -eq 'X:') {
 
     Write-SectionHeader -Message "Starting $ScriptName $ScriptVersion"
     write-host "Added Function New-SetupCompleteOSDCloudFiles" -ForegroundColor Green
-    function New-SetupCompleteOSDCloudFiles{
-        
-        $SetupCompletePath = "C:\OSDCloud\Scripts\SetupComplete"
-        $ScriptsPath = $SetupCompletePath
 
-        if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath -ItemType Directory -Force | Out-Null}
-
-        $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
-
-        Write-Output "Creating $($RunScript.Script) Files in $SetupCompletePath"
-
-        $BatFilePath = "$($RunScript.Path)\$($RunScript.batFile)"
-        $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
-                
-        #Create Batch File to Call PowerShell File
-        if (Test-Path -Path $PSFilePath){
-            copy-item $PSFilePath -Destination "$ScriptsPath\SetupComplete.ps1.bak"
-        }        
-        New-Item -Path $BatFilePath -ItemType File -Force
-        $CustomActionContent = New-Object system.text.stringbuilder
-        [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1')
-        Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
-
-        #Create PowerShell File to do actions
-
-        New-Item -Path $PSFilePath -ItemType File -Force
-        Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete TyDoneRight Script Process'"
-        Add-Content -path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'"
-        Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
-        Add-Content -path $PSFilePath 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'
-    }
 
     #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
     $Product = (Get-MyComputerProduct)
@@ -164,10 +134,93 @@ if ($env:SystemDrive -eq 'X:') {
 
     Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 
+    #region Functions
+    function Write-DarkGrayDate {
+        [CmdletBinding()]
+        param (
+            [Parameter(Position = 0)]
+            [System.String]
+            $Message
+        )
+        if ($Message) {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
+        }
+        else {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
+        }
+    }
+    function Write-DarkGrayHost {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $true, Position = 0)]
+            [System.String]
+            $Message
+        )
+        Write-Host -ForegroundColor DarkGray $Message
+    }
+    function Write-DarkGrayLine {
+        [CmdletBinding()]
+        param ()
+        Write-Host -ForegroundColor DarkGray '========================================================================='
+    }
+    function Write-SectionHeader {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $true, Position = 0)]
+            [System.String]
+            $Message
+        )
+        Write-DarkGrayLine
+        Write-DarkGrayDate
+        Write-Host -ForegroundColor Cyan $Message
+    }
+    function Write-SectionSuccess {
+        [CmdletBinding()]
+        param (
+            [Parameter(Position = 0)]
+            [System.String]
+            $Message = 'Success!'
+        )
+        Write-DarkGrayDate
+        Write-Host -ForegroundColor Green $Message
+    }
+    function New-SetupCompleteOSDCloudFiles{
+        
+        $SetupCompletePath = "C:\OSDCloud\Scripts\SetupComplete"
+        $ScriptsPath = $SetupCompletePath
+
+        if (!(Test-Path -Path $ScriptsPath)){New-Item -Path $ScriptsPath -ItemType Directory -Force | Out-Null}
+
+        $RunScript = @(@{ Script = "SetupComplete"; BatFile = 'SetupComplete.cmd'; ps1file = 'SetupComplete.ps1';Type = 'Setup'; Path = "$ScriptsPath"})
+
+        Write-Output "Creating $($RunScript.Script) Files in $SetupCompletePath"
+
+        $BatFilePath = "$($RunScript.Path)\$($RunScript.batFile)"
+        $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
+                
+        #Create Batch File to Call PowerShell File
+        if (Test-Path -Path $PSFilePath){
+            copy-item $PSFilePath -Destination "$ScriptsPath\SetupComplete.ps1.bak"
+        }        
+        New-Item -Path $BatFilePath -ItemType File -Force
+        $CustomActionContent = New-Object system.text.stringbuilder
+        [void]$CustomActionContent.Append('%windir%\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -File C:\OSDCloud\Scripts\SetupComplete\SetupComplete.ps1')
+        Add-Content -Path $BatFilePath -Value $CustomActionContent.ToString()
+
+        #Create PowerShell File to do actions
+
+        New-Item -Path $PSFilePath -ItemType File -Force
+        Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete TyDoneRight Script Process'"
+        Add-Content -path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'"
+        Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
+        Add-Content -path $PSFilePath 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'
+    }
+    #endregion
     Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
-
-
+    Write-SectionHeader -Message "Creating Custom SetupComplete Files for Hope"
+    
+    New-SetupCompleteOSDCloudFiles
 
     #Copy CMTrace Local:
     if (Test-path -path "x:\windows\system32\cmtrace.exe"){
@@ -178,6 +231,12 @@ if ($env:SystemDrive -eq 'X:') {
         $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
         Write-Host "Copy-PSModuleToFolder -Name LSUClient to $PowerShellSavePath\Modules"
         Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
+    }
+
+    if (Test-Path -Path $env:TEMP\$LogName){
+        Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
+        Stop-Transcript
+        Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
     #Restart
     #restart-computer

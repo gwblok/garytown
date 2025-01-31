@@ -276,9 +276,13 @@ If ($Defaults) {
     }
     if ($tsenv){
         $StifleRInfo = Get-StifleRURLsFromTempInstallConfig
-        $STIFLERSERVERS = $StifleRInfo.StiflerServers
-        $STIFLERULEZURL = $StifleRInfo.StifleRulezURL
-        
+        if ($null -eq $StifleRInfo) {
+            Write-Debug "No StifleR Info found in Temp Config - Exiting"
+        }
+        else{
+            $STIFLERSERVERS = $StifleRInfo.StiflerServers
+            $STIFLERULEZURL = $StifleRInfo.StifleRulezURL
+        }
     }
 
     Write-Debug "This script logs to: $Logfile"
