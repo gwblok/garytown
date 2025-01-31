@@ -177,7 +177,7 @@ function Get-StifleRURLsFromTempInstallConfig {
     # Check if the config file exists
     if (-Not (Test-Path -Path $configFilePath)) {
         Write-Debug "Config file not found at path: $configFilePath"
-        break
+        return
     }
 
     # Load the XML content from the config file
