@@ -1,4 +1,4 @@
-#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
+#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)
 
 #region Initialization
 function Write-DarkGrayDate {
