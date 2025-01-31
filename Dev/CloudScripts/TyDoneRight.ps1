@@ -53,6 +53,7 @@ function Write-SectionSuccess {
 
 #endregion
 
+#https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1
 $ScriptName = 'TyDoneRight'
 $ScriptVersion = '25.01.31.1'
 
@@ -90,10 +91,10 @@ if ($env:SystemDrive -eq 'X:') {
         #Create PowerShell File to do actions
 
         New-Item -Path $PSFilePath -ItemType File -Force
-        Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete HOPE Script Process'"
-        Add-Content -path $PSFilePath "Write-Output 'iex (irm hope.garytown.com)'"
+        Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete TyDoneRight Script Process'"
+        Add-Content -path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'"
         Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
-        Add-Content -path $PSFilePath 'iex (irm hope.garytown.com)'
+        Add-Content -path $PSFilePath 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'
     }
 
     #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
