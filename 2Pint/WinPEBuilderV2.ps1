@@ -25,7 +25,7 @@
     23.10.01  : Initial version of script 
     24.04.15  : Tax day version - updated build paths
     24.08.14  : GWB Version - Incorporate OSD Module (OSDCloud) to use to grab Windows directly from internet & also automate some folder directories
-                  - YES, that means you need to install OSD Module - "Install Module -Name OSD"
+                - YES, that means you need to install OSD Module - "Install Module -Name OSD"
 
    .LINK
     https://2pintsoftware.com
@@ -289,7 +289,7 @@ if ($WimDownload -eq $true){
             break
         }
     }
-    #Grab Index Info for Pro to pass along later into 
+    #Grab Index Info for Enterprise to pass along later into 
     if (Test-Path -Path "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"){
         $WinInfo = Get-WindowsImage -ImagePath "C:\OSDCloud\IPU\Media\$OSNameNeeded\sources\install.wim"
         $Index = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Enterprise"}).ImageIndex
