@@ -446,7 +446,7 @@ function Get-HPDockUpdateDetails {
                 }
                 else {
                     if (($DebugOut) -or ($Transcript)) { Write-Host "  Admin rights require to extract to $ExtractPath" -ForegroundColor Red }
-                    Stop-Transcript
+                     if ($Transcript) { Stop-Transcript }
                     return -1
                 }           
             }
