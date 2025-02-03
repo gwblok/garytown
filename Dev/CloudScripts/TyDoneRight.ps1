@@ -55,7 +55,7 @@ function Write-SectionSuccess {
 
 #https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1
 $ScriptName = 'TyDoneRight'
-$ScriptVersion = '25.01.31.1'
+$ScriptVersion = '25.2.3.1'
 
 
 
@@ -125,8 +125,8 @@ if ($env:SystemDrive -eq 'X:') {
     Write-Output $Global:MyOSDCloud
 
     #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
-    $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | Select-Object -Last 1).fullname
-    import-module "$ModulePath\OSD.psd1" -Force
+    #$ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | Select-Object -Last 1).fullname
+    #import-module "$ModulePath\OSD.psd1" -Force
 
     #Launch OSDCloud
     Write-SectionHeader -Message "Starting OSDCloud"
