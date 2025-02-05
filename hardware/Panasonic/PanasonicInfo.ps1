@@ -4,6 +4,15 @@ Driver Pack XML: https://us.panasonic.com/business/iframes/xml/cabs.xml
 
 #>
 
+using namespace System.Management.Automation
+
+class ValidCatGenerator : IValidateSetValuesGenerator {
+    [string[]] GetValidValues() {
+        $Values = (Get-PanasonicDLCategories).Name
+        return $Values
+    }
+}
+
 function Get-ApiData {
     param (
         [string]$url = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search",
@@ -11,8 +20,13 @@ function Get-ApiData {
     )
 
     # Create the request URL
-    $requestUrl = "$($url)?q=$($query)"
-
+    if ($query -ne "") {
+        $requestUrl = "$($url)?q=$($query)"
+    }
+    else {
+        $requestUrl = $url
+    }
+    Write-Verbose "Request URL: $requestUrl"
     # Send the HTTP GET request
     try {
         $response = Invoke-RestMethod -Uri $requestUrl -Method Get -ContentType "application/json"
@@ -51,18 +65,123 @@ function  Get-PanasonicModelsFromSeries {
     return $JSONResponse  | Select-Object "id", "name" | Where-Object { $_.name -ne 'Tough' }
 }
 
-function  Get-PanasonicDLCategoriesFromModel {
-    param (
-        [string]$SeriesID,
-        [string]$ModelId
-    )
-    [string]$url = "https://global-pc-support.connect.panasonic.com/ccm/pc_support/api/categories"
-    $apiUrl = "$($url)?series=$($ModelId)&model=$($ModelId)"
+<#
+function  Get-PanasonicDLCategories {
+
+    [string]$url = "https://global-pc-support.connect.panasonic.com/dl/api/v1/categories"
+    $apiUrl = "$($url)"
+    $response = Get-ApiData -url $apiUrl
+    return $response 
+}
+#>
+<#
+    searchParams.set('parent', 200);
+    searchParams.set('series', seriesSelect.value);
+    searchParams.set('model', modelSelect.value);
+    searchParams.set('os', osSelect.value);
+    searchParams.set('language', languageSelect.value);
+    const apiUrl = 'https://global-pc-support.connect.panasonic.com/ccm/pc_support/api/categories' + '?' + searchParams.toString();
+#>
+
+function  Get-PanasonicDLCategories {
+
+    [string]$url = 'https://global-pc-support.connect.panasonic.com/ccm/pc_support/api/categories'
+    [string]$url2 = 'https://global-pc-support.connect.panasonic.com/dl/api/v1/categories'
+    $apiUrl = "$($url)?parent=200)"
     $response = Get-ApiData -url $apiUrl
     $JSONResponse = $response.data | ConvertTo-Json -Depth 5 | ConvertFrom-Json
-    return $JSONResponse 
-}
+    
+    $apiUrl2 = $url2
+    $response2 = Get-ApiData -url $apiUrl2
+    $JSONResponse2 = $response2
 
+    $Combo = @()
+    $JSONResponse2 | ForEach-Object {
+        $Category = $_
+        $CategoryInfo = $JSONResponse | Where-Object { $_.name -eq $Category.text }
+        $Combo += [PSCustomObject]@{
+            value = $Category.value
+            name = $Category.text
+            id = $CategoryInfo.id
+        }
+    }
+    $JSONResponse | Where-Object {$_.id -match "30" -and $_.name -match "-"} | ForEach-Object {
+        $Category = $_ 
+        [string]$value = ([string]$Category.id).replace("30","00200100")
+        $Combo += [PSCustomObject]@{
+            value = $value
+            name = ($Category.name).replace(" - ","")
+            id = $Category.id
+        }
+    }
+
+
+    return $Combo
+}
+Function Get-PanasonicSeriesInfo {
+    $SeriesInfo = @(
+        @{SeriesID = "239";  Series = "FZ-40"}
+        @{SeriesID = "232";  Series = "FZ-55"}
+        @{SeriesID = "194";  Series = "FZ-A1"}
+        @{SeriesID = "223";  Series = "FZ-A2"}
+        @{SeriesID = "235";  Series = "FZ-A3"}
+        @{SeriesID = "199";  Series = "JT-B1"}
+        @{SeriesID = "210";  Series = "FZ-B2"}
+        @{SeriesID = "208";  Series = "FZ-E1"}
+        @{SeriesID = "221";  Series = "FZ-F1"}
+        @{SeriesID = "198";  Series = "FZ-G1"}
+        @{SeriesID = "237";  Series = "FZ-G2"}
+        @{SeriesID = "231";  Series = "FZ-L1"}
+        @{SeriesID = "205";  Series = "FZ-M1"}
+        @{SeriesID = "220";  Series = "FZ-N1"}
+        @{SeriesID = "219";  Series = "FZ-Q1"}
+        @{SeriesID = "224";  Series = "FZ-Q2"}
+        @{SeriesID = "217";  Series = "FZ-R1"}
+        @{SeriesID = "236";  Series = "FZ-S1"}
+        @{SeriesID = "230";  Series = "FZ-T1"}
+        @{SeriesID = "209";  Series = "FZ-X1"}
+        @{SeriesID = "216";  Series = "FZ-Y1"}
+        @{SeriesID = "206";  Series = "UT-MB5"}
+        @{SeriesID = "207";  Series = "UT-MA6"}
+        @{SeriesID = "111";  Series = "CF-19"}
+        @{SeriesID = "218";  Series = "CF-20"}
+        @{SeriesID = "116";  Series = "CF-30"}
+        @{SeriesID = "117";  Series = "CF-31"}
+        @{SeriesID = "225";  Series = "CF-33"}
+        @{SeriesID = "126";  Series = "CF-52"}
+        @{SeriesID = "185";  Series = "CF-53"}
+        @{SeriesID = "211";  Series = "CF-54"}
+        @{SeriesID = "197";  Series = "CF-AX2"}
+        @{SeriesID = "200";  Series = "CF-AX3"}
+        @{SeriesID = "135";  Series = "CF-C1"}
+        @{SeriesID = "196";  Series = "CF-C2"}
+        @{SeriesID = "187";  Series = "CF-D1"}
+        @{SeriesID = "137";  Series = "CF-F9"}
+        @{SeriesID = "240";  Series = "CF-FV3"}
+        @{SeriesID = "10300552";  Series = "CF-FV4"}
+        @{SeriesID = "138";  Series = "CF-H1"}
+        @{SeriesID = "186";  Series = "CF-H2"}
+        @{SeriesID = "234";  Series = "CF-LV8"}
+        @{SeriesID = "203";  Series = "CF-LX3"}
+        @{SeriesID = "229";  Series = "CF-LX6"}
+        @{SeriesID = "215";  Series = "CF-MX4"}
+        @{SeriesID = "157";  Series = "CF-S9"}
+        @{SeriesID = "183";  Series = "CF-S10"}
+        @{SeriesID = "241";  Series = "CF-SR4"}
+        @{SeriesID = "238";  Series = "CF-SV1"}
+        @{SeriesID = "233";  Series = "CF-SV8"}
+        @{SeriesID = "190";  Series = "CF-SX1"}
+        @{SeriesID = "192";  Series = "CF-SX2"}
+        @{SeriesID = "214";  Series = "CF-SX4"}
+        @{SeriesID = "227";  Series = "CF-SZ6"}
+        @{SeriesID = "164";  Series = "CF-U1"}
+        @{SeriesID = "228";  Series = "CF-XZ6"}
+        @{SeriesID = "195";  Series = "Option (FZ series)"}
+        @{SeriesID = "175";  Series = "Option (CF series)"}
+        @{SeriesID = "179";  Series = "All Model"}
+    )
+    return $SeriesInfo 
+}
 Function Get-PanasonicDeviceDetails {
     [CmdletBinding(DefaultParameterSetName = 'Set2')]
     param (
@@ -71,138 +190,60 @@ Function Get-PanasonicDeviceDetails {
         [string]$SeriesID,
         [Parameter( ParameterSetName = 'Set2')]
         [validateSet("FZ-40", "FZ-55", "FZ-A1", "FZ-A2", "FZ-A3", "JT-B1", "FZ-B2", "FZ-E1", "FZ-F1", "FZ-G1", "FZ-G2", "FZ-L1", "FZ-M1", "FZ-N1", "FZ-Q1", "FZ-Q2", "FZ-R1", "FZ-S1", "FZ-T1", "FZ-X1", "FZ-Y1", "UT-MB5", "UT-MA6", "CF-19", "CF-20", "CF-30", "CF-31", "CF-33", "CF-52", "CF-53", "CF-54", "CF-AX2", "CF-AX3", "CF-C1", "CF-C2", "CF-D1", "CF-F9", "CF-FV3", "CF-FV4", "CF-H1", "CF-H2", "CF-LV8", "CF-LX3", "CF-LX6", "CF-MX4", "CF-S9", "CF-S10", "CF-SR4", "CF-SV1", "CF-SV8", "CF-SX1", "CF-SX2", "CF-SX4", "CF-SZ6", "CF-U1", "CF-XZ6", "Option (FZ series)", "Option (CF series)", "All Model")]
-        [string]$ModelId
+        [string]$Series
     )
-    $SeriesInfo = @(
-        @{SeriesID = "239";  Model = "FZ-40"}
-        @{SeriesID = "232";  Model = "FZ-55"}
-        @{SeriesID = "194";  Model = "FZ-A1"}
-        @{SeriesID = "223";  Model = "FZ-A2"}
-        @{SeriesID = "235";  Model = "FZ-A3"}
-        @{SeriesID = "199";  Model = "JT-B1"}
-        @{SeriesID = "210";  Model = "FZ-B2"}
-        @{SeriesID = "208";  Model = "FZ-E1"}
-        @{SeriesID = "221";  Model = "FZ-F1"}
-        @{SeriesID = "198";  Model = "FZ-G1"}
-        @{SeriesID = "237";  Model = "FZ-G2"}
-        @{SeriesID = "231";  Model = "FZ-L1"}
-        @{SeriesID = "205";  Model = "FZ-M1"}
-        @{SeriesID = "220";  Model = "FZ-N1"}
-        @{SeriesID = "219";  Model = "FZ-Q1"}
-        @{SeriesID = "224";  Model = "FZ-Q2"}
-        @{SeriesID = "217";  Model = "FZ-R1"}
-        @{SeriesID = "236";  Model = "FZ-S1"}
-        @{SeriesID = "230";  Model = "FZ-T1"}
-        @{SeriesID = "209";  Model = "FZ-X1"}
-        @{SeriesID = "216";  Model = "FZ-Y1"}
-        @{SeriesID = "206";  Model = "UT-MB5"}
-        @{SeriesID = "207";  Model = "UT-MA6"}
-        @{SeriesID = "111";  Model = "CF-19"}
-        @{SeriesID = "218";  Model = "CF-20"}
-        @{SeriesID = "116";  Model = "CF-30"}
-        @{SeriesID = "117";  Model = "CF-31"}
-        @{SeriesID = "225";  Model = "CF-33"}
-        @{SeriesID = "126";  Model = "CF-52"}
-        @{SeriesID = "185";  Model = "CF-53"}
-        @{SeriesID = "211";  Model = "CF-54"}
-        @{SeriesID = "197";  Model = "CF-AX2"}
-        @{SeriesID = "200";  Model = "CF-AX3"}
-        @{SeriesID = "135";  Model = "CF-C1"}
-        @{SeriesID = "196";  Model = "CF-C2"}
-        @{SeriesID = "187";  Model = "CF-D1"}
-        @{SeriesID = "137";  Model = "CF-F9"}
-        @{SeriesID = "240";  Model = "CF-FV3"}
-        @{SeriesID = "10300552";  Model = "CF-FV4"}
-        @{SeriesID = "138";  Model = "CF-H1"}
-        @{SeriesID = "186";  Model = "CF-H2"}
-        @{SeriesID = "234";  Model = "CF-LV8"}
-        @{SeriesID = "203";  Model = "CF-LX3"}
-        @{SeriesID = "229";  Model = "CF-LX6"}
-        @{SeriesID = "215";  Model = "CF-MX4"}
-        @{SeriesID = "157";  Model = "CF-S9"}
-        @{SeriesID = "183";  Model = "CF-S10"}
-        @{SeriesID = "241";  Model = "CF-SR4"}
-        @{SeriesID = "238";  Model = "CF-SV1"}
-        @{SeriesID = "233";  Model = "CF-SV8"}
-        @{SeriesID = "190";  Model = "CF-SX1"}
-        @{SeriesID = "192";  Model = "CF-SX2"}
-        @{SeriesID = "214";  Model = "CF-SX4"}
-        @{SeriesID = "227";  Model = "CF-SZ6"}
-        @{SeriesID = "164";  Model = "CF-U1"}
-        @{SeriesID = "228";  Model = "CF-XZ6"}
-        @{SeriesID = "195";  Model = "Option (FZ series)"}
-        @{SeriesID = "175";  Model = "Option (CF series)"}
-        @{SeriesID = "179";  Model = "All Model"}
-    )
-    $DeviceInfo = $SeriesInfo | Where-Object { $_.SeriesID -eq $SeriesID -or $_.Model -eq $ModelId }
+    $SeriesInfo = Get-PanasonicSeriesInfo
+    $DeviceInfo = $SeriesInfo | Where-Object { $_.SeriesID -eq $SeriesID -or $_.Series -eq $Series }
 
     $SeriesModels = Get-PanasonicModelsFromSeries -SeriesID $DeviceInfo.SeriesID
-    $DLs = ""
+
     return $SeriesModels
 }
 
-$SeriesInfo = @(
-@{SeriesID = "239";  Model = "FZ-40"}
-@{SeriesID = "232";  Model = "FZ-55"}
-@{SeriesID = "194";  Model = "FZ-A1"}
-@{SeriesID = "223";  Model = "FZ-A2"}
-@{SeriesID = "235";  Model = "FZ-A3"}
-@{SeriesID = "199";  Model = "JT-B1"}
-@{SeriesID = "210";  Model = "FZ-B2"}
-@{SeriesID = "208";  Model = "FZ-E1"}
-@{SeriesID = "221";  Model = "FZ-F1"}
-@{SeriesID = "198";  Model = "FZ-G1"}
-@{SeriesID = "237";  Model = "FZ-G2"}
-@{SeriesID = "231";  Model = "FZ-L1"}
-@{SeriesID = "205";  Model = "FZ-M1"}
-@{SeriesID = "220";  Model = "FZ-N1"}
-@{SeriesID = "219";  Model = "FZ-Q1"}
-@{SeriesID = "224";  Model = "FZ-Q2"}
-@{SeriesID = "217";  Model = "FZ-R1"}
-@{SeriesID = "236";  Model = "FZ-S1"}
-@{SeriesID = "230";  Model = "FZ-T1"}
-@{SeriesID = "209";  Model = "FZ-X1"}
-@{SeriesID = "216";  Model = "FZ-Y1"}
-@{SeriesID = "206";  Model = "UT-MB5"}
-@{SeriesID = "207";  Model = "UT-MA6"}
-@{SeriesID = "111";  Model = "CF-19"}
-@{SeriesID = "218";  Model = "CF-20"}
-@{SeriesID = "116";  Model = "CF-30"}
-@{SeriesID = "117";  Model = "CF-31"}
-@{SeriesID = "225";  Model = "CF-33"}
-@{SeriesID = "126";  Model = "CF-52"}
-@{SeriesID = "185";  Model = "CF-53"}
-@{SeriesID = "211";  Model = "CF-54"}
-@{SeriesID = "197";  Model = "CF-AX2"}
-@{SeriesID = "200";  Model = "CF-AX3"}
-@{SeriesID = "135";  Model = "CF-C1"}
-@{SeriesID = "196";  Model = "CF-C2"}
-@{SeriesID = "187";  Model = "CF-D1"}
-@{SeriesID = "137";  Model = "CF-F9"}
-@{SeriesID = "240";  Model = "CF-FV3"}
-@{SeriesID = "10300552";  Model = "CF-FV4"}
-@{SeriesID = "138";  Model = "CF-H1"}
-@{SeriesID = "186";  Model = "CF-H2"}
-@{SeriesID = "234";  Model = "CF-LV8"}
-@{SeriesID = "203";  Model = "CF-LX3"}
-@{SeriesID = "229";  Model = "CF-LX6"}
-@{SeriesID = "215";  Model = "CF-MX4"}
-@{SeriesID = "157";  Model = "CF-S9"}
-@{SeriesID = "183";  Model = "CF-S10"}
-@{SeriesID = "241";  Model = "CF-SR4"}
-@{SeriesID = "238";  Model = "CF-SV1"}
-@{SeriesID = "233";  Model = "CF-SV8"}
-@{SeriesID = "190";  Model = "CF-SX1"}
-@{SeriesID = "192";  Model = "CF-SX2"}
-@{SeriesID = "214";  Model = "CF-SX4"}
-@{SeriesID = "227";  Model = "CF-SZ6"}
-@{SeriesID = "164";  Model = "CF-U1"}
-@{SeriesID = "228";  Model = "CF-XZ6"}
-@{SeriesID = "195";  Model = "Option (FZ series)"}
-@{SeriesID = "175";  Model = "Option (CF series)"}
-@{SeriesID = "179";  Model = "All Model"}
 
-)
+
+
+function Get-PanasonicDeviceDownloads{
+    [CmdletBinding()]
+    param (
+        [validateSet("FZ-40", "FZ-55", "FZ-A1", "FZ-A2", "FZ-A3", "JT-B1", "FZ-B2", "FZ-E1", "FZ-F1", "FZ-G1", "FZ-G2", "FZ-L1", "FZ-M1", "FZ-N1", "FZ-Q1", "FZ-Q2", "FZ-R1", "FZ-S1", "FZ-T1", "FZ-X1", "FZ-Y1", "UT-MB5", "UT-MA6", "CF-19", "CF-20", "CF-30", "CF-31", "CF-33", "CF-52", "CF-53", "CF-54", "CF-AX2", "CF-AX3", "CF-C1", "CF-C2", "CF-D1", "CF-F9", "CF-FV3", "CF-FV4", "CF-H1", "CF-H2", "CF-LV8", "CF-LX3", "CF-LX6", "CF-MX4", "CF-S9", "CF-S10", "CF-SR4", "CF-SV1", "CF-SV8", "CF-SX1", "CF-SX2", "CF-SX4", "CF-SZ6", "CF-U1", "CF-XZ6", "Option (FZ series)", "Option (CF series)", "All Model")]
+        [string]$Series,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateSet( [ValidCatGenerator] )]
+        [string]$Category
+    )
+
+    $Categories = Get-PanasonicDLCategories
+    $CategoryInfo = $Categories | Where-Object { $_.name -match $Category }
+    $CategoryValue = $CategoryInfo.value
+    Write-Verbose "RequestedCategory: $Category"
+    Write-Verbose "CategoryInfo: $CategoryInfo"
+    #Get-PanasonicDeviceDetails -Series $Series
+    $SeriesInfo = Get-PanasonicSeriesInfo
+    $SeriesID = ($SeriesInfo | Where-Object { $_.Series -eq $Series }).SeriesID
+    write-verbose "Requested Series: $Series"
+    write-verbose "Series Info: $SeriesID"
+    
+    [string]$url = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search"
+    [string]$query = "&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)"
+    $apiurl = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search?q=&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)"
+    Write-Verbose "Url: $url"
+    Write-Verbose "query: $query"
+    write-verbose "API URL: $apiurl"
+
+    #$response = Get-ApiData -url $url -query $query
+    $response = Get-ApiData -url $apiurl
+    $JSONResponse = $response.search_results | ConvertTo-Json -Depth 5 | ConvertFrom-Json
+
+    
+    return $JSONResponse | Select-Object -Property "title","doc_updated_on","doc_no","detail_url" 
+}
+#$url = 'https://global-pc-support.connect.panasonic.com/dl/api/v1/search?p1=239&p2=1030693'
+#$url ='https://pc-dl.panasonic.co.jp/dl/api/v1/search?q=&p1=232&p2=1020703'
+# https://global-pc-support.connect.panasonic.com/search?q=&s=232&m=1020703&c=10400&o=&l=&per_page=25#search_result
+#https://pc-dl.panasonic.co.jp/dl/api/v1/search?q=&button=&dc%5B%5D=002001&p1=135&
+
 
 <#
 
@@ -370,4 +411,12 @@ const fetchLanguages = function(selectedId='') {
     );
 }
 
+<option value="10861">Windows 11 Ver.24H2</option>
+<option value="10840">Windows 11 Ver.23H2</option>
+<option value="10760">Windows 11 Ver.22H2</option>
+<option value="10700">Windows 11 Ver.21H2</option>
+<option value="10780">Windows 10 64bit Ver.22H2</option>
+
+<option value="10260">All languages</option>
+<option value="3">English</option>
 #>
