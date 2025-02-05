@@ -4,20 +4,20 @@ USE AT YOUR OWN RISK. I TAKE NO RESPONSIBILITY FOR ANYTHING THIS SCRIPT DOES. TE
 ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT INTO ONE SCRIPT.
 
 .SYNOPSIS
-    Script to manage Lenovo Client Management Script Library (CMSL) and Lenovo System Updater.
+    Script to manage Lenovo Client Scripting Module (CSM) and Lenovo System Updater.
 
 .DESCRIPTION
     
-    This script contains functions to download and import the Lenovo CMSL, install the Lenovo System Updater, 
+    This script contains functions to download and import the Lenovo CSM, install the Lenovo System Updater, 
     and invoke the Lenovo System Updater if it is not already installed. The script ensures that the latest 
     version of the Lenovo System Updater is downloaded and installed silently.
 
 .FUNCTIONS
-    Import-ModuleLenovoCMSL
-        Downloads and imports the Lenovo Client Management Script Library (CMSL).
+    Import-ModuleLenovoCSM
+        Downloads and imports the Lenovo Client Scripting Module (LCSM).
 
     Install-LenovoSystemUpdater
-        Downloads and installs the Lenovo System Updater using the Lenovo CMSL module.
+        Downloads and installs the Lenovo System Updater using the Lenovo Client Scripting Module (LCSM).
 
     Invoke-LenovoSystemUpdater
         Checks if the Lenovo System Updater is installed, and if not, installs it.
@@ -36,7 +36,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
     Version: 25.01.27
 
 .EXAMPLE
-    Import-ModuleLenovoCMSL
+    Import-ModuleLenovoCSM
     Install-LenovoSystemUpdater
     Invoke-LenovoSystemUpdater
     Install-LenovoVantage
@@ -46,7 +46,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
     Reset-LenovoVantageSettings
 
 .LINK
-    Lenovo Client Scripting Module (CMSL) Documentation:
+    Lenovo Client Scripting Module (LCSM) Documentation:
     https://docs.lenovocdrt.com/guides/lcsm/lcsm_top/#installing-lenovo-client-scripting-module
 
 #>
@@ -54,8 +54,8 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 $ScriptVersion = "25.01.27"
 Write-Output "Loading Lenovo Tools Script Version $ScriptVersion"
 
-Function Import-ModuleLenovoCMSL {
-    #Function to download Lenovo CMSL to programdata\CMSL then import
+Function Import-ModuleLenovoCSM {
+    #Function to download Lenovo CSM to programdata\EMPS then import
     [CmdletBinding()]
     param ()
     
@@ -66,13 +66,13 @@ Function Import-ModuleLenovoCMSL {
         <#Do this if a terminating exception happens#>
     }
     if (get-module -name Lenovo.Client.Scripting -ListAvailable) {
-        Write-Verbose "Lenovo CMSL Module is already installed."
+        Write-Verbose "Lenovo Module is already installed."
         return
     }
     $URL = "https://download.lenovo.com/cdrt/tools/Lenovo.Client.Scripting_2.1.0.zip"
     $FileName = $URL.Split("/")[-1]
     #$FolderName = $FileName.Replace(".zip","")
-    $Destination = "$env:programdata\CMSL\$FileName"
+    $Destination = "$env:programdata\EMPS\$FileName"
     $ExtractedFolder = "C:\Program Files\WindowsPowerShell\Modules"
 
 
@@ -80,7 +80,7 @@ Function Import-ModuleLenovoCMSL {
         New-Item -Path $ExtractedFolder -ItemType Directory | Out-Null
     }
     if (!(Test-Path -Path $Destination)){
-        Start-BitsTransfer -Source $URL -Destination $Destination -DisplayName "Lenovo CMSL Download"
+        Start-BitsTransfer -Source $URL -Destination $Destination -DisplayName "Lenovo CSM Download"
     }
     Expand-Archive -Path $Destination -DestinationPath $ExtractedFolder -Force
     $LenovoModule = Get-ChildItem -Path $ExtractedFolder -Recurse | Where-Object { $_.Name -eq "Lenovo.Client.Scripting.psm1" } 
@@ -89,9 +89,9 @@ Function Import-ModuleLenovoCMSL {
 
 function Install-LenovoSystemUpdater {
     # Define the URL and temporary file path
-    Import-ModuleLenovoCMSL
+    Import-ModuleLenovoCSM
     $URL = Find-LnvTool -Tool SystemUpdate -Url
-    #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/system_update_5.08.02.25.exe" #No longer needed, uses the Lenovo CMSL Module to get latest version
+    #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/system_update_5.08.02.25.exe" #No longer needed, uses the Lenovo CSM to get latest version
     $tempFilePath = "C:\Windows\Temp\system_update.exe"
 
     # Create a new BITS transfer job
@@ -1010,14 +1010,14 @@ function Get-LenovoDeviceDetails {
         [ValidateLength(4,4)][parameter(position = 0, Mandatory = $false, helpMessage = "Enter the four-character Machine Type to search for", ParameterSetName="MT")] [String] $MachineType
     )
     
-    Import-ModuleLenovoCMSL
+    Import-ModuleLenovoCSM
     $Manufacturer = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer
     if ($Manufacturer -eq "LENOVO") {
         $MachineType = Get-LnvMachineType
     }
     if (!($MachineType)){Write-Output "Machine Type not found.  Please provide one, or run on Lenovo Device"; return}
 
-    #Pull in Private Functions from Lenovo CMSL
+    #Pull in Private Functions from Lenovo CSM
     $ModuleBase = (Get-Module Lenovo.Client.Scripting).ModuleBase
     Get-ChildItem -Path "$ModuleBase\Private" | ForEach-Object {Import-Module $_.FullName}
     if (-not[string]::IsNullOrWhiteSpace($MachineType)) {

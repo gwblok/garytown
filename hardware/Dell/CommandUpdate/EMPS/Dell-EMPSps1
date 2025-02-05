@@ -77,8 +77,8 @@ Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
     
-    $CabPathIndex = "$env:ProgramData\CMSL\DellCabDownloads\CatalogIndexPC.cab"
-    $DellCabExtractPath = "$env:ProgramData\CMSL\DellCabDownloads\DellCabExtract"
+    $CabPathIndex = "$env:ProgramData\EMPS\DellCabDownloads\CatalogIndexPC.cab"
+    $DellCabExtractPath = "$env:ProgramData\EMPS\DellCabDownloads\DellCabExtract"
     
     # Pull down Dell XML CAB used in Dell Command Update ,extract and Load
     if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
@@ -112,8 +112,8 @@ function Get-DellSupportedModels {
 function Get-DellDriverPackXML {
     [CmdletBinding()]
     
-    $CabPathIndex = "$env:ProgramData\CMSL\DellCabDownloads\CatalogIndexPC.cab"
-    $DellCabExtractPath = "$env:ProgramData\CMSL\DellCabDownloads\DellCabExtract"
+    $CabPathIndex = "$env:ProgramData\EMPS\DellCabDownloads\CatalogIndexPC.cab"
+    $DellCabExtractPath = "$env:ProgramData\EMPS\DellCabDownloads\DellCabExtract"
     
     # Pull down Dell XML CAB used in Dell Command Update ,extract and Load
     if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
@@ -268,7 +268,7 @@ Function Install-DCU {
     param()
     $temproot = "$env:windir\temp"
     
-    $LogFilePath = "$env:ProgramData\CMSL\Logs"
+    $LogFilePath = "$env:ProgramData\EMPS\Logs"
     #$LogFile = "$LogFilePath\DCU-Install.log"
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
     #$CabPathIndex = "$temproot\DellCabDownloads\CatalogIndexPC.cab"
@@ -391,7 +391,7 @@ Function Get-DCUAppUpdates {
                 $temproot = "$env:windir\temp"
                 $DellCabDownloadsPath = "$temproot\DellCabDownloads"
                 if (!(Test-Path $DellCabExtractPath)){$null = New-Item -Path $DellCabExtractPath -ItemType Directory -Force}
-                $LogFilePath = "$env:ProgramData\CMSL\Logs"
+                $LogFilePath = "$env:ProgramData\EMPS\Logs"
                 $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
                 $TargetLink = $CommandUpdateAppsLatest.path
                 $TargetFilePathName = "$($DellCabDownloadsPath)\$($TargetFileName)"
@@ -468,7 +468,7 @@ function Set-DCUSettings {
     
     $DCUPath = (Get-DCUInstallDetails).DCUPath
     Write-Verbose "DCU Path: $DCUPath"
-    $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
+    $LogPath = "$env:SystemDrive\Users\Dell\EMPS\Logs"
     Write-Verbose "Log Path: $LogPath"
     $DateTimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
     #$ArgList = "$ActionVar $updateSeverityVar $updateTypeVar $updateDeviceCategoryVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-$Action.log`""
@@ -635,7 +635,7 @@ function Invoke-DCU {
     [switch]$applyUpdates
     )
     $DCUPath = (Get-DCUInstallDetails).DCUPath
-    $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
+    $LogPath = "$env:SystemDrive\Users\Dell\EMPS\Logs"
     #Build Argument Strings for each parameter
     if ($updateSeverity){
         [String]$updateSeverity = $($updateSeverity -join ",").ToString()
@@ -693,8 +693,8 @@ function Invoke-DCUBITS {
     [switch]$DownloadOnly
     )
     $DCUPath = (Get-DCUInstallDetails).DCUPath
-    $LogPath = "$env:SystemDrive\Users\Dell\CMSL\Logs"
-    $DownloadPath = "$env:SystemDrive\Users\Dell\CMSL\Downloads"
+    $LogPath = "$env:SystemDrive\Users\Dell\EMPS\Logs"
+    $DownloadPath = "$env:SystemDrive\Users\Dell\EMPS\Downloads"
     $DellDLRootURL = "https://dl.dell.com"
     [void][System.IO.Directory]::CreateDirectory($LogPath)
     [void][System.IO.Directory]::CreateDirectory($DownloadPath)

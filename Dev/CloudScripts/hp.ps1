@@ -1,7 +1,7 @@
 #Functions for HP Computers
 
 #HP CMSL WinPE replacement
-Write-Host -ForegroundColor Cyan " ** Custom CMSL Functions for WinPE **"
+Write-Host -ForegroundColor Cyan " ** Custom EMPS Functions for WinPE **"
 Write-Host -ForegroundColor Green "[+] Function Get-HPOSSupport"
 Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqListLatest"
 Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqItems"
@@ -32,7 +32,7 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/M
 
 #Install-ModuleHPCMSL
 Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Install-ModuleHPCMSL.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EMPS/Install-ModuleHPCMSL.ps1)
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPAnalyzer"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPDriverUpdate"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Invoke-HPDriverUpdate.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EMPS/Invoke-HPDriverUpdate.ps1)
