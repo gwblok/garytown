@@ -1,6 +1,6 @@
 $ScriptName = 'functions.garytown.com'
 $ScriptVersion = '25.1.7.1'
-Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
+#Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
 #endregion
@@ -898,11 +898,11 @@ iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS
 
 #Install-ModuleHPCMSL
 Write-Host -ForegroundColor Green "[+] Function Install-ModuleHPCMSL"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Install-ModuleHPCMSL.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EMPS/Install-ModuleHPCMSL.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPAnalyzer"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPDriverUpdate"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/CMSL/Invoke-HPDriverUpdate.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EMPS/Invoke-HPDriverUpdate.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Get-HPDockUpdateDetails"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/Docks/Function_Get-HPDockUpdateDetails.ps1)

@@ -36,6 +36,43 @@ function Get-ApiData {
         Write-Error "Failed to get data from API: $_"
     }
 }
+
+
+function Get-PanasonicSupportedModels {
+    [CmdletBinding()]
+    
+    $CabPathIndex = "$env:ProgramData\EMPS\CabDownloads\CatalogIndexPC.cab"
+    $CabExtractPath = "$env:ProgramData\EMPS\CabDownloads\CabExtract"
+    
+    # Pull down  XML CAB  ,extract and Load
+    if (!(Test-Path $CabExtractPath)){$null = New-Item -Path $CabExtractPath -ItemType Directory -Force}
+    Write-Verbose "Downloading Cab"
+    Invoke-WebRequest -Uri "https://pc-dl.panasonic.co.jp/public/sccmcatalog/PanasonicUpdateCatalog.cab" -OutFile $CabPathIndex -UseBasicParsing -Proxy $ProxyServer
+    If(Test-Path "$CabExtractPath\DellSDPCatalogPC.xml"){Remove-Item -Path "$CabExtractPath\DellSDPCatalogPC.xml" -Force}
+    Start-Sleep -Seconds 1
+    if (test-path $CabExtractPath){Remove-Item -Path $CabExtractPath -Force -Recurse}
+    $null = New-Item -Path $CabExtractPath -ItemType Directory
+    Write-Verbose "Expanding the Cab File..." 
+    $null = expand -r $CabPathIndex -f:PanasonicUpdateCatalog.xml $CabExtractPath
+    Write-Verbose "Loading Catalog XML.... can take awhile"
+    $Catalog = Get-ChildItem -Path $CabExtractPath -Filter *.xml -Recurse 
+    [xml]$XMLIndex = Get-Content $Catalog.FullName
+    
+    
+    $SupportedModels = $XMLIndex.ManifestIndex.GroupManifest
+    $SupportedModelsObject = @()
+    foreach ($SupportedModel in $SupportedModels){
+        $SPInventory = New-Object -TypeName PSObject
+        $SPInventory | Add-Member -MemberType NoteProperty -Name "SystemID" -Value "$($SupportedModel.SupportedSystems.Brand.Model.systemID)" -Force
+        $SPInventory | Add-Member -MemberType NoteProperty -Name "Model" -Value "$($SupportedModel.SupportedSystems.Brand.Model.Display.'#cdata-section')"  -Force
+        $SPInventory | Add-Member -MemberType NoteProperty -Name "URL" -Value "$($SupportedModel.ManifestInformation.path)" -Force
+        $SPInventory | Add-Member -MemberType NoteProperty -Name "Date" -Value "$($SupportedModel.ManifestInformation.version)" -Force		
+        $SupportedModelsObject += $SPInventory 
+    }
+    return $SupportedModelsObject
+}
+
+
 <#
 # Example usage
 $response = Get-ApiData -query $query
