@@ -225,10 +225,9 @@ Function Get-PanasonicDeviceDetails {
         [validateSet("FZ-40", "FZ-55", "FZ-A1", "FZ-A2", "FZ-A3", "JT-B1", "FZ-B2", "FZ-E1", "FZ-F1", "FZ-G1", "FZ-G2", "FZ-L1", "FZ-M1", "FZ-N1", "FZ-Q1", "FZ-Q2", "FZ-R1", "FZ-S1", "FZ-T1", "FZ-X1", "FZ-Y1", "UT-MB5", "UT-MA6", "CF-19", "CF-20", "CF-30", "CF-31", "CF-33", "CF-52", "CF-53", "CF-54", "CF-AX2", "CF-AX3", "CF-C1", "CF-C2", "CF-D1", "CF-F9", "CF-FV3", "CF-FV4", "CF-H1", "CF-H2", "CF-LV8", "CF-LX3", "CF-LX6", "CF-MX4", "CF-S9", "CF-S10", "CF-SR4", "CF-SV1", "CF-SV8", "CF-SX1", "CF-SX2", "CF-SX4", "CF-SZ6", "CF-U1", "CF-XZ6", "Option (FZ series)", "Option (CF series)", "All Model")]
         [string]$Series
     )
+    $SeriesInfo = Get-PanasonicSeriesInfo
     if ($SeriesID -or $Series){
-        $SeriesInfo = Get-PanasonicSeriesInfo
         $DeviceInfo = $SeriesInfo | Where-Object { $_.SeriesID -eq $SeriesID -or $_.Series -eq $Series }
-
         $SeriesModels = Get-PanasonicModelsFromSeries -SeriesID $DeviceInfo.SeriesID
 
         return $SeriesModels
@@ -239,12 +238,32 @@ Function Get-PanasonicDeviceDetails {
             $Model = (Get-CimInstance -ClassName Win32_ComputerSystem).Model
             $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
             $Product = (Get-CimInstance -className Win32_BaseBoard).Product
+            #Convert Model into Series Name
+            $SeriesNamePrefix = ($Model.split("-")[0]).substring(0,2)
+            $SeriesNameSuffix = ($Model.Split("-")[0]).Replace($SeriesNamePrefix,"")
+            $SeriesName = $SeriesNamePrefix + "-" + $SeriesNameSuffix
+            $DeviceInfo = $SeriesInfo | Where-Object { $_.Series -eq $SeriesName }
+            $SeriesModels = Get-PanasonicModelsFromSeries -SeriesID $DeviceInfo.SeriesID
+            $MKNumber = $Model.Split("-")[1]
+            $MKString = "mk" + $MKNumber
+            $DeviceDetails = $SeriesModels | Where-Object { $_.name -match $MKString }
+            #Get the Last 4 characters of the ID
+            [String]$SeriesID = $DeviceInfo.SeriesID
+            [String]$ModelID = $DeviceDetails.id
+            $WebID = $SeriesID + ($ModelID.substring($ModelID.length - 4, 4))
+            $DeviceDetailsObject = New-Object PSObject -Property @{
+                SeriesID = $DeviceInfo.SeriesID
+                Series = $DeviceInfo.Series
+                ModelID = $ModelID
+                Model = $DeviceDetails.name
+                WebID = $WebID
+            }
+            return $DeviceDetailsObject
         }
         else {
             Write-Error "This function is only for Panasonic Devices"
             Write-Error "Specify a SeriesID or Series if this isn't a Panasonic Device"
         }
-
     }
 }
 
@@ -256,7 +275,7 @@ function Get-PanasonicDeviceDownloads{
     param (
         [validateSet("FZ-40", "FZ-55", "FZ-A1", "FZ-A2", "FZ-A3", "JT-B1", "FZ-B2", "FZ-E1", "FZ-F1", "FZ-G1", "FZ-G2", "FZ-L1", "FZ-M1", "FZ-N1", "FZ-Q1", "FZ-Q2", "FZ-R1", "FZ-S1", "FZ-T1", "FZ-X1", "FZ-Y1", "UT-MB5", "UT-MA6", "CF-19", "CF-20", "CF-30", "CF-31", "CF-33", "CF-52", "CF-53", "CF-54", "CF-AX2", "CF-AX3", "CF-C1", "CF-C2", "CF-D1", "CF-F9", "CF-FV3", "CF-FV4", "CF-H1", "CF-H2", "CF-LV8", "CF-LX3", "CF-LX6", "CF-MX4", "CF-S9", "CF-S10", "CF-SR4", "CF-SV1", "CF-SV8", "CF-SX1", "CF-SX2", "CF-SX4", "CF-SZ6", "CF-U1", "CF-XZ6", "Option (FZ series)", "Option (CF series)", "All Model")]
         [string]$Series,
-
+        [string]$WebID,
         [Parameter(Mandatory=$true)]
         [ValidateSet( [ValidCatGenerator] )]
         [string]$Category
@@ -275,7 +294,7 @@ function Get-PanasonicDeviceDownloads{
     
     [string]$url = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search"
     [string]$query = "&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)"
-    $apiurl = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search?q=&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)"
+    $apiurl = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search?q=&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)&p2=$($WebID)"
     Write-Verbose "Url: $url"
     Write-Verbose "query: $query"
     write-verbose "API URL: $apiurl"
