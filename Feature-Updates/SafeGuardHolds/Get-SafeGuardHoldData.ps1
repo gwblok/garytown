@@ -174,7 +174,7 @@ $SettingsTable = @(
 
 #This is the new Process to find all URLs that are valid.  This will be used to update the SettingsTable.
 
-<#Experimental - Run 1 Time Only to create the JSON file on GitHub - This will start at the beginning. Then skip the next section where it grabs info form GitHub
+#Experimental - Run 1 Time Only to create the JSON file on GitHub - This will start at the beginning. Then skip the next section where it grabs info form GitHub
 
 
 #StartDate
@@ -186,7 +186,7 @@ $SettingsTable = @(
 
 #>
 #This will grab the latest URL from GitHub, and start from that date to current date to find any new URLs.
-
+<#
 if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json" -ErrorAction SilentlyContinue){
     $OnlineSettingsTable = (Invoke-WebRequest -URI "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json").content | ConvertFrom-Json
 }
@@ -196,15 +196,16 @@ if (test-webconnection -uri "https://raw.githubusercontent.com/gwblok/garytown/r
 if ($OnlineSettingsTable){
     $LatestURL = $OnlineSettingsTable | Sort-Object ALTERNATEDATAVERSION -Descending | Select-Object -First 1
 }
+#>
 $Counter = 1
 $GuessingTable = @() 
 
 #StartDate
-[int]$URLYear = $LatestURL.ALTERNATEDATAVERSION.Substring(0,4)
-[int]$URLMonth = $LatestURL.ALTERNATEDATAVERSION.Substring(4,2)
-[int]$URLDay = $LatestURL.ALTERNATEDATAVERSION.Substring(6,2)
-[int]$URLExtra1 = $LatestURL.ALTERNATEDATAVERSION.Substring(8,2)
-[int]$URLExtra2 = $LatestURL.ALTERNATEDATAVERSION.Substring(10,2)
+#[int]$URLYear = $LatestURL.ALTERNATEDATAVERSION.Substring(0,4)
+#[int]$URLMonth = $LatestURL.ALTERNATEDATAVERSION.Substring(4,2)
+#[int]$URLDay = $LatestURL.ALTERNATEDATAVERSION.Substring(6,2)
+#[int]$URLExtra1 = $LatestURL.ALTERNATEDATAVERSION.Substring(8,2)
+#[int]$URLExtra2 = $LatestURL.ALTERNATEDATAVERSION.Substring(10,2)
 
 [int]$MaxDay = 31
 [int]$MaxMonth = 12
@@ -272,7 +273,7 @@ write-host "Total Count of URLS: $($GuessingTable.Count)" -ForegroundColor Cyan
 # Need to write code here to grab the latest version from GitHub, then start from that date to current date to find any new URLs. - Future Update
 
 
-$Path = "C:\Temp"
+$Path = "D:\SafeGuard\Build"
 $AppriaserRoot = $Path
 try {[void][System.IO.Directory]::CreateDirectory($AppriaserRoot)}
 catch {throw}

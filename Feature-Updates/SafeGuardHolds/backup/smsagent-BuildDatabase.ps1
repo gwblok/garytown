@@ -26,7 +26,7 @@ $ThrottleLimit = 25
 # Minimum free space required on the drive where the cab files will be downloaded to in GB
 $MinimumDriveSpace = 30
 # Clean out the working directory when finished to free up the used space
-$PurgeWorkingDirectory = $true
+$PurgeWorkingDirectory = $false
 #endregion --------------------------------------------------------------------------------------------------------
 
 
