@@ -4,23 +4,28 @@ Driver Pack XML: https://us.panasonic.com/business/iframes/xml/cabs.xml
 
 #>
 
-#Require PowerShell 7
+using namespace System.Management.Automation
 
-#Test The version of PowerShell
+#Test The version of PowerShell - #Require PowerShell 7
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Error "This script requires PowerShell 7 or higher. Please upgrade your PowerShell version."
     exit
 }
-
-
-using namespace System.Management.Automation
-
-class ValidCatGenerator : IValidateSetValuesGenerator {
-    [string[]] GetValidValues() {
-        $Values = (Get-PanasonicDLCategories).Name
-        return $Values
+else{
+    
+    class ValidCatGenerator : IValidateSetValuesGenerator {
+        [string[]] GetValidValues() {
+            $Values = (Get-PanasonicDLCategories).Name
+            return $Values
+        }
     }
+
 }
+
+
+
+
+
 
 function Get-ApiData {
     param (
