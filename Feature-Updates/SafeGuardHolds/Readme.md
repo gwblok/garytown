@@ -7,12 +7,15 @@ Information contained in JSON format in SafeGuardHoldDatabase.json file
 Example PowerShell Commands:
 
 ```PowerShell
-- $SafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldDataBase.json'
-  - #This will set the URL for the JSON database
-- $SafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
-  - #This creates a variable with the safeguard data
-- $SafeGuardData | Where-Object {$_.SafeguardID -eq "56031903"}
-  - #This will pull the information for the SafeGuard 56031903
+#This will set the URL for the JSON database
+$SafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldDataBase.json'
+
+#This creates a variable with the safeguard data
+$SafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
+
+#This will pull the information for the SafeGuard 56031903
+$SafeGuardData | Where-Object {$_.SafeguardID -eq "56031903"}
+
 ```
 
 [![Demo](media/Demo1.png)](media/Demo1.png)
