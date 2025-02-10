@@ -161,12 +161,12 @@ $WinPEBuilderPath = 'D:\WinPEBuilder'
 # Check for elevation (admin rights)
 If ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
-  # All OK, script is running with admin rights
+    # All OK, script is running with admin rights
 }
 else
 {
-  Write-Warning "This script needs to be run with admin rights..."
-  Exit 1
+    Write-Warning "This script needs to be run with admin rights..."
+    Exit 1
 }
 
 #
@@ -317,7 +317,6 @@ $WinPEScratch = "$Scratch\winpe.wim"
 If (Test-Path $Scratch) {
     Write-Host "Cleaning up previous run: $Scratch" -ForegroundColor DarkGray
     Remove-Item $Scratch -Force -Verbose -Recurse | Out-Null
-    
 }
 Write-Host "Creating New Folder: $Scratch" -ForegroundColor DarkGray
 New-Item $Scratch -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
@@ -473,18 +472,21 @@ If ($SSUPath) {Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbos
 
 #Apply LCU
 $CU_MSU = Get-ChildItem -Path "$WinPEBuilderPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
+
 if ($CU_MSU){
     if ($CU_MSU.count -gt 1){
-        $CU_MSU = $CU_MSU | Sort-Object -Property Name | Select-Object -Last 1
+        $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
     }
-    $PatchPath = $CU_MSU.FullName
-    If ($PatchPath) {
-        Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
-        Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+    foreach ($CU in $CU_MSU){
+        Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
+        $PatchPath = $CU_MSU.FullName
+        If ($PatchPath) {
+            $AvailableCU = $PatchPath
+            Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
+            Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
+            Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+        }
     }
-}
-else {
-    write-host "No CU's found to apply to OS $OSNameNeeded"
 }
 
 
