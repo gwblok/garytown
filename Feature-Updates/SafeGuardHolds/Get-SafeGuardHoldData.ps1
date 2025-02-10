@@ -172,6 +172,9 @@ $SettingsTable = @(
 
 #>
 
+$SettingsTable = @(
+@{ ALTERNATEDATALINK = ' http://adl.windows.com/appraiseradl/2025_01_30_03_04_AMD64.cab'; ALTERNATEDATAVERSION = '2699'}
+)
 #This is the new Process to find all URLs that are valid.  This will be used to update the SettingsTable.
 
 #Experimental - Run 1 Time Only to create the JSON file on GitHub - This will start at the beginning. Then skip the next section where it grabs info form GitHub
@@ -259,7 +262,7 @@ if ($GuessingTable.count -ge 1){
     $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
     Write-Host "Exporting to SafeGuardHoldURLS.json File" -ForegroundColor Green
     [System.IO.File]::WriteAllLines("$Path\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
-    $LocalGitHubPath = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBookStudio2Pint\garytown\Feature-Updates\SafeGuardHolds"
+    $LocalGitHubPath = "C:\Users\GaryBlok\OneDrive - garytown\GitHub\garytown\Feature-Updates\SafeGuardHolds"
     if (Test-Path $LocalGitHubPath\SafeGuardHoldURLS.json){
         Write-Host "Exporting to Local GitHub SafeGuardHoldURLS.json File" -ForegroundColor Green
         [System.IO.File]::WriteAllLines("$LocalGitHubPath\SafeGuardHoldURLS.json", ($GuessingTable | ConvertTo-Json), $Utf8NoBomEncoding)
