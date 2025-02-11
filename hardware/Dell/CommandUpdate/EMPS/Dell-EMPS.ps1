@@ -70,6 +70,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 # Change Log
 
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
+25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
 
 #>
 $ScriptVersion = '25.1.25.2'
@@ -1081,17 +1082,22 @@ Function Get-DellBIOSUpdates {
         if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
         else{
             [Version]$CurrentBIOSVersion = (Get-CimInstance -ClassName Win32_BIOS).SMBIOSBIOSVersion
-            [version]$LatestVersion = (Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest).DellVersion
+            $LatestBIOS = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest
+            if ($LatestVersion.count -gt 1){
+                $LatestBIOS = $LatestBIOS | Select-Object -Last 1
+            }
+            [version]$LatestVersion = ($LatestBIOS).DellVersion
+
             if ($CurrentBIOSVersion -lt $LatestVersion){
-                #Write-Output "Current BIOS Version: $CurrentBIOSVersion"
-                #Write-Output "Latest BIOS Version: $LatestVersion"
-                #Write-Output "New BIOS Update Available"
+                Write-Verbose "Current BIOS Version: $CurrentBIOSVersion"
+                Write-Verbose "Latest BIOS Version: $LatestVersion"
+                Write-Verbose "New BIOS Update Available"
                 return $false
             }
             else {
-                #Write-Output "Current BIOS Version: $CurrentBIOSVersion"
-                #Write-Output "Latest BIOS Version: $LatestVersion"
-                #Write-Output "No New BIOS Update Available"
+                Write-Verbose "Current BIOS Version: $CurrentBIOSVersion"
+                Write-Verbose "Latest BIOS Version: $LatestVersion"
+                Write-Verbose "No New BIOS Update Available"
                 return $true
             }
         }
