@@ -479,7 +479,7 @@ if ($CU_MSU){
     }
     foreach ($CU in $CU_MSU){
         Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
-        $PatchPath = $CU_MSU.FullName
+        $PatchPath = $CU.FullName
         If ($PatchPath) {
             $AvailableCU = $PatchPath
             Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
@@ -515,6 +515,7 @@ Dismount-WindowsImage -Path $MountPath -Save
 
 #Get build info
 $BuildNumber = (Get-WindowsImage -ImagePath $WinPEScratch -Index 1).Version
+write-output "Build Number: $BuildNumber"
 
 #Export boot image to reduce the size
 If ($StifleR) {
