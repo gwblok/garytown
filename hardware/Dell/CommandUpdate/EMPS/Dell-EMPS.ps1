@@ -1082,9 +1082,9 @@ Function Get-DellBIOSUpdates {
         if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
         else{
             [Version]$CurrentBIOSVersion = (Get-CimInstance -ClassName Win32_BIOS).SMBIOSBIOSVersion
-            $LatestBIOS = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest
-            if ($LatestVersion.count -gt 1){
-                $LatestBIOS = $LatestBIOS | Select-Object -Last 1
+            $LatestBIOS = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS -Latest | Sort-Object -Property ReleaseDate -Descending
+            if ($LatestBIOS.count -gt 1){
+                $LatestBIOS = $LatestBIOS | Select-Object -First 1
             }
             [version]$LatestVersion = ($LatestBIOS).DellVersion
 
