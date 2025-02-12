@@ -44,6 +44,10 @@
 #   - https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/a4531812-78f3-4028-8d1a-ea4381a49c48/public/windows11.0-kb5039239-x64_cd369cfc3ecd2e67c715dc28e563ca7ac1515f79.msu
 
 
+$StifleR = $true
+$BranchCache = $true
+$SkipOptionalComponents = $false
+$WinPEBuilderPath = 'D:\WinPEBuilder'
 
 #region functions
 
@@ -153,10 +157,7 @@ $StifleRSourceReadme = "Place the StifleR source directory in this folder if inc
 
 #endregion
 
-$StifleR = $true
-$BranchCache = $true
-$SkipOptionalComponents = $false
-$WinPEBuilderPath = 'D:\WinPEBuilder'
+
 
 # Check for elevation (admin rights)
 If ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
