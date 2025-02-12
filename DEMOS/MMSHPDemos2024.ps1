@@ -1,3 +1,4 @@
+Write-Host -foregroundcolor cyan 'HP MMS 2024 HP Demos | Get-MMSDemo1 | Get-MMSDemo2 | Get-MMSDemo3 | Get-MMSDemo4 | Get-MMSDemo5'
 function Get-MMSDemo1 {
     Write-host ' Softpaq Automation Demo' -ForegroundColor Cyan
     Write-host '  cd c:\temp' -ForegroundColor Gray
