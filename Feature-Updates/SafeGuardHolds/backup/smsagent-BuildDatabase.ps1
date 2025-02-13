@@ -4,11 +4,16 @@
 ###################################################################################################################
 
 # This script is based on the work of Adam Gross and Gary Blok
-# It makes use of parallel procesing available in PowerShell Core to improve execution speed
+# It makes use of parallel processing available in PowerShell Core to improve execution speed
 # Run on a well-spec'd multi-core machine for best performance
 # Requires that sdb2xml.exe exists at $AppraiserWorkingDirectory\sdb2xml.exe (https://github.com/heaths/sdb2xml)
 # Requires .Net Framework 3.5 to run the sdb2xml.exe utility
 # Expected run time could be around 40-60 minutes
+
+<#  Changes by Gary Blok (Thanks Trevor for this awesome reworking of our original script)
+    25.2.9 Modified to not clean out after running, and then checking for previous runs, skipping downloads, and expanding if already present, saving a lot of time.
+
+#>
 #Requires -Version 7
 
 #region ----------------------------------------------- Parameters ------------------------------------------------
@@ -21,7 +26,7 @@ $syncHash = [hashtable]::Synchronized(@{
     Counter = @(0)
     GatedBlocks = [Collections.Generic.List[PSCustomObject]]::new()
 })
-# Maximum number of parallel threads. The optimimum number depends on available system resources
+# Maximum number of parallel threads. The optimum number depends on available system resources
 $ThrottleLimit = 25
 # Minimum free space required on the drive where the cab files will be downloaded to in GB
 $MinimumDriveSpace = 30
@@ -32,7 +37,8 @@ $PurgeWorkingDirectory = $false
 
 #region ----------------------------------------------- Prepare ---------------------------------------------------
 # Create the working directory if needed
-$AppraiserRoot = "$AppraiserWorkingDirectory\$(Get-Date -format "yyyy-MM-dd HH.mm")"
+#$AppraiserRoot = "$AppraiserWorkingDirectory\$(Get-Date -format "yyyy-MM-dd HH.mm")"
+$AppraiserRoot = "$AppraiserWorkingDirectory\BuildZone"
 try {[void][System.IO.Directory]::CreateDirectory($AppraiserRoot)}
 catch {throw}
 
@@ -43,7 +49,7 @@ If ((Test-Path -Path "$AppraiserWorkingDirectory\sdb2xml.exe") -eq $false)
 }
 
 # Check if .Net Framework 3.5 is installed
-$Net35 = Get-ItemProperty "HKLM:\Software\Microsoft\NET Framework Setup\NDP\v3.5" -Name Install -ErrorAction SilentlyContinue | Select -ExpandProperty Install
+$Net35 = Get-ItemProperty "HKLM:\Software\Microsoft\NET Framework Setup\NDP\v3.5" -Name Install -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Install
 if ($null -eq $Net35 -or $net35 -ne 1)
 {
     throw ".Net Framework 3.5 is not installed."
@@ -80,7 +86,7 @@ $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 
 #region ----------------------------------------------- Download CABs ---------------------------------------------
-$SettingsTable | foreach -Parallel {
+$SettingsTable | ForEach-Object -Parallel {
     $Appraiser = $_
     # Increment the counter
     $syncHash = $using:syncHash
@@ -98,7 +104,8 @@ $SettingsTable | foreach -Parallel {
         $OutFileName = $AppraiserURL.Split("/")[-1]
         Write-Output "[Thread $Count] Downloading $OutFileName..."
         [void][System.IO.Directory]::CreateDirectory($OutFilePath)   
-        Invoke-WebRequest -URI $AppraiserURL -OutFile "$OutFilePath\$OutFileName" -ErrorAction Stop 
+        if (Test-Path -Path "$OutFilePath\$OutFileName"){Write-host -ForegroundColor Green "File already exists: $OutFileName"}
+        else {Invoke-WebRequest -URI $AppraiserURL -OutFile "$OutFilePath\$OutFileName" -ErrorAction Stop}
     }
     catch 
     {
@@ -114,7 +121,7 @@ $syncHash['Counter'][0] = 0
 
 #region ----------------------------------------------- Expand SDBs to XML ----------------------------------------
 $CabDirectories = Get-ChildItem -Path $AppraiserRoot -Directory
-$CabDirectories | foreach -Parallel {
+$CabDirectories | ForEach-Object -Parallel {
     $CabDirectory = $_.Name
     # Increment the counter
     $syncHash = $using:syncHash
@@ -125,29 +132,32 @@ $CabDirectories | foreach -Parallel {
     # Expand out the cab contents
     try 
     {
-        $CabFile = Get-ChildItem -Path "$using:AppraiserRoot\$CabDirectory" -Filter "*.cab" -ErrorAction Stop | Select -First 1
+        $CabFile = Get-ChildItem -Path "$using:AppraiserRoot\$CabDirectory" -Filter "*.cab" -ErrorAction Stop | Select-Object -First 1
         $OutFilePath = "$using:AppraiserRoot\$CabDirectory"
         $OutFileName = $CabFile.Name
-        Write-Output "[Thread $Count] Expanding $OutFileName..."
-        $null = & expand.exe "$OutFilePath\$OutFileName" -F:* $OutFilePath
-        # Decompress the appraiser.sdb
-        $appraiserSDB = Get-ChildItem -Path $OutFilePath -Recurse -File -Filter "Appraiser.sdb" -ErrorAction Stop
-        $inFileBytes = [System.IO.File]::ReadAllBytes( $(resolve-path $appraiserSDB) )
-        $expandedAppraiserSDB = "$OutFilePath\Appraiser_Expanded.sdb"
-        $DeflateStreamBlob = $inFileBytes[22..($inFileBytes.Length)]
-        $MemoryStream = [System.IO.MemoryStream]::new($DeflateStreamBlob)
-        $OutputObj = [System.IO.FileStream]::new($expandedAppraiserSDB, ([IO.FileMode]::Create), ([IO.FileAccess]::Write), ([IO.FileShare]::None))
-        $DeflateStream = [System.IO.Compression.DeflateStream]::new($MemoryStream, ([IO.Compression.CompressionMode]::Decompress))
-        $buffer = [byte[]]::new(1024)
-        while ($true) {
-            $read = $DeflateStream.Read($buffer, 0, 1024)
-            if ($read -le 0) {
-                break;
+        if (Test-Path -Path "$OutFilePath\Appraiser_Expanded.sdb"){Write-host -ForegroundColor Yellow "File already exists: $($OutFilePath)\Appraiser_Expanded.sdb"}
+        else {
+            Write-Output "[Thread $Count] Expanding $OutFileName..."
+            $null = & expand.exe "$OutFilePath\$OutFileName" -F:* $OutFilePath
+            # Decompress the appraiser.sdb
+            $appraiserSDB = Get-ChildItem -Path $OutFilePath -Recurse -File -Filter "Appraiser.sdb" -ErrorAction Stop
+            $inFileBytes = [System.IO.File]::ReadAllBytes( $(resolve-path $appraiserSDB) )
+            $expandedAppraiserSDB = "$OutFilePath\Appraiser_Expanded.sdb"
+            $DeflateStreamBlob = $inFileBytes[22..($inFileBytes.Length)]
+            $MemoryStream = [System.IO.MemoryStream]::new($DeflateStreamBlob)
+            $OutputObj = [System.IO.FileStream]::new($expandedAppraiserSDB, ([IO.FileMode]::Create), ([IO.FileAccess]::Write), ([IO.FileShare]::None))
+            $DeflateStream = [System.IO.Compression.DeflateStream]::new($MemoryStream, ([IO.Compression.CompressionMode]::Decompress))
+            $buffer = [byte[]]::new(1024)
+            while ($true) {
+                $read = $DeflateStream.Read($buffer, 0, 1024)
+                if ($read -le 0) {
+                    break;
+                }
+                $OutputObj.Write($buffer, 0, $read)
             }
-            $OutputObj.Write($buffer, 0, $read)
+            # Don't forget to dispose!
+            $OutputObj.Dispose()
         }
-        # Don't forget to dispose!
-        $OutputObj.Dispose()
     }
     catch 
     {
@@ -162,7 +172,7 @@ $syncHash['Counter'][0] = 0
 
 
 #region ----------------------------------------------- Convert SDB to XML ----------------------------------------
-$CabDirectories | foreach -Parallel {
+$CabDirectories | ForEach-Object -Parallel {
     $CabDirectory = $_.Name
     # Increment the counter
     $syncHash = $using:syncHash
@@ -179,8 +189,10 @@ $CabDirectories | foreach -Parallel {
         # Copy the sdb2xml utility to the threads' working directory. Each thread needs to create its own process from it.
         [System.IO.File]::Copy("$using:AppraiserWorkingDirectory\sdb2xml.exe", "$OutFilePath\sdb2xml.exe", $true)
         $appraiserXMLFile = "$OutFilePath\appraiser.xml"
-        & $OutFilePath\sdb2xml.exe $expandedAppraiserSDB -out $appraiserXMLFile
-      }
+        if (Test-Path -Path "$OutFilePath\appraiser.xml"){Write-host -ForegroundColor Yellow "File already exists: $($OutFilePath)\appraiser.xml"}
+        else {& $OutFilePath\sdb2xml.exe $expandedAppraiserSDB -out $appraiserXMLFile}
+        
+    }
     catch 
     {
         throw "[Thread $Count] $($_.Exception.Message)"
@@ -194,7 +206,7 @@ $syncHash['Counter'][0] = 0
 
 
 #region ----------------------------------------------- Parse Appraiser Data --------------------------------------
-$CabDirectories | foreach -Parallel {
+$CabDirectories | ForEach-Object -Parallel {
     $CabDirectory = $_.Name
     $syncHash = $using:syncHash
     $WorkingDirectory = "$using:AppraiserRoot\$CabDirectory"

@@ -18,8 +18,8 @@ $ComputerManufacturer = (Get-MyComputerManufacturer -Brief)
 #Variables to define the Windows OS / Edition etc to be applied during OSDCloud
 $Product = (Get-MyComputerProduct)
 $OSVersion = 'Windows 11' #Used to Determine Driver Pack
-$OSReleaseID = '21H2' #Used to Determine Driver Pack
-$OSName = 'Windows 11 21H2 x64'
+$OSReleaseID = '24H2' #Used to Determine Driver Pack
+$OSName = 'Windows 11 24H2 x64'
 $OSEdition = 'Pro'
 $OSActivation = 'Retail'
 $OSLanguage = 'fr-ca'

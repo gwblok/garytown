@@ -267,14 +267,17 @@ catch {throw}
 $CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
 if ($CU_MSU){
     if ($CU_MSU.count -gt 1){
-        $CU_MSU = $CU_MSU | Sort-Object -Property Name | Select-Object -Last 1
+        $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
     }
-    $PatchPath = $CU_MSU.FullName
-    If ($PatchPath) {
-        $AvailableCU = $PatchPath
-        Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
-        #Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
-        #Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+    foreach ($CU in $CU_MSU){
+        Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
+        $PatchPath = $CU.FullName
+        If ($PatchPath) {
+            $AvailableCU = $PatchPath
+            Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
+            Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
+            Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+        }
     }
 }
 else {

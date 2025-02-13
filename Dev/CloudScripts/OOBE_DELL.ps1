@@ -10,7 +10,7 @@ $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNu
 
 
 
-Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPSps1')
+Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPS.ps1')
 
 
 write-output "Manufacturer:    $Manufacturer"
