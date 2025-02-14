@@ -15,13 +15,13 @@
 
 #Please ensure that the following folders exist before running this script, adjust the paths as necessary
 #$StifleRParentFolder = "C:\Program Files\2Pint Software"
-$StifleRInstallFolder = Get-ItemPropertyValue -Path HKLM:\SYSTEM\CurrentControlSet\Services\StifleRServer -Name ImagePath | Split-Path -Parent
+$StifleRInstallFolder = (Get-ItemPropertyValue -Path HKLM:\SYSTEM\CurrentControlSet\Services\StifleRServer -Name ImagePath | Split-Path -Parent).Replace('"','')
 $StifleRParentFolder = $StifleRInstallFolder | split-Path -Parent
-$gMSAAccountName = "gMSA_StifleRMaintenance"
+$gMSAAccountName = 'gMSAStifleR$'
 
 #Create Folder Structure
 $StifleRMaintenanceFolder = "$StifleRParentFolder\StifleR Maintenance"
-$StifleRMaintenanceLogFolder = "$env:ProgramData\2Pint Software\StifleR Maintenance\Logs"
+$StifleRMaintenanceLogFolder = "$ENV:ProgramData\2Pint Software\StifleR Maintenance Logs"
 
 # Create the StifleR Maintenance folder if it doesn't exist
 if (-Not (Test-Path -Path $StifleRMaintenanceFolder)) {
@@ -81,9 +81,13 @@ function New-StifleRMaintenanceTask {
 
     # Define the trigger for the scheduled task (daily at 2 AM)
     $trigger = New-ScheduledTaskTrigger -Daily -At $timeofday
+    # Define the settings for the scheduled task
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5) -MultipleInstances IgnoreNew -DisallowStartIfOnRemoteAppSession -RunOnlyIfNetworkAvailable -RunLevel Highest
 
+    # Define the principal for the scheduled task
+    $principal = New-ScheduledTaskPrincipal -UserId $gMSAAccountName -LogonType Password -RunLevel Highest
     # Register the scheduled task
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -User $gMSAAccountName  -RunLevel Highest -TaskPath "\2Pint Software" -Force
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -TaskPath "\2Pint Software" -Force -Settings $settings -Principal $principal
 }
 
 
