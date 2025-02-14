@@ -80,7 +80,7 @@ function New-StifleRMaintenanceTask {
     $trigger = New-ScheduledTaskTrigger -Daily -At 2:00AM
 
     # Register the scheduled task
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -User $gMSAAccountName  -RunLevel Highest
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -User $gMSAAccountName  -RunLevel Highest -TaskPath "\2Pint Software" -Force
 }
 
 
