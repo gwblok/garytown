@@ -49,7 +49,8 @@ function New-StifleRMaintenanceTask {
     param (
         [string]$TaskName = "StifleRMaintenance",
         [string]$ScriptPath = "C:\Program Files\2Pint Software\StifleR Maintenance\script.ps1",
-        [string]$gMSAAccountName = "gMSA_StifleRMaintenance"
+        [string]$gMSAAccountName = "gMSA_StifleRMaintenance",
+        [string]$timeofday = "2:00AM"
     )
     
     if (Test-ScheduledTaskExists -TaskName $TaskName) {
@@ -77,7 +78,7 @@ function New-StifleRMaintenanceTask {
     $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`""
 
     # Define the trigger for the scheduled task (daily at 2 AM)
-    $trigger = New-ScheduledTaskTrigger -Daily -At 2:00AM
+    $trigger = New-ScheduledTaskTrigger -Daily -At $timeofday
 
     # Register the scheduled task
     Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -User $gMSAAccountName  -RunLevel Highest -TaskPath "\2Pint Software" -Force
@@ -93,7 +94,7 @@ $RemoveStifleRStaleClientsScriptContent = @'
 '@
 
 $RemoveStifleRStaleClientsScriptContent | Out-File -FilePath "$StifleRMaintenanceFolder\Remove-StifleRStaleClients.ps1" -Force
-New-StifleRMaintenanceTask -TaskName "Remove StifleR Stale Clients" -ScriptPath "$StifleRMaintenanceFolder\Remove-StifleRStaleClients.ps1" -gMSAAccountName $gMSAAccountName
+New-StifleRMaintenanceTask -TaskName "Remove StifleR Stale Clients" -ScriptPath "$StifleRMaintenanceFolder\Remove-StifleRStaleClients.ps1" -gMSAAccountName $gMSAAccountName -timeofday "3:00AM"
 
 
 #Create Maintenance Scripts - Clean up Duplicate Objects
@@ -102,4 +103,4 @@ $RemoveStifleRDuplicateClientsScriptContent = @'
 '@
 
 $RemoveStifleRDuplicateClientsScriptContent | Out-File -FilePath "$StifleRMaintenanceFolder\Remove-StifleRDuplicates.ps1" -Force
-New-StifleRMaintenanceTask -TaskName "Remove StifleR Duplicate Clients" -ScriptPath "$StifleRMaintenanceFolder\Remove-StifleRDuplicates.ps1" -gMSAAccountName $gMSAAccountName
+New-StifleRMaintenanceTask -TaskName "Remove StifleR Duplicate Clients" -ScriptPath "$StifleRMaintenanceFolder\Remove-StifleRDuplicates.ps1" -gMSAAccountName $gMSAAccountName -timeofday "4:00AM"
