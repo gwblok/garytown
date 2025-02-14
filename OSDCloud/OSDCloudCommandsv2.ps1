@@ -264,24 +264,27 @@ try {
 }
 catch {throw}
 
-$CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
-if ($CU_MSU){
-    if ($CU_MSU.count -gt 1){
-        $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
-    }
-    foreach ($CU in $CU_MSU){
-        Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
-        $PatchPath = $CU.FullName
-        If ($PatchPath) {
-            $AvailableCU = $PatchPath
-            Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
-            Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
-            Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+#This needs to be run when the WIM is mounted.
+function Apply-WinPEMSUpdates {
+    $CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
+    if ($CU_MSU){
+        if ($CU_MSU.count -gt 1){
+            $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
+        }
+        foreach ($CU in $CU_MSU){
+            Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
+            $PatchPath = $CU.FullName
+            If ($PatchPath) {
+                $AvailableCU = $PatchPath
+                Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
+                Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
+                #Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
+            }
         }
     }
-}
-else {
-    write-host "No CU's found to apply to OS $OSNameNeeded"
+    else {
+        write-host "No CU's found to apply to OS $OSNameNeeded"
+    }
 }
 
 <#
@@ -379,7 +382,7 @@ if ($WinRE){
     Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WifiProfile C:\OSDCloud-ROOT\Lab-WifiProfile.xml
 }
 else{
-    Edit-OSDCloudWinPE -CloudDriver HP,USB -PSModuleInstall HPCMSL
+    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
     Edit-OSDCloudWinPE -StartURL 'https://hope.garytown.com'
 }
 New-OSDCloudISO
@@ -420,7 +423,7 @@ write-host "Mounting: $(Get-OSDCloudWorkspace)\Media\sources\boot.wim"  -Foregro
 Mount-WindowsImage -Path $MountPath -ImagePath "$(Get-OSDCloudWorkspace)\Media\sources\boot.wim" -Index 1
 
 
-Add-Opera -MountPath "$MountPath" -BuildPath "c:\windows\temp\Opera"
+#Add-Opera -MountPath "$MountPath" -BuildPath "c:\windows\temp\Opera"
 
 #Copy Development Files - Overwrite production
 $GitHubFolder = "C:\Users\GaryBlok\OneDrive - garytown\GitHub"
@@ -430,7 +433,9 @@ $OSDMountedModule = "$($OSDMountedModuleFolder.FullName)"
 #Update Boot WIM
 write-host "Updating Module in Boot WIM from Dev Source" -ForegroundColor Green
 if (($GitHubFolder) -and ($OSDMountedModule) -and ($MountPath)){
-    copy-item "$GitHubFolder\OSD\*"   "$OSDMountedModule" -Force -Recurse
+    copy-item "$GitHubFolder\OSD\Public\*"   "$OSDMountedModule\Public\" -Force -Recurse
+    copy-item "$GitHubFolder\OSD\Catalogs\*"   "$OSDMountedModule\Catalogs\" -Force -Recurse
+    copy-item "$GitHubFolder\OSD\Projects\*"   "$OSDMountedModule\Projects\" -Force -Recurse
     if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
         Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
     }
@@ -439,6 +444,8 @@ if (($GitHubFolder) -and ($OSDMountedModule) -and ($MountPath)){
 
 #Dismount - Save
 Dismount-WindowsImage -Path $MountPath -Save
+
+New-OSDCloudISO
 
 #Update Flash Drive
 Update-OSDCloudUSB
