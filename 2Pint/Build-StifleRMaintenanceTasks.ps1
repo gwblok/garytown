@@ -73,21 +73,15 @@ function New-StifleRMaintenanceTask {
         $rootFolder = $taskService.GetFolder("\")
         $rootFolder.CreateFolder($folderName) | Out-Null
     }
-
-    Write-Output "Scheduled task folder '$folderName' created successfully."
     
     # Define the action for the scheduled task
     $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`""
-
     # Define the trigger for the scheduled task (daily at 2 AM)
     $trigger = New-ScheduledTaskTrigger -Daily -At $timeofday
-    # Define the settings for the scheduled task
-    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -DontStopOnIdleEnd -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5) -MultipleInstances IgnoreNew -DisallowStartIfOnRemoteAppSession -RunOnlyIfNetworkAvailable -RunLevel Highest
-
     # Define the principal for the scheduled task
     $principal = New-ScheduledTaskPrincipal -UserId $gMSAAccountName -LogonType Password -RunLevel Highest
     # Register the scheduled task
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -TaskPath "\2Pint Software" -Force -Settings $settings -Principal $principal
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -Description "Daily StifleR Maintenance Task" -TaskPath "\2Pint Software" -Force -Principal $principal
 }
 
 
