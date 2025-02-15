@@ -1,7 +1,11 @@
 #region Functions
-Function Remove-OSDCloudWorkSpaceMediaLanguageExtras {
+Function Remove-OSDCloudMediaLanguageExtras {
     if (Test-Path -Path "$(Get-OSDCloudWorkspace)\Media"){
         $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
+        $Folders | Remove-Item -Force -Recurse
+    }
+    if (Test-Path -path "$(Get-OSDCloudTemplate)\Media"){
+        $Folders = get-childitem -path "$(Get-OSDCloudTemplate)\Media" -Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
         $Folders | Remove-Item -Force -Recurse
     }
 }
@@ -205,13 +209,57 @@ Function Remove-OldOSDModulesInWinPE {
     #Dismount - Save
     Dismount-WindowsImage -Path $MountPath -Save
 }
-
+#This needs to be run when the WIM is mounted.
+function Get-WinPEMSUpdates {
+    param (
+        [switch]$Apply,
+        [string]$MountPath = 'C:\Mount'
+    )
+    $CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
+    if ($CU_MSU){
+        if ($CU_MSU.count -gt 1){
+            $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
+        }
+        foreach ($CU in $CU_MSU){
+            Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
+            $PatchPath = $CU.FullName
+            If ($PatchPath) {
+                $AvailableCU = $PatchPath
+                Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
+                Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
+                if ($Apply){Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose}
+            }
+        }
+        return $true
+    }
+    else {
+        write-host "No CU's found to apply to OS $OSNameNeeded"
+        return $false
+    }
+}
+# Clean up and create Mount directory
+function Reset-MountPath {
+    param (
+        $MountPath
+    )
+    If (Test-Path $MountPath) {
+        Write-Host "Cleaning up previous run: $MountPath" -ForegroundColor DarkGray
+        Remove-Item $MountPath -Force -Verbose -Recurse | Out-Null    
+    }
+    Write-Host "Creating New Folder: $MountPath" -ForegroundColor DarkGray
+    New-Item $MountPath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+}
 #endregion
 
 
 $IsTemplateWinRE = $false
+$IsTemplateARM64 = $true
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
+$MountPath = "C:\Mount"
 
+#Build Additional Variables based on the ones above
+if ($IsTemplateARM64){$Arch = 'ARM64'; $ArchDisplay = 'ARM64'}
+else{$Arch = 'AMD64'; $ArchDisplay = 'x64'}
 
 
 
@@ -220,17 +268,12 @@ if ($CurrentModule){
     $AvailbleModule = Find-Module -Name "OSD"
     if ([VERSION]$CurrentModule.Version -lt [VERSION]$AvailbleModule.Version){
         Update-Module -name OSD -Force
-        
         #Restart PowerShell after OSD has been updated (if it needed to be updated)
-
     }
-
 }
-else{
-        Install-Module -name OSD -Force
-}
+else{Install-Module -name OSD -Force}
 
-$ADKPaths = Get-AdkPaths -ErrorAction SilentlyContinue
+$ADKPaths = Get-AdkPaths -Architecture $Arch -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
     Write-Host "NO ADK Found, resolve and try again" -ForegroundColor Red
     break
@@ -246,11 +289,9 @@ Write-Host "$($ADKWinPEInfo.ImageName)" -ForegroundColor Green
 
 
 $Mappings = @(
-
-@{ Build = '10.0.26100.1'; OSName = "Windows 11 24H2 x64" ; OSDisplay="Win1124H2"}
-@{ Build = '10.0.22621.1'; OSName = "Windows 11 22H2 x64" ; OSDisplay="Win1122H2"}
-@{ Build = '10.0.19045.1'; OSName = "Windows 10 22H2 x64" ; OSDisplay="Win1022H2"}
-
+@{ Build = '10.0.26100.1'; OSName = "Windows 11 24H2 $ArchDisplay" ; OSDisplay="Win1124H2"}
+@{ Build = '10.0.22621.1'; OSName = "Windows 11 22H2 $ArchDisplay" ; OSDisplay="Win1122H2"}
+@{ Build = '10.0.19045.1'; OSName = "Windows 10 22H2 $ArchDisplay" ; OSDisplay="Win1022H2"}
 )
 $OSNameNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Version}).OSName
 $OSDisplayNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Version}).OSDisplay
@@ -260,118 +301,51 @@ $Lang = ($ADKWinPE.FullName | Split-Path) | Split-Path -Leaf
 try {
     [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\Patches\CU\$OSNameNeeded")
     [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\AKDWinPEWIM")
-    
 }
 catch {throw}
 
-#This needs to be run when the WIM is mounted.
-function Apply-WinPEMSUpdates {
-    $CU_MSU = Get-ChildItem -Path "$OSDCloudRootPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
-    if ($CU_MSU){
-        if ($CU_MSU.count -gt 1){
-            $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
-        }
-        foreach ($CU in $CU_MSU){
-            Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
-            $PatchPath = $CU.FullName
-            If ($PatchPath) {
-                $AvailableCU = $PatchPath
-                Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
-                Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
-                #Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
-            }
-        }
-    }
-    else {
-        write-host "No CU's found to apply to OS $OSNameNeeded"
-    }
-}
 
-<#
-$GitHubFolder = "C:\Users\GaryBlok\OneDrive - garytown\Documents\GitHub - ZBook"
-$LocalModuleFolder = Get-ChildItem 'C:\Program Files\WindowsPowerShell\Modules\OSD'
-$OSDLocalModule = "$($LocalModuleFolder.FullName)"
-copy-item "$GitHubFolder\OSD\*"   "$OSDLocalModule" -Force -Verbose -Recurse
-#>
-
-
-
-
-<#
-#Setup WorkSpace Location
-Import-Module -name OSD -force
-$OSDCloudWorkspace = "C:\OSDCloudWinPE"
-$OSDCloudWorkspaceWinRE = "C:\OSDCloudWinRE"
-$OSDCloudWorkspaceARM64 = "C:\OSDCloudARM64"
-[void][System.IO.Directory]::CreateDirectory($OSDCloudWorkspace)
-[void][System.IO.Directory]::CreateDirectory($OSDCloudWorkspaceWinRE)
-[void][System.IO.Directory]::CreateDirectory($OSDCloudWorkspaceARM64)
-
-#New Template (After you've updated ADK to lastest Version)
-New-OSDCloudTemplate -Name "OSDCloudWinPE"
-New-OSDCloudTemplate -Name "OSDCloudWinRE" -WinRE
-New-OSDCloudTemplate -Name "OSDCloudARM64" -ARM64
-
-#New WorkSpace x64
-Set-OSDCloudTemplate -Name OSDCloudWinPE
-New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
-New-OSDCloudWorkSpaceSetupCompleteTemplate
-
-#>
-
+#Build Template Name
 if ($IsTemplateWinRE){
     $templateName = "OSDCloud-$($OSDisplayNeeded)-WinRE"
     $WinRE = $True
 }
 else{
-    $templateName = "OSDCloud-$($OSDisplayNeeded)-WinPE"
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($ArchDisplay)"
     $WinRE = $false
 }
-
 Write-Host -ForegroundColor Magenta "Template Name: $templateName"
 $WorkSpacePath = "C:\$TemplateName"
-$MountPath = "C:\Mount"
 
 
-# Clean up and create Mount directory
-If (Test-Path $MountPath) {
-    Write-Host "Cleaning up previous run: $MountPath" -ForegroundColor DarkGray
-    Remove-Item $MountPath -Force -Verbose -Recurse | Out-Null    
-}
-Write-Host "Creating New Folder: $MountPath" -ForegroundColor DarkGray
-New-Item $MountPath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-
-
-#$DisplayLinkDriverPath = "C:\Users\GaryBlok\Downloads\DisplayLink USB Graphics Software for Windows11.4 M0-INF\x64"
-
+#Build the Template
 Write-Host -ForegroundColor Magenta "Creating OSDCloud Template for $OSNameNeeded"
-if ($AvailableCU){
-    Write-Host "  Including CU & 7Zip in Boot Media" -ForegroundColor Cyan
-    if ($WinRE){
-        New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip -WinRE:$WinRE
-    }
-    else{
-        New-OSDCloudTemplate -Name $templateName -CumulativeUpdate "$AvailableCU" -Add7Zip
-    }
+Write-Host "  Including 7Zip in Boot Media" -ForegroundColor Cyan
+if ($WinRE){
+    New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
 }
-else {
-    Write-Host "  Including 7Zip in Boot Media" -ForegroundColor Cyan
-    if ($WinRE){
-        New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
-    }
-    else{
-        New-OSDCloudTemplate -Name $templateName -Add7Zip
-    }
+else{
+    New-OSDCloudTemplate -Name $templateName -Add7Zip -OSArch $ArchDisplay
+}
+#Cleanup Languages
+Remove-OSDCloudWorkSpaceMediaLanguageExtras
+
+#Update the Template with the CU (if available)
+$AvailableCU = Get-WinPEMSUpdates
+
+if ($AvailableCU){
+    $Path = Get-OSDCloudTemplate
+    $BootWIM = (Get-ChildItem -Path $Path -Recurse -Filter *.wim).FullName
+    Reset-MountPath -MountPath $MountPath
+    Mount-WindowsImage -Path $MountPath -ImagePath $BootWIM -Index 1
+    Get-WinPEMSUpdates -Apply -MountPath $MountPath
+    dismount-WindowsImage -Path $MountPath -Save
 }
 
+#Create the WorkSpace
 Write-Host "Creating OSDCloud WorkSpace: $WorkSpacePath" -ForegroundColor Magenta
 New-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
 Set-OSDCloudWorkspace -WorkspacePath $WorkSpacePath
-Remove-OSDCloudWorkSpaceMediaLanguageExtras
-
-
-
-#Edit-OSDCloudWinPE -CloudDriver HP,USB -Add7Zip -PSModuleInstall HPCMSL #7Zip is already in template now
 
 
 #Added HPCMSL into WinPE
@@ -387,28 +361,11 @@ else{
 }
 New-OSDCloudISO
 
-
-#New WorkSpace ARM64
-
-Set-OSDCloudTemplate -Name OSDCloudARM64
-New-OSDCloudWorkspace -WorkspacePath $OSDCloudWorkspaceARM64
-
-
-#Cleanup Languages
-Remove-OSDCloudWorkSpaceMediaLanguageExtras
-
-
-#Cleanup Languages - Different Method
-<#
-$KeepTheseDirs = @('boot','efi','en-us','sources','fonts','resources')
-Get-ChildItem "$(Get-OSDCloudWorkspace)\Media" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
-Get-ChildItem "$(Get-OSDCloudWorkspace)\Media\Boot" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
-Get-ChildItem "$(Get-OSDCloudWorkspace)\Media\EFI\Microsoft\Boot" | Where {$_.PSIsContainer} | Where {$_.Name -notin $KeepTheseDirs} | Remove-Item -Recurse -Force
-#>
-
+#Extra Items Optional
 New-OSDCloudWorkSpaceSetupCompleteTemplate
 Edit-OSDCloudWinPE -DriverPath "C:\OSDCloudARM64\WinPEDrivers\SurfaceProX\FileRepository"
 Edit-OSDCloudWinPE -DriverPath "C:\swsetup\Dock"
+
 #Create Cloud USB
 New-OSDCloudUSB
 
@@ -417,11 +374,9 @@ New-OSDCloudUSB
 Update-OSDCloudUSB -PSUpdate
 
 
-
 #Custom Changes to Boot.Wim
 write-host "Mounting: $(Get-OSDCloudWorkspace)\Media\sources\boot.wim"  -ForegroundColor Green
 Mount-WindowsImage -Path $MountPath -ImagePath "$(Get-OSDCloudWorkspace)\Media\sources\boot.wim" -Index 1
-
 
 #Add-Opera -MountPath "$MountPath" -BuildPath "c:\windows\temp\Opera"
 
@@ -440,8 +395,6 @@ if (($GitHubFolder) -and ($OSDMountedModule) -and ($MountPath)){
         Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
     }
 }
-#Update Local Module
-
 #Dismount - Save
 Dismount-WindowsImage -Path $MountPath -Save
 
