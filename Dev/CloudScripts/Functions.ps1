@@ -239,7 +239,7 @@ Function Get-MyComputerInfoBasic {
     Write-Output "TPM Info:                              $($TPM.ManufacturerVersion) | Spec: $($TPM.SpecVersion)"
     Write-Output "Time Zone:                             $(Get-TimeZone)"
     if ($Locale.Name -ne "en-US"){Write-Output "WinSystemLocale:                       $locale"}
-    Write-Output "DiskInfo (C:\):                        Size: $DiskSize | Free: $Freespace"
+    Write-Output "Disk Info (C:\):                        Size: $DiskSize | Free: $Freespace"
 
     #Get Volume Infomration
     try {$SecureBootStatus = Confirm-SecureBootUEFI}
@@ -251,7 +251,7 @@ Function Get-MyComputerInfoBasic {
         $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
         $TotalMB = [MATH]::Round(($SystemVolume).Size /1MB)
         $FreeMB = [MATH]::Round(($SystemVolume).SizeRemaining /1MB)
-        Write-Output "System Volume FreeSpace:               Size: $TotalMB MB | Free: $FreeMB MB"
+        Write-Output "System Volume Info:               Size: $TotalMB MB | Free: $FreeMB MB"
     }
 
     
