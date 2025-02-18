@@ -4,10 +4,12 @@ Function Remove-OSDCloudMediaLanguageExtras {
         $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
         $Folders | Remove-Item -Force -Recurse
     }
+    <#
     if (Test-Path -path "$(Get-OSDCloudTemplate)\Media"){
         $Folders = get-childitem -path "$(Get-OSDCloudTemplate)\Media" -Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
         $Folders | Remove-Item -Force -Recurse
     }
+        #>
 }
 
 

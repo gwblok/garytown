@@ -137,6 +137,18 @@ catch
 {
     throw $_.Exception.Message
 }
+
+$SafeGuardURLSGitHubURL = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldURLS.json'
+$SafeGuardURLSGitHubData = (Invoke-WebRequest -URI $SafeGuardURLSGitHubURL).content | ConvertFrom-Json
+
+Write-Output "Valid URLs currently on GitHub $($SafeGuardURLSGitHubData.Count)"
+
 $Stopwatch.Stop()
 Write-Output "Execution complete in $($Stopwatch.Elapsed.Minutes) minutes and $($Stopwatch.Elapsed.Seconds) seconds." #15 #18 #12 #12 #13 #15 #12 #12 #13
 #endregion --------------------------------------------------------------------------------------------------------
+<#
+$ValidURLs.count
+$Total = $ValidURLs[0] + $SafeGuardURLSGitHubData
+$TotalUnique = $Total | Sort-Object -Property ALTERNATEDATALINK -Unique 
+[IO.File]::WriteAllLines("$OutputDirectory\SafeGuardHoldURLs.json", ($TotalUnique | Sort -Property ALTERNATEDATAVERSION  | ConvertTo-Json), [Text.UTF8Encoding]::new($False))
+#>
