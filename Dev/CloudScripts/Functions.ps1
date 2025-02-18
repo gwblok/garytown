@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '25.1.7.1'
+$ScriptVersion = '25.2.18.1'
 #Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -149,7 +149,7 @@ function Set-HyperVName {
     Rename-Computer -NewName $HyperVName -Force 
 }
 
-
+#Need to rewrite to export this as PS object, instead of Write-Output
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
 Function Get-MyComputerInfoBasic {
     Function Convert-FromUnixDate ($UnixDate) {
