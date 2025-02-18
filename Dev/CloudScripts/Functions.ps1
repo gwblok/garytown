@@ -148,7 +148,22 @@ function Set-HyperVName {
     Write-Output "Renaming Computer to $HyperVName"
     Rename-Computer -NewName $HyperVName -Force 
 }
-
+Write-Host -ForegroundColor Green "[+] Function Get-SafeGuardHoldData (-ID)"
+function Get-SafeGuardHoldData {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$false)]
+        [string]$ID
+    )
+    $SafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldDataBase.json'
+    $SafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
+    if ($ID){
+        return $SafeGuardData | Where-Object {$_.SafeguardID -eq $ID}
+    }
+    else {
+        return $SafeGuardData
+    }
+}
 #Need to rewrite to export this as PS object, instead of Write-Output
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
 Function Get-MyComputerInfoBasic {
