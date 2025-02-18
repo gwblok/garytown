@@ -86,6 +86,10 @@ $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 
 #region ----------------------------------------------- Download CABs ---------------------------------------------
+write-host -foregroundcolor darkgray "====================================================="
+write-host -foregroundcolor magenta "Downloading $($SettingsTable.Count) CAB files"
+write-host -foregroundcolor darkgray "====================================================="
+
 $SettingsTable | ForEach-Object -Parallel {
     $Appraiser = $_
     # Increment the counter
@@ -120,6 +124,11 @@ $syncHash['Counter'][0] = 0
 
 
 #region ----------------------------------------------- Expand SDBs to XML ----------------------------------------
+
+write-host -foregroundcolor darkgray "====================================================="
+write-host -foregroundcolor magenta "  Expand SDBs to XML"
+write-host -foregroundcolor darkgray "====================================================="
+
 $CabDirectories = Get-ChildItem -Path $AppraiserRoot -Directory
 $CabDirectories | ForEach-Object -Parallel {
     $CabDirectory = $_.Name
@@ -172,6 +181,9 @@ $syncHash['Counter'][0] = 0
 
 
 #region ----------------------------------------------- Convert SDB to XML ----------------------------------------
+write-host -foregroundcolor darkgray "====================================================="
+write-host -foregroundcolor magenta "  Convert SDB to XML"
+write-host -foregroundcolor darkgray "====================================================="
 $CabDirectories | ForEach-Object -Parallel {
     $CabDirectory = $_.Name
     # Increment the counter
@@ -206,6 +218,11 @@ $syncHash['Counter'][0] = 0
 
 
 #region ----------------------------------------------- Parse Appraiser Data --------------------------------------
+
+write-host -foregroundcolor darkgray "====================================================="
+write-host -foregroundcolor magenta "  Parse Appraiser Data"
+write-host -foregroundcolor darkgray "====================================================="
+
 $CabDirectories | ForEach-Object -Parallel {
     $CabDirectory = $_.Name
     $syncHash = $using:syncHash
@@ -343,6 +360,10 @@ Write-Output "Normalized block count: $($GatedBlocks.Count)."
 # Output the data to a JSON file
 # Note: each Safeguard Id may have multiple block entries due to differing match requirements per entry,
 # such as file version, etc.
+write-host -foregroundcolor darkgray "====================================================="
+write-host -foregroundcolor magenta "  Exporting Data & Overview"
+write-host -foregroundcolor darkgray "====================================================="
+
 try 
 {
     [IO.File]::WriteAllLines("$AppraiserWorkingDirectory\SafeGuardHoldDataBase.json", ($GatedBlocks | ConvertTo-Json), [Text.UTF8Encoding]::new($False))

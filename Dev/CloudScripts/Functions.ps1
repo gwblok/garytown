@@ -222,9 +222,12 @@ Function Get-MyComputerInfoBasic {
     $DiskInfo = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_LogicalDisk -Filter "DeviceID='C:'"
     $FreeSpace = $DiskInfo.FreeSpace/1GB -as [int]
     $DiskSize = $DiskInfo.Size/1GB -as [int]
+    $Disks = Get-Disk | Where-Object {$_.BusType -ne "USB"}
+
 
     Write-Output "Computer Name: $env:computername"
-    Write-Output "Windows $WindowsRelease | $BuildUBR_CurrentOS | Installed: $InstallDate_CurrentOS"
+    Write-Output "Windows Release & Build:               $WindowsRelease | $BuildUBR_CurrentOS "
+    Write-Output "Windows Install Date:                  $InstallDate_CurrentOS"
     Write-Output "Manufacturer(Win32_ComputerSystem):    $Manufacturer"
     Write-Output "Model (Win32_ComputerSystem):          $ComputerModel"
     Write-Output "Serial (Win32_BIOS):                   $Serial"
@@ -236,7 +239,7 @@ Function Get-MyComputerInfoBasic {
     Write-Output "TPM Info:                              $($TPM.ManufacturerVersion) | Spec: $($TPM.SpecVersion)"
     Write-Output "Time Zone:                             $(Get-TimeZone)"
     if ($Locale.Name -ne "en-US"){Write-Output "WinSystemLocale:                       $locale"}
-    Write-Output "DiskInfo:                              Size: $DiskSize | Free: $Freespace"
+    Write-Output "DiskInfo (C:\):                        Size: $DiskSize | Free: $Freespace"
 
     #Get Volume Infomration
     try {$SecureBootStatus = Confirm-SecureBootUEFI}
@@ -251,9 +254,10 @@ Function Get-MyComputerInfoBasic {
         Write-Output "System Volume FreeSpace:               Size: $TotalMB MB | Free: $FreeMB MB"
     }
 
-    $Disk = Get-Disk | Where-Object {$_.BusType -ne "USB"}
-    write-output "Disk Model:                            $($Disk.Model) $($Disk.BusType)"
     
+    foreach ($disk in $disks){
+        write-output "Disk Model:                            $($Disk.Model) $($Disk.BusType) $($Disk.TotalSize)"
+    }
 
     $MemorySize = [math]::Round((Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory/1MB)
     Write-Output "Memory size:                           $MemorySize MB"
