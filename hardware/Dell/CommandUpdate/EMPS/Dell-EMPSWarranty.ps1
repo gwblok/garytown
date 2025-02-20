@@ -36,7 +36,9 @@ function Get-DellWarrantyInfo {
             return
         }
     }
-    $CSVPath = "$env:TEMP\Dell\ServiceTag.csv"
+    
+    $CSVPath = "$env:programdata\Dell\ServiceTag.csv"
+    if (-not (Test-Path "$env:programdata\Dell")) { New-Item -ItemType Directory -Path "$env:programdata\Dell" |out-null }
     $ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force
     $ExportPath = "$env:TEMP\Dell\WarrantyExport.csv"
     Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList "/I=$($CSVPath) /E=$($ExportPath)" -Wait -NoNewWindow -PassThru
