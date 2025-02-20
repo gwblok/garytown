@@ -1,3 +1,14 @@
+<# Notes
+This script will download and install Dell Command Integration Suite if it is not already installed, then get the warranty information for the system
+If you do NOT want to download and install the Dell Command Integration Suite, you can do it on a single test machine,
+and then copy the C:\Program Files (x86)\Dell\CommandIntegrationSuite\ folder (yes, all of the stuff in the folder) to your own "package".
+
+Since I'm hosting this script on GitHub, I didn't want to host the Dell Warranty CLI files, so I'm downloading the entire Suite Installer from Dell's site.
+
+If my explaination of how you could create your own package to use doesn't make sense, let me know, and I'll try to explain it better.
+#>
+
+
 function Get-DellWarrantyInfo {
     #This will download and install Dell Command Integration Suite if it is not already installed, then get the warranty information for the system
     #Dell Command Integration Suite needs to be installed on the system
