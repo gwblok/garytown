@@ -240,7 +240,7 @@ Function Get-MyComputerInfoBasic {
     $Disks = Get-Disk | Where-Object {$_.BusType -ne "USB"}
 
 
-    Write-Output "Computer Name: $env:computername"
+    Write-Output "Computer Name:                         $env:computername"
     Write-Output "Windows Release & Build:               $WindowsRelease | $BuildUBR_CurrentOS "
     Write-Output "Windows Install Date:                  $InstallDate_CurrentOS"
     Write-Output "Manufacturer(Win32_ComputerSystem):    $Manufacturer"
@@ -254,7 +254,7 @@ Function Get-MyComputerInfoBasic {
     Write-Output "TPM Info:                              $($TPM.ManufacturerVersion) | Spec: $($TPM.SpecVersion)"
     Write-Output "Time Zone:                             $(Get-TimeZone)"
     if ($Locale.Name -ne "en-US"){Write-Output "WinSystemLocale:                       $locale"}
-    Write-Output "Disk Info (C:\):                        Size: $DiskSize | Free: $Freespace"
+    Write-Output "Disk Info (C:\):                       Size: $DiskSize | Free: $Freespace"
 
     #Get Volume Infomration
     try {$SecureBootStatus = Confirm-SecureBootUEFI}
@@ -266,12 +266,12 @@ Function Get-MyComputerInfoBasic {
         $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
         $TotalMB = [MATH]::Round(($SystemVolume).Size /1MB)
         $FreeMB = [MATH]::Round(($SystemVolume).SizeRemaining /1MB)
-        Write-Output "System Volume Info:               Size: $TotalMB MB | Free: $FreeMB MB"
+        Write-Output "System Volume Info:                    Size: $TotalMB MB | Free: $FreeMB MB"
     }
 
     
-    foreach ($disk in $disks){
-        write-output "Disk Model:                            $($Disk.Model) $($Disk.BusType) $($Disk.TotalSize)"
+    foreach ($disk in $Disks){
+        write-output "Disk[#$($Disk.DiskNumber)] Model:                        $($Disk.Model) | $($Disk.BusType) | $([MATH]::Round($Disk.Size / 1GB))GB"
     }
 
     $MemorySize = [math]::Round((Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory/1MB)
