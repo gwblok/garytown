@@ -20,7 +20,25 @@ function Get-DellWarrantyInfo {
         [string]$ServiceTag,
         [switch]$Cleanup #Uninstalls Dell Command Integration Suite after running
     )
-
+    # Get the service tag
+    if (!($ServiceTag)) {
+        $Manf = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer
+        Write-Verbose -Message "Manufacturer: $Manf"
+        if ($Manf -match "Dell") {
+            $ServiceTag = (Get-CimInstance -ClassName Win32_BIOS).SerialNumber
+            
+        } else {
+            Write-Host "This script is only for Dell systems, or pass it a ServiceTag" -ForegroundColor Red
+            if ($Cleanup) {
+                write-verbose "Cleanup"
+                Write-Verbose -Message "Start-Process -FilePath $DCWarrMSI -ArgumentList `"/s /V/qn /x`" -Wait -NoNewWindow"        
+                Start-Process -FilePath $DCWarrMSI -ArgumentList "/s /V/qn /x" -Wait -NoNewWindow
+            }
+            return
+        }
+    }
+    Write-Verbose -Message "Service Tag: $ServiceTag"
+    
     $ScratchDir = "$env:TEMP\Dell"
     if (-not (Test-Path $ScratchDir)) { New-Item -ItemType Directory -Path $ScratchDir |out-null }
     $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
@@ -40,24 +58,7 @@ function Get-DellWarrantyInfo {
         Start-Process -FilePath $DCWarrMSI -ArgumentList "/S /V/qn" -Wait -NoNewWindow
     }
 
-    # Get the service tag
-    if (!($ServiceTag)) {
-        $Manf = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer
-        Write-Verbose -Message "Manufacturer: $Manf"
-        if ($Manf -match "Dell") {
-            $ServiceTag = (Get-CimInstance -ClassName Win32_BIOS).SerialNumber
-            
-        } else {
-            Write-Host "This script is only for Dell systems, or pass it a ServiceTag" -ForegroundColor Red
-            if ($Cleanup) {
-                write-verbose "Cleanup"
-                Write-Verbose -Message "Start-Process -FilePath $DCWarrMSI -ArgumentList `"/s /V/qn /x`" -Wait -NoNewWindow"        
-                Start-Process -FilePath $DCWarrMSI -ArgumentList "/s /V/qn /x" -Wait -NoNewWindow
-            }
-            return
-        }
-    }
-    Write-Verbose -Message "Service Tag: $ServiceTag"
+
     $CSVPath = "$env:programdata\Dell\ServiceTag.csv"
     if (-not (Test-Path "$env:programdata\Dell")) { New-Item -ItemType Directory -Path "$env:programdata\Dell" |out-null }
     if ($ServiceTag){$ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force}
