@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '25.2.18.1'
+$ScriptVersion = '25.2.20.1'
 #Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -962,6 +962,9 @@ function Get-WindowsESDFileInfo {iex (irm https://raw.githubusercontent.com/gwbl
 
 Write-Host -ForegroundColor Green "[+] Function Check-ComplianceKB5025885"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-CheckCompliance.ps1)
+
+Write-Host -ForegroundColor Green "[+] Function Invoke-ComplianceKB5025885"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-PSRemediationScript_Step1-2_HPCMSL.ps1)
 
 if ((Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer -match "Lenovo"){
 	Write-Host -ForegroundColor Green "[+] Function Install-LenovoDMM"
