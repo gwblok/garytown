@@ -11,6 +11,7 @@ $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNu
 
 
 Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPS.ps1')
+Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPSWarranty.ps1')
 
 
 write-output "Manufacturer:    $Manufacturer"
@@ -28,7 +29,7 @@ Write-Host -ForegroundColor Green "[+] Function: Get-DCUAppUpdates"
 Write-Host -ForegroundColor Green "[+] Function: Set-DCUSettings"
 Write-Host -ForegroundColor Green "[+] Function: Invoke-DCU"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
-Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
-Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
+#Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
+#Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellBIOSUpdates"
-
+Write-Host -ForegroundColor Green "[+] Function: Get-DellWarrantyInfo"
