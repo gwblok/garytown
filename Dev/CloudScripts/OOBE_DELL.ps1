@@ -1,5 +1,5 @@
 $ScriptName = 'dell.garytown.com'
-$ScriptVersion = '25.2.7.1'
+$ScriptVersion = '25.2.20.1'
 
 #region Initialize
 
@@ -32,4 +32,4 @@ Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
 #Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
 #Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellBIOSUpdates"
-Write-Host -ForegroundColor Green "[+] Function: Get-DellWarrantyInfo"
+Write-Host -ForegroundColor Green "[+] Function: Get-DellWarrantyInfo (-Cleanup)" #Temporarily Installs Dell Command Integration Suite to gather warranty info
