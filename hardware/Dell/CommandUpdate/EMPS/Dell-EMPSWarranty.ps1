@@ -66,8 +66,8 @@ function Get-DellWarrantyInfo {
     $ExportPath = "$env:programdata\Dell\WarrantyExport.csv"
     Write-Verbose -Message "CSV Path: $CSVPath"
     write-verbose -Message "Export Path: $ExportPath"
-    write-verbose -Message "Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList `"/I=$($CSVPath) /E=$($ExportPath)`" -Wait -NoNewWindow"
-    Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList "/I=$($CSVPath) /E=$($ExportPath)" -Wait -NoNewWindow
+    write-verbose -Message "Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList `"/I=$($CSVPath) /E=$($ExportPath)`" -Wait -WindowStyle Hidden"
+    $CLI = Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList "/I=$($CSVPath) /E=$($ExportPath)" -Wait -WindowStyle Hidden
     $Data = Get-Content -Path $ExportPath | ConvertFrom-Csv
     if ($Cleanup) {
         write-verbose "Cleanup"
