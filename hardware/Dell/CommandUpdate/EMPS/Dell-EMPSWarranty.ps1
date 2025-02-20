@@ -41,7 +41,7 @@ function Get-DellWarrantyInfo {
     }
 
     # Get the service tag
-    if ($ServiceTag -eq $null) {
+    if (!($ServiceTag)) {
         $Manf = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer
         Write-Verbose -Message "Manufacturer: $Manf"
         if ($Manf -match "Dell") {
