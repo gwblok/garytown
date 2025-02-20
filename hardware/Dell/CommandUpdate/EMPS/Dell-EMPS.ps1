@@ -73,7 +73,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
 
 #>
-$ScriptVersion = '25.1.25.2'
+$ScriptVersion = '25.2.20.3'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
