@@ -38,7 +38,7 @@ function Get-DellWarrantyInfo {
         }
     }
     Write-Verbose -Message "Service Tag: $ServiceTag"
-    
+
     $ScratchDir = "$env:TEMP\Dell"
     if (-not (Test-Path $ScratchDir)) { New-Item -ItemType Directory -Path $ScratchDir |out-null }
     $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
@@ -51,7 +51,7 @@ function Get-DellWarrantyInfo {
         Write-Verbose -Message "Downloading Dell Command Integration Suite"
         Start-BitsTransfer -Source $DCWarrURL -Destination $DCWarrPath -CustomHeaders "User-Agent:BITS 42"
         Write-Verbose -Message "Installing Dell Command Integration Suite"
-        write-verboese -Message "Start-Process -FilePath $DCWarrPath -ArgumentList `"/S /E=$ScratchDir`" -Wait -NoNewWindow"
+        write-verbose -Message "Start-Process -FilePath $DCWarrPath -ArgumentList `"/S /E=$ScratchDir`" -Wait -NoNewWindow"
         Start-Process -FilePath $DCWarrPath -ArgumentList "/S /E=$ScratchDir" -Wait -NoNewWindow
         $DCWarrMSI = Get-ChildItem -Path $ScratchDir -Filter 'DCIS*.exe' | Select-Object -ExpandProperty FullName
         write-verbose -Message "Start-Process -FilePath $DCWarrMSI -ArgumentList `"/S /V/qn`" -Wait -NoNewWindow"
