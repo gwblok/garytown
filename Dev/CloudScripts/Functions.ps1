@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '25.2.20.2'
+$ScriptVersion = '25.2.20.3'
 #Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -163,6 +163,37 @@ function Get-SafeGuardHoldData {
     else {
         return $SafeGuardData
     }
+}
+Write-Host -ForegroundColor Green "[+] Function Get-SafeGuardHoldID"
+function Get-SafeGuardHoldID {
+    $UX = Get-ChildItem -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\TargetVersionUpgradeExperienceIndicators"
+    foreach ($U in $UX){
+        $GatedBlockId = $U.GetValue('GatedBlockId')
+        if ($GatedBlockId){
+            if ($GatedBlockId -ne "None"){
+                $SafeGuardID  = $GatedBlockId
+            }             
+        }
+    }
+if (!($SafeGuardID)){$SafeGuardID = "NONE"}
+return $SafeGuardID
+}
+Write-Host -ForegroundColor Green "[+] Function Run-Appraiser"
+function Run-Appraiser{
+
+    #Trigger Appraiser
+
+    $TaskName = "Microsoft Compatibility Appraiser"
+    $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if ($Task -ne $null){
+        Write-Output "Triggering Task $($Task.TaskName)"
+        Start-ScheduledTask -InputObject $Task
+        Start-Sleep -Seconds 60
+    }
+    else {
+        Write-Output "No Task found with name: $TaskName"
+    }
+
 }
 #Need to rewrite to export this as PS object, instead of Write-Output
 Write-Host -ForegroundColor Green "[+] Function Get-MyComputerInfoBasic"
