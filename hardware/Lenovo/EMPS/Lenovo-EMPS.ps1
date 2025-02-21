@@ -141,7 +141,8 @@ function Invoke-LenovoSystemUpdater
 function Install-LenovoVantage {
     [CmdletBinding()]
     param (
-        [switch]$IncludeSUHelper
+        [switch]$IncludeSUHelper,
+        [switch]$IncludeAddins
     )
     # Define the URL and temporary file path - https://support.lenovo.com/us/en/solutions/hf003321-lenovo-vantage-for-enterprise
     #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/metroapps/Vantage/LenovoCommercialVantage_10.2401.29.0.zip"
@@ -169,6 +170,7 @@ function Install-LenovoVantage {
         return
     }
     #Lenovo System Interface Foundation (LSIF)
+    <# - OLD METHOD
     if (Test-Path -Path "$tempExtractPath\System-Interface-Foundation-Update-64.exe"){
         Write-Host -ForegroundColor Cyan " Installing Lenovo System Interface Foundation..."
         $ArgumentList = "/VERYSILENT /NORESTART"
@@ -182,6 +184,7 @@ function Install-LenovoVantage {
         Write-Host -ForegroundColor red " Failed to find $tempExtractPath\System-Interface-Foundation-Update-64.exe"
         return
     }
+    #>
     #Lenovo Vantage Service
     Write-Host -ForegroundColor Cyan " Installing Lenovo Vantage Service..."
     Invoke-Expression -command "$tempExtractPath\VantageService\Install-VantageService.ps1"
@@ -192,10 +195,13 @@ function Install-LenovoVantage {
     $InstallProcess = Start-Process -FilePath "cmd.exe" -ArgumentList $ArgumentList -Wait -PassThru
     if ($InstallProcess.ExitCode -eq 0) {
         Write-Host -ForegroundColor Green "Lenovo Vantage completed successfully."
+        $RegistryPath = "HKLM:\SOFTWARE\Policies\Lenovo\Commercial Vantage"
+        New-ItemProperty -Path $RegistryPath -Name "AcceptEULAAutomatically" -Value 1 -PropertyType dword -Force | Out-Null
+        New-ItemProperty -Path $RegistryPath -Name "wmi.warranty" -Value 1 -PropertyType dword -Force | Out-Null
     } else {
         Write-Host -ForegroundColor Red "Lenovo Vantage failed with exit code $($InstallProcess.ExitCode)."
     }
-
+    if ($IncludeAddins){Invoke-Expression -command "$tempExtractPath\VantageService\Install-Addins.ps1"}
     if ($IncludeSUHelper){
         $InstallProcess = Start-Process -FilePath $tempExtractPath\SystemUpdate\SUHelperSetup.exe -ArgumentList "/VERYSILENT /NORESTART" -Wait -PassThru
         if ($InstallProcess.ExitCode -eq 0) {
@@ -215,7 +221,7 @@ function Set-LenovoVantage {
         [ValidateSet('True','False')]
         [string]$WarrantyInfoHide,
         [ValidateSet('True','False')]
-        [string]$WarrantyWriteWMI,
+        [string]$WarrantyWriteWMI = 'True',
         [ValidateSet('True','False')]
         [string]$MyDevicePageHide,
         [ValidateSet('True','False')]
