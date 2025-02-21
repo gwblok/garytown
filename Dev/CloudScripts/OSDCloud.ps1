@@ -26,5 +26,8 @@ $namespace = "ROOT\HP\InstrumentedBIOS"
 $classname = "HP_BIOSEnumeration"
 if (Get-CimInstance -ClassName $classname -Namespace $namespace | Where-Object {$_.Name -match "Enhanced BIOS Authentication"}){
 	$HPSureAdminState = Get-HPSureAdminState -ErrorAction SilentlyContinue
+	Write-Output "SureAdminState = $HPSureAdminState"
 }
-Write-Output "SureAdminState = $HPSureAdminState"
+else{
+	Write-Output "SureAdminState = Feature Not Available"
+}
