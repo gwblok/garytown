@@ -255,7 +255,7 @@ function Reset-MountPath {
 
 
 $IsTemplateWinRE = $false
-$IsTemplateARM64 = $true
+$IsTemplateARM64 = $false
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
 $MountPath = "C:\Mount"
 
@@ -309,11 +309,11 @@ catch {throw}
 
 #Build Template Name
 if ($IsTemplateWinRE){
-    $templateName = "OSDCloud-$($OSDisplayNeeded)-WinRE"
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($Arch)-WinRE"
     $WinRE = $True
 }
 else{
-    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($ArchDisplay)"
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($Arch)"
     $WinRE = $false
 }
 Write-Host -ForegroundColor Magenta "Template Name: $templateName"
@@ -323,14 +323,22 @@ $WorkSpacePath = "C:\$TemplateName"
 #Build the Template
 Write-Host -ForegroundColor Magenta "Creating OSDCloud Template for $OSNameNeeded"
 Write-Host "  Including 7Zip in Boot Media" -ForegroundColor Cyan
+if ((Get-OSDCloudTemplateNames) -contains $templateName){
+    Write-Host "Template Already Exists, Skipping" -ForegroundColor Yellow
+}
 if ($WinRE){
     New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
 }
 else{
-    New-OSDCloudTemplate -Name $templateName -Add7Zip -OSArch $ArchDisplay
+    if ($Arch -eq 'ARM64'){
+        New-OSDCloudTemplate -Name $templateName -Add7Zip -OSArch $ArchDisplay
+    }
+    else{
+        New-OSDCloudTemplate -Name $templateName -Add7Zip
+    }
 }
 #Cleanup Languages
-Remove-OSDCloudWorkSpaceMediaLanguageExtras
+Remove-OSDCloudMediaLanguageExtras
 
 #Update the Template with the CU (if available)
 $AvailableCU = Get-WinPEMSUpdates
