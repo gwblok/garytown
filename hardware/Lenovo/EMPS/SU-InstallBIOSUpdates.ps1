@@ -9,7 +9,7 @@ $suParams = @('-autoupdate', '-packagetype', '3') # Specifying Package Type 3 to
 if (-Not (Test-Path $suHelperPath))
 {
     Write-Error "SUHelper.exe not found at $suHelperPath."
-    exit 1
+    #exit 1
 }
 
 try
@@ -37,11 +37,11 @@ try
     if ($process.ExitCode -ne 0)
     {
         Write-Error "SUHelper.exe exited with code $($process.ExitCode)."
-        exit 1
+        #exit 1
     }
 }
 catch
 {
     Write-Error "Error occurred: $_"
-    exit 1
+    #exit 1
 }
