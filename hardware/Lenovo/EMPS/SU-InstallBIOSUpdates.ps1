@@ -31,7 +31,7 @@ try
     }
 
     # Start the SU Helper process
-    $process = Start-Process -FilePath $suHelperPath -ArgumentList $suParams -NoNewWindow -PassThru
+    $process = Start-Process -FilePath $suHelperPath -ArgumentList $suParams -NoNewWindow -PassThru -Wait
     $process.WaitForExit()
 
     if ($process.ExitCode -ne 0)

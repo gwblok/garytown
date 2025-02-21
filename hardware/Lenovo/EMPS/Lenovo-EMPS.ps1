@@ -75,7 +75,9 @@ Function Import-ModuleLenovoCSM {
     $Destination = "$env:programdata\EMPS\$FileName"
     $ExtractedFolder = "C:\Program Files\WindowsPowerShell\Modules"
 
-
+    if (!(Test-Path -Path "$env:programdata\EMPS")){
+        New-Item -Path "$env:programdata\EMPS" -ItemType Directory | Out-Null
+    }
     if (!(Test-Path -Path $ExtractedFolder)){
         New-Item -Path $ExtractedFolder -ItemType Directory | Out-Null
     }
