@@ -65,7 +65,7 @@ function Get-DellWarrantyInfo {
     $ExportPath = "$env:programdata\Dell\WarrantyExport.csv"
     if (-not (Test-Path "$env:programdata\Dell")) { New-Item -ItemType Directory -Path "$env:programdata\Dell" |out-null }
     write-verbose -Message "Export Path: $ExportPath"
-
+    $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
 
     if ($CMConnectionStringHost -or $CMConnectionStringDBName) {
         if (-not($CMConnectionStringHost -and $CMConnectionStringDBName)) {
