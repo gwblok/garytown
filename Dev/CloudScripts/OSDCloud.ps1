@@ -20,3 +20,11 @@ function Copy-OSDCloudLogs2OSDCloudUSB {
 				Copy-Item -Path $OSDCloudLogs -Destination $OSDCloudUSBFolder -Recurse -Force
 		}
 }
+
+
+$namespace = "ROOT\HP\InstrumentedBIOS"
+$classname = "HP_BIOSEnumeration"
+if (Get-CimInstance -ClassName $classname -Namespace $namespace | Where-Object {$_.Name -match "Enhanced BIOS Authentication"}){
+	$HPSureAdminState = Get-HPSureAdminState -ErrorAction SilentlyContinue
+}
+Write-Output "SureAdminState = $HPSureAdminState"
