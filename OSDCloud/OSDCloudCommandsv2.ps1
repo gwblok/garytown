@@ -401,8 +401,12 @@ if (($GitHubFolder) -and ($OSDMountedModule) -and ($MountPath)){
     copy-item "$GitHubFolder\OSD\Public\*"   "$OSDMountedModule\Public\" -Force -Recurse
     copy-item "$GitHubFolder\OSD\Catalogs\*"   "$OSDMountedModule\Catalogs\" -Force -Recurse
     copy-item "$GitHubFolder\OSD\Projects\*"   "$OSDMountedModule\Projects\" -Force -Recurse
-    if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
-        Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
+    if (!(Test-Path "$MountPath\Windows\System32\cmtrace.exe")){
+        Write-Host -ForegroundColor Yellow "CMTrace missing from Boot WIM"
+        if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
+            Write-Host "Adding CMTrace to Boot WIM" -ForegroundColor Cyan
+            Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force -verbose
+        }
     }
 }
 #Dismount - Save

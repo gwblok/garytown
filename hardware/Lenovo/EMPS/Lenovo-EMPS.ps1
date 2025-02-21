@@ -139,6 +139,10 @@ function Invoke-LenovoSystemUpdater
 }
 
 function Install-LenovoVantage {
+    [CmdletBinding()]
+    param (
+        [switch]$IncludeSUHelper
+    )
     # Define the URL and temporary file path - https://support.lenovo.com/us/en/solutions/hf003321-lenovo-vantage-for-enterprise
     #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/metroapps/Vantage/LenovoCommercialVantage_10.2401.29.0.zip"
     $url = "https://download.lenovo.com/pccbbs/thinkvantage_en/metroapps/Vantage/LenovoCommercialVantage_10.2501.15.0_v3.zip"
@@ -162,6 +166,7 @@ function Install-LenovoVantage {
 
     } else {
         Write-Host "Failed to download the file."
+        return
     }
     #Lenovo System Interface Foundation (LSIF)
     if (Test-Path -Path "$tempExtractPath\System-Interface-Foundation-Update-64.exe"){
@@ -175,6 +180,7 @@ function Install-LenovoVantage {
         }
     } else {
         Write-Host -ForegroundColor red " Failed to find $tempExtractPath\System-Interface-Foundation-Update-64.exe"
+        return
     }
     #Lenovo Vantage Service
     Write-Host -ForegroundColor Cyan " Installing Lenovo Vantage Service..."
@@ -188,6 +194,15 @@ function Install-LenovoVantage {
         Write-Host -ForegroundColor Green "Lenovo Vantage completed successfully."
     } else {
         Write-Host -ForegroundColor Red "Lenovo Vantage failed with exit code $($InstallProcess.ExitCode)."
+    }
+
+    if ($IncludeSUHelper){
+        $InstallProcess = Start-Process -FilePath $tempExtractPath\SystemUpdate\SUHelperSetup.exe -ArgumentList "/VERYSILENT /NORESTART" -Wait -PassThru
+        if ($InstallProcess.ExitCode -eq 0) {
+            Write-Host -ForegroundColor Green "Lenovo SU Helper completed successfully."
+        } else {
+            Write-Host -ForegroundColor Red "Lenovo SU Helper failed with exit code $($InstallProcess.ExitCode)."
+        }
     }
 }
 
