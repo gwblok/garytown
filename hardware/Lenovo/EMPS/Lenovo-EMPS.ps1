@@ -141,8 +141,7 @@ function Invoke-LenovoSystemUpdater
 function Install-LenovoVantage {
     [CmdletBinding()]
     param (
-        [switch]$IncludeSUHelper,
-        [switch]$IncludeAddins
+        [switch]$IncludeSUHelper
     )
     # Define the URL and temporary file path - https://support.lenovo.com/us/en/solutions/hf003321-lenovo-vantage-for-enterprise
     #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/metroapps/Vantage/LenovoCommercialVantage_10.2401.29.0.zip"
@@ -196,12 +195,13 @@ function Install-LenovoVantage {
     if ($InstallProcess.ExitCode -eq 0) {
         Write-Host -ForegroundColor Green "Lenovo Vantage completed successfully."
         $RegistryPath = "HKLM:\SOFTWARE\Policies\Lenovo\Commercial Vantage"
+        New-Item -Path $RegistryPath -ItemType Directory -Force |Out-Null
         New-ItemProperty -Path $RegistryPath -Name "AcceptEULAAutomatically" -Value 1 -PropertyType dword -Force | Out-Null
         New-ItemProperty -Path $RegistryPath -Name "wmi.warranty" -Value 1 -PropertyType dword -Force | Out-Null
     } else {
         Write-Host -ForegroundColor Red "Lenovo Vantage failed with exit code $($InstallProcess.ExitCode)."
     }
-    if ($IncludeAddins){Invoke-Expression -command "$tempExtractPath\VantageService\Install-Addins.ps1"}
+
     if ($IncludeSUHelper){
         $InstallProcess = Start-Process -FilePath $tempExtractPath\SystemUpdate\SUHelperSetup.exe -ArgumentList "/VERYSILENT /NORESTART" -Wait -PassThru
         if ($InstallProcess.ExitCode -eq 0) {
