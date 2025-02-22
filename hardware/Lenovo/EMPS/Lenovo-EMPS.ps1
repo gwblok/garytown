@@ -181,6 +181,98 @@ function Invoke-LenovoSystemUpdater
     }
 }
 
+function Install-LenovoThinInstaller {
+    if (Test-Path -Path ${env:ProgramFiles(x86)}\Lenovo\ThinInstaller\ThinInstaller.exe){
+        Write-Host "Lenovo ThinInstaller is already installed."
+        return
+    }
+    # Define the URL and temporary file path
+    Import-ModuleLenovoCSM
+    $URL = Find-LnvTool -Tool ThinInstaller -Url
+    #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/system_update_5.08.02.25.exe" #No longer needed, uses the Lenovo CSM to get latest version
+    $tempFilePath = "C:\Windows\Temp\ThinInstaller.exe"
+
+    # Create a new BITS transfer job
+    $bitsJob = Start-BitsTransfer -Source $url -Destination $tempFilePath -DisplayName "Lenovo ThinInstaller Download"
+
+    # Wait for the BITS transfer job to complete
+    while ($bitsJob.JobState -eq "Transferring") {
+        Start-Sleep -Seconds 2
+    }
+
+    # Check if the transfer was successful
+    if (Test-Path -Path $tempFilePath) {
+        # Start the installation process
+        Write-Host -ForegroundColor Green "Installation file downloaded successfully. Starting installation..."
+        $ArgumentList = "/VERYSILENT /NORESTART"
+        $InstallProcess = Start-Process -FilePath $tempFilePath -ArgumentList $ArgumentList -Wait -PassThru
+        if ($InstallProcess.ExitCode -eq 0) {
+            Write-Host -ForegroundColor Green "Installation completed successfully."
+        } else {
+            Write-Host -ForegroundColor Red "Installation failed with exit code $($InstallProcess.ExitCode)."
+        }
+    } else {
+        Write-Host "Failed to download the file."
+    }
+}
+
+function Invoke-LenovoThinInstaller {
+
+
+    [CmdletBinding()]
+    param (
+        [ValidateSet('DOWNLOAD','LIST','INSTALL')]
+        [String]$Action = 'LIST', #https://docs.lenovocdrt.com/guides/sus/su_dg/su_dg_ch5/#-action_1
+        [ValidateSet('All','Application','Driver','Bios','Firmware')]
+        [String]$PackageTypes = 'All',
+        [ValidateSet('Critical','Recommended','All')]
+        [string]$Severity = 'All',
+        [switch]$noReboot,
+        [switch]$noIcon,
+        [switch]$showprogress
+    )
+    $ThinAppPath = "${env:ProgramFiles(x86)}\Lenovo\ThinInstaller\ThinInstaller.exe"
+    if (!(Test-Path -Path $ThinAppPath)){
+        Write-Host "Lenovo ThinInstaller is not installed. Installing..."
+        Install-LenovoThinInstaller
+    }
+
+    switch ($PackageTypes) {
+        'All' { $LSUPackageTypes = $null }
+        'Application' { $LSUPackageTypes = '-packagetypes 1'}
+        'Driver' { $LSUPackageTypes = '-packagetypes 2' }
+        'Bios' { $LSUPackageTypes = '-packagetypes 3' }
+        'Firmware' { $LSUPackageTypes = '-packagetypes 4' }
+    }
+    switch ($Severity ) {
+        'All' { $LSUSeverity = '-search A' }
+        'Critical' { $LSUSeverity = '-search C'}
+        'Recommended' { $LSUSeverity = '-search R' }
+
+    }
+
+    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 1,3,5 -nolicense -exporttowmi "
+    if ($noReboot) {
+        $ArgList += ' -noreboot'
+    }
+        if ($noIcon) {
+        $ArgList += ' -noicon'
+    }
+    if ($showprogress) {
+        $ArgList += ' -showprogress'
+    }
+
+    #$ArgList = "/CM -search A -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon"
+    write-host -ForegroundColor Cyan "Starting Lenovo ThinInstaller: $ArgList"
+    $Updater = Start-Process -FilePath $ThinAppPath -ArgumentList $ArgList   -Wait -PassThru
+
+    if ($Updater.ExitCode -eq 0) {
+        Write-Host -ForegroundColor Green "Lenovo ThinInstaller completed successfully."
+    } else {
+        Write-Host -ForegroundColor Red "Lenovo ThinInstaller failed with exit code $($Updater.ExitCode)."
+    }
+}
+
 function Install-LenovoVantage {
     [CmdletBinding()]
     param (
