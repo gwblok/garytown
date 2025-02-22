@@ -123,6 +123,39 @@ function Install-LenovoSystemUpdater {
 #This is basic pre-programmed right now, will eventually build out to add parameters
 function Invoke-LenovoSystemUpdater
 {
+    [CmdletBinding()]
+    param (
+        [ValidateSet('DOWNLOAD','LIST','INSTALL')]
+        [String]$Action = 'LIST', #https://docs.lenovocdrt.com/guides/sus/su_dg/su_dg_ch5/#-action_1
+        [ValidateSet('All','Application','Driver','Bios','Firmware')]
+        [String]$PackageTypes = 'All',
+        [ValidateSet('Critical','Recommended','All')]
+        [string]$Severity = 'All',
+        [switch]$noReboot,
+        [switch]$noIcon
+    )
+    
+    switch ($PackageTypes) {
+        'All' { $PackageTypes = $null }
+        'Application' { $PackageTypes = '-packagetypes 1'}
+        'Driver' { $PackageTypes = '-packagetypes 2' }
+        'Bios' { $PackageTypes = '-packagetypes 3' }
+        'Firmware' { $PackageTypes = '-packagetypes 4' }
+    }
+    switch ($Severity ) {
+        'All' { $Severity = '-search A' }
+        'Critical' { $Severity = '-search C'}
+        'Recommended' { $Severity = '-search R' }
+
+    }
+
+    $ArgList = "/CM $Severity -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi "
+    if ($noReboot) {
+        $ArgList += ' -noreboot'
+    }
+        if ($noIcon) {
+        $ArgList += ' -noicon'
+    }
     # Check if Lenovo System Updater is already installed
     if (Test-Path "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe") {
         Write-Host "Lenovo System Updater is already installed."
@@ -130,7 +163,8 @@ function Invoke-LenovoSystemUpdater
         Write-Host "Lenovo System Updater is not installed. Installing..."
         Install-LenovoSystemUpdater
     }
-    $ArgList = '/CM -search A -action INSTALL -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon'
+    #$ArgList = "/CM -search A -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon"
+    write-host -ForegroundColor Cyan "Starting Lenovo System Updater with arguments: $ArgList"
     $Updater = Start-Process -FilePath "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe" -ArgumentList $ArgList  -Wait -PassThru
 
     if ($Updater.ExitCode -eq 0) {
