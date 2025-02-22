@@ -136,20 +136,20 @@ function Invoke-LenovoSystemUpdater
     )
     
     switch ($PackageTypes) {
-        'All' { $PackageTypes = $null }
-        'Application' { $PackageTypes = '-packagetypes 1'}
-        'Driver' { $PackageTypes = '-packagetypes 2' }
-        'Bios' { $PackageTypes = '-packagetypes 3' }
-        'Firmware' { $PackageTypes = '-packagetypes 4' }
+        'All' { $LSUPackageTypes = $null }
+        'Application' { $LSUPackageTypes = '-packagetypes 1'}
+        'Driver' { $LSUPackageTypes = '-packagetypes 2' }
+        'Bios' { $LSUPackageTypes = '-packagetypes 3' }
+        'Firmware' { $LSUPackageTypes = '-packagetypes 4' }
     }
     switch ($Severity ) {
-        'All' { $Severity = '-search A' }
-        'Critical' { $Severity = '-search C'}
-        'Recommended' { $Severity = '-search R' }
+        'All' { $LSUSeverity = '-search A' }
+        'Critical' { $LSUSeverity = '-search C'}
+        'Recommended' { $LSUSeverity = '-search R' }
 
     }
 
-    $ArgList = "/CM $Severity -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi "
+    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 3 -nolicense -exporttowmi "
     if ($noReboot) {
         $ArgList += ' -noreboot'
     }
