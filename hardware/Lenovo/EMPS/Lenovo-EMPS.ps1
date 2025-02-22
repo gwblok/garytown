@@ -149,7 +149,7 @@ function Invoke-LenovoSystemUpdater
 
     }
 
-    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 3 -nolicense -exporttowmi "
+    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 1,3,5 -nolicense -exporttowmi "
     if ($noReboot) {
         $ArgList += ' -noreboot'
     }
@@ -171,7 +171,7 @@ function Invoke-LenovoSystemUpdater
     Set-ItemProperty -Path $LSURegKey -Name $LSURegName -Value $LSURegValue -Force | Out-Null
 
     #$ArgList = "/CM -search A -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon"
-    write-host -ForegroundColor Cyan "Starting Lenovo System Updater with arguments: $ArgList"
+    write-host -ForegroundColor Cyan "Starting Lenovo System Updater with AdminCommandLine: $ArgList"
     $Updater = Start-Process -FilePath "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe" -ArgumentList '/CM'  -Wait -PassThru
 
     if ($Updater.ExitCode -eq 0) {
