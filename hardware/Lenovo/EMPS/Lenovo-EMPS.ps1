@@ -158,7 +158,7 @@ function Invoke-LenovoSystemUpdater
     }
     # Check if Lenovo System Updater is already installed
     if (Test-Path "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe") {
-        Write-Host "Lenovo System Updater is already installed."
+        #Write-Host "Lenovo System Updater is already installed."
     } else {
         Write-Host "Lenovo System Updater is not installed. Installing..."
         Install-LenovoSystemUpdater
@@ -167,8 +167,8 @@ function Invoke-LenovoSystemUpdater
     $LSURegName = "AdminCommandLine"
     $LSURegValue = $ArgList
 
-    if (!(Test-Path $RegKey)) {New-Item -Path $LSURegKey -ItemType Directory -Force | Out-Null}
-    Set-ItemProperty -Path $LSURegKey -Name $LSURegName -Value $LSURegValue -Force
+    if (!(Test-Path $LSURegKey)) {New-Item -Path $LSURegKey -ItemType Directory -Force | Out-Null}
+    Set-ItemProperty -Path $LSURegKey -Name $LSURegName -Value $LSURegValue -Force | Out-Null
 
     #$ArgList = "/CM -search A -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon"
     write-host -ForegroundColor Cyan "Starting Lenovo System Updater with arguments: $ArgList"
