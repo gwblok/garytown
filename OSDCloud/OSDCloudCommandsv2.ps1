@@ -255,7 +255,7 @@ function Reset-MountPath {
 
 
 $IsTemplateWinRE = $false
-$IsTemplateARM64 = $false
+$IsTemplateARM64 = $true
 $OSDCloudRootPath = "C:\OSDCloud-ROOT"
 $MountPath = "C:\Mount"
 
@@ -309,11 +309,11 @@ catch {throw}
 
 #Build Template Name
 if ($IsTemplateWinRE){
-    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($Arch)-WinRE"
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-WinRE"
     $WinRE = $True
 }
 else{
-    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($Arch)"
+    $templateName = "OSDCloud-$($OSDisplayNeeded)-$($ArchDisplay)"
     $WinRE = $false
 }
 Write-Host -ForegroundColor Magenta "Template Name: $templateName"
@@ -323,22 +323,14 @@ $WorkSpacePath = "C:\$TemplateName"
 #Build the Template
 Write-Host -ForegroundColor Magenta "Creating OSDCloud Template for $OSNameNeeded"
 Write-Host "  Including 7Zip in Boot Media" -ForegroundColor Cyan
-if ((Get-OSDCloudTemplateNames) -contains $templateName){
-    Write-Host "Template Already Exists, Skipping" -ForegroundColor Yellow
-}
 if ($WinRE){
     New-OSDCloudTemplate -Name $templateName -Add7Zip -WinRE:$WinRE
 }
 else{
-    if ($Arch -eq 'ARM64'){
-        New-OSDCloudTemplate -Name $templateName -Add7Zip -OSArch $ArchDisplay
-    }
-    else{
-        New-OSDCloudTemplate -Name $templateName -Add7Zip
-    }
+    New-OSDCloudTemplate -Name $templateName -Add7Zip -OSArch $ArchDisplay
 }
 #Cleanup Languages
-Remove-OSDCloudMediaLanguageExtras
+Remove-OSDCloudWorkSpaceMediaLanguageExtras
 
 #Update the Template with the CU (if available)
 $AvailableCU = Get-WinPEMSUpdates
@@ -401,12 +393,8 @@ if (($GitHubFolder) -and ($OSDMountedModule) -and ($MountPath)){
     copy-item "$GitHubFolder\OSD\Public\*"   "$OSDMountedModule\Public\" -Force -Recurse
     copy-item "$GitHubFolder\OSD\Catalogs\*"   "$OSDMountedModule\Catalogs\" -Force -Recurse
     copy-item "$GitHubFolder\OSD\Projects\*"   "$OSDMountedModule\Projects\" -Force -Recurse
-    if (!(Test-Path "$MountPath\Windows\System32\cmtrace.exe")){
-        Write-Host -ForegroundColor Yellow "CMTrace missing from Boot WIM"
-        if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
-            Write-Host "Adding CMTrace to Boot WIM" -ForegroundColor Cyan
-            Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force -verbose
-        }
+    if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
+        Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
     }
 }
 #Dismount - Save

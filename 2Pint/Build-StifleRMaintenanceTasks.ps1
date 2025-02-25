@@ -10,14 +10,25 @@
 
 .VERSION
     25.2.14
+    25.2.25 - Added Check to ensure it's running as Admin | added note about gMSA account, if you aren't using one, just change it to SYSTEM and update it manually after tasks are created.
 #>
 
+# Check for elevation (admin rights)
+If ((New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+{
+    # All OK, script is running with admin rights
+}
+else
+{
+    Write-Warning "This script needs to be run with admin rights..."
+    Exit 1
+}
 
 #Please ensure that the following folders exist before running this script, adjust the paths as necessary
 #$StifleRParentFolder = "C:\Program Files\2Pint Software"
 $StifleRInstallFolder = (Get-ItemPropertyValue -Path HKLM:\SYSTEM\CurrentControlSet\Services\StifleRServer -Name ImagePath | Split-Path -Parent).Replace('"','')
 $StifleRParentFolder = $StifleRInstallFolder | split-Path -Parent
-$gMSAAccountName = 'gMSAStifleR$'
+$gMSAAccountName = 'gMSAStifleR$'  #If you don't have a gMSA account, I'd recommend using "SYSTEM" then going in manually and changing it to the account you want to use.
 
 #Create Folder Structure
 $StifleRMaintenanceFolder = "$StifleRParentFolder\StifleR Maintenance"
@@ -343,7 +354,7 @@ if ($($duplicates.Count) -eq 0) {
     Write-Host "Removed $($ClientsToRemove.count) Clients" -ForegroundColor Green
     Write-Log ""
 }
-
+<# This can cause issue if you have a VPN Adapter that all use the same MAC Address
 #Duplicates based on MAC Address
 $Clients = Get-CimInstance -Namespace root\StifleR -Class "Clients"
 $duplicates = $Clients | Group-ObjectCount -Property MacAddress | Where-Object { $_.Count -gt 1 }
@@ -383,7 +394,7 @@ if ($($duplicates.Count) -eq 0) {
     Write-Log "Removed $($ClientsToRemove.count) Clients"
     Write-Host "Removed $($ClientsToRemove.count) Clients" -ForegroundColor Green
 }
-
+#>
 Write-Log "Remove-StifleRDuplicates all done, over and out!"
 '@
 

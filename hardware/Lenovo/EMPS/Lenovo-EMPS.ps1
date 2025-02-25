@@ -255,7 +255,7 @@ function Invoke-LenovoThinInstaller {
     if ($noReboot) {
         $ArgList += ' -noreboot'
     }
-        if ($noIcon) {
+    if ($noIcon) {
         $ArgList += ' -noicon'
     }
     if ($showprogress) {
