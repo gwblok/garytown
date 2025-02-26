@@ -48,7 +48,7 @@
     So moral of the story, when you see multiple things in that Download Dialog, grab all of the, and place in the CU folder.
 
     I've had odd behavior with WinRE 24H2, I've been unsuccessful in getting it to patch to the latest CU.  I'd recommend going to Visual Studio Downloads, grabbing the latest release of 24H2 Enterprise, and using that as your source for WinRE.
-
+        - Note, I'm still just using the WinRE from the install WIM that this script will automatically download (via the OSD Module), and it's been working, but I haven't tested it with Black Lotus remedated machines, I'd assume it would fail 
     I'm not going to explain anymore, read the code, it's all there, if you have questions, hit me up on WinAdmins Discord.
 #>
 
