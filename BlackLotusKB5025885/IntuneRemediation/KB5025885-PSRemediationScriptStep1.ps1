@@ -32,10 +32,10 @@ $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
 if ($UBR -ge $MatchedUBR){
-    $OSSupported = $true
+    #$OSSupported = $true
 }
 else {
-    $OSSupported = $false
+    #$OSSupported = $false
     Write-Output "The OS is not supported for this remediation."
     exit 4
 }
@@ -83,10 +83,11 @@ else {
             New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
             Set-PendingUpdate
         }
+        else {
+            New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+        }
     }
     #endregion Do Step 1 - #Applying the DB update
 }
 
-
 #endregion Remediation
-    

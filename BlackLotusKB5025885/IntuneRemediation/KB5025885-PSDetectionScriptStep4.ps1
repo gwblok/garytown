@@ -15,12 +15,21 @@ if ($UBR -ge $MatchedUBR){
 }
 else {
     $OSSupported = $false
+    Write-Output "The OS is not supported for this remediation."
+    exit 4
+}
+if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
+    #This is required for remediation to work
+}
+else {
+    Write-Output "Secure Boot is not enabled."
+    exit 5
 }
 #endregion Applicability
 
 
 if ($OSSupported -eq $true){
-    $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+    #$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
     $RemediationsRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
     if (Test-Path -Path $RemediationsRegPath){
         $RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')

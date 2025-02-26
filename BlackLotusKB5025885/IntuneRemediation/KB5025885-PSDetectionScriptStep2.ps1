@@ -11,10 +11,10 @@ $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
 if ($UBR -ge $MatchedUBR){
-    $OSSupported = $true
+    #$OSSupported = $true
 }
 else {
-    $OSSupported = $false
+    #$OSSupported = $false
     Write-Output "The OS is not supported for this remediation."
     exit 4
 }
@@ -28,64 +28,60 @@ else {
 #endregion Applicability
 
 
-if ($OSSupported -eq $true){
-    $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-    $RemediationsRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-    if (Test-Path -Path $RemediationsRegPath){
-        [int]$RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
-        if ($null -eq $RebootCount){
-            [int]$RebootCount = 0
-        }
-    }
 
-    
-    #region Test if Remediation is already applied for each Step
-    #Test: Applying the DB update
-    $Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
-    
-    #Test: Updating the boot manager
-    $Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
-    $SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
-    $SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
-    $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
-    $FilePath = "$($SystemVolume.Path)\EFI\Microsoft\Boot\bootmgfw.efi"
-    $CertCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
-    $CertCollection.Import($FilePath, $null, 'DefaultKeySet')
-    If ($CertCollection.Subject -like "*Windows UEFI CA 2023*") {$Step2Complete = $true}
-    else {$Step2Complete = $false}
-    
-    #Test: Applying the DBX update
-    $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
-
-    #endregion Test if Remediation is already applied for each Step
-
-    #region Remediation
-    #If all 3 steps are complete, remediation is not needed, exit 
-    
-    #Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
-    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
-        Write-Output "The remediation is already applied."
-        exit 0
+#$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+$RemediationsRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+if (Test-Path -Path $RemediationsRegPath){
+    [int]$RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+    if ($null -eq $RebootCount){
+        [int]$RebootCount = 0
     }
-    #If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
-    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -eq 4){
-        Write-Output "The remediation is already applied."
-        exit 0
-    }
-    #if Step 1 or 2 are not complete, remediation is needed, exit 1
-    if ($Step1Complete -ne $true -or $Step2Complete -ne $true){
-            Write-Output "Needs Remediation"
-            exit 1
-    }
-    #If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
-    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -lt 4){
-        Write-Output "The remediation is already applied."
-        exit 0
-    }
-
-    #endregion Remediation
-    
-} #Supported OS -eq $true
-else {
-    Write-Output "The OS is not supported for this remediation."
 }
+
+
+#region Test if Remediation is already applied for each Step
+#Test: Applying the DB update
+$Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+
+#Test: Updating the boot manager
+$Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
+$SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
+$SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
+$SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
+$FilePath = "$($SystemVolume.Path)\EFI\Microsoft\Boot\bootmgfw.efi"
+$CertCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+$CertCollection.Import($FilePath, $null, 'DefaultKeySet')
+If ($CertCollection.Subject -like "*Windows UEFI CA 2023*") {$Step2Complete = $true}
+else {$Step2Complete = $false}
+
+#Test: Applying the DBX update
+$Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
+
+#endregion Test if Remediation is already applied for each Step
+
+#region Remediation
+#If all 3 steps are complete, remediation is not needed, exit 
+
+#Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
+    Write-Output "The remediation is already applied."
+    exit 0
+}
+#If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
+    Write-Output "The remediation is already applied."
+    exit 0
+}
+#if Step 1 or 2 are not complete, remediation is needed, exit 1
+if ($Step1Complete -ne $true -or $Step2Complete -ne $true){
+        Write-Output "Needs Remediation"
+        exit 1
+}
+#If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -lt 4){
+    Write-Output "The remediation is already applied."
+    exit 0
+}
+
+#endregion Remediation
+    

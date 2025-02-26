@@ -99,7 +99,11 @@ if ($OSSupported -eq $true){
                 New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
                 New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
             }
+            else {
+                New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+            }
         }
+        
         #endregion Do Step 1 - #Applying the DB update
 
         #region Do Step 2 - #Updating the boot manager
@@ -108,10 +112,16 @@ if ($OSSupported -eq $true){
                 New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
                 New-ItemProperty -Path $RemediationsRegPath -Name  "RebootCount" -PropertyType dword -Value 3 -Force
             }
+            else {
+                New-ItemProperty -Path $RemediationsRegPath -Name  "RebootCount" -PropertyType dword -Value 2 -Force
+            }
         }
         if ($Step2Complete -eq $true){
             if ($RebootCount -eq 3){
                 New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
+                New-ItemProperty -Path $RemediationsRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
+            }
+            else {
                 New-ItemProperty -Path $RemediationsRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
             }
         }
