@@ -1,12 +1,12 @@
 
 #Test if Remediation is applicable
-#Region Applicablitity
+#Region Applicability
 $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
 #April 2024 UBRs
-$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150')
+$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150','26120.1')
 $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
@@ -15,8 +15,17 @@ if ($UBR -ge $MatchedUBR){
 }
 else {
     $OSSupported = $false
+    Write-Output "The OS is not supported for this remediation."
+    exit 4
 }
-#endregionApplicablitity
+if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
+    #This is required for remediation to work
+}
+else {
+    Write-Output "Secure Boot is not enabled."
+    exit 5
+}
+#endregion Applicability
 
 
 if ($OSSupported -eq $true){
@@ -25,7 +34,7 @@ if ($OSSupported -eq $true){
     if (Test-Path -Path $RemediationsRegPath){
         $RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
         if ($null -eq $RebootCount){
-            $RebootCount = 0
+            [int]$RebootCount = 0
         }
     }
 
@@ -50,13 +59,19 @@ if ($OSSupported -eq $true){
 
     #endregion Test if Remediation is already applied for each Step
 
-    #region Remediation
-    if ($Step1Complete -ne $true -or $Step2Complete -ne $true -or $Step3Complete -ne $true){
-            Write-Output "Needs Remediation"
-            exit 1
+    #If all 3 steps are complete, remediation is not needed, exit
+    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
+        Write-Output "The remediation is already applied."
+        exit 0
     }
+    #if Step 1 is not complete, remediation is needed, exit 1
+    if ($Step1Complete -ne $true){
+        Write-Output "Needs Remediation"
+        exit 1
+    }
+    #if Step 1 is complete, but reboot count is not 1, remediation is needed, exit 1
     if ($null -eq $RebootCount){
-        if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
+        if ($Step1Complete -eq $true){
             Write-Output "The remediation is already applied."
             exit 0
         }
@@ -66,7 +81,8 @@ if ($OSSupported -eq $true){
         }
     }
     else {
-        if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true -and $RebootCount -eq 5){
+        #If Step 1 is complete, but reboot count is 1, remediation is needed, exit 1 (to progress to 2nd reboot)
+        if ($Step1Complete -eq $true -and $RebootCount -eq 1){
             Write-Output "Needs Remediation to update Registry Values"
             exit 1
         }

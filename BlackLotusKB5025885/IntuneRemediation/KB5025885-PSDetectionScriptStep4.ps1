@@ -1,6 +1,6 @@
 
 #Test if Remediation is applicable
-#Region Applicablitity
+#Region Applicability
 $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
@@ -16,7 +16,7 @@ if ($UBR -ge $MatchedUBR){
 else {
     $OSSupported = $false
 }
-#endregionApplicablitity
+#endregion Applicability
 
 
 if ($OSSupported -eq $true){

@@ -21,13 +21,13 @@ function Set-PendingUpdate {
     New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
 }
 
-#Region Applicablitity
+#Region Applicability
 $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
 #April 2024 UBRs
-$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150')
+$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150', '26120.1')
 $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
@@ -36,8 +36,18 @@ if ($UBR -ge $MatchedUBR){
 }
 else {
     $OSSupported = $false
+    Write-Output "The OS is not supported for this remediation."
+    exit 4
 }
-#endregionApplicablitity
+if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
+    #This is required for remediation to work
+}
+else {
+    Write-Output "Secure Boot is not enabled."
+    exit 5
+}
+#endregion Applicability
+
 
 
 if ($OSSupported -eq $true){
@@ -73,7 +83,7 @@ if ($OSSupported -eq $true){
     #endregion Test if Remediation is already applied for each Step
 
     #region Remediation
-    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true -and $RebootCount -ne 5){
+    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ne 3){
         Write-Output "The remediation is already applied."
     }
 
@@ -106,21 +116,6 @@ if ($OSSupported -eq $true){
             }
         }
         #endregion Do Step 2 - #Updating the boot manager
-
-        #region Do Step 3 - #Applying the DBX update
-        if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -ne $true){
-            if ($RebootCount -eq 4){
-                New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x80 -Force
-                New-ItemProperty -Path $RemediationsRegPath -Name  "RebootCount" -PropertyType dword -Value 5 -Force
-            }
-        }
-        if ($Step3Complete -eq $true){
-            if ($RebootCount -eq 5){
-                New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 6 -Force
-                New-ItemProperty -Path $RemediationsRegPath -Name  "Step3Success" -PropertyType dword -Value 1 -Force
-            }
-        }
-        #endregion Do Step 3 - #Applying the DBX update
     }
     #endregion Remediation
     
