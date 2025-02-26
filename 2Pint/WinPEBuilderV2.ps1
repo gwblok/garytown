@@ -17,7 +17,7 @@
 
    .NOTES
     AUTHOR: 2Pint Software
-    EMAIL: support@2pintsoftware.com
+    EMAIL: support@2pintsoftware.com (or reach out to Gary Blok)
     VERSION: 23.10.01
     DATE:10/01/2023 
     
@@ -26,6 +26,7 @@
     24.04.15  : Tax day version - updated build paths
     24.08.14  : GWB Version - Incorporate OSD Module (OSDCloud) to use to grab Windows directly from internet & also automate some folder directories
                 - YES, that means you need to install OSD Module - "Install Module -Name OSD"
+    25.02.25  : Added WinRE Support to build WinRE with WiFi Support
 
    .LINK
     https://2pintsoftware.com
@@ -39,11 +40,21 @@
     - $WinPEBuilderPath = Path for where everything happens, this is set automatically based on where the script is running from
 #>
 
-#Random Notes
-# ADK 24H2 doesn't patch well, last good patch = 2024-06 Cumulative Update for Windows 11 Version 24H2 for x64-based Systems (KB5039239)
-#   - https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/a4531812-78f3-4028-8d1a-ea4381a49c48/public/windows11.0-kb5039239-x64_cd369cfc3ecd2e67c715dc28e563ca7ac1515f79.msu
+<#Random Notes
+    ADK 24H2 requires a hop step to patch... 
+    If you got to the MS Catalog and look for the latest Windows 11 24H2 Cumulative Update, when you click on Download, you will see there are 2 files, windows11.0-kb5043080-x64, which is an older CU, and the newest one
+    You will need to download the older one, and then download the newer one, and then use the older one to patch the WinPE, then use the newer one to patch the OS.
+    This script will automatically install anything in that CU folder based on the name, so oldest CU to newest.  I keep the KB5043080 in that folder, and replace the other CU with the monthly released CU.
+    So moral of the story, when you see multiple things in that Download Dialog, grab all of the, and place in the CU folder.
+
+    I've had odd behavior with WinRE 24H2, I've been unsuccessful in getting it to patch to the latest CU.  I'd recommend going to Visual Studio Downloads, grabbing the latest release of 24H2 Enterprise, and using that as your source for WinRE.
+
+    I'm not going to explain anymore, read the code, it's all there, if you have questions, hit me up on WinAdmins Discord.
+#>
 
 
+
+#!!!!!Update these to fit your Needs!!!!!!
 $StifleR = $true
 $BranchCache = $true
 $SkipOptionalComponents = $false
