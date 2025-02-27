@@ -78,7 +78,7 @@ else {
         Set-PendingUpdate
     }
     if ($Step1Complete -eq $true){
-        if ($RebootCount -eq 1){
+        if ($RebootCount -eq 1 -or $RebootCount -eq 0){
             New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
             New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
             Set-PendingUpdate

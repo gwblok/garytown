@@ -117,7 +117,7 @@ if ($OSSupported -eq $true){
             }
         }
         if ($Step2Complete -eq $true){
-            if ($RebootCount -eq 3){
+            if ($RebootCount -eq 3 -or $RebootCount -eq 0){
                 New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
                 New-ItemProperty -Path $RemediationsRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
             }
