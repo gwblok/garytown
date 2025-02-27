@@ -51,7 +51,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 
 #>
 
-$ScriptVersion = "25.01.27"
+$ScriptVersion = "25.02.27"
 Write-Output "Loading Lenovo Tools Script Version $ScriptVersion"
 
 Function Import-ModuleLenovoCSM {
@@ -69,7 +69,7 @@ Function Import-ModuleLenovoCSM {
         Write-Verbose "Lenovo Module is already installed."
         return
     }
-    $URL = "https://download.lenovo.com/cdrt/tools/Lenovo.Client.Scripting_2.1.0.zip"
+    $URL = "https://download.lenovo.com/cdrt/tools/Lenovo.Client.Scripting_2.2.0.zip"
     $FileName = $URL.Split("/")[-1]
     #$FolderName = $FileName.Replace(".zip","")
     $Destination = "$env:programdata\EMPS\$FileName"
