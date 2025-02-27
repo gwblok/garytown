@@ -452,15 +452,20 @@ Function Set-Win11ReqBypassRegValues {
         New-ItemProperty -Path "HKLM:\SYSTEM\Setup\MoSetup" -Name "AllowUpgradesWithUnsupportedTPMOrCPU" -Value 1 -PropertyType DWORD -Force | out-null
     }
 }
-
+Write-Host -ForegroundColor Green "[+] Functions for HP TPM"
+iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Get-HPTPMDetermine.ps1)
 Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdate"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Start-WindowsUpdate.ps1)
 
-Write-Host -ForegroundColor Green "[+] Functions for HP TPM"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Get-HPTPMDetermine.ps1)
-
 Write-Host -ForegroundColor Green "[+] Function Start-WindowsUpdateDriver"
 iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Start-WindowsUpdateDrivers.ps1)
+
+Write-Host -ForegroundColor Green "[+] Function Invoke-WindowsUpdate"
+Write-Host -ForegroundColor Green "[+] Reset-WindowsUpdateRegistry"
+Write-Host -ForegroundColor Green "[+] Reset-WindowsUpdate"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/SoftwareUpdates/WindowsUpdateFunctions.ps1)
+
+
 
 Write-Host -ForegroundColor Green "[+] Function Enable-AutoTimeZoneUpdate"
 Function Enable-AutoTimeZoneUpdate {
