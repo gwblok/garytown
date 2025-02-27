@@ -33,7 +33,7 @@ $RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
 if (-not (Test-Path -Path $RemediationRegPath)){
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
-if (Test-Path -Path $SecureBootRegPath){
+if (Test-Path -Path $RemediationRegPath){
     $Step1Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step1Success')
     $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
 }

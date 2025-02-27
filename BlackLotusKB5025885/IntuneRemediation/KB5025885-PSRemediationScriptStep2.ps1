@@ -32,10 +32,10 @@ $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
 if ($UBR -ge $MatchedUBR){
-    $OSSupported = $true
+    #$OSSupported = $true
 }
 else {
-    $OSSupported = $false
+    #$OSSupported = $false
     Write-Output "The OS is not supported for this remediation."
     exit 4
 }
@@ -48,88 +48,90 @@ else {
 }
 #endregion Applicability
 
-
-
-if ($OSSupported -eq $true){
-
-    $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-    $RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-    if (-not (Test-Path -Path $RemediationRegPath)){
-        New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
-    }
-    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
-    if ($null -eq $RebootCount){
-        $RebootCount = 0
-    }
-    
-    #region Test if Remediation is already applied for each Step
-    #Test: Applying the DB update
-    $Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
-    
-    #Test: Updating the boot manager
-    $Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
-    $SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
-    $SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
-    $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
-    $FilePath = "$($SystemVolume.Path)\EFI\Microsoft\Boot\bootmgfw.efi"
-    $CertCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
-    $CertCollection.Import($FilePath, $null, 'DefaultKeySet')
-    If ($CertCollection.Subject -like "*Windows UEFI CA 2023*") {$Step2Complete = $true}
-    else {$Step2Complete = $false}
-    
-    #Test: Applying the DBX update
-    $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
-
-    #endregion Test if Remediation is already applied for each Step
-
-    #region Remediation
-    if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ne 3){
-        Write-Output "The remediation is already applied."
-    }
-
-    else {
-        Write-Output "The remediation is not applied."
-        #Region Do Step 1 - #Applying the DB update
-        if ($Step1Complete -ne $true){
-            New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
-            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
-        }
-        if ($Step1Complete -eq $true){
-            if ($RebootCount -eq 1){
-                New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
-                New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
-            }
-            else {
-                New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
-            }
-        }
-        
-        #endregion Do Step 1 - #Applying the DB update
-
-        #region Do Step 2 - #Updating the boot manager
-        if ($Step1Complete -eq $true -and $Step2Complete -ne $true){
-            if ($RebootCount -eq 2){
-                New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
-                New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 3 -Force
-            }
-            else {
-                New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 2 -Force
-            }
-        }
-        if ($Step2Complete -eq $true){
-            if ($RebootCount -eq 3){
-                New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
-                New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
-            }
-            else {
-                New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
-            }
-        }
-        #endregion Do Step 2 - #Updating the boot manager
-    }
-    #endregion Remediation
-    
-} #Supported OS -eq $true
-else {
-    Write-Output "The OS is not supported for this remediation."
+$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+if (-not (Test-Path -Path $RemediationRegPath)){
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
+if (Test-Path -Path $RemediationRegPath){
+    $Step1Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step1Success')
+    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+}
+if ($null -ne $Step1Success){
+    if ($Step1Success -eq 1){
+        $Step1Success = $true
+    }
+    else {
+        $Step1Success = $false
+    }
+}
+if ($null -eq $RebootCount){
+    $RebootCount = 0
+}
+
+#region Test if Remediation is already applied for each Step
+#Test: Applying the DB update
+$Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+
+#Test: Updating the boot manager
+$Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
+$SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
+$SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
+$SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
+$FilePath = "$($SystemVolume.Path)\EFI\Microsoft\Boot\bootmgfw.efi"
+$CertCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+$CertCollection.Import($FilePath, $null, 'DefaultKeySet')
+If ($CertCollection.Subject -like "*Windows UEFI CA 2023*") {$Step2Complete = $true}
+else {$Step2Complete = $false}
+
+#Test: Applying the DBX update
+$Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
+
+#endregion Test if Remediation is already applied for each Step
+
+#region Remediation
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ne 3){
+    Write-Output "The remediation is already applied."
+}
+
+else {
+    Write-Output "The remediation is not applied."
+    #Region Do Step 1 - #Applying the DB update
+    if ($Step1Complete -ne $true){
+        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
+        New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
+    }
+    if ($Step1Complete -eq $true){
+        if ($RebootCount -eq 1){
+            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+        }
+        else {
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+        }
+    }
+    
+    #endregion Do Step 1 - #Applying the DB update
+
+    #region Do Step 2 - #Updating the boot manager
+    if ($Step1Complete -eq $true -and $Step2Complete -ne $true){
+        if ($RebootCount -eq 2){
+            New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 3 -Force
+        }
+        else {
+            New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 2 -Force
+        }
+    }
+    if ($Step2Complete -eq $true){
+        if ($RebootCount -eq 3){
+            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
+        }
+        else {
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
+        }
+    }
+    #endregion Do Step 2 - #Updating the boot manager
+}
+#endregion Remediation
