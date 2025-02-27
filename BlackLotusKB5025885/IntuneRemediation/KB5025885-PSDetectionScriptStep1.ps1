@@ -6,7 +6,7 @@ $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
 #April 2024 UBRs
-$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150')
+$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150','26120.1')
 $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
@@ -27,14 +27,24 @@ else {
 }
 #endregion Applicability
 
-
-
-$RemediationsRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-if (Test-Path -Path $RemediationsRegPath){
-    [int]$RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
-    if ($null -eq $RebootCount){
-        [int]$RebootCount = 0
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+if (-not (Test-Path -Path $RemediationRegPath)){
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
+}
+if (Test-Path -Path $SecureBootRegPath){
+    $Step1Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step1Success')
+    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+}
+if ($null -ne $Step1Success){
+    if ($Step1Success -eq 1){
+        $Step1Success = $true
     }
+    else {
+        $Step1Success = $false
+    }
+}
+if ($null -eq $RebootCount){
+    $RebootCount = 0
 }
 
 
@@ -59,9 +69,13 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 #endregion Test if Remediation is already applied for each Step
 
 #region Remediation
-#If all 3 steps are complete, remediation is not needed, exit 
 
-#Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
+#If we detect step one is done, and we stamped the registry, we can assume the reboots are complete and we're good
+if ($Step1Success -eq $true -and $Step1Complete -eq $true){
+    Write-Output "The remediation is already applied."
+    exit 0
+}
+#If the first 2 steps are complete, remediation is not needed, exit 
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true){
     Write-Output "The remediation is already applied."
     exit 0

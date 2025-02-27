@@ -6,7 +6,7 @@ $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
 #April 2024 UBRs
-$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150')
+$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150','26120.1')
 $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
@@ -30,12 +30,24 @@ else {
 
 
 #$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-$RemediationsRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-if (Test-Path -Path $RemediationsRegPath){
-    [int]$RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
-    if ($null -eq $RebootCount){
-        [int]$RebootCount = 0
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+if (-not (Test-Path -Path $RemediationRegPath)){
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
+}
+if (Test-Path -Path $SecureBootRegPath){
+    $Step2Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step2Success')
+    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+}
+if ($null -ne $Step2Success){
+    if ($Step2Success -eq 1){
+        $Step2Success = $true
     }
+    else {
+        $Step2Success = $false
+    }
+}
+if ($null -eq $RebootCount){
+    $RebootCount = 0
 }
 
 
@@ -67,21 +79,25 @@ if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -
     Write-Output "The remediation is already applied."
     exit 0
 }
+#If we detect steps are done, and we stamped the registry, we can assume the reboots are complete and we're good
+if ($Step1Success -eq $true -and $Step1Complete -eq $true -and $Step2Success -eq $true -and $Step2Complete -eq $true){
+    Write-Output "The remediation is already applied."
+    exit 0
+}
 #If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
     Write-Output "The remediation is already applied."
     exit 0
 }
+#If Steps 1 & 2 are complete, and we're on less than 4 reboots, we probably need another reboot.
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -lt 4){
+    Write-Output "Needs Remediation"
+    exit 1
+}
 #if Step 1 or 2 are not complete, remediation is needed, exit 1
 if ($Step1Complete -ne $true -or $Step2Complete -ne $true){
-        Write-Output "Needs Remediation"
-        exit 1
+    Write-Output "Needs Remediation"
+    exit 1
 }
-#If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
-if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -lt 4){
-    Write-Output "The remediation is already applied."
-    exit 0
-}
-
 #endregion Remediation
     
