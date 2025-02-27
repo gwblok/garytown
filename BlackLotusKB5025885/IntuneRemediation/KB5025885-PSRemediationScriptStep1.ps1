@@ -50,11 +50,22 @@ else {
 
 
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-$RemediationsRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-if (-not (Test-Path -Path $RemediationsRegPath)){
-    New-Item -Path $RemediationsRegPath -Force -ItemType Directory | Out-Null
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+if (-not (Test-Path -Path $RemediationRegPath)){
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
-$RebootCount = (Get-Item -Path $RemediationsRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+if (Test-Path -Path $RemediationRegPath){
+    $Step1Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step1Success')
+    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+}
+if ($null -ne $Step1Success){
+    if ($Step1Success -eq 1){
+        $Step1Success = $true
+    }
+    else {
+        $Step1Success = $false
+    }
+}
 if ($null -eq $RebootCount){
     $RebootCount = 0
 }
@@ -74,7 +85,7 @@ else {
     #Region Do Step 1 - #Applying the DB update
     if ($Step1Complete -ne $true){
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
-        New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
+        New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
         Set-PendingUpdate
     }
     if ($Step1Complete -eq $true){
@@ -84,7 +95,7 @@ else {
             Set-PendingUpdate
         }
         else {
-            New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
         }
     }
     #endregion Do Step 1 - #Applying the DB update
