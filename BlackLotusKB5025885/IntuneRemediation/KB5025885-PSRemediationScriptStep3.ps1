@@ -32,10 +32,10 @@ $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
 if ($UBR -ge $MatchedUBR){
-    $OSSupported = $true
+    #$OSSupported = $true
 }
 else {
-    $OSSupported = $false
+    #$OSSupported = $false
     Write-Output "The OS is not supported for this remediation."
     exit 4
 }
@@ -47,6 +47,30 @@ else {
     exit 5
 }
 #endregion Applicability
+
+$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+if (-not (Test-Path -Path $RemediationRegPath)){
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
+}
+if (Test-Path -Path $RemediationRegPath){
+    $Step1Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step1Success')
+    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+}
+if ($null -ne $Step1Success){
+    if ($Step1Success -eq 1){
+        $Step1Success = $true
+    }
+    else {
+        $Step1Success = $false
+    }
+}
+if ($null -eq $RebootCount){
+    $RebootCount = 0
+}
+$DetectionTime = Get-Date -Format "yyyyMMddHHmmss"
+New-ItemProperty -Path $RemediationRegPath -Name "Step3RemediationTime" -Value $DetectionTime -PropertyType String -Force | Out-Null
+
 
 
 

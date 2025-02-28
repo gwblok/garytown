@@ -68,6 +68,8 @@ if ($null -ne $Step1Success){
 if ($null -eq $RebootCount){
     $RebootCount = 0
 }
+$DetectionTime = Get-Date -Format "yyyyMMddHHmmss"
+New-ItemProperty -Path $RemediationRegPath -Name "Step2RemediationTime" -Value $DetectionTime -PropertyType String -Force | Out-Null
 
 #region Test if Remediation is already applied for each Step
 #Test: Applying the DB update

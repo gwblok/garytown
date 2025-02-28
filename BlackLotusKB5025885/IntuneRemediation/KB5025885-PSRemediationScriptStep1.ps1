@@ -69,7 +69,9 @@ if ($null -ne $Step1Success){
 if ($null -eq $RebootCount){
     $RebootCount = 0
 }
-
+#TimeStamp when Detection last Ran
+$DetectionTime = Get-Date -Format "yyyyMMddHHmmss"
+New-ItemProperty -Path $RemediationRegPath -Name "Step1RemediationTime" -Value $DetectionTime -PropertyType String -Force | Out-Null
 #region Test if Remediation is already applied for each Step
 #Test: Applying the DB update
 $Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
