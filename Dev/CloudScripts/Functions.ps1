@@ -1,5 +1,5 @@
 $ScriptName = 'functions.garytown.com'
-$ScriptVersion = '25.2.20.3'
+$ScriptVersion = '25.3.3.1'
 #Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
 
 Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
@@ -308,7 +308,8 @@ Function Get-MyComputerInfoBasic {
     $MemorySize = [math]::Round((Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory/1MB)
     Write-Output "Memory size:                           $MemorySize MB"
 }
-
+Write-Host -ForegroundColor Green "[+] Function Build-ComputerName"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/OSD/CloudOSD/CreateOSDComputerName.ps1)
 
 
 Write-Host -ForegroundColor Green "[+] Function Get-UBR"
