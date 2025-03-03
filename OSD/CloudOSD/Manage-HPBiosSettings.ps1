@@ -171,7 +171,7 @@ Function Stop-Script
     {
         Write-LogEntry -Value "Exception Message: $Exception" -Severity 3
     }
-    throw $ErrorMessage
+    return $ErrorMessage
 }
 
 Function Get-WmiData
