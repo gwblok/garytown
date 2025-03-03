@@ -27,6 +27,7 @@
     24.08.14  : GWB Version - Incorporate OSD Module (OSDCloud) to use to grab Windows directly from internet & also automate some folder directories
                 - YES, that means you need to install OSD Module - "Install Module -Name OSD"
     25.02.25  : Added WinRE Support to build WinRE with WiFi Support
+    25.02.28  : Added SMSTS.ini file to ExtraFiles\Windows folder
 
    .LINK
     https://2pintsoftware.com
@@ -60,6 +61,7 @@ $BranchCache = $true
 $SkipOptionalComponents = $false
 $WinPEBuilderPath = 'D:\WinPEBuilder'
 $UseWinRE = $true
+$AddSMSTSiniFile = $true
 
 #region functions
 
@@ -153,6 +155,12 @@ function Get-AdkPaths {
 
 
 #region Readme Files
+$SMSTSini = "[Logging]
+LOGLEVEL=1
+LOGMAXSIZE=5242880
+LOGMAXHISTORY=5
+DEBUGLOGGING=0
+"
 $BuildsReadme = "This is where WinPE builds will get staged once they are built."
 
 $OSDToolKitReadme = "For release changes please go to: https://docs.2pintsoftware.com/osd-toolkit/release-notes
@@ -254,7 +262,12 @@ try {
     [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\WiFiSupport") #Place OSDToolkit extract here
 }
 catch {throw}
-#Build Readme Files
+#Build  Files
+if ($AddSMSTSiniFile -eq $true){
+    if (!(Test-Path "$WinPEBuilderPath\ExtraFiles\Windows\smsts.ini")){
+        $SMSTSini | Out-File -FilePath "$WinPEBuilderPath\ExtraFiles\Windows\smsts.ini" -Encoding utf8
+    }
+}
 if (!(Test-Path "$WinPEBuilderPath\Builds\Readme.txt")){
     $BuildsReadme | Out-File -FilePath "$WinPEBuilderPath\Builds\Readme.txt" -Encoding utf8
 }
