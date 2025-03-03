@@ -179,6 +179,8 @@ if ($Manufacturer -match "Lenovo") {
     $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
     Write-Host "Copy-PSModuleToFolder -Name LSUClient to $PowerShellSavePath\Modules"
     Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
+    Write-Host "Copy-PSModuleToFolder -Name Lenovo.Client.Scripting to $PowerShellSavePath\Modules"
+    Copy-PSModuleToFolder -Name Lenovo.Client.Scripting -Destination "$PowerShellSavePath\Modules"
 }
 #Restart
 #restart-computer
