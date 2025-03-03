@@ -39,6 +39,7 @@ function Build-ComputerName {
         if ($Extra){$Model = $Model.replace("$Extra","")}
         if ($Model-match " DM"){$Model = $Model.replace(" DM","")}
         if ($Model-match " Desktop PC"){$Model = $Model.replace(" Desktop PC","")}
+        if ($Model-match " Notebook PC"){$Model = $Model.replace(" Notebook PC","")}
         if ($Model-match " Desktop Mini PC"){$Model = $Model.replace(" Desktop Mini PC","")}
         if ($Model-match "EliteDesk"){$Model = $Model.replace("EliteDesk","ED")}
         elseif($Model-match "EliteBook"){$Model = $Model.replace("EliteBook","EB")}
@@ -51,6 +52,11 @@ function Build-ComputerName {
         elseif($Model-match "ProDesk"){$Model = $Model.replace("ProDesk","PD")}
         elseif($Model-match "ProBook"){$Model = $Model.replace("ProBook","PB")}
         elseif($Model-match "ZBook"){$Model = $Model.replace("ZBook","ZB")}
+        if ($Model -match "inch"){
+            $Split = ($Model.Split('inch')[0])
+            $inch = $Split.TrimEnd().Split(" ") | Select-Object -Last 1
+            $Model = $Model.replace("$inch inch","")
+        }
         if($Model-match "Fury"){$Model = "$($Model.Substring(0,11))$Generation"}
         $Model = $model.replace(" ","")
         if ($Model.Length -gt 15){$ComputerName = $Model.Substring(0,15)}
