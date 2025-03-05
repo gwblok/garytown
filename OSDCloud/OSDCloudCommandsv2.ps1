@@ -122,7 +122,7 @@ Function Add-Opera {
     Write-Host " Starting creation of Portable Setup"
     $OperaArgs = "/singleprofile=1 /copyonly=1 /enable-stats=0 /enable-installer-stats=0 /launchbrowser=0 /installfolder=$InstallPath /allusers=0 /run-at-startup=0 /import-browser-data=0 /setdefaultbrowser=0 /language=en /personalized-ads=0 /personalized-content=0 /general-location=0 /consent-given=0 /silent"
     $InstallOpera = Start-Process -FilePath $OperaInstallerPath -ArgumentList $OperaArgs -PassThru -Wait -NoNewWindow
-
+    $InstallOpera.WaitForExit()
     Start-Sleep -Seconds 30
 
     #Confirm Opera Path for Install is there
@@ -254,6 +254,10 @@ function Get-WinPEMSUpdates {
                 if ($Apply){Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose}
             }
         }
+        if ($Apply){
+            Write-Host "Cleaning up after CU's (DISM /Cleanup-image /StartComponentCleanup /Resetbase)" -ForegroundColor DarkGray
+            Start-Process "dism" -ArgumentList " /Image:$MountPath /Cleanup-image /StartComponentCleanup /Resetbase" -Wait -LoadUserProfile
+        }
         return $true
     }
     else {
@@ -284,8 +288,8 @@ $WorkSpaceRootDrive = "D:"
 $DriversPath = "D:\OSDCloud-ROOT\Drivers"
 
 #Build Additional Variables based on the ones above - This will be used more later with OSDCloud V2.
-if ($IsTemplateARM64){$Arch = 'ARM64'; $ArchDisplay = 'ARM64'}
-else{$Arch = 'AMD64'; $ArchDisplay = 'x64'}
+if ($IsTemplateARM64){$Arch = 'ARM64'}
+else{$Arch = 'AMD64'}
 
 
 
