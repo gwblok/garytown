@@ -50,13 +50,16 @@ else {
 
 
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+$SecureBootKey = Get-Item -Path $SecureBootRegPath
+$SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
 $RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-if (-not (Test-Path -Path $RemediationRegPath)){
-    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
-}
 if (Test-Path -Path $RemediationRegPath){
-    $Step1Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step1Success')
-    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+    $Key = Get-Item -Path $RemediationRegPath
+    $Step1Success = ($Key).GetValue('Step1Success')
+    $RebootCount = ($Key).GetValue('RebootCount')
+}
+else{
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
 if ($null -ne $Step1Success){
     if ($Step1Success -eq 1){
@@ -80,27 +83,35 @@ $Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db)
 
 #region Remediation
 if ($Step1Complete -eq $true -and $RebootCount -ne 1){
-    Write-Output "The remediation is already applied."
+    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
 }
 else {
     Write-Output "The remediation is not applied."
     #Region Do Step 1 - #Applying the DB update
     if ($Step1Complete -ne $true){
+        Write-Output "Applying remediation | Setting Secure Boot Key to 0x40 & RebootCount to 1"
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
         New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
         Set-PendingUpdate
     }
     if ($Step1Complete -eq $true){
         if ($RebootCount -eq 1 -or $RebootCount -eq 0){
+            Write-Output "Applying remediation | Setting Step1Success to 1 & RebootCount to 2"
             New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
             New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
             Set-PendingUpdate
         }
         else {
+            Write-Output "Applying remediation | Setting Step1Success to 1"
             New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
         }
     }
     #endregion Do Step 1 - #Applying the DB update
+    $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+    $SecureBootKey = Get-Item -Path $SecureBootRegPath
+    $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
+    $RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+    Write-Output "SBKey: $SecureBootRegValue"
 }
 
 #endregion Remediation

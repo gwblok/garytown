@@ -29,14 +29,17 @@ else {
 
 
 
-#$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+$SecureBootKey = Get-Item -Path $SecureBootRegPath
+$SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
 $RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-if (-not (Test-Path -Path $RemediationRegPath)){
-    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
-}
 if (Test-Path -Path $RemediationRegPath){
-    $Step2Success = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('Step2Success')
-    $RebootCount = (Get-Item -Path $RemediationRegPath -ErrorAction SilentlyContinue).GetValue('RebootCount')
+    $Key = Get-Item -Path $RemediationRegPath
+    $Step2Success = ($Key).GetValue('Step2Success')
+    $RebootCount = ($Key).GetValue('RebootCount')
+}
+else{
+    New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
 if ($null -ne $Step2Success){
     if ($Step2Success -eq 1){
@@ -78,28 +81,35 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 
 #Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
-    Write-Output "The remediation is already applied."
+    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
     exit 0
 }
 #If we detect steps are done, and we stamped the registry, we can assume the reboots are complete and we're good
 if ($Step1Success -eq $true -and $Step1Complete -eq $true -and $Step2Success -eq $true -and $Step2Complete -eq $true){
-    Write-Output "The remediation is already applied."
+    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
     exit 0
 }
 #If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
-    Write-Output "The remediation is already applied."
+    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
     exit 0
 }
 #If Steps 1 & 2 are complete, and we're on less than 4 reboots, we probably need another reboot.
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -lt 4){
-    Write-Output "Needs Remediation"
+    Write-Output "Step 1 - Cert Found & Step 2 - Boot Manager Updated, but Reboot less than 4: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue"
     exit 1
 }
 #if Step 1 or 2 are not complete, remediation is needed, exit 1
-if ($Step1Complete -ne $true -or $Step2Complete -ne $true){
-    Write-Output "Needs Remediation"
+if ($Step1Complete -ne $true){
+
+    Write-Output "Step 1 - 2023 Cert Not Found in DB: Needs Remediation | SBKey: $SecureBootRegValue"
     exit 1
 }
+if ($Step2Complete -ne $true){
+
+    Write-Output "Step 2 - Boot Manager Not Updated: Needs Remediation | SBKey: $SecureBootRegValue"
+    exit 1
+}
+
 #endregion Remediation
     
