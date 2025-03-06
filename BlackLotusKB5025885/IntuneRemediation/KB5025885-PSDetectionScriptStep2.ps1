@@ -81,17 +81,17 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 
 #Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
-    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
+    Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
     exit 0
 }
 #If we detect steps are done, and we stamped the registry, we can assume the reboots are complete and we're good
 if ($Step1Success -eq $true -and $Step1Complete -eq $true -and $Step2Success -eq $true -and $Step2Complete -eq $true){
-    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
+    Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
     exit 0
 }
 #If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
-    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
+    Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
     exit 0
 }
 #If Steps 1 & 2 are complete, and we're on less than 4 reboots, we probably need another reboot.

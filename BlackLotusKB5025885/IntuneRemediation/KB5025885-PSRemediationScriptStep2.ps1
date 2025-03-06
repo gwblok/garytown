@@ -96,11 +96,11 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 
 #region Remediation
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ne 3){
-    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
+    Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
 }
 
 else {
-    Write-Output "The remediation is not applied. SBKey: $SecureBootRegValue"
+    Write-Output "The remediation is not applied | SBKey: $SecureBootRegValue"
     #Region Do Step 1 - #Applying the DB update
     if ($Step1Complete -ne $true){
         Write-Output "Applying remediation | Setting Secure Boot Key to 0x40 & RebootCount to 1"
