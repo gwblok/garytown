@@ -126,22 +126,22 @@ else {
         if ($RebootCount -eq 2){
             Write-Output "Applying remediation | Setting Secure Boot Key to 0x100 & RebootCount to 3"
             New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
-            New-ItemProperty -Path $RemediationsRegPath -Name  "RebootCount" -PropertyType dword -Value 3 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 3 -Force
         }
         else {
             Write-Output "Applying remediation | Setting Reboot Count to 2"
-            New-ItemProperty -Path $RemediationsRegPath -Name  "RebootCount" -PropertyType dword -Value 2 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 2 -Force
         }
     }
     if ($Step2Complete -eq $true){
         if ($RebootCount -eq 3 -or $RebootCount -eq 0){
             Write-Output "Applying remediation | Setting Step2Success to 1 & RebootCount to 4"
-            New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
-            New-ItemProperty -Path $RemediationsRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
         }
         else {
             Write-Output "Applying remediation | Setting Step2Success to 1"
-            New-ItemProperty -Path $RemediationsRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
         }
     }
     #endregion Do Step 2 - #Updating the boot manager
