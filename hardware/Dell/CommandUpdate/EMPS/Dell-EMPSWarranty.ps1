@@ -114,7 +114,10 @@ function Get-DellWarrantyInfo {
     Write-Verbose -Message "Service Tag: $ServiceTag"
     $CSVPath = "$env:programdata\Dell\ServiceTag.csv"
     
-    if ($ServiceTag){$ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force}
+    if ($ServiceTag){
+        $ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force
+        Install-CommandIntegrationSuite
+    }
     else{Write-Host "No Service Tag found" -ForegroundColor Red; return}
     
     Write-Verbose -Message "CSV Path: $CSVPath"
