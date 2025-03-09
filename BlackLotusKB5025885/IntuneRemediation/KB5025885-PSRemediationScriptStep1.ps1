@@ -83,10 +83,10 @@ $Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db)
 
 #region Remediation
 if ($Step1Complete -eq $true -and $RebootCount -ne 1){
-    Write-Output "The remediation is already applied. SBKey: $SecureBootRegValue"
+    Write-Output "Step 1 Complete | SBKey: $SecureBootRegValue"
 }
 else {
-    Write-Output "The remediation is not applied."
+    Write-Output "The remediation is not applied | SBKey: $SecureBootRegValue"
     #Region Do Step 1 - #Applying the DB update
     if ($Step1Complete -ne $true){
         Write-Output "Applying remediation | Setting Secure Boot Key to 0x40 & RebootCount to 1"
@@ -97,8 +97,8 @@ else {
     if ($Step1Complete -eq $true){
         if ($RebootCount -eq 1 -or $RebootCount -eq 0){
             Write-Output "Applying remediation | Setting Step1Success to 1 & RebootCount to 2"
-            New-ItemProperty -Path $RemediationsRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
-            New-ItemProperty -Path $RemediationsRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
+            New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
             Set-PendingUpdate
         }
         else {

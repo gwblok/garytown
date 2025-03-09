@@ -48,14 +48,14 @@ Set-HPSecurePlatformPayload -PayloadFile "$SureRecoverWorkingpath\OSpayload.dat"
 #$URL = "http://hpsr.lab.garytown.com/$($build)/custom.mft"
 #Azure Blob URLS for Content - Used in Payload file. - You wont' have this information until you've setup your BLOB storage
 $OSImageURL = "http://hpsr.blob.core.windows.net/public/OSImages/$($build)/Custom.mft"
-$AgentURL = "http://hpsr.blob.core.windows.net/public/SRAgent"
+$AgentURL = "http://2pdp01.2p.garytown.com/HPSR"
 
 $Build = 'Win10' # is is the Version of the Windows WIM I'm going o use for my custom image... I've customized the image using OSDBuilder
 #$HPProdCode = '83B2'# For if you want to create an image per device... I'm opting to have a single image and run HPIA to install drivers for any model
 
 #Build Basics
 #Host Drive Location
-$HostRoot = "\\nas\openshare\2Pint"
+$HostRoot = "C:\Users\GaryBlok\OneDrive - garytown\Documents\HP Sure Recover Setup - 2Pint"
 $SureRecoverRoot = "$HostRoot\SureRecover" #Root location of where you are going to be building things
 $SourceMedia = "$SureRecoverRoot\Sources"
 $SourceOS = "$SourceMedia\OSImages\$Build"
@@ -73,8 +73,8 @@ $AgentPath = "$SureRecoverWorkingpath\SRAgent"
 #Set Variables for the certs.
 $OpenSLLFilePath = 'C:\Program Files\OpenSSL-Win64\bin\openssl.exe'
 $CertPswd = 'P@ssw0rd'
-$EndorsementKeyFile = "$KeyPath\Secure Platform Certs-Endorsement Key.pfx"  #Created & downloaded from HP Connect
-$SigningKeyFile = "$KeyPath\Secure Platform Certs-Signing Key.pfx"  #Created & downloaded from HP Connect
+$EndorsementKeyFile = "$KeyPath\Secure Platform -Endorsement Key.pfx"  #Created & downloaded from HP Connect
+$SigningKeyFile = "$KeyPath\Secure Platform -Signing Key.pfx"  #Created & downloaded from HP Connect
 $CertSubject = "/C=US/ST=MN/L=Glenwood/O=GARYTOWN/OU=IT/CN=lab.garytown.com"
 $OSImageCertFile = "$KeyPath\os.pfx"
 $AgentImageCertFile = "$KeyPath\re.pfx"
@@ -129,7 +129,9 @@ if (!(Test-Path -Path "$KeyPath\re.key")){ #Only Create Once
 #$AgentPublicKeyFile  = "$KeyPath\hpsr_agent_public_key.pem" #Default Signing Key for Default Agent
 
 
-#region Custom Image
+
+
+<#region Custom Image - NOT USING THIS SECTION - We'll use iPXE to deploy
 #Create the Custom Image
 
 #Split the WIM File (per docs recommendations)
@@ -149,14 +151,14 @@ $pathToManifest = $ImagePath
 $total = $Files.count
 $current = 1
 $Files | Sort-Object $ToNatural | ForEach-Object {
-     Write-Progress -Activity "Generating manifest" -Status "$current of $total ($_)" -PercentComplete ($current / $total * 100)
-     $hashObject = Get-FileHash -Algorithm SHA256 -Path $_.FullName
-     $fileHash = $hashObject.Hash.ToLower()
-     $filePath = $hashObject.Path.Replace($pathToManifest + '\', '')
-     $fileSize = (Get-Item $_.FullName).length
-     $manifestContent = "$fileHash $filePath $fileSize"
-     Out-File -Encoding utf8 -FilePath $SureRecoverWorkingpath\$mftFilename -InputObject $manifestContent -Append
-     $current = $current + 1
+    Write-Progress -Activity "Generating manifest" -Status "$current of $total ($_)" -PercentComplete ($current / $total * 100)
+    $hashObject = Get-FileHash -Algorithm SHA256 -Path $_.FullName
+    $fileHash = $hashObject.Hash.ToLower()
+    $filePath = $hashObject.Path.Replace($pathToManifest + '\', '')
+    $fileSize = (Get-Item $_.FullName).length
+    $manifestContent = "$fileHash $filePath $fileSize"
+    Out-File -Encoding utf8 -FilePath $SureRecoverWorkingpath\$mftFilename -InputObject $manifestContent -Append
+    $current = $current + 1
 }
 $content = Get-Content $SureRecoverWorkingpath\$mftFilename
 $encoding = New-Object System.Text.UTF8Encoding $False
@@ -171,6 +173,8 @@ $encoding = New-Object System.Text.UTF8Encoding $False
 #Copy to Production WebServer Folder: - Do Manually for Azure Cloud Blob Storage
 #copy-item $ImagePath\* -Destination $ProdWebServerImagePath -Force -Verbose
 
+#>
+
 #region Agent
 
 #AGENT:
@@ -182,20 +186,20 @@ Remove-Item -Path "$AgentPath\$sigFilename" -Force -ErrorAction SilentlyContinue
 $imageVersion = '20'
 $header = "mft_version=20, image_version=$imageVersion"
 Out-File -Encoding UTF8 -FilePath $SureRecoverWorkingpath\$mftFilename -InputObject $header
-$Files = Get-ChildItem -Path $AgentPath -Recurse | Where-Object {$_.Attributes -ne 'Directory'}
+$Files = Get-ChildItem -Path $AgentPath -Recurse | Where-Object {$_.Attributes -notmatch 'Directory'}
 $ToNatural = { [regex]::Replace($_, '\d*\....$',{ $args[0].Value.PadLeft(50) }) }
 $pathToManifest = $AgentPath
 $total = $Files.count
 $current = 1
 $Files | Sort-Object $ToNatural | ForEach-Object {
-     Write-Progress -Activity "Generating manifest" -Status "$current of $total ($_)" -PercentComplete ($current / $total * 100)
-     $hashObject = Get-FileHash -Algorithm SHA256 -Path $_.FullName
-     $fileHash = $hashObject.Hash.ToLower()
-     $filePath = $hashObject.Path.Replace($pathToManifest + '\', '')
-     $fileSize = (Get-Item $_.FullName).length
-     $manifestContent = "$fileHash $filePath $fileSize"
-     Out-File -Encoding utf8 -FilePath $SureRecoverWorkingpath\$mftFilename -InputObject $manifestContent -Append
-     $current = $current + 1
+    Write-Progress -Activity "Generating manifest" -Status "$current of $total ($_)" -PercentComplete ($current / $total * 100)
+    $hashObject = Get-FileHash -Algorithm SHA256 -Path $_.FullName
+    $fileHash = $hashObject.Hash.ToLower()
+    $filePath = $hashObject.Path.Replace($pathToManifest + '\', '')
+    $fileSize = (Get-Item $_.FullName).length
+    $manifestContent = "$fileHash $filePath $fileSize"
+    Out-File -Encoding utf8 -FilePath $SureRecoverWorkingpath\$mftFilename -InputObject $manifestContent -Append
+    $current = $current + 1
 }
 $content = Get-Content $SureRecoverWorkingpath\$mftFilename
 $encoding = New-Object System.Text.UTF8Encoding $False
@@ -207,9 +211,9 @@ $content, $encoding)
 .\openssl dgst -sha256 -sign $AgentImageCertFile -passin pass:$CertPswd -out "$AgentPath\$sigFilename" "$AgentPath\$mftFilename" 
 
 #endregion
-
+break
 #Increment this number each time you make a change to the Payload file (like change the URL).  It does NOT need to be changed if you update an image or agent media.  Only if you change certificates or URLs.
-[int16]$Version = 8
+[int16]$Version = 2
 
 #Create the HP Secure Platform Payload Files - Provisining Secure Platform - Endorsement & Signing Payloads
 New-HPSecurePlatformEndorsementKeyProvisioningPayload -EndorsementKeyFile $EndorsementKeyFile -EndorsementKeyPassword $CertPswd -OutputFile "$PayloadFiles\SPEndorsementKeyPP.dat"
