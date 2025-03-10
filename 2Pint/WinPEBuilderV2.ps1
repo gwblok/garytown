@@ -293,7 +293,7 @@ if (!(Test-Path "$WinPEBuilderPath\WiFiSupport\Readme.txt")){
 }
 
 #Check for Install.WIM, make sure one is already there, if not, it will try to download / build one for you
-if (Test-Path -Path "$WinPEBuilderPath\OSSource\install.wim"){
+if (Test-Path -Path "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"){
     $WinInfo = Get-WindowsImage -ImagePath "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"
     $Index = ($WinInfo | Where-Object {$_.ImageName -eq "Windows 11 Enterprise"}).ImageIndex
     if ($Index){
