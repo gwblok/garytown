@@ -35,6 +35,9 @@ if (Test-Path -Path $RemediationRegPath){
     $Key = Get-Item -Path $RemediationRegPath
     $Step1Success = ($Key).GetValue('Step1Success')
     $RebootCount = ($Key).GetValue('RebootCount')
+    $Step1DetRunCount = ($Key).GetValue('Step1DetRunCount')
+    if ($null -eq $Step1DetRunCount){$Step1DetRunCount = 0 }
+    New-ItemProperty -Path $RemediationRegPath -Name "Step1DetRunCount" -Value ($Step1DetRunCount + 1) -PropertyType DWord -Force | Out-Null
 }
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null

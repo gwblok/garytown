@@ -63,6 +63,7 @@ function Get-DellWarrantyInfo {
 
     #Create Export Path
     $ExportPath = "$env:programdata\Dell\WarrantyExport.csv"
+    $RedirectPath = "$env:programdata\Dell\WarrantyExport.txt"
     if (-not (Test-Path "$env:programdata\Dell")) { New-Item -ItemType Directory -Path "$env:programdata\Dell" |out-null }
     write-verbose -Message "Export Path: $ExportPath"
     $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
@@ -114,14 +115,22 @@ function Get-DellWarrantyInfo {
     Write-Verbose -Message "Service Tag: $ServiceTag"
     $CSVPath = "$env:programdata\Dell\ServiceTag.csv"
     
-    if ($ServiceTag){$ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force}
+    if ($ServiceTag){
+        $ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force
+        Install-CommandIntegrationSuite
+    }
     else{Write-Host "No Service Tag found" -ForegroundColor Red; return}
     
     Write-Verbose -Message "CSV Path: $CSVPath"
     Write-Verbose -Message "Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList `"/I=$($CSVPath) /E=$($ExportPath)`" -Wait -WindowStyle Hidden"
-    $CLI = Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList "/I=$($CSVPath) /E=$($ExportPath)" -Wait -WindowStyle Hidden -PassThru
+    $CLI = Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList "/I=$($CSVPath) /E=$($ExportPath)" -Wait -WindowStyle Hidden -PassThru -RedirectStandardOutput $RedirectPath
+
     Write-Verbose -Message "CLI Exit Code: $($CLI.ExitCode)"
     $Data = Get-Content -Path $ExportPath | ConvertFrom-Csv
+    if ($null -eq $Data) {
+        $Data = Get-Content -Path $RedirectPath
+        $Data = $Data + "`n" + "!! No Warranty Information Found (which is odd) !!" + "`n"
+    }
 
     if ($Cleanup) {
         write-verbose "Cleanup"
