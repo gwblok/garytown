@@ -1,56 +1,56 @@
 <#
-   .Synopsis
-        WinPE Builder will generate a patched WinPE with Optional Components
-        and also optionally add BranchCache and StifleR
+.Synopsis
+WinPE Builder will generate a patched WinPE with Optional Components
+and also optionally add BranchCache and StifleR
 
-   .REQUIREMENTS
-       OSD Module
-       Windows ADK for WinPE source
-       Windows install ISO/media for install.wim source for the BranchCache binaries
-        - This it can grab using the OSD Module, it will grab the OS that matches your ADK (if available)
-       Latest/recent Windows patch that matches the Windows install.wim version
-       Optionally: OSD Toolkit for injecting BranchCache and StifleR
-       Optionally: A copy of an installed StifleR Client folder
+.REQUIREMENTS
+OSD Module
+Windows ADK for WinPE source
+Windows install ISO/media for install.wim source for the BranchCache binaries
+- This it can grab using the OSD Module, it will grab the OS that matches your ADK (if available)
+Latest/recent Windows patch that matches the Windows install.wim version
+Optionally: OSD Toolkit for injecting BranchCache and StifleR
+Optionally: A copy of an installed StifleR Client folder
 
-   .USAGE
-       Set the parameters to match your environment in the parameters region
+.USAGE
+Set the parameters to match your environment in the parameters region
 
-   .NOTES
-    AUTHOR: 2Pint Software
-    EMAIL: support@2pintsoftware.com (or reach out to Gary Blok)
-    VERSION: 23.10.01
-    DATE:10/01/2023 
-    
-    CHANGE LOG: 
-    23.10.01  : Initial version of script 
-    24.04.15  : Tax day version - updated build paths
-    24.08.14  : GWB Version - Incorporate OSD Module (OSDCloud) to use to grab Windows directly from internet & also automate some folder directories
-                - YES, that means you need to install OSD Module - "Install Module -Name OSD"
-    25.02.25  : Added WinRE Support to build WinRE with WiFi Support
-    25.02.28  : Added SMSTS.ini file to ExtraFiles\Windows folder
+.NOTES
+AUTHOR: 2Pint Software
+EMAIL: support@2pintsoftware.com (or reach out to Gary Blok)
+VERSION: 23.10.01
+DATE:10/01/2023 
 
-   .LINK
-    https://2pintsoftware.com
+CHANGE LOG: 
+23.10.01  : Initial version of script 
+24.04.15  : Tax day version - updated build paths
+24.08.14  : GWB Version - Incorporate OSD Module (OSDCloud) to use to grab Windows directly from internet & also automate some folder directories
+- YES, that means you need to install OSD Module - "Install Module -Name OSD"
+25.02.25  : Added WinRE Support to build WinRE with WiFi Support
+25.02.28  : Added SMSTS.ini file to ExtraFiles\Windows folder
+
+.LINK
+https://2pintsoftware.com
 
 
-    WHAT YOU NEED TO DO
-    Manage the script with some variables below, look for:
-    - $StifleR = $true #this will add the content from your StifleRSource folder and enable that awesome 2Pint Magic
-       - if you set it to false, you just get BC, which is still something.
-    - $SkipOptionalComponents = $false #you'll typically want to leave this false unless you're doing some random testing
-    - $WinPEBuilderPath = Path for where everything happens, this is set automatically based on where the script is running from
+WHAT YOU NEED TO DO
+Manage the script with some variables below, look for:
+- $StifleR = $true #this will add the content from your StifleRSource folder and enable that awesome 2Pint Magic
+- if you set it to false, you just get BC, which is still something.
+- $SkipOptionalComponents = $false #you'll typically want to leave this false unless you're doing some random testing
+- $WinPEBuilderPath = Path for where everything happens, this is set automatically based on where the script is running from
 #>
 
 <#Random Notes
-    ADK 24H2 requires a hop step to patch... 
-    If you got to the MS Catalog and look for the latest Windows 11 24H2 Cumulative Update, when you click on Download, you will see there are 2 files, windows11.0-kb5043080-x64, which is an older CU, and the newest one
-    You will need to download the older one, and then download the newer one, and then use the older one to patch the WinPE, then use the newer one to patch the OS.
-    This script will automatically install anything in that CU folder based on the name, so oldest CU to newest.  I keep the KB5043080 in that folder, and replace the other CU with the monthly released CU.
-    So moral of the story, when you see multiple things in that Download Dialog, grab all of the, and place in the CU folder.
+ADK 24H2 requires a hop step to patch... 
+If you got to the MS Catalog and look for the latest Windows 11 24H2 Cumulative Update, when you click on Download, you will see there are 2 files, windows11.0-kb5043080-x64, which is an older CU, and the newest one
+You will need to download the older one, and then download the newer one, and then use the older one to patch the WinPE, then use the newer one to patch the OS.
+This script will automatically install anything in that CU folder based on the name, so oldest CU to newest.  I keep the KB5043080 in that folder, and replace the other CU with the monthly released CU.
+So moral of the story, when you see multiple things in that Download Dialog, grab all of the, and place in the CU folder.
 
-    I've had odd behavior with WinRE 24H2, I've been unsuccessful in getting it to patch to the latest CU.  I'd recommend going to Visual Studio Downloads, grabbing the latest release of 24H2 Enterprise, and using that as your source for WinRE.
-        - Note, I'm still just using the WinRE from the install WIM that this script will automatically download (via the OSD Module), and it's been working, but I haven't tested it with Black Lotus remedated machines, I'd assume it would fail 
-    I'm not going to explain anymore, read the code, it's all there, if you have questions, hit me up on WinAdmins Discord.
+I've had odd behavior with WinRE 24H2, I've been unsuccessful in getting it to patch to the latest CU.  I'd recommend going to Visual Studio Downloads, grabbing the latest release of 24H2 Enterprise, and using that as your source for WinRE.
+- Note, I'm still just using the WinRE from the install WIM that this script will automatically download (via the OSD Module), and it's been working, but I haven't tested it with Black Lotus remedated machines, I'd assume it would fail 
+I'm not going to explain anymore, read the code, it's all there, if you have questions, hit me up on WinAdmins Discord.
 #>
 
 
@@ -60,6 +60,8 @@ $StifleR = $true
 $BranchCache = $true
 $SkipOptionalComponents = $false
 $WinPEBuilderPath = 'D:\WinPEBuilder'
+$Drivers = "$WinPEBuilderPath\Drivers"
+$ExtraFiles = "$WinPEBuilderPath\ExtraFiles"
 $UseWinRE = $true
 $AddSMSTSiniFile = $true
 
@@ -84,9 +86,9 @@ https://github.com/OSDeploy/OSD/tree/master/Docs
 function Get-AdkPaths {
     [CmdletBinding()]
     param (
-        [Parameter(Position = 0, ValueFromPipelineByPropertyName = $true)]
-        [ValidateSet('amd64','x86','arm64')]
-        [string]$Arch = $Env:PROCESSOR_ARCHITECTURE
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = $true)]
+    [ValidateSet('amd64','x86','arm64')]
+    [string]$Arch = $Env:PROCESSOR_ARCHITECTURE
     )
     
     #=================================================
@@ -135,7 +137,7 @@ function Get-AdkPaths {
         WinPEOCs            = Join-Path $PathWinPE 'WinPE_OCs'
         WinPERoot           = $WinPERoot
         WimSourcePath       = Join-Path $PathWinPE 'en-us\winpe.wim'
-
+        
         bcdbootexe          = Join-Path $PathDeploymentTools (Join-Path 'BCDBoot' 'bcdboot.exe')
         bcdeditexe          = Join-Path $PathDeploymentTools (Join-Path 'BCDBoot' 'bcdedit.exe')
         bootsectexe         = Join-Path $PathDeploymentTools (Join-Path 'BCDBoot' 'bootsect.exe')
@@ -187,6 +189,12 @@ $WiFiSupportReadme = "Place the WiFi support files in this folder if incorporati
     dll files will get copied automatically from the mounted OS source WIM if needed
 
 "
+$DriversWinREReadme = "Place the WinRE drivers in this folder if incorporating WinRE into the WinRE build.
+This will typically be the Intel WiFi Drivers (for Adminsitrators) that you'd extract here
+Also check driver packs for the models you support and look through the network folder, you might need to support Realtek too"
+
+$DriversWinPEReadme = "Place the WinRE drivers in this folder if incorporating WinRE into the WinRE build
+This will be your stardard OEM WinPE Driver Pack"
 
 #endregion
 
@@ -249,10 +257,10 @@ $Lang = ($ADKWinPE.FullName | Split-Path) | Split-Path -Leaf
 #Create Folder Structure - ASSUMES everything based on the location you're running this script from.
 try {
     [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Builds") #This is where WinPE builds will get staged once they are built.
-    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Drivers") #Future Version with DISM these in automatically.
-    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\ExtraFiles") #Files get copied into the boot WIM (Folder Structure Matters)
-    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\ExtraFiles\ProgramData") #Files get copied into the boot WIM (Folder Structure Matters)
-    [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\ExtraFiles\Windows\System32") #Files get copied into the boot WIM (Folder Structure Matters)
+    [void][System.IO.Directory]::CreateDirectory("$Drivers") #Future Version with DISM these in automatically.
+    [void][System.IO.Directory]::CreateDirectory("$ExtraFiles") #Files get copied into the boot WIM (Folder Structure Matters)
+    [void][System.IO.Directory]::CreateDirectory("$ExtraFiles\ProgramData") #Files get copied into the boot WIM (Folder Structure Matters)
+    [void][System.IO.Directory]::CreateDirectory("$ExtraFiles\Windows\System32") #Files get copied into the boot WIM (Folder Structure Matters)
     [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\OSSource\$OSNameNeeded") #Location for the Install.wim file from the Full OS
     [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Patches\CU\$OSNameNeeded") #Location to save your .msu CU files
     [void][System.IO.Directory]::CreateDirectory("$WinPEBuilderPath\Scratch") #Temp location, has nothing to do with scratching of the itchy kind
@@ -313,7 +321,7 @@ else {$WimDownload = $true}
 #It will download the ESD File, then extract the indexes needed and create a a WIM to place into the correct WInPEBuilderPath Location
 
 if ($WimDownload -eq $true){
-
+    
     #Check if previously downloaded and available
     if (Test-Path -Path "C:\OSDCloud\IPU\Media\$OSNameNeeded\sources\install.wim"){
         #Double check that there is no install.wim file there, if there isn't copy it there.
@@ -342,8 +350,8 @@ if ($WimDownload -eq $true){
             $ImageIndexNumber = $Index
         }
         else {
-        Write-Host "Unable to get OSSourceIndex Info for Enterprise" -ForegroundColor Red
-        break
+            Write-Host "Unable to get OSSourceIndex Info for Enterprise" -ForegroundColor Red
+            break
         }
     }
 }
@@ -402,7 +410,7 @@ if ($UseWinRE){
         if (!(Test-Path "$WinPEBuilderPath\WiFiSupport\dmcmnutils.dll")){
             Copy-Item -path "$MountPath\Windows\System32\dmcmnutils.dll" -Destination "$WinPEBuilderPath\WiFiSupport" -Force
         }
-    Dismount-WindowsImage -Path $MountPath -Discard
+        Dismount-WindowsImage -Path $MountPath -Discard
     }
     if (Test-Path -Path "$WinPEBuilderPath\WiFiSupport\DefaultWiFiProfile.xml"){
         $DefaultWifiProfile = "$WinPEBuilderPath\WiFiSupport\DefaultWiFiProfile.xml"
@@ -418,52 +426,52 @@ if ($FixWinRE) {
         If (Test-Path $WinPEScratch) {Remove-Item $WinPEScratch -Force}
         Copy-item $WinRESourceOriginal $WinPEScratch
     }
-
+    
     Write-Host "Mounting boot image to do some cleanup"
     Mount-WindowsImage -ImagePath $WinPEScratch -Index 1 -Path $MountPath
-
+    
     if (Test-Path "$MountPath\Windows\System32\winpeshl.ini") {
         Write-Host "Removing winpeshl.ini to avoid going in to recovery menu"
         Remove-Item "$MountPath\Windows\System32\winpeshl.ini"
     }
-
+    
     
     # Path to the external registry hive
     Write-Host "Cleaning registry to be able to successfully run WinPEGen"
     $RegistryFilePath = "$MountPath\Windows\System32\config\SOFTWARE"
-
+    
     # Keys to take ownership of and delete
     $KeysToDelete = @(
-        "Classes\AppID\BITS",
-        "Classes\AppID\{69AD4AEE-51BE-439b-A92C-86AE490E8B30}",
-        "Classes\CLSID\{1ecca34c-e88a-44e3-8d6a-8921bde9e452}",
-        "Classes\CLSID\{4bd3e4e1-7bd4-4a2b-9964-496400de5193}",
-        "Classes\CLSID\{4d233817-b456-4e75-83d2-b17dec544d12}",
-        "Classes\CLSID\{4991d34b-80a1-4291-83b6-3328366b9097}",
-        "Classes\CLSID\{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}",
-        "Classes\CLSID\{6d18ad12-bde3-4393-b311-099c346e6df9}",
-        "Classes\CLSID\{659cdea7-489e-11d9-a9cd-000d56965251}",
-        "Classes\CLSID\{69AD4AEE-51BE-439b-A92C-86AE490E8B30}",
-        "Classes\CLSID\{03ca98d6-ff5d-49b8-abc6-03dd84127020}",
-        "Classes\CLSID\{bb6df56b-cace-11dc-9992-0019b93a3a84}",
-        "Classes\CLSID\{F087771F-D74F-4C1A-BB8A-E16ACA9124EA}",
-        "Classes\Interface\{37668D37-507E-4160-9316-26306D150B12}",
-        "Classes\Interface\{54B50739-686F-45EB-9DFF-D6A9A0FAA9AF}",
-        "Classes\Interface\{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}",
-        "Classes\Interface\{1AF4F612-3B71-466F-8F58-7B6F73AC57AD}",
-        "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~~$($ADKBuild)\Owners",
-        "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~en-US~$($ADKBuild)\Owners"
+    "Classes\AppID\BITS",
+    "Classes\AppID\{69AD4AEE-51BE-439b-A92C-86AE490E8B30}",
+    "Classes\CLSID\{1ecca34c-e88a-44e3-8d6a-8921bde9e452}",
+    "Classes\CLSID\{4bd3e4e1-7bd4-4a2b-9964-496400de5193}",
+    "Classes\CLSID\{4d233817-b456-4e75-83d2-b17dec544d12}",
+    "Classes\CLSID\{4991d34b-80a1-4291-83b6-3328366b9097}",
+    "Classes\CLSID\{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}",
+    "Classes\CLSID\{6d18ad12-bde3-4393-b311-099c346e6df9}",
+    "Classes\CLSID\{659cdea7-489e-11d9-a9cd-000d56965251}",
+    "Classes\CLSID\{69AD4AEE-51BE-439b-A92C-86AE490E8B30}",
+    "Classes\CLSID\{03ca98d6-ff5d-49b8-abc6-03dd84127020}",
+    "Classes\CLSID\{bb6df56b-cace-11dc-9992-0019b93a3a84}",
+    "Classes\CLSID\{F087771F-D74F-4C1A-BB8A-E16ACA9124EA}",
+    "Classes\Interface\{37668D37-507E-4160-9316-26306D150B12}",
+    "Classes\Interface\{54B50739-686F-45EB-9DFF-D6A9A0FAA9AF}",
+    "Classes\Interface\{5CE34C0D-0DC9-4C1F-897C-DAA1B78CEE7C}",
+    "Classes\Interface\{1AF4F612-3B71-466F-8F58-7B6F73AC57AD}",
+    "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~~$($ADKBuild)\Owners",
+    "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~en-US~$($ADKBuild)\Owners"
     )
-
+    
     # Keys to modify
     $KeysToModify = @(
-        "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~en-US~$($ADKBuild)",
-        "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~~$($ADKBuild)"
+    "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~en-US~$($ADKBuild)",
+    "Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages\Microsoft-OneCore-BITS-Client-Package~31bf3856ad364e35~amd64~~$($ADKBuild)"
     )
-
+    
     # Temporary mount point for the registry hive
     $TempKey = "HKLM\TempHive"
-
+    
     # Get SeTakeOwnership, SeBackup and SeRestore privileges before executes next lines, script needs Admin privilege
     $import = '[DllImport("ntdll.dll")] public static extern int RtlAdjustPrivilege(ulong a, bool b, bool c, ref bool d);'
     $ntdll = Add-Type -Member $import -Name NtDll -PassThru
@@ -471,14 +479,14 @@ if ($FixWinRE) {
     foreach ($i in $privileges.Values) {
         $null = $ntdll::RtlAdjustPrivilege($i, 1, 0, [ref]0)
     }
-
-
+    
+    
     function Set-RegistryKeyOwnership {
         param (
-            [Parameter(Mandatory)]
-            [string]$RegistryKeyPath
+        [Parameter(Mandatory)]
+        [string]$RegistryKeyPath
         )
-
+        
         # Set current user as owner
         $Owner = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
         # Apply new security descriptor
@@ -486,54 +494,54 @@ if ($FixWinRE) {
         $acl = New-Object System.Security.AccessControl.RegistrySecurity
         $acl.SetOwner([System.Security.Principal.NTAccount]"$Owner")
         $key.SetAccessControl($acl)
-
+        
         $acl = $key.GetAccessControl()
         $rule = New-Object System.Security.AccessControl.RegistryAccessRule ("$Owner","FullControl","Allow")
         $acl.AddAccessRule($rule)
         $key.SetAccessControl($acl)
         $key.Close()
-
+        
         # Now handle subkeys recursively
         $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($RegistryKeyPath, $true)
-
+        
         # Get the list of subkeys under the current registry key
         $subKeys = $key.GetSubKeyNames()
-
+        
         if ($subKeys) {
             # Loop through each subkey and apply the same process
             foreach ($subKey in $subKeys) {
                 # Recursively call the function to take ownership of the subkey
                 Set-RegistryKeyOwnership -RegistryKeyPath "$RegistryKeyPath\$subKey"
             }
-
+            
             # Close the key after processing subkeys
             $key.Close()
         }
-
+        
     }
-
+    
     try {
         # Mount the registry hive
         Write-Host "Loading registry hive..."
         reg.exe load $TempKey $RegistryFilePath
-
+        
         # Loop through each key to take ownership and delete
         foreach ($Key in $KeysToDelete) {
             $FullKeyPath = "$TempKey\$Key"
             $ShortKey = $FullKeyPath -replace '^HKLM\\', ''
             Write-Host "Processing key: $FullKeyPath"
-
+            
             if (-not (Test-Path "Registry::$FullKeyPath")) {
                 Write-Host "Key does not exist: $FullKeyPath" -ForegroundColor Green
                 continue
             }
-
+            
             if ((Test-Path "Registry::$FullKeyPath")) {
                 # Take ownership
                 Write-Host "Taking ownership of $FullKeyPath..."
                 Set-RegistryKeyOwnership -RegistryKeyPath $ShortKey
-
-
+                
+                
                 # Delete the key
                 Write-Host "Deleting key: $FullKeyPath..."
                 Remove-Item -Path "Registry::$FullKeyPath" -Recurse -Force
@@ -546,7 +554,7 @@ if ($FixWinRE) {
             
             $ValueName = "Visibility" 
             $NewValue = 1
-
+            
             if ((Test-Path "Registry::$FullKeyPath")) {
                 Write-Host "Processing key: $FullKeyPath"
                 $CheckValue = (Get-ItemProperty -Path HKLM:\$ShortKey -Name $ValueName).Visibility
@@ -555,7 +563,7 @@ if ($FixWinRE) {
                     Set-ItemProperty -Path HKLM:\$ShortKey -Name $ValueName -Value $NewValue
                 }
                 else {
-                Write-Host "Value correct. Nothing to do here"
+                    Write-Host "Value correct. Nothing to do here"
                 }
             }
         }
@@ -571,19 +579,19 @@ if ($FixWinRE) {
         reg.exe unload $TempKey
         Write-Host "Registry hive processing completed."
     }
-
-
+    
+    
     # Set the features to disable to save some space
     $featuresToDisable = @(
-        "Microsoft-Windows-WinPE-Speech-TTS-Package",
-        "Microsoft-Windows-WinPE-ATBroker-Package",
-        "Microsoft-Windows-WinPE-Narrator-Package",
-        "Microsoft-Windows-WinPE-AudioDrivers-Package",
-        "Microsoft-Windows-WinPE-AudioCore-Package",
-        "Microsoft-Windows-WinPE-SRH-Package"
+    "Microsoft-Windows-WinPE-Speech-TTS-Package",
+    "Microsoft-Windows-WinPE-ATBroker-Package",
+    "Microsoft-Windows-WinPE-Narrator-Package",
+    "Microsoft-Windows-WinPE-AudioDrivers-Package",
+    "Microsoft-Windows-WinPE-AudioCore-Package",
+    "Microsoft-Windows-WinPE-SRH-Package"
     )
-
-
+    
+    
     if ($featuresToDisable.Count -gt 0) {
         Write-Host "Removing unnecessary features"
         foreach ($feature in $featuresToDisable) {
@@ -591,38 +599,38 @@ if ($FixWinRE) {
             & DISM /Image:$MountPath /Disable-Feature /FeatureName:$feature /Remove > $null 2>&1
         }
     }
-
+    
     #Perform cleanup
     Write-Host "Cleaning up bootimage"
     & DISM /Image:$MountPath /Cleanup-Image /RestoreHealth /StartComponentCleanup /ResetBase > $null 2>&1
     #>
-
+    
     if ($DefaultWifiProfile) {
         Write-Host "Copying default wifi profile"
         Copy-Item -Path $DefaultWifiProfile -Destination "$MountPath\Windows\System32" -Force
     }
-
+    
     if ($Cert) {
         Write-Host "Copying root certificate"
         Copy-Item -Path $Cert -Destination "$MountPath\Windows\System32" -Force
     }
-
+    
     #DLLs needed to support wifi
     $DLLs = Get-ChildItem -Path $WifiFolder -Filter *.dll
     foreach ($DLL in $DLLs) {
         Write-Host "Copying $($DLL)"
         Copy-Item -Path $DLL.FullName -Destination "$MountPath\Windows\System32" -Force
     }
-
+    
     #iPXEinjectfile seems to be broken for 26100. Otherwise the injection of this script would be handled from there
     #Copy-Item -Path "F:\2Pint-WinRE Builder\WifiSupport\WifiConnection.ps1" -Destination "$MountPath\Windows\System32" -Force
-
+    
     Dismount-WindowsImage -Path $MountPath -Save
     $TempWim = "$($WinPEScratch).temp"
     Export-WindowsImage -SourceImagePath $WinPEScratch -SourceIndex 1 -DestinationImagePath $TempWim -CompressionType Maximum
     Move-Item -Path $TempWim -Destination $WinPEScratch -Force
     Copy-Item -Path $WinPEScratch -Destination "$WinRESource" -Force
-
+    
 }
 
 #endregion WinRE WiFi Stuff
@@ -642,7 +650,6 @@ $StifleRClientRules = "$StifleRSource\StifleR.ClientApp.exe.Config"
 
 # Set other parameters
 $ExportPath = "$WinPEBuilderPath\Builds"
-$ExtraFiles = "$WinPEBuilderPath\ExtraFiles"
 $WinPEIndex = "1"
 #if ($ImageIndexNumber){[String]$OSSourceIndex = $ImageIndexNumber}
 #else {$OSSourceIndex = "3"} #  Index 3 is Enterprise if using the WIM from a Microsoft ISO
@@ -701,13 +708,13 @@ Set-Location "$OSDToolkitPath\x64"
 Copy-Item $WinPESource $WinPEScratch -Force -Verbose
 
 If ($StifleR) {
-Write-Output "Adding BranchCache and StifleR to WinPE..."
-.\WinPEGen.exe $OSSource $OSSourceIndex $WinPEScratch $WinPEIndex /Add-StifleR /StifleRConfig:$StifleRClientRules /StifleRSource:$StifleRSource
-    }
+    Write-Output "Adding BranchCache and StifleR to WinPE..."
+    .\WinPEGen.exe $OSSource $OSSourceIndex $WinPEScratch $WinPEIndex /Add-StifleR /StifleRConfig:$StifleRClientRules /StifleRSource:$StifleRSource
+}
 Elseif ($BranchCache) {
-Write-Output "Adding BranchCache to WinPE..."
-.\WinPEGen.exe $OSSource $OSSourceIndex $WinPEScratch $WinPEIndex 
-    }
+    Write-Output "Adding BranchCache to WinPE..."
+    .\WinPEGen.exe $OSSource $OSSourceIndex $WinPEScratch $WinPEIndex 
+}
 
 
 
@@ -722,19 +729,19 @@ if ((Test-Path "$ADKPath\WinPE_OCs\WinPE-Scripting.cab") -and ($SkipOptionalComp
     #Scripting (WinPE-Scripting)
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-Scripting.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-Scripting_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Scripting (WinPE-WMI)
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-WMI.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-WMI_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Network (WinPE-WDS-Tools) 
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-WDS-Tools.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-WDS-Tools_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Startup (WinPE-SecureStartup) Requires WinPE-WMI
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-SecureStartup.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-SecureStartup_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Configuration Manager boot image additional components
     #Microsoft .NET (WinPE-NetFx) Requires WinPE-WMI
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-NetFx.cab" -Path $MountPath -Verbose
@@ -743,26 +750,26 @@ if ((Test-Path "$ADKPath\WinPE_OCs\WinPE-Scripting.cab") -and ($SkipOptionalComp
     #Windows PowerShell (WinPE-PowerShell) Requires WinPE-WMI, WinPE-NetFx, WinPE-Scripting
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-PowerShell.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-PowerShell_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Windows PowerShell (WinPE-DismCmdlets) Requires WinPE-WMI, WinPE-NetFx, WinPE-Scripting, WinPE-PowerShell
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-DismCmdlets.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-DismCmdlets_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Microsoft Secure Boot Cmdlets (WinPE-SecureBootCmdlets) Requires WinPE-WMI, WinPE-NetFx, WinPE-Scripting, WinPE-PowerShell
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-SecureBootCmdlets.cab" -Path $MountPath -Verbose
-
+    
     #Windows PowerShell (WinPE-StorageWMI) Requires WinPE-WMI, WinPE-NetFx, WinPE-Scripting, WinPE-PowerShell
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-StorageWMI.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-StorageWMI_en-us.cab" -Path $MountPath -Verbose
-
+    
     #Storage (WinPE-EnhancedStorage) 
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-EnhancedStorage.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-EnhancedStorage_en-us.cab" -Path $MountPath -Verbose
-
+    
     #HTML (WinPE-HTA) Requires WinPE-Scripting
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-HTA.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-HTA_en-us.cab" -Path $MountPath -Verbose
-
+    
 }
 else {
     if (Test-Path "$ADKPath\WinPE_OCs\WinPE-Scripting.cab"){
@@ -773,6 +780,7 @@ else {
     }
 }
 #Apply SSU - only required for WinPE 10 19041
+$SSUPath = "D:\WinPEBuilder\Patches\SSU\SSU-26100.1738-x64.cab"
 If ($SSUPath) {Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose}
 
 #Apply LCU
@@ -782,12 +790,16 @@ if ($CU_MSU){
     if ($CU_MSU.count -gt 1){
         $CU_MSU = $CU_MSU | Sort-Object -Property Name #| Select-Object -Last 1
     }
+    Write-Host -ForegroundColor DarkGray "-----------------------------------------------------"
+    foreach ($CU in $CU_MSU){
+        Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
+    }
+    Write-Host -ForegroundColor DarkGray "-----------------------------------------------------"
     foreach ($CU in $CU_MSU){
         Write-Host -ForegroundColor Yellow "Found CU: $($CU.Name)"
         $PatchPath = $CU.FullName
         If ($PatchPath) {
             $AvailableCU = $PatchPath
-            Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
             Write-Host -ForegroundColor DarkGray "Applying CU $PatchPath"
             Add-WindowsPackage -Path $MountPath -PackagePath $PatchPath -Verbose
         }
@@ -808,14 +820,26 @@ Start-Process "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment 
 #SDClean, devcon, smsts.ini, makeiPXEUSB, iPXEEFI, etc.
 If (Test-Path $ExtraFiles\*) {
     Copy-Item -Path $ExtraFiles\* -Destination "$MountPath\" -Force -Recurse -Verbose
-    }
+}
 
 #Inject Drivers
-If (Test-Path -Path D:\WinPEBuilder\Drivers\*){
-    $DriverPath = "D:\WinPEBuilder\Drivers"
-    Write-Host "Injecting Drivers from $DriverPath"
-    #Apply-WindowsDriver -Path $MountPath -Driver $DriverPath -Recurse -Verbose
-    & DISM /Image:$MountPath /Add-Driver /Driver:$DriverPath /Recurse /ForceUnsigned /LogPath:$WinPEBuilderPath\Drivers.log
+If (Test-Path -Path $Drivers\*){
+    if (Test-Path -Path "$Drivers\WinPE"){
+        $DriverPath = "$Drivers\WinPE"
+        Write-Host "Injecting Drivers from $DriverPath"
+        #Apply-WindowsDriver -Path $MountPath -Driver $DriverPath -Recurse -Verbose
+        & DISM /Image:$MountPath /Add-Driver /Driver:$DriverPath /Recurse /ForceUnsigned /LogPath:$WinPEBuilderPath\Drivers.log
+    }
+    if ($UseWinRE){
+        Write-Host "Adding additional drivers for WinRE Builds (WiFi)"
+        if (Test-Path -Path "$Drivers\WinRE"){
+            $DriverPath = "$Drivers\WinRE"
+            Write-Host "Injecting Drivers from $DriverPath"
+            #Apply-WindowsDriver -Path $MountPath -Driver $DriverPath -Recurse -Verbose
+            & DISM /Image:$MountPath /Add-Driver /Driver:$DriverPath /Recurse /ForceUnsigned /LogPath:$WinPEBuilderPath\Drivers.log
+        }
+    }
+
     
 }
 #Verify added packages
@@ -831,10 +855,10 @@ write-output "Build Number: $BuildNumber"
 #Export boot image to reduce the size
 If ($StifleR) {
     Export-WindowsImage -SourceImagePath $WinPEScratch -SourceIndex 1 -DestinationImagePath "$ExportPath\winpe.$($BuildNumber)_$(get-date -format "yy.MM.dd")_StifleR_$($FileSuffix).wim" -Verbose
-    }
+}
 Elseif ($BranchCache) {
     Export-WindowsImage -SourceImagePath $WinPEScratch -SourceIndex 1 -DestinationImagePath "$ExportPath\winpe.$($BuildNumber)_$(get-date -format "yy.MM.dd")_BC_$($FileSuffix).wim" -Verbose
-    }
+}
 Else {
     Export-WindowsImage -SourceImagePath $WinPEScratch -SourceIndex 1 -DestinationImagePath "$ExportPath\winpe.$($BuildNumber)_$(get-date -format "yy.MM.dd")_$($FileSuffix).wim" -Verbose
-    }
+}
