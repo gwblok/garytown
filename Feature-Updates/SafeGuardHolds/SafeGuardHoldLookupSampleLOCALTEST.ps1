@@ -5,16 +5,21 @@ Sample of how to lookup Safe Guard Hold data based on the "database" I built and
 
 $ID = '26062027'
 
+
+#Just Build on D Drive:
+$SafeGuardJSONURL = "D:\SafeGuard\AppraiserDatabase\SafeGuardHoldDataBase.json"
+$SafeGuardDataLocal = Get-Content -Path $SafeGuardJSONURL  | ConvertFrom-Json
+$SafeGuardDataLocal.count
+
+#Current on GiHubt
 $SafeGuardJSONURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/SafeGuardHoldDataBase.json'
 $SafeGuardData = (Invoke-WebRequest -URI $SafeGuardJSONURL).content | ConvertFrom-Json
-$SafeGuardData | Where-Object {$_.SafeguardID -eq $ID}
-
+$SafeGuardData.count
 
 #Previous Backup of the JSON file
 $SafeGuardJSONBackupURL = 'https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/SafeGuardHolds/backup/SafeGuardHoldDataBase.json'
 $SafeGuardDataBackup = (Invoke-WebRequest -URI $SafeGuardJSONBackupURL).content | ConvertFrom-Json
-
-$SafeGuardDataBackup | Where-Object {$_.SafeguardID -eq $ID}
+$SafeGuardDataBackup.count
 
 
 #Grab Recent SafeGuards new for upgrading to 11 23H2
