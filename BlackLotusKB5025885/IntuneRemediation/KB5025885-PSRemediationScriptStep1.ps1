@@ -2,6 +2,14 @@
     Gary Blok & Mike Terrill
     KB5025885 Remediation Script
     Part 1 of 4
+
+
+    IDEA, when I set the Registry in Secure boot to 0x40, record the time then check the next couple of reboot times
+    in the eventlog, and confirm that it's rebooted twice before setting it as successful.
+    This will require a bit of a rewrite of the script today.
+
+    As it stands, it does work, but it's not as elegant as I'd like it to be.
+
 #>
 
 function Set-PendingUpdate {
@@ -57,6 +65,9 @@ if (Test-Path -Path $RemediationRegPath){
     $Key = Get-Item -Path $RemediationRegPath
     $Step1Success = ($Key).GetValue('Step1Success')
     $RebootCount = ($Key).GetValue('RebootCount')
+    $Step1RemRunCount = ($Key).GetValue('Step1RemRunCount')
+    if ($null -eq $Step1RemRunCount){$Step1RemRunCount = 0 }
+    New-ItemProperty -Path $RemediationRegPath -Name "Step1RemRunCount" -Value ($Step1RemRunCount + 1) -PropertyType DWord -Force | Out-Null
 }
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null

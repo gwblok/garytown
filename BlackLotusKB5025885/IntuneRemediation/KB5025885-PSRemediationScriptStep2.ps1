@@ -56,6 +56,9 @@ if (Test-Path -Path $RemediationRegPath){
     $Key = Get-Item -Path $RemediationRegPath
     $Step1Success = ($Key).GetValue('Step1Success')
     $RebootCount = ($Key).GetValue('RebootCount')
+    $Step2RemRunCount = ($Key).GetValue('Step2RemRunCount')
+    if ($null -eq $Step2RemRunCount){$Step2RemRunCount = 0}   
+    New-ItemProperty -Path $RemediationRegPath -Name "Step2RemRunCount" -Value ($Step2RemRunCount + 1) -PropertyType DWord -Force | Out-Null
 }
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
@@ -95,7 +98,7 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 #endregion Test if Remediation is already applied for each Step
 
 #region Remediation
-if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ne 3){
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
     Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
 }
 
@@ -107,19 +110,19 @@ else {
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
         New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
     }
-    if ($Step1Complete -eq $true){
+    else {
         if ($RebootCount -eq 1){
             Write-Output "Applying remediation | Setting Step1Success to 1 & RebootCount to 2"
             New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
             New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
         }
         else {
-            Write-Output "Applying remediation | Setting Step1Success to 1"
-            New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+            if ($Step1Success -ne 1){
+                Write-Output "Applying remediation | Setting Step1Success to 1"
+                New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
+            }
         }
     }
-
-#endregion Do Step 1 - #Applying the DB update
 
     #region Do Step 2 - #Updating the boot manager
     if ($Step1Complete -eq $true -and $Step2Complete -ne $true){
@@ -134,7 +137,7 @@ else {
         }
     }
     if ($Step2Complete -eq $true){
-        if ($RebootCount -eq 3 -or $RebootCount -eq 0){
+        if ($RebootCount -in (0,1,2,3)){
             Write-Output "Applying remediation | Setting Step2Success to 1 & RebootCount to 4"
             New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
             New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force

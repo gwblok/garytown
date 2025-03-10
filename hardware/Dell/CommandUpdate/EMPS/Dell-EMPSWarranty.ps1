@@ -131,7 +131,6 @@ function Get-DellWarrantyInfo {
         $Data = Get-Content -Path $RedirectPath
         $Data = $Data + "`n" + "!! No Warranty Information Found (which is odd) !!" + "`n"
     }
-    
 
     if ($Cleanup) {
         write-verbose "Cleanup"
