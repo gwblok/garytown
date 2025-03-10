@@ -872,7 +872,7 @@ else {
 }
 
 Write-Host -ForegroundColor DarkGray "========================================================================="
-Write-Host -ForegroundColor Yellow "Saving OSD Module to X:\Program Files\WindowsPowerShell\Modules"
+Write-Host -ForegroundColor Yellow "Saving OSD Module to $MountPath\Program Files\WindowsPowerShell\Modules"
 Save-Module -Name OSD -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
 
 Write-Host -ForegroundColor DarkGray "========================================================================="
@@ -896,6 +896,7 @@ if ($Module -eq 'DellBiosProvider') {
         Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\vcruntime140_1.dll to WinPE"
         Copy-Item -Path "$env:SystemRoot\System32\vcruntime140_1.dll" -Destination "$MountPath\Windows\System32\vcruntime140_1.dll" -Force | Out-Null
     }
+    Save-Module -Name $Module -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
 }
 Write-Host -ForegroundColor DarkGray "========================================================================="
 Write-Host -ForegroundColor Yellow "Downloading https://github.com/okieselbach/Helpers/raw/master/WirelessConnect/WirelessConnect/bin/Release/WirelessConnect.exe"
@@ -914,6 +915,8 @@ Enable-PEWindowsImagePSGallery -Path $MountPath | Out-Null
 
 
 #Unmount boot image
+Write-Host -ForegroundColor DarkGray "========================================================================="
+Write-Host -ForegroundColor Yellow "Process: Dismount-WindowsImage -Path $MountPath -Save"
 Dismount-WindowsImage -Path $MountPath -Save
 
 #Get build info
