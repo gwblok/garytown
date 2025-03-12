@@ -53,7 +53,7 @@ I've had odd behavior with WinRE 24H2, I've been unsuccessful in getting it to p
 I'm not going to explain anymore, read the code, it's all there, if you have questions, hit me up on WinAdmins Discord.
 #>
 
-
+Push-Location
 
 #!!!!!Update these to fit your Needs!!!!!!
 $StifleR = $true
@@ -935,3 +935,4 @@ Elseif ($BranchCache) {
 Else {
     Export-WindowsImage -SourceImagePath $WinPEScratch -SourceIndex 1 -DestinationImagePath "$ExportPath\winpe.$($BuildNumber)_$(get-date -format "yy.MM.dd")_$($FileSuffix).wim" -Verbose
 }
+Pop-Location
