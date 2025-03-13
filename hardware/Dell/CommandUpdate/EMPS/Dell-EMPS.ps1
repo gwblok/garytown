@@ -377,6 +377,8 @@ Function Get-DCUAppUpdates {
         if ($Manufacturer -notmatch "Dell"){return "This Function is only for Dell Systems"}
         $SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
     }
+    $temproot = "$env:windir\temp"
+    $DellCabExtractPath = "$temproot\DellCabDownloads\DellCabExtract"
     
     $Apps = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType application | Select-Object -Property PackageID, Name, ReleaseDate, DellVersion, VendorVersion, Path
     $CommandUpdateApps = $Apps | Where-Object {$_.Name -like "*Command | Update*"} | Sort-Object -Property VendorVersion
