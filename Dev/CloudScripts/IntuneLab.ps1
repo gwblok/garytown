@@ -212,16 +212,23 @@ if ($env:SystemDrive -ne 'X:') {
     Write-SectionHeader -Message "**Running Debloat Script**" 
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
-    #OEM Updates
-    try {
-        iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/LenovoUpdate.ps1)
-    }
-    catch {}
 
-    try {
-        iex (irm https://dell.garytown.com)
+    $BaseBoard = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_BaseBoard
+    $ComputerSystem = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_ComputerSystem
+    $Manufacturer = ($ComputerSystem).Manufacturer
+    $ManufacturerBaseBoard = ($BaseBoard).Manufacturer
+    $ComputerModel = ($ComputerSystem).Model
+
+    #OEM Updates
+    if ($Manufacturer -match "Microsoft"){
+        if ($ComputerModel -match "Virtual Machine"){
+            try {
+                Set-HyperVName
+            }
+            catch {}
+        }
     }
-    catch {}
+
 
     #Set Time Zone
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
