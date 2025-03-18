@@ -25,6 +25,11 @@ else {
     Write-Output "Secure Boot is not enabled."
     exit 5
 }
+
+
+
+
+
 #endregion Applicability
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
 $SecureBootKey = Get-Item -Path $SecureBootRegPath
@@ -36,12 +41,24 @@ if (Test-Path -Path $RemediationRegPath){
     $Step1Success = ($Key).GetValue('Step1Success')
     $RebootCount = ($Key).GetValue('RebootCount')
     $Step1DetRunCount = ($Key).GetValue('Step1DetRunCount')
+    $Step1Set0x40 = ($Key).GetValue('Step1Set0x40') 
     if ($null -eq $Step1DetRunCount){$Step1DetRunCount = 0 }
     New-ItemProperty -Path $RemediationRegPath -Name "Step1DetRunCount" -Value ($Step1DetRunCount + 1) -PropertyType DWord -Force | Out-Null
 }
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
+[datetime]$SecondToLastReboot = (Get-WinEvent -LogName System -MaxEvents 2 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated | Select-Object -Last 1).TimeCreated
+$Last9Reboots = (Get-WinEvent -LogName System -MaxEvents 10 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated).TimeCreated
+
+#Convert $Step1Set0x40 into Datetime
+$Step1Set0x40 = [System.DateTime]::ParseExact($Step1Set0x40, "yyyyMMddHHmmss", $null)
+if ($Step1Set0x40 -lt $SecondToLastReboot){
+    New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force | out-null
+    $RebootCount = 2
+}
+$CountOfRebootsSinceRemediation = ($Last9Reboots | Where-Object {$_ -gt $Step1Set0x40}).Count
+
 if ($null -ne $Step1Success){
     if ($Step1Success -eq 1){
         $Step1Success = $true
@@ -94,14 +111,17 @@ if ($Step1Complete -eq $true -and $RebootCount -ge 2){
     Write-Output "Step 1 Complete | SBKey: $SecureBootRegValue"
     exit 0
 }
+
 #if Step 1 or 2 are not complete, remediation is needed, exit 1
 if ($Step1Complete -ne $true){
-        Write-Output "Step 1 - 2023 Cert Not Found in DB: Needs Remediation | SBKey: $SecureBootRegValue"
-        exit 1
+
+
+    Write-Output "Step 1 - 2023 Cert Not Found in DB: Needs Remediation | SBKey: $SecureBootRegValue | Reboot Count: $CountOfRebootsSinceRemediation "
+    exit 1
 }
 #If Step 1is complete, and we're on reboot 1, this would need remediation, exit 1
 if ($Step1Complete -eq $true -and $RebootCount -lt 2){
-    Write-Output "Step 1 - 2023 Cert Found, but Reboot Count Less than 2: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue "
+    Write-Output "Step 1 - 2023 Cert Found, but Reboot Count Less than 2: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue  | Reboot Count: $CountOfRebootsSinceRemediation"
     exit 1
 }
 

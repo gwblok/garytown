@@ -66,6 +66,7 @@ if (Test-Path -Path $RemediationRegPath){
     $Step1Success = ($Key).GetValue('Step1Success')
     $RebootCount = ($Key).GetValue('RebootCount')
     $Step1RemRunCount = ($Key).GetValue('Step1RemRunCount')
+    $Step1Set0x40 = ($Key).GetValue('Step1Set0x40') 
     if ($null -eq $Step1RemRunCount){$Step1RemRunCount = 0 }
     New-ItemProperty -Path $RemediationRegPath -Name "Step1RemRunCount" -Value ($Step1RemRunCount + 1) -PropertyType DWord -Force | Out-Null
 }
@@ -102,6 +103,9 @@ else {
     if ($Step1Complete -ne $true){
         Write-Output "Applying remediation | Setting Secure Boot Key to 0x40 & RebootCount to 1"
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
+        if ($null -eq $Step1Set0x40){
+            New-ItemProperty -Path $RemediationRegPath -Name "Step1Set0x40" -PropertyType string -Value $DetectionTime -Force
+        }
         New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
         Set-PendingUpdate
     }
