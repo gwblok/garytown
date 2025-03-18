@@ -44,7 +44,7 @@ if ($UBR -ge $MatchedUBR){
 }
 else {
     #$OSSupported = $false
-    Write-Output "The OS is not supported for this remediation."
+    Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     exit 4
 }
 if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
