@@ -21,13 +21,15 @@ function Set-PendingUpdate {
     New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
 }
 
+
+#Test if Remediation is applicable
 #Region Applicability
 $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
 #April 2024 UBRs
-$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150', '26120.1')
+$AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150','26120.1')
 $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
@@ -48,35 +50,46 @@ else {
 }
 #endregion Applicability
 
+
+
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
 $SecureBootKey = Get-Item -Path $SecureBootRegPath
 $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
-$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediation\KB5025885'
+
+#TimeStamp when Remediation last Ran
+$DetectionTime = Get-Date -Format "yyyyMMddHHmmss"
+New-ItemProperty -Path $RemediationRegPath -Name "Step2LastRemediationTime" -Value $DetectionTime -PropertyType String -Force | Out-Null
+
+
 if (Test-Path -Path $RemediationRegPath){
     $Key = Get-Item -Path $RemediationRegPath
-    $Step1Success = ($Key).GetValue('Step1Success')
-    $RebootCount = ($Key).GetValue('RebootCount')
-    $Step2RemRunCount = ($Key).GetValue('Step2RemRunCount')
+    $Step2Success = ($Key).GetValue('Step2Success')
     $Step2Set0x100 = ($Key).GetValue('Step2Set0x100') 
-    if ($null -eq $Step2RemRunCount){$Step2RemRunCount = 0}   
-    New-ItemProperty -Path $RemediationRegPath -Name "Step2RemRunCount" -Value ($Step2RemRunCount + 1) -PropertyType DWord -Force | Out-Null
 }
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
-if ($null -ne $Step1Success){
-    if ($Step1Success -eq 1){
-        $Step1Success = $true
+$Last9Reboots = (Get-WinEvent -LogName System -MaxEvents 10 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated).TimeCreated
+[datetime]$SecondToLastReboot = $Last9Reboots | Select-Object -First 2 | Select-Object -Last 1
+
+if ($null -ne $Step2Set0x100){
+    #Convert $Step1Set0x40 into Datetime
+    $Step2Set0x100 = [System.DateTime]::ParseExact($Step1Set0x40, "yyyyMMddHHmmss", $null)
+}
+else{
+    $Step2Set0x100 = Get-Date
+}
+$CountOfRebootsSinceRemediation = ($Last9Reboots | Where-Object {$_ -gt $Step2Set0x100}).Count
+
+if ($null -ne $Step2Success){
+    if ($Step2Success -eq 1){
+        $Step2Success = $true
     }
     else {
-        $Step1Success = $false
+        $Step2Success = $false
     }
 }
-if ($null -eq $RebootCount){
-    $RebootCount = 0
-}
-$DetectionTime = Get-Date -Format "yyyyMMddHHmmss"
-New-ItemProperty -Path $RemediationRegPath -Name "Step2RemediationTime" -Value $DetectionTime -PropertyType String -Force | Out-Null
 
 #region Test if Remediation is already applied for each Step
 #Test: Applying the DB update
@@ -99,71 +112,50 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 #endregion Test if Remediation is already applied for each Step
 
 #region Remediation
-if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
+#If all 3 steps are complete, remediation is not needed, exit 
+
+#Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
     Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
+    if ($Null -eq $Step2Success){
+        New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force | Out-Null
+    }
+    exit 0
+}
+#If we detect steps are done, and we stamped the registry, we can assume the reboots are complete and we're good
+if ($Step1Success -eq $true -and $Step1Complete -eq $true -and $Step2Success -eq $true -and $Step2Complete -eq $true){
+    Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
+    exit 0
+}
+#If Steps 1 & 2 are complete, and we're on reboot 2, all is well, exit 0
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $CountOfRebootsSinceRemediation -ge 2){
+    Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
+    if ($Null -eq $Step2Success){
+        New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force | Out-Null
+    }
+    exit 0
+}
+#If Steps 1 & 2 are complete, and we're on less than 2 reboots, we probably need another reboot.
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $CountOfRebootsSinceRemediation -lt 2){
+    Write-Output "Step 1 - Cert Found & Step 2 - Boot Manager Updated, but Reboot less than 2: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue"
+    Set-PendingUpdate
+    exit 0
+}
+#if Step 1 not complete, this is a dependency on a different remediation to finish, exit 2
+if ($Step1Complete -ne $true){
+    Write-Output "Dependency not complete | Step 1 - 2023 Cert Not Found in DB: Needs Remediation | SBKey: $SecureBootRegValue"
+    exit 2
+}
+#If Step 2 is not complete, remediation is needed, exit 1
+if ($Step2Complete -ne $true){
+    New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
+    if ($null -eq $Step2Set0x100){
+        New-ItemProperty -Path $RemediationRegPath -Name "Step2Set0x100" -PropertyType string -Value $DetectionTime -Force
+    }
+    Write-Output "Step 2 - Boot Manager Not Updated: Set AvailableUpdates from $SecureBootRegValue to 0x100"
+    Set-PendingUpdate
+    exit 0
 }
 
-else {
-    Write-Output "The remediation is not applied | SBKey: $SecureBootRegValue"
-    #Region Do Step 1 - #Applying the DB update
-    # I decided I don't want Step 2 to try to deal with Step 1 not being done.  So, I removed this logic.
-    <#
-    if ($Step1Complete -ne $true){
-        
-        Write-Output "Applying remediation | Setting Secure Boot Key to 0x40 & RebootCount to 1"
-        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
-        New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 1 -Force
-        if ($null -eq $Step1Set0x40){
-            New-ItemProperty -Path $RemediationRegPath -Name "Step1Set0x40" -PropertyType string -Value $DetectionTime -Force
-        }
-    }
-    else {
-        if ($RebootCount -eq 1){
-            Write-Output "Applying remediation | Setting Step1Success to 1 & RebootCount to 2"
-            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 2 -Force
-            New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
-        }
-        else {
-            if ($Step1Success -ne 1){
-                Write-Output "Applying remediation | Setting Step1Success to 1"
-                New-ItemProperty -Path $RemediationRegPath -Name  "Step1Success" -PropertyType dword -Value 1 -Force
-            }
-        }
-    }
-    #>
-
-    #region Do Step 2 - #Updating the boot manager
-    if ($Step1Complete -eq $true -and $Step2Complete -ne $true){
-        if ($RebootCount -eq 2){
-            Write-Output "Applying remediation | Setting Secure Boot Key to 0x100 & RebootCount to 3"
-            New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
-            if ($null -eq $Step2Set0x100){
-                New-ItemProperty -Path $RemediationRegPath -Name "Step2Set0x100" -PropertyType string -Value $DetectionTime -Force
-            }
-            New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 3 -Force
-        }
-        else {
-            Write-Output "Applying remediation | Setting Reboot Count to 2"
-            New-ItemProperty -Path $RemediationRegPath -Name  "RebootCount" -PropertyType dword -Value 2 -Force
-        }
-    }
-    if ($Step2Complete -eq $true){
-        if ($RebootCount -in (0,1,2,3)){
-            Write-Output "Applying remediation | Setting Step2Success to 1 & RebootCount to 4"
-            New-ItemProperty -Path $RemediationRegPath -Name "RebootCount" -PropertyType dword -Value 4 -Force
-            New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
-        }
-        else {
-            Write-Output "Applying remediation | Setting Step2Success to 1"
-            New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force
-        }
-    }
-    #endregion Do Step 2 - #Updating the boot manager
-    $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-    $SecureBootKey = Get-Item -Path $SecureBootRegPath
-    $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
-    $RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
-    Write-Output "SBKey: $SecureBootRegValue"
-}
 #endregion Remediation
-
+    
