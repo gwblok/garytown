@@ -49,7 +49,7 @@ else {
 #endregion Applicability
 
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediation\KB5025885'
 if (-not (Test-Path -Path $RemediationRegPath)){
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
