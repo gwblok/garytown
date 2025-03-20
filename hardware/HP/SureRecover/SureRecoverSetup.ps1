@@ -51,7 +51,7 @@ $OSImageURL = "http://hpsr.blob.core.windows.net/public/OSImages/$($build)/Custo
 $AgentURL = "http://hpsr.blob.core.windows.net/public/SRAgent"
 
 $Build = 'Win10' # is is the Version of the Windows WIM I'm going o use for my custom image... I've customized the image using OSDBuilder
-$HPProdCode = '83B2'# For if you want to create an image per device... I'm opting to have a single image and run HPIA to install drivers for any model
+#$HPProdCode = '83B2'# For if you want to create an image per device... I'm opting to have a single image and run HPIA to install drivers for any model
 
 #Build Basics
 #Host Drive Location

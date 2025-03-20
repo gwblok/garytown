@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PUT THIS FILE IN THE BIN DIRECTORY OF THE SERVICE TO OVERRIDE SETTINGS WITHOUT EDITTING THE APP.CONFIG DIRECTLY -->
+<appSettings>
+	<add key="SignalRCertificateThumbprint" value="3f6a8f630d1bbebf2ca65f869149828fd7b63677"/>
+        <add key="WebServiceCertificateThumbprint" value="3f6a8f630d1bbebf2ca65f869149828fd7b63677"/>
+	<add key="DefaultStifleRAdmins" value="2P\StifleR Global Admins"/>
+	<add key="DefaultStifleRRead" value="2P\StifleR Global Read"/>
+	<add key="LicenseKey" value="PLACE YOUR LICENSE KEY VALUE HERE"/>
+	<add key="RequireAgentClientCertificate" value="0"/>
+	<add key="StifleRDashboardAccess" value="2P\StifleR Dashboard Access"/>
+	<add key="ListenToUrl" value="https://*:1414"/>
+	<add key="LocationWSListenToUrl" value="https://*:9000"/>
+	<add key="AutoLinkNetworks" value="0"/>
+	<add key="AutoLinkLocations" value="0"/>
+</appSettings>

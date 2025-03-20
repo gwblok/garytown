@@ -192,7 +192,7 @@ if ($env:SystemDrive -eq 'X:') {
         Stop-Transcript
         Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
-    #restart-computer
+    restart-computer
 }
 
 #Non-WinPE

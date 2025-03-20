@@ -51,7 +51,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 
 #>
 
-$ScriptVersion = "25.01.27"
+$ScriptVersion = "25.02.27"
 Write-Output "Loading Lenovo Tools Script Version $ScriptVersion"
 
 Function Import-ModuleLenovoCSM {
@@ -69,13 +69,15 @@ Function Import-ModuleLenovoCSM {
         Write-Verbose "Lenovo Module is already installed."
         return
     }
-    $URL = "https://download.lenovo.com/cdrt/tools/Lenovo.Client.Scripting_2.1.0.zip"
+    $URL = "https://download.lenovo.com/cdrt/tools/Lenovo.Client.Scripting_2.2.0.zip"
     $FileName = $URL.Split("/")[-1]
     #$FolderName = $FileName.Replace(".zip","")
     $Destination = "$env:programdata\EMPS\$FileName"
     $ExtractedFolder = "C:\Program Files\WindowsPowerShell\Modules"
 
-
+    if (!(Test-Path -Path "$env:programdata\EMPS")){
+        New-Item -Path "$env:programdata\EMPS" -ItemType Directory | Out-Null
+    }
     if (!(Test-Path -Path $ExtractedFolder)){
         New-Item -Path $ExtractedFolder -ItemType Directory | Out-Null
     }
@@ -121,15 +123,56 @@ function Install-LenovoSystemUpdater {
 #This is basic pre-programmed right now, will eventually build out to add parameters
 function Invoke-LenovoSystemUpdater
 {
+    [CmdletBinding()]
+    param (
+        [ValidateSet('DOWNLOAD','LIST','INSTALL')]
+        [String]$Action = 'LIST', #https://docs.lenovocdrt.com/guides/sus/su_dg/su_dg_ch5/#-action_1
+        [ValidateSet('All','Application','Driver','Bios','Firmware')]
+        [String]$PackageTypes = 'All',
+        [ValidateSet('Critical','Recommended','All')]
+        [string]$Severity = 'All',
+        [switch]$noReboot,
+        [switch]$noIcon
+    )
+    
+    switch ($PackageTypes) {
+        'All' { $LSUPackageTypes = $null }
+        'Application' { $LSUPackageTypes = '-packagetypes 1'}
+        'Driver' { $LSUPackageTypes = '-packagetypes 2' }
+        'Bios' { $LSUPackageTypes = '-packagetypes 3' }
+        'Firmware' { $LSUPackageTypes = '-packagetypes 4' }
+    }
+    switch ($Severity ) {
+        'All' { $LSUSeverity = '-search A' }
+        'Critical' { $LSUSeverity = '-search C'}
+        'Recommended' { $LSUSeverity = '-search R' }
+
+    }
+
+    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 1,3,5 -nolicense -exporttowmi "
+    if ($noReboot) {
+        $ArgList += ' -noreboot'
+    }
+        if ($noIcon) {
+        $ArgList += ' -noicon'
+    }
     # Check if Lenovo System Updater is already installed
     if (Test-Path "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe") {
-        Write-Host "Lenovo System Updater is already installed."
+        #Write-Host "Lenovo System Updater is already installed."
     } else {
         Write-Host "Lenovo System Updater is not installed. Installing..."
         Install-LenovoSystemUpdater
     }
-    $ArgList = '/CM -search A -action INSTALL -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon'
-    $Updater = Start-Process -FilePath "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe" -ArgumentList $ArgList  -Wait -PassThru
+    $LSURegKey = "HKLM:\SOFTWARE\Policies\Lenovo\System Update\UserSettings\General"
+    $LSURegName = "AdminCommandLine"
+    $LSURegValue = $ArgList
+
+    if (!(Test-Path $LSURegKey)) {New-Item -Path $LSURegKey -ItemType Directory -Force | Out-Null}
+    Set-ItemProperty -Path $LSURegKey -Name $LSURegName -Value $LSURegValue -Force | Out-Null
+
+    #$ArgList = "/CM -search A -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon"
+    write-host -ForegroundColor Cyan "Starting Lenovo System Updater with AdminCommandLine: $ArgList"
+    $Updater = Start-Process -FilePath "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe" -ArgumentList '/CM'  -Wait -PassThru
 
     if ($Updater.ExitCode -eq 0) {
         Write-Host -ForegroundColor Green "Lenovo System Updater completed successfully."
@@ -138,7 +181,103 @@ function Invoke-LenovoSystemUpdater
     }
 }
 
+function Install-LenovoThinInstaller {
+    if (Test-Path -Path ${env:ProgramFiles(x86)}\Lenovo\ThinInstaller\ThinInstaller.exe){
+        Write-Host "Lenovo ThinInstaller is already installed."
+        return
+    }
+    # Define the URL and temporary file path
+    Import-ModuleLenovoCSM
+    $URL = Find-LnvTool -Tool ThinInstaller -Url
+    #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/system_update_5.08.02.25.exe" #No longer needed, uses the Lenovo CSM to get latest version
+    $tempFilePath = "C:\Windows\Temp\ThinInstaller.exe"
+
+    # Create a new BITS transfer job
+    $bitsJob = Start-BitsTransfer -Source $url -Destination $tempFilePath -DisplayName "Lenovo ThinInstaller Download"
+
+    # Wait for the BITS transfer job to complete
+    while ($bitsJob.JobState -eq "Transferring") {
+        Start-Sleep -Seconds 2
+    }
+
+    # Check if the transfer was successful
+    if (Test-Path -Path $tempFilePath) {
+        # Start the installation process
+        Write-Host -ForegroundColor Green "Installation file downloaded successfully. Starting installation..."
+        $ArgumentList = "/VERYSILENT /NORESTART"
+        $InstallProcess = Start-Process -FilePath $tempFilePath -ArgumentList $ArgumentList -Wait -PassThru
+        if ($InstallProcess.ExitCode -eq 0) {
+            Write-Host -ForegroundColor Green "Installation completed successfully."
+        } else {
+            Write-Host -ForegroundColor Red "Installation failed with exit code $($InstallProcess.ExitCode)."
+        }
+    } else {
+        Write-Host "Failed to download the file."
+    }
+}
+
+function Invoke-LenovoThinInstaller {
+
+
+    [CmdletBinding()]
+    param (
+        [ValidateSet('DOWNLOAD','LIST','INSTALL')]
+        [String]$Action = 'LIST', #https://docs.lenovocdrt.com/guides/sus/su_dg/su_dg_ch5/#-action_1
+        [ValidateSet('All','Application','Driver','Bios','Firmware')]
+        [String]$PackageTypes = 'All',
+        [ValidateSet('Critical','Recommended','All')]
+        [string]$Severity = 'All',
+        [switch]$noReboot,
+        [switch]$noIcon,
+        [switch]$showprogress
+    )
+    $ThinAppPath = "${env:ProgramFiles(x86)}\Lenovo\ThinInstaller\ThinInstaller.exe"
+    if (!(Test-Path -Path $ThinAppPath)){
+        Write-Host "Lenovo ThinInstaller is not installed. Installing..."
+        Install-LenovoThinInstaller
+    }
+
+    switch ($PackageTypes) {
+        'All' { $LSUPackageTypes = $null }
+        'Application' { $LSUPackageTypes = '-packagetypes 1'}
+        'Driver' { $LSUPackageTypes = '-packagetypes 2' }
+        'Bios' { $LSUPackageTypes = '-packagetypes 3' }
+        'Firmware' { $LSUPackageTypes = '-packagetypes 4' }
+    }
+    switch ($Severity ) {
+        'All' { $LSUSeverity = '-search A' }
+        'Critical' { $LSUSeverity = '-search C'}
+        'Recommended' { $LSUSeverity = '-search R' }
+
+    }
+
+    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 1,3,5 -nolicense -exporttowmi "
+    if ($noReboot) {
+        $ArgList += ' -noreboot'
+    }
+    if ($noIcon) {
+        $ArgList += ' -noicon'
+    }
+    if ($showprogress) {
+        $ArgList += ' -showprogress'
+    }
+
+    #$ArgList = "/CM -search A -action $Action $PackageTypes -includerebootpackages 3 -nolicense -exporttowmi -noreboot -noicon"
+    write-host -ForegroundColor Cyan "Starting Lenovo ThinInstaller: $ArgList"
+    $Updater = Start-Process -FilePath $ThinAppPath -ArgumentList $ArgList   -Wait -PassThru
+
+    if ($Updater.ExitCode -eq 0) {
+        Write-Host -ForegroundColor Green "Lenovo ThinInstaller completed successfully."
+    } else {
+        Write-Host -ForegroundColor Red "Lenovo ThinInstaller failed with exit code $($Updater.ExitCode)."
+    }
+}
+
 function Install-LenovoVantage {
+    [CmdletBinding()]
+    param (
+        [switch]$IncludeSUHelper
+    )
     # Define the URL and temporary file path - https://support.lenovo.com/us/en/solutions/hf003321-lenovo-vantage-for-enterprise
     #$url = "https://download.lenovo.com/pccbbs/thinkvantage_en/metroapps/Vantage/LenovoCommercialVantage_10.2401.29.0.zip"
     $url = "https://download.lenovo.com/pccbbs/thinkvantage_en/metroapps/Vantage/LenovoCommercialVantage_10.2501.15.0_v3.zip"
@@ -162,8 +301,10 @@ function Install-LenovoVantage {
 
     } else {
         Write-Host "Failed to download the file."
+        return
     }
     #Lenovo System Interface Foundation (LSIF)
+    <# - OLD METHOD
     if (Test-Path -Path "$tempExtractPath\System-Interface-Foundation-Update-64.exe"){
         Write-Host -ForegroundColor Cyan " Installing Lenovo System Interface Foundation..."
         $ArgumentList = "/VERYSILENT /NORESTART"
@@ -175,7 +316,9 @@ function Install-LenovoVantage {
         }
     } else {
         Write-Host -ForegroundColor red " Failed to find $tempExtractPath\System-Interface-Foundation-Update-64.exe"
+        return
     }
+    #>
     #Lenovo Vantage Service
     Write-Host -ForegroundColor Cyan " Installing Lenovo Vantage Service..."
     Invoke-Expression -command "$tempExtractPath\VantageService\Install-VantageService.ps1"
@@ -186,8 +329,21 @@ function Install-LenovoVantage {
     $InstallProcess = Start-Process -FilePath "cmd.exe" -ArgumentList $ArgumentList -Wait -PassThru
     if ($InstallProcess.ExitCode -eq 0) {
         Write-Host -ForegroundColor Green "Lenovo Vantage completed successfully."
+        $RegistryPath = "HKLM:\SOFTWARE\Policies\Lenovo\Commercial Vantage"
+        New-Item -Path $RegistryPath -ItemType Directory -Force |Out-Null
+        New-ItemProperty -Path $RegistryPath -Name "AcceptEULAAutomatically" -Value 1 -PropertyType dword -Force | Out-Null
+        New-ItemProperty -Path $RegistryPath -Name "wmi.warranty" -Value 1 -PropertyType dword -Force | Out-Null
     } else {
         Write-Host -ForegroundColor Red "Lenovo Vantage failed with exit code $($InstallProcess.ExitCode)."
+    }
+
+    if ($IncludeSUHelper){
+        $InstallProcess = Start-Process -FilePath $tempExtractPath\SystemUpdate\SUHelperSetup.exe -ArgumentList "/VERYSILENT /NORESTART" -Wait -PassThru
+        if ($InstallProcess.ExitCode -eq 0) {
+            Write-Host -ForegroundColor Green "Lenovo SU Helper completed successfully."
+        } else {
+            Write-Host -ForegroundColor Red "Lenovo SU Helper failed with exit code $($InstallProcess.ExitCode)."
+        }
     }
 }
 
@@ -200,7 +356,7 @@ function Set-LenovoVantage {
         [ValidateSet('True','False')]
         [string]$WarrantyInfoHide,
         [ValidateSet('True','False')]
-        [string]$WarrantyWriteWMI,
+        [string]$WarrantyWriteWMI = 'True',
         [ValidateSet('True','False')]
         [string]$MyDevicePageHide,
         [ValidateSet('True','False')]
