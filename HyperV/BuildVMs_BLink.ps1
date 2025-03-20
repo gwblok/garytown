@@ -26,7 +26,7 @@ This script will...
 
 
 # REQUIRED INPUT VARIABLES:
-[int]$DesiredVMs = 4  #The Number of VMs that are going to be created this run.
+[int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
 
 [int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB
 [int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB
@@ -63,6 +63,8 @@ Write-Host "SiteCode:  $SiteCode" -ForegroundColor Green
 
 #$VirtualNameAdapterName = "192.168.1.X Lab Network" #The Actual Name of the Hyper-V Virtual Network you want to assign to the VM.
 $RequiredDeploymentCollectionName = "OSD Required Deployment" #Whatever Collection you deployed the Task Sequence too
+$AvailableDeploymentCollectionName = "OSD Available Deployment Client"
+
 [int]$StartNumber = 1
 [int]$EndNumber = 20
 [int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
@@ -282,8 +284,13 @@ else
         Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
         Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1280 -VerticalResolution 800
 
-        Set-VMFirmware -EnableSecureBoot Off -VMName $VMName
-
+        if ($Purpose -eq "ConfigMgr"){
+            Write-Host "  Setting Secure Boot to Off" -ForegroundColor Green
+            Set-VMFirmware -EnableSecureBoot Off -VMName $VMName
+            #Set-VMFirmware -VMName $VMName -FirstBootDevice $vmNetworkAdapter
+            $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
+            Set-VMFirmware -FirstBootDevice  $vmNetworkAdapter -VMName $VMName 
+        }
 
         #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
         Set-VMDvdDrive -VMName $VMName -Path $BootISO
@@ -310,7 +317,7 @@ else
             Else
                 {
             
-                $ImportDevice = Import-CMComputerInformation -ComputerName $VMName -CollectionName $RequiredDeploymentCollectionName -MacAddress $MAC
+                $ImportDevice = Import-CMComputerInformation -ComputerName $VMName -CollectionName $AvailableDeploymentCollectionName -MacAddress $MAC
                 $CMDevice = Get-CMDevice -Name $VMName -Resource
 
                 if (($CMDevice.MACAddresses).replace(":","") -eq $MAC)
@@ -330,9 +337,13 @@ else
             #$AllSystemCollection = Get-WmiObject -ComputerName $ProviderMachineName -ClassName SMS_Collection -Namespace root\SMS\site_PS2 | Where-Object {$_.Name -eq "All Systems"}
             #$AllSystemCollection.InvokeMethod("RequestRefresh",$null)
             Start-Sleep -Seconds 15
-            Write-Host "Triggering Collection Eval on $RequiredDeploymentCollectionName"
-            $OSDCollection = Get-CMCollection -Name "$RequiredDeploymentCollectionName"
+            #Write-Host "Triggering Collection Eval on $RequiredDeploymentCollectionName"
+            #$OSDCollection = Get-CMCollection -Name "$RequiredDeploymentCollectionName"
+            #$OSDCollection.ExecuteMethod("RequestRefresh", $null)
+            Write-Host "Triggering Collection Eval on $AvailableDeploymentCollectionName"
+            $OSDCollection = Get-CMCollection -Name "$AvailableDeploymentCollectionName"
             $OSDCollection.ExecuteMethod("RequestRefresh", $null)
+
             #$OSDCollection = Get-WmiObject -ComputerName $ProviderMachineName -ClassName SMS_Collection -Namespace root\SMS\site_PS2 | Where-Object {$_.Name -eq "OSD Required Deployment"}
             #$OSDCollection.InvokeMethod("RequestRefresh",$null)
 
