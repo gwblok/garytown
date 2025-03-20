@@ -15,8 +15,11 @@ function Get-InstalledApps
     Get-ItemProperty $regpath | .{process{if($_.DisplayName -and $_.UninstallString) { $_ } }} | Select DisplayName, Publisher, InstallDate, DisplayVersion, UninstallString |Sort DisplayName
 }
 
-$PowerShellCurrentInstall = Get-InstalledApps | Where-Object {$_.DisplayName -match "PowerShell 7"}
-
+$AppCurrentInstall = Get-InstalledApps | Where-Object {$_.DisplayName -match "PowerShell 7"}
+[version]$AppCurrentInstallVersion = $AppCurrentInstall.DisplayVersion
+if ($null -eq $AppCurrentInstallVersion){
+    [version]$AppCurrentInstallVersion = '0.0.0.1'
+}
 $architecture = "x64"
 $originalValue = [Net.ServicePointManager]::SecurityProtocol
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -28,7 +31,7 @@ $metadata = Invoke-RestMethod https://raw.githubusercontent.com/PowerShell/Power
 $release = $metadata.ReleaseTag -replace '^v'
 [Version]$NewRelease = $release
 $NewRelease = [version]::new($NewRelease.Major, $NewRelease.Minor, $(if($NewRelease.Build -eq -1){0}else{$NewRelease.Build}), $(if($NewRelease.Revision -eq -1){0}else{$NewRelease.Revision}))
-if ([Version]$NewRelease -match [version]$PowerShellCurrentInstall.DisplayVersion){
+if ([Version]$NewRelease -match [version]$AppCurrentInstallVersion){
     Write-Output "PowerShell already current: $NewRelease"
 }
 else {
