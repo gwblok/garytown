@@ -60,7 +60,7 @@ Expand-Archive -Path $packagePath -DestinationPath $tempDir
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 write-host -ForegroundColor DarkGray "Invoke-WebRequest -UseBasicParsing -Uri $ClientInstallScript -OutFile $tempDir\StifleR_Client_Installer.ps1"
-Invoke-WebRequest -UseBasicParsing -Uri $ClientInstallScript -OutFile "$tempDir\StifleR_Client_Installer.ps1" -Verbose -TimeoutSec 15
+Invoke-WebRequest -UseBasicParsing -Uri $ClientInstallScript -OutFile "$tempDir\StifleR_Client_Installer.ps1"
 
 
 if (Test-path -path "$tempDir\StifleR_Client_Installer.ps1" ) {
