@@ -13,7 +13,9 @@ function Get-InstalledApps
     }
     Get-ItemProperty $regpath | .{process{if($_.DisplayName -and $_.UninstallString) { $_ } }} | Select DisplayName, Publisher, InstallDate, DisplayVersion, UninstallString |Sort DisplayName
 }
-
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+$null = New-Item -ItemType Directory -Path $tempDir -Force -ErrorAction SilentlyContinue
+        
 $AppCurrentInstall = Get-InstalledApps | Where-Object {$_.DisplayName -eq "git"}
 [version]$AppCurrentInstallVersion = $AppCurrentInstall.DisplayVersion
 if ($null -eq $AppCurrentInstallVersion){
