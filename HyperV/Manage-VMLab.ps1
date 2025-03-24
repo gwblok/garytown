@@ -33,13 +33,17 @@ $Lab2Run = ($DayofWeekMapping | Where-Object {$_.DayOfWeek -match $DayofWeek}).L
 $VMs = Get-VM
 
 #Make sure all VMs are off before starting to turn things on.
+write-host "Shutting down all VMs" -ForegroundColor Cyan
 Foreach ($VM in $VMs){
     $WorkingVM = Get-VM -Name $VM.Name
+    if ($WorkingVM.State -eq "Running"){
+        Write-Host "Shutting down VM: $($WorkingVM.Name)" -ForegroundColor Yellow
     Stop-VM -VM $WorkingVM -Force -ErrorAction SilentlyContinue
-    
+    }
 }
 
 #Start the VMs based on the day of the week
+Write-Host "Starting VMs for $Lab2Run" -ForegroundColor Cyan
 Foreach ($VM in $VMs){
     $WorkingVM = Get-VM -Name $VM.Name
     $Notes = $WorkingVM.Notes -split "`n"
