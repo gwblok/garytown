@@ -56,7 +56,7 @@ Foreach ($VM in $VMs){
     if ($Environment -eq $Lab2Run){
         Write-Host "Starting VM: $($WorkingVM.Name)" -ForegroundColor Green
         Start-VM -VM $WorkingVM
-        Start-Sleep -Seconds 30
+        Start-Sleep -Seconds 60
     }
     else{
         Write-Host "Shutting down VM: $($WorkingVM.Name)" -ForegroundColor Red
