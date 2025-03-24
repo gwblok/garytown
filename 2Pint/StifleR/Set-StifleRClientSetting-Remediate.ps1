@@ -8,7 +8,7 @@ $SCQueryCmd = {sc.exe query $ServiceName}
 $SCStopCmd = {sc.exe stop $ServiceName}
 $LogPath = "C:\Windows\Temp\StifleRClientConfiguration_Remediation.log"
 $SettingName = 'StiflerServers'
-$DesiredValue = "https://2PStifleR.2p.garytown.com:1414"
+$DesiredValue = "https://2PSR210.2p.garytown.com:1414"
 # Delete any existing logfile if it exists
 If (Test-Path $LogPath){Remove-Item $LogPath -Force -ErrorAction SilentlyContinue -Confirm:$false}
 
