@@ -13,7 +13,7 @@ $RestartServicesAfterBackup = $false
 $BackupRootFolder = 'C:\Program Files\2Pint Software\StifleR Backups'
 $StifleRServerRootPath = "C:\Program Files\2Pint Software\StifleR"
 $StifleRDashBoardRootPath = "C:\Program Files\2Pint Software\StifleR Dashboards"
-$StfileRDatabasePath  = "C:\ProgramData\2Pint Software\StifleR\Server"
+$StifleRDatabasePath  = "C:\ProgramData\2Pint Software\StifleR\Server"
 
 
 
@@ -64,8 +64,8 @@ write-Host -ForegroundColor Yellow "Backing up StifleR Dashboard Files | $Stifle
 Copy-Item $StifleRDashBoardRootPath -Destination $CurrentBackupFolderPath -Recurse -Force
 $StifleRDashBoardAppInfo | Out-File -FilePath "$CurrentBackupFolderPath\StifleRDashBoardAppInfo.txt"
 
-write-Host -ForegroundColor Yellow "Backing up StifleR Database Files | $StfileRDatabasePath"
-Copy-Item $StfileRDatabasePath -Destination $CurrentBackupFolderPath -Recurse -Force
+write-Host -ForegroundColor Yellow "Backing up StifleR Database Files | $StifleRDatabasePath"
+Copy-Item $StifleRDatabasePath -Destination $CurrentBackupFolderPath -Recurse -Force
 
 if ($RestartServicesAfterBackup -eq $true){
     Write-Host -ForegroundColor Yellow "Starting StifleR Server Service(s)"
