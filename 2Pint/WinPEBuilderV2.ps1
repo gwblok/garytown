@@ -62,7 +62,7 @@ $SkipOptionalComponents = $false
 $WinPEBuilderPath = 'D:\WinPEBuilder'
 $Drivers = "$WinPEBuilderPath\Drivers"
 $ExtraFiles = "$WinPEBuilderPath\ExtraFiles"
-$UseWinRE = $true
+$UseWinRE = $false
 $AddSMSTSiniFile = $true
 
 #region functions
