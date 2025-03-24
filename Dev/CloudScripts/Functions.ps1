@@ -930,8 +930,8 @@ Function Update-OfflineOSDModuleFromWinPEVersion {
 }
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "Tweaks Functions"
-Write-Host -ForegroundColor Green "[+] Function Setup-BranchCache"
-function Setup-BranchCache {
+Write-Host -ForegroundColor Green "[+] Function Set-BranchCache"
+function Set-BranchCache {
     iex (irm 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/MAIN_REMEDIATE.ps1')
     iex (irm 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/CacheSize_REMEDIATE.ps1')
 }
@@ -1038,6 +1038,12 @@ function Set-DefaultProfilePersonalPref {
     Start-Sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
 }
+Write-Host -ForegroundColor Green "[+] Function Set-DesktopIcons"
+function Set-DesktopIcons {
+    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/CreateControlPanelDesktopIconsRemedate.ps1')
+}
+
+
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "GARYTOWN LAB ONLY Functions"
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
