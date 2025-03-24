@@ -26,7 +26,7 @@ This script will...
 
 
 # REQUIRED INPUT VARIABLES:
-[int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
+[int]$DesiredVMs = 2  #The Number of VMs that are going to be created this run.
 
 [int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB
 [int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB
@@ -77,9 +77,9 @@ $Purpose = "AutoPilot", "ConfigMgr", "MikesLab", "Other" | Out-GridView -Title "
 
 if ($Purpose -eq "AutoPilot"){
     $Tenant = "GARYTOWN", "OSDCloud","2PintLab" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
-    if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-$HostName-GT-"}
+    if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-$HostName-GT-"; $ExtraNotes = "Environment = GTIntune"}
     elseif ($Tenant -eq "OSDCloud"){$VMNamePreFix = "VM-$HostName-OC-"}
-    elseif ($Tenant -eq "2PintLab"){$VMNamePreFix = "VM-$HostName-2P-"}
+    elseif ($Tenant -eq "2PintLab"){$VMNamePreFix = "VM-$HostName-2P-"; $ExtraNotes = "Environment = 2PIntune"}
     }
 if ($Purpose -eq "Other"){
     $VMNamePreFix = "VM-$HostName-"
@@ -281,7 +281,7 @@ else
         }
         Write-Host "  Setting Processors to $ProcessorCount" -ForegroundColor Green
         Set-VMProcessor -VMName $VMName -Count $ProcessorCount        
-        Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
+        write-host "  Setting Video Resolution to 1280x800" -ForegroundColor Green
         Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1280 -VerticalResolution 800
 
         if ($Purpose -eq "ConfigMgr"){
@@ -289,11 +289,26 @@ else
             Set-VMFirmware -EnableSecureBoot Off -VMName $VMName
             #Set-VMFirmware -VMName $VMName -FirstBootDevice $vmNetworkAdapter
             $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
-            Set-VMFirmware -FirstBootDevice  $vmNetworkAdapter -VMName $VMName 
+            Set-VMFirmware -FirstBootDevice  $vmNetworkAdapter -VMName $VMName
+            $CurrentNotes = Get-VM -Name $VMname | Select-Object -ExpandProperty Notes
+            $AddNotes = "Environment = CMLAB"
+            $NewNotes = $CurrentNotes + "`n" + $AddNotes
+            Get-VM -Name $VMname | Set-VM -Notes $NewNotes
         }
+        else{
+            Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
+            Set-VMDvdDrive -VMName $VMName -Path $BootISO
+            
+            if ($ExtraNotes){
+                $CurrentNotes = Get-VM -Name $VMname | Select-Object -ExpandProperty Notes
+                $NewNotes = $CurrentNotes + "`n" + $ExtraNotes
+                Get-VM -Name $VMname | Set-VM -Notes $NewNotes
+            }
 
+
+        }
         #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
-        Set-VMDvdDrive -VMName $VMName -Path $BootISO
+        
         Write-Host "  Setting CheckPoints to Standard" -ForegroundColor Green
         set-vm -Name $VMName -AutomaticCheckpointsEnabled $false
         set-vm -Name $VMName -CheckpointType Standard
@@ -350,7 +365,6 @@ else
             Write-Host "Waiting 90 Seconds, For Eval to Finish" -ForegroundColor Yellow
             Write-Host "Starting Each Machine Slowly to Start Automatic Imaging" -ForegroundColor Yellow
             Start-Sleep -Seconds 90
-            Set-VMBios -StartupOrder NetworkAdapter -VMName $VMName
             start-vm -Name $VMName
             }
         else{
