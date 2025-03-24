@@ -935,6 +935,24 @@ function Set-BranchCache {
     iex (irm 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/MAIN_REMEDIATE.ps1')
     iex (irm 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/CacheSize_REMEDIATE.ps1')
 }
+
+Write-Host -ForegroundColor Green "[+] Unblock-Folder"
+function Unblock-Folder {
+    [CmdletBinding()]
+    param (
+    [Parameter(Mandatory=$false)]
+    [string]$FolderPath
+    )
+    if (-not $FolderPath) {
+        $FolderPath = Pop-Location
+    }
+    $Files = Get-ChildItem -Path $FolderPath -Recurse
+    foreach ($File in $Files)
+    {
+        Unblock-File -Path $File.FullName
+    }
+}
+
 Write-Host -ForegroundColor Green "[+] Function Invoke-Debloat"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/Debloat.ps1)
 
