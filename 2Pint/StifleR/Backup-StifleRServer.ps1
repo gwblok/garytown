@@ -38,3 +38,14 @@ Write-Host -ForegroundColor Yellow "Starting StifleR Server Service(s)"
 Get-Service -Name StifleRServer | Start-Service
 if ($Service = Get-Service -DisplayName '2Pint Software CacheR WebApi' -ErrorAction SilentlyContinue){$Service | Start-Service}
 Write-Host -ForegroundColor DarkGray "========================================================================="
+
+Write-Host -ForegroundColor Magenta "Getting Data used for Upgrade"
+[XML]$StifleROverride = Get-Content -Path "$CurrentBackupFolderPath\StifleR\appSettings-override.xml"
+$Data = $StifleROverride.appSettings.add
+$SignalRCertificateThumbprint = $Data | Where-Object { $_.key -eq 'SignalRCertificateThumbprint' } | Select-Object -ExpandProperty value
+Write-Host "SignalRCertificateThumbprint: $SignalRCertificateThumbprint"
+$LicenseKey = $Data | Where-Object { $_.key -eq 'LicenseKey' } | Select-Object -ExpandProperty value
+Write-Host "LicenseKey: $LicenseKey"
+
+$DashBoardConfig = Get-Content -Path "$CurrentBackupFolderPath\StifleR Dashboards\Dashboard Files\assets\config\config.json" | ConvertFrom-Json
+$DashBoardConfig.apiServers
