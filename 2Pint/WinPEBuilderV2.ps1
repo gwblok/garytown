@@ -56,7 +56,7 @@ I'm not going to explain anymore, read the code, it's all there, if you have que
 Push-Location
 
 #!!!!!Update these to fit your Needs!!!!!!
-$StifleR = $true
+$StifleR = $false
 $BranchCache = $true
 $SkipOptionalComponents = $false
 $WinPEBuilderPath = 'D:\WinPEBuilder'
@@ -781,7 +781,12 @@ else {
 }
 #Apply SSU - only required for WinPE 10 19041
 $SSUPath = "D:\WinPEBuilder\Patches\SSU\SSU-26100.1738-x64.cab"
-If ($SSUPath) {Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose}
+If ($SSUPath) {
+    if (Test-Path $SSUPath){
+        Write-Host "Applying SSU $SSUPath"
+        Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose
+    }
+}
 
 #Apply LCU
 $CU_MSU = Get-ChildItem -Path "$WinPEBuilderPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
