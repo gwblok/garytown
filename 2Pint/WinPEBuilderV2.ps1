@@ -164,7 +164,7 @@ function Get-AdkPaths {
 $SMSTSini = "[Logging]
 LOGLEVEL=1
 LOGMAXSIZE=5242880
-LOGMAXHISTORY=5
+LOGMAXHISTORY=10
 DEBUGLOGGING=0
 "
 $BuildsReadme = "This is where WinPE builds will get staged once they are built."
