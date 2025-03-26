@@ -174,8 +174,7 @@ if ($env:SystemDrive -ne 'X:') {
     catch {}
 
 
-    #Connect to my Library
-    iex (irm f.garytown.com)
+
     #Install StifleR
     Install-StifleRClient210
 
