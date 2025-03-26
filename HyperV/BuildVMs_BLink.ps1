@@ -75,6 +75,26 @@ $CMConnected = $null
 
 $Purpose = "AutoPilot", "ConfigMgr", "MikesLab", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
 
+$HostName = $env:COMPUTERNAME
+if ($HostName -match "HPED800G6-HOST"){
+    $HostName = '800G6'
+}
+elseif ($HostName -eq "D-P-5810-VMHOST"){
+    $HostName = 'P5180'
+}
+elseif ($HostName -eq "HP-Z2-SFF-G5"){
+    $HostName = 'Z2G5'
+}
+elseif ($HostName -eq "UGREEN"){
+    $HostName = 'UGNAS'
+}
+elseif ($HostName -eq "BEELINK-HOST"){
+    $HostName = 'BLink'
+}
+else{
+    $HostName = 'HVHst'
+}
+
 if ($Purpose -eq "AutoPilot"){
     $Tenant = "GARYTOWN", "OSDCloud","2PintLab" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
     if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-$HostName-GT-"; $ExtraNotes = "Environment = GTIntune"}
@@ -122,25 +142,7 @@ else
 $Usable = $null
 $NameTable = @()
 
-$HostName = $env:COMPUTERNAME
-if ($HostName -match "HPED800G6-HOST"){
-    $HostName = '800G6'
-}
-elseif ($HostName -eq "D-P-5810-VMHOST"){
-    $HostName = 'P5180'
-}
-elseif ($HostName -eq "HP-Z2-SFF-G5"){
-    $HostName = 'Z2G5'
-}
-elseif ($HostName -eq "UGREEN"){
-    $HostName = 'UGNAS'
-}
-elseif ($HostName -eq "BEELINK-HOST"){
-    $HostName = 'BLink'
-}
-else{
-    $HostName = 'HVHst'
-}
+
 
 if ($Purpose -eq "ConfigMgr"){
 
