@@ -79,6 +79,7 @@ if ($null -ne $Step2Set0x100){
 }
 else{
     $Step2Set0x100 = Get-Date
+    New-ItemProperty -Path $RemediationRegPath -Name "Step2Set0x100" -PropertyType string -Value $DetectionTime -Force | Out-Null
 }
 $CountOfRebootsSinceRemediation = ($Last9Reboots | Where-Object {$_ -gt $Step2Set0x100}).Count
 

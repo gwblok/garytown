@@ -22,7 +22,7 @@
 
 #region Functions
 Function Remove-OSDCloudMediaLanguageExtras {
-    # Clean up Language extras in the WorkSpace (Shouldn't be there if this ran on the Templete)
+    # Clean up Language extras in the WorkSpace (Shouldn't be there if this ran on the template)
     if (Test-Path -Path "$(Get-OSDCloudWorkspace)\Media"){
         $Folders = get-childitem -path "$(Get-OSDCloudWorkspace)\Media"-Recurse | where-object {$_.Attributes -match "Directory" -and $_.Name -match "-" -and $_.Name -notmatch "en-us"}
         $Folders | Remove-Item -Force -Recurse
@@ -295,13 +295,13 @@ else{$Arch = 'AMD64'}
 
 $CurrentModule = Get-InstalledModule -name OSD -ErrorAction SilentlyContinue
 if ($CurrentModule){
-    $AvailbleModule = Find-Module -Name "OSD"
-    if ([VERSION]$CurrentModule.Version -lt [VERSION]$AvailbleModule.Version){
-        Update-Module -name OSD -Force
+    $availableModule = Find-Module -Name "OSD"
+    if ([VERSION]$CurrentModule.Version -lt [VERSION]$availableModule.Version){
+        Update-Module -name OSD -Force -Scope AllUsers
         #Restart PowerShell after OSD has been updated (if it needed to be updated)
     }
 }
-else{Install-Module -name OSD -Force}
+else{Install-Module -name OSD -Force -Scope AllUsers}
 
 $ADKPaths = Get-AdkPaths -Architecture $Arch -ErrorAction SilentlyContinue
 if (!($ADKPaths)){
@@ -433,6 +433,7 @@ if ($WinRE){
 else{
     Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
     #Edit-OSDCloudWinPE -StartURL 'https://hope.garytown.com'
+    Edit-OSDCloudWinPE -StartURL 'https://intunelab.garytown.com'
 }
 New-OSDCloudISO
 
