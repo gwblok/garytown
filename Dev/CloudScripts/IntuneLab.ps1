@@ -174,9 +174,10 @@ if ($env:SystemDrive -ne 'X:') {
     catch {}
 
 
-
-
-
+    #Connect to my Library
+    iex (irm f.garytown.com)
+    #Install StifleR
+    Install-StifleRClient210
 
     #Enable Microsoft Other Updates:
     (New-Object -com "Microsoft.Update.ServiceManager").AddService2("7971f918-a847-4430-9279-4a52d1efe18d",7,"")
