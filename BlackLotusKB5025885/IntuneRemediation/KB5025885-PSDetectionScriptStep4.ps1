@@ -15,7 +15,7 @@ if ($UBR -ge $MatchedUBR){
 }
 else {
     $OSSupported = $false
-    Write-Output "The OS is not supported for this remediation."
+    Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     exit 4
 }
 if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
@@ -29,7 +29,7 @@ else {
 
 
 #$SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
-$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediation\KB5025885'
 if (-not (Test-Path -Path $RemediationRegPath)){
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }

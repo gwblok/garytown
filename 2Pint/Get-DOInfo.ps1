@@ -40,8 +40,9 @@
     }
 }
 
-
+<#
 $NameSpace = "root\cimv2\mdm\dmmap"
 $MDMDOClass = Get-CimClass -Namespace $NameSpace | Where-Object {$_.CimClassName -like "MDM_Policy_Result01_DeliveryOptimization*"} | Select-Object -Property CimClassName
 $MDMDOInstance = Get-CimInstance -Namespace $NameSpace -ClassName $MDMDOClass.CimClassName
 $MDMDOInstance
+#>

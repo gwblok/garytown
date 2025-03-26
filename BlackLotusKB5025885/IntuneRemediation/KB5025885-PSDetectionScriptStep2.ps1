@@ -15,7 +15,7 @@ if ($UBR -ge $MatchedUBR){
 }
 else {
     #$OSSupported = $false
-    Write-Output "The OS is not supported for this remediation."
+    Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     exit 4
 }
 if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
@@ -32,19 +32,27 @@ else {
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
 $SecureBootKey = Get-Item -Path $SecureBootRegPath
 $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
-$RemediationRegPath = 'HKLM:\SOFTWARE\Remediations\KB5025885'
+$RemediationRegPath = 'HKLM:\SOFTWARE\Remediation\KB5025885'
 if (Test-Path -Path $RemediationRegPath){
     $Key = Get-Item -Path $RemediationRegPath
     $Step2Success = ($Key).GetValue('Step2Success')
-    $RebootCount = ($Key).GetValue('RebootCount')
-    $Step2DetRunCount = ($Key).GetValue('Step2DetRunCount')
-    if ($null -eq $Step2DetRunCount){$Step2DetRunCount = 0 }
-    New-ItemProperty -Path $RemediationRegPath -Name "Step2DetRunCount" -Value ($Step2DetRunCount + 1) -PropertyType DWord -Force | Out-Null
-
+    $Step2Set0x100 = ($Key).GetValue('Step2Set0x100') 
 }
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
+$Last9Reboots = (Get-WinEvent -LogName System -MaxEvents 10 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated).TimeCreated
+[datetime]$SecondToLastReboot = $Last9Reboots | Select-Object -First 2 | Select-Object -Last 1
+
+if ($null -ne $Step2Set0x100){
+    #Convert $Step1Set0x40 into Datetime
+    $Step2Set0x100 = [System.DateTime]::ParseExact($Step1Set0x40, "yyyyMMddHHmmss", $null)
+}
+else{
+    $Step2Set0x100 = Get-Date
+}
+$CountOfRebootsSinceRemediation = ($Last9Reboots | Where-Object {$_ -gt $Step2Set0x100}).Count
+
 if ($null -ne $Step2Success){
     if ($Step2Success -eq 1){
         $Step2Success = $true
@@ -53,12 +61,6 @@ if ($null -ne $Step2Success){
         $Step2Success = $false
     }
 }
-if ($null -eq $RebootCount){
-    $RebootCount = 0
-}
-#TimeStamp when Detection last Ran
-$DetectionTime = Get-Date -Format "yyyyMMddHHmmss"
-New-ItemProperty -Path $RemediationRegPath -Name "Step2DetectionTime" -Value $DetectionTime -PropertyType String -Force | Out-Null
 
 #region Test if Remediation is already applied for each Step
 #Test: Applying the DB update
@@ -86,6 +88,9 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 #Yes we're only doing the first 2 steps, but if the 3rd is done, I can assume the reboots are complete.
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
     Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
+    if ($Null -eq $Step2Success){
+        New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force | Out-Null
+    }
     exit 0
 }
 #If we detect steps are done, and we stamped the registry, we can assume the reboots are complete and we're good
@@ -93,24 +98,26 @@ if ($Step1Success -eq $true -and $Step1Complete -eq $true -and $Step2Success -eq
     Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
     exit 0
 }
-#If Steps 1 & 2 are complete, and we're on reboot 4, all is well, exit 0
-if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -ge 4){
+#If Steps 1 & 2 are complete, and we're on reboot 2, all is well, exit 0
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $CountOfRebootsSinceRemediation -ge 2){
     Write-Output "Step 2 Complete | SBKey: $SecureBootRegValue"
+    if ($Null -eq $Step2Success){
+        New-ItemProperty -Path $RemediationRegPath -Name  "Step2Success" -PropertyType dword -Value 1 -Force | Out-Null
+    }
     exit 0
 }
-#If Steps 1 & 2 are complete, and we're on less than 4 reboots, we probably need another reboot.
-if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $RebootCount -lt 4){
+#If Steps 1 & 2 are complete, and we're on less than 2 reboots, we probably need another reboot.
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $CountOfRebootsSinceRemediation -lt 2){
     Write-Output "Step 1 - Cert Found & Step 2 - Boot Manager Updated, but Reboot less than 4: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue"
     exit 1
 }
-#if Step 1 or 2 are not complete, remediation is needed, exit 1
+#if Step 1 not complete, this is a dependency on a different remediation to finish, exit 2
 if ($Step1Complete -ne $true){
-
-    Write-Output "Step 1 - 2023 Cert Not Found in DB: Needs Remediation | SBKey: $SecureBootRegValue"
-    exit 1
+    Write-Output "Dependency not complete | Step 1 - 2023 Cert Not Found in DB: Needs Remediation | SBKey: $SecureBootRegValue"
+    exit 2
 }
+#If Step 2 is not complete, remediation is needed, exit 1
 if ($Step2Complete -ne $true){
-
     Write-Output "Step 2 - Boot Manager Not Updated: Needs Remediation | SBKey: $SecureBootRegValue"
     exit 1
 }
