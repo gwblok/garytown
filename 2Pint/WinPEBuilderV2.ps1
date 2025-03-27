@@ -56,7 +56,7 @@ I'm not going to explain anymore, read the code, it's all there, if you have que
 Push-Location
 
 #!!!!!Update these to fit your Needs!!!!!!
-$StifleR = $true
+$StifleR = $false
 $BranchCache = $true
 $SkipOptionalComponents = $false
 $WinPEBuilderPath = 'D:\WinPEBuilder'
@@ -64,6 +64,10 @@ $Drivers = "$WinPEBuilderPath\Drivers"
 $ExtraFiles = "$WinPEBuilderPath\ExtraFiles"
 $UseWinRE = $false
 $AddSMSTSiniFile = $true
+$AddDellProvider = $false
+$AddHPCMSL = $false
+$Add7Zip = $false
+$AddOSDModule = $false
 
 #region functions
 
@@ -160,7 +164,7 @@ function Get-AdkPaths {
 $SMSTSini = "[Logging]
 LOGLEVEL=1
 LOGMAXSIZE=5242880
-LOGMAXHISTORY=5
+LOGMAXHISTORY=10
 DEBUGLOGGING=0
 "
 $BuildsReadme = "This is where WinPE builds will get staged once they are built."
@@ -787,11 +791,7 @@ else {
 }
 #Apply SSU - only required for WinPE 10 19041
 $SSUPath = "D:\WinPEBuilder\Patches\SSU\SSU-26100.1738-x64.cab"
-If ($null -ne $SSUPath){
-    if (Test-Path -path $SSUPath){
-        Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose
-    }
-}
+If ($SSUPath) {Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose}
 
 #Apply LCU
 $CU_MSU = Get-ChildItem -Path "$WinPEBuilderPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue
@@ -855,63 +855,68 @@ If (Test-Path -Path $Drivers\*){
 #Verify added packages
 Get-WindowsPackage -Path $MountPath
 
-#region Do more stuff here leveraging OSDCloud Stuff - Requires OSD Module
-Write-Host -ForegroundColor DarkGray "========================================================================="
+if ($Add7Zip -eq $true){
+    #region Do more stuff here leveraging OSDCloud Stuff - Requires OSD Module
+    Write-Host -ForegroundColor DarkGray "========================================================================="
+    Write-Host -ForegroundColor Yellow "7Zip for Extracting Driver Packs in WinPE"
+    $Latest = Invoke-WebRequest -Uri https://github.com/ip7z/7zip/releases/latest -UseBasicParsing
+    $NextLink = ($Latest.Links | Where-Object {$_.href -match "releases/tag"}).href
+    $Version = $NextLink.Split("/")[-1]
+    $VersionClean = ($Version).Replace(".","")
+    $FileName = "7z$VersionClean-extra.7z"
+    # Example: https://github.com/ip7z/7zip/releases/download/24.07/7z2407-extra.7z
+    $Download7zrURL = "https://github.com/ip7z/7zip/releases/download/$Version/7zr.exe"
+    $DownloadURL ="https://github.com/ip7z/7zip/releases/download/$Version/$fileName"
 
-Write-Host -ForegroundColor Yellow "7Zip for Extracting Driver Packs in WinPE"
-$Latest = Invoke-WebRequest -Uri https://github.com/ip7z/7zip/releases/latest -UseBasicParsing
-$NextLink = ($Latest.Links | Where-Object {$_.href -match "releases/tag"}).href
-$Version = $NextLink.Split("/")[-1]
-$VersionClean = ($Version).Replace(".","")
-$FileName = "7z$VersionClean-extra.7z"
-# Example: https://github.com/ip7z/7zip/releases/download/24.07/7z2407-extra.7z
-$Download7zrURL = "https://github.com/ip7z/7zip/releases/download/$Version/7zr.exe"
-$DownloadURL ="https://github.com/ip7z/7zip/releases/download/$Version/$fileName"
-
-Write-Host -ForegroundColor DarkGray "Downloading $DownloadURL"
-Invoke-WebRequest -Uri $Download7zrURL -OutFile "$env:TEMP\7zr.exe" -UseBasicParsing
-Invoke-WebRequest -Uri $DownloadURL -OutFile "$env:TEMP\$FileName" -UseBasicParsing
-if (Test-Path -Path $env:TEMP\$FileName){
-    Write-Host -ForegroundColor DarkGray "Extracting $env:TEMP\$FileName"
-    #$null = & "$env:temp\7zr.exe" x "$env:TEMP\$FileName" -o"$MountPath\Windows\System32" -y
-    $null = & "$env:temp\7zr.exe" x "$env:TEMP\$FileName" -o"$env:temp\7zip" -y
-    Copy-Item -Path "$env:temp\7zip\x64\*" -Destination "$MountPath\Windows\System32" -Recurse -Force -verbose
-}
-else {
-    Write-Warning "Could not find $env:TEMP\$FileName"
-}
-
-Write-Host -ForegroundColor DarkGray "========================================================================="
-Write-Host -ForegroundColor Yellow "Saving OSD Module to $MountPath\Program Files\WindowsPowerShell\Modules"
-Save-Module -Name OSD -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
-
-Write-Host -ForegroundColor DarkGray "========================================================================="
-$Module = 'HPCMSL'
-Write-Host -ForegroundColor Yellow "Saving $Module to $MountPath\Program Files\WindowsPowerShell\Modules"
-Save-Module -Name $Module -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force -AcceptLicense
-
-Write-Host -ForegroundColor DarkGray "========================================================================="
-$Module = 'DellBiosProvider'
-Write-Host -ForegroundColor Yellow "Saving $Module to $MountPath\Program Files\WindowsPowerShell\Modules"
-if ($Module -eq 'DellBiosProvider') {
-    if (Test-Path "$env:SystemRoot\System32\msvcp140.dll") {
-        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\msvcp140.dll to WinPE"
-        Copy-Item -Path "$env:SystemRoot\System32\msvcp140.dll" -Destination "$MountPath\Windows\System32\msvcp140.dll" -Force | Out-Null
+    Write-Host -ForegroundColor DarkGray "Downloading $DownloadURL"
+    Invoke-WebRequest -Uri $Download7zrURL -OutFile "$env:TEMP\7zr.exe" -UseBasicParsing
+    Invoke-WebRequest -Uri $DownloadURL -OutFile "$env:TEMP\$FileName" -UseBasicParsing
+    if (Test-Path -Path $env:TEMP\$FileName){
+        Write-Host -ForegroundColor DarkGray "Extracting $env:TEMP\$FileName"
+        #$null = & "$env:temp\7zr.exe" x "$env:TEMP\$FileName" -o"$MountPath\Windows\System32" -y
+        $null = & "$env:temp\7zr.exe" x "$env:TEMP\$FileName" -o"$env:temp\7zip" -y
+        Copy-Item -Path "$env:temp\7zip\x64\*" -Destination "$MountPath\Windows\System32" -Recurse -Force -verbose
     }
-    if (Test-Path "$env:SystemRoot\System32\vcruntime140.dll") {
-        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\vcruntime140.dll to WinPE"
-        Copy-Item -Path "$env:SystemRoot\System32\vcruntime140.dll" -Destination "$MountPath\Windows\System32\vcruntime140.dll" -Force | Out-Null
+    else {
+        Write-Warning "Could not find $env:TEMP\$FileName"
     }
-    if (Test-Path "$env:SystemRoot\System32\vcruntime140_1.dll") {
-        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\vcruntime140_1.dll to WinPE"
-        Copy-Item -Path "$env:SystemRoot\System32\vcruntime140_1.dll" -Destination "$MountPath\Windows\System32\vcruntime140_1.dll" -Force | Out-Null
-    }
-    Save-Module -Name $Module -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
 }
-Write-Host -ForegroundColor DarkGray "========================================================================="
-Write-Host -ForegroundColor Yellow "Downloading https://github.com/okieselbach/Helpers/raw/master/WirelessConnect/WirelessConnect/bin/Release/WirelessConnect.exe"
-Save-WebFile -SourceUrl 'https://github.com/okieselbach/Helpers/raw/master/WirelessConnect/WirelessConnect/bin/Release/WirelessConnect.exe' -DestinationDirectory "$MountPath\Windows" | Out-Null
-
+if ($AddOSDModule -eq $true){
+    Write-Host -ForegroundColor DarkGray "========================================================================="
+    Write-Host -ForegroundColor Yellow "Saving OSD Module to $MountPath\Program Files\WindowsPowerShell\Modules"
+    Save-Module -Name OSD -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
+}
+if ($AddHPCMSL -eq $true){
+    Write-Host -ForegroundColor DarkGray "========================================================================="
+    $Module = 'HPCMSL'
+    Write-Host -ForegroundColor Yellow "Saving $Module to $MountPath\Program Files\WindowsPowerShell\Modules"
+    Save-Module -Name $Module -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force -AcceptLicense
+}
+if ($AddDellProvider -eq $true){
+    Write-Host -ForegroundColor DarkGray "========================================================================="
+    $Module = 'DellBiosProvider'
+    Write-Host -ForegroundColor Yellow "Saving $Module to $MountPath\Program Files\WindowsPowerShell\Modules"
+    if ($Module -eq 'DellBiosProvider') {
+        if (Test-Path "$env:SystemRoot\System32\msvcp140.dll") {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\msvcp140.dll to WinPE"
+            Copy-Item -Path "$env:SystemRoot\System32\msvcp140.dll" -Destination "$MountPath\Windows\System32\msvcp140.dll" -Force | Out-Null
+        }
+        if (Test-Path "$env:SystemRoot\System32\vcruntime140.dll") {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\vcruntime140.dll to WinPE"
+            Copy-Item -Path "$env:SystemRoot\System32\vcruntime140.dll" -Destination "$MountPath\Windows\System32\vcruntime140.dll" -Force | Out-Null
+        }
+        if (Test-Path "$env:SystemRoot\System32\vcruntime140_1.dll") {
+            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) Copying $env:SystemRoot\System32\vcruntime140_1.dll to WinPE"
+            Copy-Item -Path "$env:SystemRoot\System32\vcruntime140_1.dll" -Destination "$MountPath\Windows\System32\vcruntime140_1.dll" -Force | Out-Null
+        }
+        Save-Module -Name $Module -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
+    }
+}
+if ($UseWinRE){
+    Write-Host -ForegroundColor DarkGray "========================================================================="
+    Write-Host -ForegroundColor Yellow "Downloading https://github.com/okieselbach/Helpers/raw/master/WirelessConnect/WirelessConnect/bin/Release/WirelessConnect.exe"
+    Save-WebFile -SourceUrl 'https://github.com/okieselbach/Helpers/raw/master/WirelessConnect/WirelessConnect/bin/Release/WirelessConnect.exe' -DestinationDirectory "$MountPath\Windows" | Out-Null
+}
 # Set PowerShell Execution Policy
 Write-Host -ForegroundColor DarkGray "========================================================================="
 Write-Host -ForegroundColor Yellow "OSD Function: Set-WindowsImageExecutionPolicy"

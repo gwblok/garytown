@@ -108,7 +108,7 @@ if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $CountOfRebootsS
 }
 #If Steps 1 & 2 are complete, and we're on less than 2 reboots, we probably need another reboot.
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $CountOfRebootsSinceRemediation -lt 2){
-    Write-Output "Step 1 - Cert Found & Step 2 - Boot Manager Updated, but Reboot less than 4: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue"
+    Write-Output "Step 1 - Cert Found & Step 2 - Boot Manager Updated, but Reboot less than 2: Needs Remediation (another reboot) | SBKey: $SecureBootRegValue"
     exit 1
 }
 #if Step 1 not complete, this is a dependency on a different remediation to finish, exit 2

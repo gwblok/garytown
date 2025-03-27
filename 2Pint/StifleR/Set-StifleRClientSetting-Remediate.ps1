@@ -8,19 +8,34 @@ $SCQueryCmd = {sc.exe query $ServiceName}
 $SCStopCmd = {sc.exe stop $ServiceName}
 $LogPath = "C:\Windows\Temp\StifleRClientConfiguration_Remediation.log"
 $SettingName = 'StiflerServers'
-$DesiredValue = "https://2PStifleR.2p.garytown.com:1414"
+$DesiredValue = "https://2PSR210.2p.garytown.com:1414"
 # Delete any existing logfile if it exists
 If (Test-Path $LogPath){Remove-Item $LogPath -Force -ErrorAction SilentlyContinue -Confirm:$false}
 
-Function Write-Log{
-	param (
-    [Parameter(Mandatory = $true)]
-    [string]$Message
+Function Write-Log {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$false)]
+        $Message,
+        [Parameter(Mandatory=$false)]
+        $ErrorMessage,
+        [Parameter(Mandatory=$false)]
+        $Component = "Script",
+        [Parameter(Mandatory=$false)]
+        [int]$Type,
+        [Parameter(Mandatory=$false)]
+        $LogFile = $LogPath
     )
-
-    $TimeGenerated = $(Get-Date -UFormat "%D %T")
-    $Line = "$TimeGenerated : $Message"
-    Add-Content -Value $Line -Path $LogPath -Encoding Ascii
+    <#
+    Type: 1 = Normal, 2 = Warning (yellow), 3 = Error (red)
+    #>
+    $Time = Get-Date -Format "HH:mm:ss.ffffff"
+    $Date = Get-Date -Format "MM-dd-yyyy"
+    if ($ErrorMessage -ne $null) {$Type = 3}
+    if ($Component -eq $null) {$Component = " "}
+    if ($Type -eq $null) {$Type = 1}
+    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
+    $LogMessage.Replace("`0","") | Out-File -Append -Encoding UTF8 -FilePath $LogFile
 }
 
 Function Get-AppSetting{
