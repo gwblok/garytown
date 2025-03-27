@@ -90,7 +90,10 @@ BranchCachePort=1337
 BlueLeaderProxyPort=1338
 GreenLeaderOfferPort=1339
 BranchCachePortForGreenLeader=1336
-
+DefaultNonRedLeaderDOPolicy=102400
+DefaultNonRedLeaderBITSPolicy=768000
+DefaultDisconnectedDOPolicy=25600
+DefaultDisconnectedBITSPolicy=25600
 "@
 $StifleRDefaultsini | Out-File -FilePath "$tempDir\StifleRDefaults.ini" -Force -Encoding utf8
 if (Test-path -path "$tempDir\StifleRDefaults.ini") {
