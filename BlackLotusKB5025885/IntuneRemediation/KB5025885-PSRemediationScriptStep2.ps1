@@ -154,9 +154,6 @@ if ($Step1Complete -ne $true){
 #If Step 2 is not complete, remediation is needed, exit 1
 if ($Step2Complete -ne $true){
     New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
-    if ($null -eq $Step2Set0x100){
-        New-ItemProperty -Path $RemediationRegPath -Name "Step2Set0x100" -PropertyType string -Value $DetectionTime -Force
-    }
     Write-Output "Step 2 - Boot Manager Not Updated: Set AvailableUpdates from $SecureBootRegValue to 0x100"
     Set-PendingUpdate
     exit 0
