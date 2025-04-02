@@ -47,5 +47,8 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
     New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x200 -Force
     #endregion Do Step 4 - #Apply the SVN update to the firmware
 
+    #Combo Step 3 & 4 - #Apply the DBX update & SVN update to the firmware
+    $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'  
+    New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x280 -Force
 #endregion Remediation
     
