@@ -938,7 +938,7 @@ Function Get-FreeSpace {$DriveInfo = Get-CimInstance Win32_LogicalDisk -Filter "
 CMTraceLog -Message "-----------------------------------------------------------------" -Component "Disk Management" -LogFile $ScriptLogPath
 CMTraceLog -Message "Starting Disk Management Remediation Script" -Component "Disk Management" -LogFile $ScriptLogPath
 
-if (!(Test-Path -Path (split-path -Path $LogPath))){$NULL = New-Item -Path (split-path -Path $LogPath) -ItemType Directory}
+if (!(Test-Path -Path (split-path -Path $ScriptLogPath))){$NULL = New-Item -Path (split-path -Path $ScriptLogPath) -ItemType Directory -Force}
 
 #Directories I just don't want on my machines  If they exist, I want to delete them.  This is a detection script, so if they exist, it will return a 1 and the remediation script will run.  If they don't exist, it will return a 0 and the remediation script won't run.
 $Directories = @("C:\Drivers","C:\OSDCloud")
