@@ -32,13 +32,43 @@ $Lab2Run = ($DayofWeekMapping | Where-Object {$_.DayOfWeek -match $DayofWeek}).L
 
 $VMs = Get-VM
 
+Function Optimize-LABVHDX
+{
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$VMName
+    )
+    $VM = Get-VM -Name $VMName
+    $VHDXPaths = $VM.HardDrives.path | Where-Object {$VM.HardDrives.DiskNumber -eq $null}
+    if ($VHDXPaths){
+        Get-VM -Name $VM.Name | Stop-VM -Force
+        ForEach ($VHDXPath in $VHDXPaths)
+            {
+            $SizeBefore = (Get-Item -Path $VHDXPath).length
+            Write-Host " Size of $((Get-Item -Path $VHDXPath).Name) = $($SizeBefore/1GB) GB" -ForegroundColor Green
+            Write-Host " Optimzing VHD $VHDXPath on $($VM.Name)" -ForegroundColor Green
+            Optimize-VHD -Path $VHDXPath -Mode Full
+            $SizeAfter = (Get-Item -Path $VHDXPath).length
+            $Diff = $SizeBefore - $SizeAfter
+            Write-Host " Size After: $($SizeAfter/1GB) GB | Saving $($Diff /1GB) GB" -ForegroundColor Green
+            }
+        }
+    else{ Write-Host "$($WorkingVM.Name) Has no associated VHDx Files" -ForegroundColor Yellow
+        }
+}
+
 #Make sure all VMs are off before starting to turn things on.
 write-host "Shutting down all VMs" -ForegroundColor Cyan
 Foreach ($VM in $VMs){
     $WorkingVM = Get-VM -Name $VM.Name
     if ($WorkingVM.State -eq "Running"){
         Write-Host "Shutting down VM: $($WorkingVM.Name)" -ForegroundColor Yellow
-    Stop-VM -VM $WorkingVM -Force -ErrorAction SilentlyContinue
+        Stop-VM -VM $WorkingVM -Force -ErrorAction SilentlyContinue
+        Optimize-LABVHDX
+    }
+    else{
+        Optimize-LABVHDX
     }
 }
 
@@ -63,8 +93,10 @@ Foreach ($VM in $VMs){
         Start-Sleep -Seconds 60
     }
     else{
-        Write-Host "Shutting down VM: $($WorkingVM.Name)" -ForegroundColor Red
-        Stop-VM -VM $WorkingVM -Force
+        if ($WorkingVM.State -eq "Running"){
+            Write-Host "Shutting down VM: $($WorkingVM.Name)" -ForegroundColor Red
+            Stop-VM -VM $WorkingVM -Force
+        }
     }
 }
 
