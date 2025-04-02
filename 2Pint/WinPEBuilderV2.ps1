@@ -295,6 +295,12 @@ if (!(Test-Path "$WinPEBuilderPath\StifleRSource\Readme.txt")){
 if (!(Test-Path "$WinPEBuilderPath\WiFiSupport\Readme.txt")){
     $WiFiSupportReadme | Out-File -FilePath "$WinPEBuilderPath\WiFiSupport\Readme.txt" -Encoding utf8
 }
+if (Test-Path -Path "$WinPEBuilderPath"){
+    $Files = Get-ChildItem -Path "$WinPEBuilderPath" -Recurse | Where-Object {$_.Attributes -ne "Directory"}
+    foreach ($File in $files){
+        Unblock-File -Path $File.FullName
+    }
+}
 
 #Check for Install.WIM, make sure one is already there, if not, it will try to download / build one for you
 if (Test-Path -Path "$WinPEBuilderPath\OSSource\$OSNameNeeded\install.wim"){
@@ -785,12 +791,7 @@ else {
 }
 #Apply SSU - only required for WinPE 10 19041
 $SSUPath = "D:\WinPEBuilder\Patches\SSU\SSU-26100.1738-x64.cab"
-If ($SSUPath) {
-    if (Test-Path $SSUPath){
-        Write-Host "Applying SSU $SSUPath"
-        Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose
-    }
-}
+If ($SSUPath) {Add-WindowsPackage -Path $MountPath -PackagePath $SSUPath -Verbose}
 
 #Apply LCU
 $CU_MSU = Get-ChildItem -Path "$WinPEBuilderPath\Patches\CU\$OSNameNeeded" -Filter *.msu -ErrorAction SilentlyContinue

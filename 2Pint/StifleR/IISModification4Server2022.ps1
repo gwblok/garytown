@@ -1,12 +1,26 @@
 #Fix BranchCache Peering in Server 2022, 2025 +
 
+#Disable Elipical Curve Diffie Hillman
 New-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\KeyExchangeAlgorithms\ECDH' -ItemType directory -Force
 New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\KeyExchangeAlgorithms\ECDH' -Name 'Enabled' -PropertyType dword -Value 0 -Force
 
+
+
+#Disable TLS 1.3
+New-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -ItemType directory -Force
+New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Name 'DisabledByDefault' -PropertyType dword -Value 1 -Force
+New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Name 'Enabled' -PropertyType dword -Value 0 -Force
+
+
+
+
+<#
 New-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\KeyExchangeAlgorithms\Diffie-Hellman' -ItemType directory -Force
 New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\KeyExchangeAlgorithms\Diffie-Hellman' -Name 'Enabled' -PropertyType dword -Value 0 -Force
+#>
 
 
+<#
 Import-Module WebAdministration
 
 # Specify the website name
@@ -33,3 +47,4 @@ if ($binding) {
 } else {
     Write-Host "No HTTPS binding found for $siteName on port 443."
 }
+#>
