@@ -9,7 +9,7 @@ Each lab gets to run 2 days a week, but the host gets Sunday off to rest, as any
 #Tueday = CM LAB
 #Wednesday = 2Pint Intune Lab
 
-#Thursday = GARYTOWN Intue
+#Thursday = GARYTOWN Intune
 #Friday = CM LAB
 #Saturday = 2Pint Intune Lab
 

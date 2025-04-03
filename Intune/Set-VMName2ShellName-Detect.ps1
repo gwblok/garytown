@@ -29,7 +29,7 @@ $LogFilePath = "$IntuneFolder\Logs"
 $LogFile = "$LogFilePath\SetComputerName.log"
 
 if (!(Test-Path -Path $LogFilePath)){$NewFolder = New-Item -Path $LogFilePath -ItemType Directory -Force}
-$Remediate = $true
+$Remediate = $false
 
 function CMTraceLog {
     [CmdletBinding()]
@@ -85,6 +85,7 @@ if (((Get-CimInstance Win32_ComputerSystem).Model -eq "Virtual Machine") -and ((
         }
         else {
             CMTraceLog -Message  "Device is Non-Compliant - Needs to be Renamed" -Type 1 -LogFile $LogFile
+            exit 1
         }
     }
     else
