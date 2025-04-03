@@ -2,7 +2,7 @@ $STIFLERSERVERS = 'https://2pstifler.2p.garytown.com:1414'
 $STIFLERULEZURL = 'https://raw.githubusercontent.com/2pintsoftware/StifleRRules/master/StifleRulez.xml'
 
 
-$ClientURL = 'https://github.com/gwblok/garytown/raw/refs/heads/master/2Pint/GARYTOWN/214/StifleR.ClientApp.Installer64_2.14.312.944.zip'
+$ClientURL = 'https://garytown.com/Downloads/2Pint/214/StifleR.ClientApp.Installer64_2.14.312.944.zip'
 $ClientInstallScript = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/StifleR/StifleR_Client_Installer.ps1'
 
 $packageName = $ClientURL.Split('/')[-1]
