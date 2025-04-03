@@ -21,11 +21,19 @@ https://www.recastsoftware.com
 --
 #>
 
+Function Get-AzureTenantDisplayNameFromClient {
+    $Items = Get-ChildItem -path HKLM:\SYSTEM\CurrentControlSet\Control\CloudDomainJoin\TenantInfo
+    foreach ($Item in $Items){
+        $Item.GetValue("DisplayName") 
+    }
+}
+$CompanyName = Get-AzureTenantDisplayNameFromClient
+$CompanyName = $CompanyName -replace " ",""
+$LogFolder = "$env:ProgramData\$CompanyName"
+$LogFilePath = "$LogFolder\Logs"
 $ScriptVersion = "21.4.6.1"
 $ScriptName = "Set HyperV Name to Shell Name"
 $whoami = $env:USERNAME
-$IntuneFolder = "$env:ProgramData\Intune"
-$LogFilePath = "$IntuneFolder\Logs"
 $LogFile = "$LogFilePath\SetComputerName.log"
 
 if (!(Test-Path -Path $LogFilePath)){$NewFolder = New-Item -Path $LogFilePath -ItemType Directory -Force}
@@ -85,11 +93,12 @@ if (((Get-CimInstance Win32_ComputerSystem).Model -eq "Virtual Machine") -and ((
         }
         else {
             CMTraceLog -Message  "Device is Non-Compliant - Needs to be Renamed" -Type 1 -LogFile $LogFile
+            CMTraceLog -Message  "Current: $ComputerName - Needs to be $env:COMPUTERNAME" -Type 1 -LogFile $LogFile
         }
     }
     else
     {
-        CMTraceLog -Message  "Machine already named properly" -Type 1 -LogFile $LogFile
+        CMTraceLog -Message  "Machine already named properly | $ComputerName " -Type 1 -LogFile $LogFile
     }
 }
 else

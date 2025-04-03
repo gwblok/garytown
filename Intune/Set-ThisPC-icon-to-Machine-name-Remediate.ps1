@@ -189,11 +189,12 @@ $RegistryPath = "Registry::HKEY_CLASSES_ROOT\CLSID\{20D04FE0-3AEA-1069-A2D8-0800
 $CurrentValue = Get-ItemPropertyValue -Path $RegistryPath -Name "LocalizedString" -ErrorAction SilentlyContinue
 if ($CurrentValue -match $env:COMPUTERNAME)
     {
-    CMTraceLog -Message  "Value Already Set Correctly" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message  "Value Already Set Correctly | $env:COMPUTERNAME" -Type 1 -LogFile $LogFile
     }
 else
     {
     CMTraceLog -Message  "Value not set, requires Remediation" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message  "Current: $CurrentValue | Desired: $env:COMPUTERNAME" -Type 1 -LogFile $LogFile
     $Compliance = $false
     }
 
