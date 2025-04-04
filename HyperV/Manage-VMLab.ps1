@@ -65,10 +65,10 @@ Foreach ($VM in $VMs){
     if ($WorkingVM.State -eq "Running"){
         Write-Host "Shutting down VM: $($WorkingVM.Name)" -ForegroundColor Yellow
         Stop-VM -VM $WorkingVM -Force -ErrorAction SilentlyContinue
-        Optimize-LABVHDX
+        Optimize-LABVHDX -VMName $WorkingVM.Name
     }
     else{
-        Optimize-LABVHDX
+        #Optimize-LABVHDX -VMName $WorkingVM.Name
     }
 }
 
