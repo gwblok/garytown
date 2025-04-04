@@ -26,7 +26,7 @@ This script will...
 
 
 # REQUIRED INPUT VARIABLES:
-[int]$DesiredVMs = 6  #The Number of VMs that are going to be created this run.
+[int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
 [int]$WaitBetweenNext = 15 #Time in Minutes before starting the next VM - works nice if you don't want to kill your WAN while creating OSDCloud machines.
 
 [int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB
