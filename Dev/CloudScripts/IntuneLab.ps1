@@ -63,7 +63,6 @@ function Write-SectionSuccess {
 iex (irm functions.garytown.com)
 #region functions
 
-
 function New-SetupCompleteOSDCloudFiles{
     [CmdletBinding()]
     param (
@@ -177,6 +176,30 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Install StifleR
     Install-StifleRClient210
+
+    #Trigger Autopilot Enrollment
+    if (Test-Connection -ComputerName wd1tb -ErrorAction SilentlyContinue){
+        Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
+        net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
+        start-sleep -s 2
+        if (Test-Path -Path W:\OSDCloud){
+            Write-Host -ForegroundColor Green "Successfully Mapped Drive, triggering Autopilot Enrollment Script"
+            if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1){
+            Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+            Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+            }
+            else{
+                Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
+                Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+            }
+        }
+        else{
+            Write-Host -ForegroundColor Red "Failed to Map Drive"
+        }
+    }
+    else{
+        Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
+    }
 
     #Enable Microsoft Other Updates:
     (New-Object -com "Microsoft.Update.ServiceManager").AddService2("7971f918-a847-4430-9279-4a52d1efe18d",7,"")
