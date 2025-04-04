@@ -92,8 +92,8 @@ elseif ($HostName -eq "UGREEN"){
 elseif ($HostName -eq "BEELINK-HOST"){
     $HostName = 'BLink'
 }
-elseif ($HostName -eq "MS-01"){
-    $HostName = 'MS-01'
+elseif ($HostName -eq "MS01"){
+    $HostName = 'MS01'
 }
 else{
     $HostName = 'HVHst'
