@@ -157,7 +157,7 @@ if ($env:SystemDrive -eq 'X:') {
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
-    Set-ExecutionPolicy Bypass -Force
+
 
     #Setup Post Actions Scheduled Task
     #iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
