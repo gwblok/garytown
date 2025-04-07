@@ -178,28 +178,40 @@ if ($env:SystemDrive -ne 'X:') {
     Install-StifleRClient210
 
     #Trigger Autopilot Enrollment
-    if (Test-Connection -ComputerName wd1tb -ErrorAction SilentlyContinue){
-        Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
-        net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd
-        start-sleep -s 2
-        if (Test-Path -Path W:\OSDCloud){
-            Write-Host -ForegroundColor Green "Successfully Mapped Drive, triggering Autopilot Enrollment Script"
-            if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1){
-            Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
-            Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+    Function Invoke-APConnect {
+        if (Test-Connection -ComputerName wd1tb -ErrorAction SilentlyContinue){
+            Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
+            if (Test-Path -Path W:){
+                Write-Host -ForegroundColor Green "Drive W: Already Mapped"
             }
             else{
-                Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
-                Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                Write-Host -ForegroundColor DarkGray "net use w: \\wd1tb\osd /user:OSDCloud [PASSWORD] /persistent:no"
+                net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd /persistent:no
+            }
+            start-sleep -s 2
+            if (Test-Path -Path W:\OSDCloud){
+                Write-Host -ForegroundColor Green "Successfully Mapped Drive, triggering Autopilot Enrollment Script"
+                if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1){
+                Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                }
+                else{
+                    Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
+                    Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                }
+            }
+            else{
+                Write-Host -ForegroundColor Red "Failed to Map Drive"
             }
         }
         else{
-            Write-Host -ForegroundColor Red "Failed to Map Drive"
+            Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
         }
     }
-    else{
-        Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
-    }
+    Write-SectionHeader -Message "**Triggering Autopilot Enrollment**"
+    Invoke-APConnect
+
+    Write-SectionHeader -Message "**Setting Up Windows Update Settings**"
 
     #Enable Microsoft Other Updates:
     (New-Object -com "Microsoft.Update.ServiceManager").AddService2("7971f918-a847-4430-9279-4a52d1efe18d",7,"")
@@ -224,10 +236,15 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Driver Updates**"
     Start-WindowsUpdateDriver
 
+    #Trigger AP Enrollment (Again)
+    Write-SectionHeader -Message "**Triggering Autopilot Enrollment Again**"
+    Invoke-APConnect
+
     #Store Updates
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
     Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
     Invoke-UpdateScanMethodMSStore
+    
     #Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
@@ -257,5 +274,5 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
 
-    Write-SectionHeader -Message  "**Completed Hope.garytown.com sub script**" 
+    Write-SectionHeader -Message  "**Completed IntuneLab.garytown.com sub script**" 
 }
