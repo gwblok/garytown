@@ -266,7 +266,9 @@ Function Get-DUPExitInfo {
 }
 Function Install-DCU {
     [CmdletBinding()]
-    param()
+    param(
+        [Switch]$UseWebRequest
+    )
     $temproot = "$env:windir\temp"
     
     $LogFilePath = "$env:ProgramData\EMPS\Logs"
@@ -335,7 +337,13 @@ Function Install-DCU {
                 #Build Required Info to Download and Update CM Package
                 $TargetFilePathName = "$($DellCabExtractPath)\$($TargetFileName)"
                 #Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
-                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if ($UseWebRequest){
+                    Write-Output "Using WebRequest to download the file"
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                else{
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                }
                 if (!(Test-Path $TargetFilePathName)){
                     Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
                 }
