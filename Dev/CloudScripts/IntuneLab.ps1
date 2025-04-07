@@ -174,8 +174,7 @@ if ($env:SystemDrive -ne 'X:') {
 
 
 
-    #Install StifleR
-    Install-StifleRClient210
+
 
     #Trigger Autopilot Enrollment
     Function Invoke-APConnect {
@@ -210,6 +209,14 @@ if ($env:SystemDrive -ne 'X:') {
     }
     Write-SectionHeader -Message "**Triggering Autopilot Enrollment**"
     Invoke-APConnect
+
+    #Install CMTrace
+    Install-CMTrace
+
+    Write-SectionHeader -Message "**Installing StifleR**"
+    #Install StifleR
+    Install-StifleRClient210
+
 
     Write-SectionHeader -Message "**Setting Up Windows Update Settings**"
 
