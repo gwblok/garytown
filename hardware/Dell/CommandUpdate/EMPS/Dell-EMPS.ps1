@@ -377,7 +377,8 @@ Function Get-DCUAppUpdates {
         [ValidateLength(4,4)]    
         [string]$SystemSKUNumber,
         [switch]$Latest,
-        [switch]$Install
+        [switch]$Install,
+        [switch]$UseWebRequest
     )
     
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
@@ -406,8 +407,15 @@ Function Get-DCUAppUpdates {
                 $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
                 $TargetLink = $CommandUpdateAppsLatest.path
                 $TargetFilePathName = "$($DellCabDownloadsPath)\$($TargetFileName)"
-
-                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if ($UseWebRequest){
+                    Write-Output "Using WebRequest to download the file"
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                else{
+                    Write-Output "Using BITS to download the file"
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                }
+                
                 if (!(Test-Path $TargetFilePathName)){
                     Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
                 }
