@@ -413,7 +413,7 @@ Function Get-DCUAppUpdates {
                 }
                 else{
                     Write-Output "Using BITS to download the file"
-                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority High -ErrorVariable err -ErrorAction SilentlyContinue
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -ErrorAction SilentlyContinue
                 }
                 
                 if (!(Test-Path $TargetFilePathName)){
