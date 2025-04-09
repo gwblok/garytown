@@ -2,11 +2,11 @@
 
 
 
-#Build CMClient App Intune Installer
-$IntuneAppRootPath = "\\nas\openshare\IntuneApps"
+#Build App Intune Installer
+$IntuneAppRootPath = "\\src\src$\Intune"
 
 #Path to App Folder you want to Convert
-$SourceAppPathRoot = "$IntuneAppRootPath\Sources"
+$SourceAppPathRoot = "\\src\src$\Apps\"
 
 #++++++++++++++++++++++++++
 #!!!Change These!!!
@@ -16,7 +16,7 @@ $LatestSourceAppPath = Get-ChildItem -Path $SourceAppPath | Where-Object {$_.Att
 $SourceAppPath = ($LatestSourceAppPath).FullName
 #++++++++++++++++++++++++++
 
-$OutputAppPath = $SourceAppPath.Replace("Sources","Output")
+$OutputAppPath = $SourceAppPath.Replace("Agent","AgentIntune")
 $IntuneUtilFolderPath = "$IntuneAppRootPath\Microsoft-Win32-Content-Prep-Tool"
 $IntuneUtilPath = "$IntuneUtilFolderPath\IntuneWinAppUtil.exe"
 $IntuneUtilURL = "https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool/raw/master/IntuneWinAppUtil.exe"
@@ -60,8 +60,14 @@ else{
 
 
 $App = get-item -Path $SourceAppPath
-$SetupEXE = Get-ChildItem -Path $App.FullName -Filter *.exe
-if (!($SetupEXE)){$SetupEXE = Get-ChildItem -Path $App.FullName -Filter *.msi}
+$SetupCMD = Get-ChildItem -Path $App.FullName -Filter *.cmd
+if (!($SetupCMD)){
+    $SetupEXE = Get-ChildItem -Path $App.FullName -Filter *.exe
+    if (!($SetupEXE)){$SetupEXE = Get-ChildItem -Path $App.FullName -Filter *.msi}
+}
+else {
+    $SetupEXE = $SetupCMD
+}
 $SetupFolder = $App.FullName
 #$CreateIntuneApp = Start-Process -FilePath $IntuneUtilPath -ArgumentList "-c $SetupFolder -s $SetupEXEPath -o $OutPutPath -q" -Wait -PassThru
 Write-Host "Starting Intune Package Creation" -ForegroundColor Green
