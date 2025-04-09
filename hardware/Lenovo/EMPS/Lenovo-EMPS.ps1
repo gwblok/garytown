@@ -157,7 +157,8 @@ function Invoke-LenovoSystemUpdater
         [ValidateSet('Critical','Recommended','All')]
         [string]$Severity = 'All',
         [switch]$noReboot,
-        [switch]$noIcon
+        [switch]$noIcon,
+        [switch]$IncludeRebootPackages135
     )
     
     switch ($PackageTypes) {
@@ -171,15 +172,17 @@ function Invoke-LenovoSystemUpdater
         'All' { $LSUSeverity = '-search A' }
         'Critical' { $LSUSeverity = '-search C'}
         'Recommended' { $LSUSeverity = '-search R' }
-
     }
 
-    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -includerebootpackages 1,3,5 -nolicense -exporttowmi "
+    $ArgList = "/CM $LSUSeverity -action $Action $LSUPackageTypes -nolicense -exporttowmi "
     if ($noReboot) {
         $ArgList += ' -noreboot'
     }
-        if ($noIcon) {
+    if ($noIcon) {
         $ArgList += ' -noicon'
+    }
+    if ($IncludeRebootPackages135) {
+        $ArgList += ' -includerebootpackages 1,3,5'
     }
     # Check if Lenovo System Updater is already installed
     if (Test-Path "C:\Program Files (x86)\Lenovo\System Update\TVSU.exe") {
