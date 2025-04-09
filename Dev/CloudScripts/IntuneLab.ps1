@@ -152,6 +152,12 @@ if ($env:SystemDrive -eq 'X:') {
     Write-Host -ForegroundColor Gray "Set-DefaultProfilePersonalPref"
     Set-DefaultProfilePersonalPref
 
+    #Set-TaskBarStartMenu
+    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/FunctionsSnips/Set-TaskBarStartMenu.ps1')
+    Write-Host -ForegroundColor Gray "Set-TaskBarStartMenu"
+    Set-TaskBarStartMenu -RemoveTaskView -RemoveCopilot -RemoveWidgets -RemoveChat -MoveStartLeft -RemoveSearch -StartMorePins
+
+
     if (Test-Path -Path $env:TEMP\$LogName){
         Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
         Stop-Transcript
