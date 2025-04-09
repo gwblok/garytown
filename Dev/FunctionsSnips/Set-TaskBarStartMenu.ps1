@@ -30,56 +30,56 @@ function Set-TaskBarStartMenu {
 
     New-itemproperty $FullRegKeyName -Name $RegValueName -Value "1" -Type STRING -Force
 
-    REG LOAD HKLM\Default C:\Users\Default\NTUSER.DAT
+    REG LOAD HKLM\DefUser C:\Users\Default\NTUSER.DAT
 
     switch ($PSBoundParameters.Keys) {
         # Removes Task View from the Taskbar
         'RemoveTaskView' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value "0" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value "0" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
 
         }
         # Removes Widgets from the Taskbar
         'RemoveWidgets' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value "0" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value "0" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
         }
             # Removes Copilot from the Taskbar
         'RemoveCopilot' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowCopilotButton" -Value "0" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowCopilotButton" -Value "0" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
         }
         # Removes Chat from the Taskbar
         'RemoveChat' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Value "0" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Value "0" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
         }
-        # Default StartMenu alignment 0=Left
+        # DefUser StartMenu alignment 0=Left
         'MoveStartLeft' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value "0" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value "0" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
         }
         # Default StartMenu pins layout 0=Default, 1=More Pins, 2=More Recommendations (requires Windows 11 22H2)
         'StartMorePins' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_Layout" -Value "1" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_Layout" -Value "1" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
         }
         # Default StartMenu pins layout 0=Default, 1=More Pins, 2=More Recommendations (requires Windows 11 22H2)
         'StartMoreRecommendations' {
             Write-Host "Attempting to run: $PSItem"
-            $reg = New-ItemProperty "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_Layout" -Value "2" -PropertyType Dword -Force
+            $reg = New-ItemProperty "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_Layout" -Value "2" -PropertyType Dword -Force
             try { $reg.Handle.Close() } catch {}
 
         }    # Removes search from the Taskbar
         'RemoveSearch' {
             Write-Host "Attempting to run: $PSItem"
-            $RegKey = "HKLM:\Default\Software\Microsoft\Windows\CurrentVersion\RunOnce"
+            $RegKey = "HKLM:\DefUser\Software\Microsoft\Windows\CurrentVersion\RunOnce"
             if (-not(Test-Path $RegKey )) {
                 $reg = New-Item $RegKey -Force | Out-Null
                 try { $reg.Handle.Close() } catch {}

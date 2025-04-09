@@ -1055,6 +1055,7 @@ function Set-DefaultProfilePersonalPref {
     New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
     Start-Sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
+    Start-Sleep -s 1
 }
 Write-Host -ForegroundColor Green "[+] Function Set-DesktopIcons"
 function Set-DesktopIcons {
