@@ -147,11 +147,19 @@ if ($env:SystemDrive -eq 'X:') {
     Write-SectionHeader -Message "Creating Custom SetupComplete Files"
     New-SetupCompleteOSDCloudFiles -URL2Call "IntuneLab.garytown.com"
 
+    #Set Personal Preferences
+    Write-SectionHeader -Message "Setting Preferences"
+    Write-Host -ForegroundColor Gray "Set-DefaultProfilePersonalPref"
+    Set-DefaultProfilePersonalPref
+
     if (Test-Path -Path $env:TEMP\$LogName){
         Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
         Stop-Transcript
         Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
+    Write-SectionHeader -Message "Completed WinPE Phase of $ScriptName1 $ScriptVersion1"
+    Write-Host -ForegroundColor DarkGray "Restarting in 60 Seconds"
+    Start-Sleep -Seconds 60
     restart-computer
 }
 

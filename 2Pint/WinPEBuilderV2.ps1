@@ -743,6 +743,7 @@ if ((Test-Path "$ADKPath\WinPE_OCs\WinPE-Scripting.cab") -and ($SkipOptionalComp
     }
     catch {
         Write-Host "Failed to add WinPE Components" -ForegroundColor Red
+        dismount-WindowsImage -Path "D:\WinPEBuilder\mount" -Discard
         Exit 1
     }
     #Scripting (WinPE-WMI)
