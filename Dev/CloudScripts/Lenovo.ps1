@@ -8,7 +8,7 @@ $SerialNumber = Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandPro
 
 Write-Host -ForegroundColor Cyan "Manufacturer:       " -NoNewline ; Write-Host  -ForegroundColor Yellow "$Manufacturer"
 Write-Host -ForegroundColor Cyan "Model:              " -NoNewline ; Write-Host  -ForegroundColor Yellow "$Model"
-Write-Host -ForegroundColor Cyan "System Family:  " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SystemFamily"
+Write-Host -ForegroundColor Cyan "System Family:      " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SystemFamily"
 Write-Host -ForegroundColor Cyan "Serial Number:      " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SerialNumber"
 
 Write-host -ForegroundColor Cyan "Calling Lenovo-CSM script on GARYTOWN GitHub"
