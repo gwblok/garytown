@@ -3,20 +3,21 @@ $ScriptVersion = '25.2.20.3'
 
 #region Initialize
 
-
-$Manufacturer = (Get-CimInstance -Class:Win32_ComputerSystem).Manufacturer
-$Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model
-$SystemSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem).SystemSKUNumber
-
+$ComputerSystem = (Get-CimInstance -ClassName Win32_ComputerSystem)
+$Manufacturer = ($ComputerSystem).Manufacturer
+$Model = ($ComputerSystem).Model
+$SystemSKUNumber = ($ComputerSystem).SystemSKUNumber
+$SerialNumber = Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber
 
 
 Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPS.ps1')
 Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPSWarranty.ps1')
 
 
-write-output "Manufacturer:    $Manufacturer"
-write-output "Model:           $Model"
-write-output "SystemSKUNumber: $SystemSKUNumber"
+Write-Host -ForegroundColor Cyan "Manufacturer:       " -NoNewline ; Write-Host  -ForegroundColor Yellow "$Manufacturer"
+Write-Host -ForegroundColor Cyan "Model:              " -NoNewline ; Write-Host  -ForegroundColor Yellow "$Model"
+Write-Host -ForegroundColor Cyan "System SKU Number:  " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SystemSKUNumber"
+Write-Host -ForegroundColor Cyan "Serial Number:      " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SerialNumber"
 
 Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDetails"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellDeviceDriverPack"

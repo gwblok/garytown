@@ -1,6 +1,15 @@
-$Manufacturer = (Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_ComputerSystem).Manufacturer
-$Model = (Get-CimInstance -Namespace root/CIMV2 -ClassName Win32_ComputerSystem).Model
-Write-Output "Manufacturer = $Manufacturer | Model = $Model"
+$ComputerSystem = (Get-CimInstance -ClassName Win32_ComputerSystem)
+$Manufacturer = ($ComputerSystem).Manufacturer
+$Model = ($ComputerSystem).Model
+$SystemSKUNumber = ($ComputerSystem).SystemSKUNumber
+$SerialNumber = Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber
+
+
+Write-Host -ForegroundColor Cyan "Manufacturer:       " -NoNewline ; Write-Host  -ForegroundColor Yellow "$Manufacturer"
+Write-Host -ForegroundColor Cyan "Model:              " -NoNewline ; Write-Host  -ForegroundColor Yellow "$Model"
+#Write-Host -ForegroundColor Cyan "System SKU Number:  " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SystemSKUNumber"
+Write-Host -ForegroundColor Cyan "Serial Number:      " -NoNewline ; Write-Host  -ForegroundColor Yellow "$SerialNumber"
+
 Write-host -ForegroundColor Cyan "Calling Lenovo-CSM script on GARYTOWN GitHub"
 Write-Host "https://github.com/gwblok/garytown/blob/master/hardware/Lenovo/EMPS/Lenovo-EMPS.ps1"
 Write-Host ""
