@@ -7,8 +7,8 @@ $SCStartCmd = {sc.exe start $ServiceName}
 $SCQueryCmd = {sc.exe query $ServiceName}
 $SCStopCmd = {sc.exe stop $ServiceName}
 $LogPath = "$env:ProgramData\Intune\StifleRClientConfiguration_Remediation.log"
-$SettingName = 'StiflerServers'
-$DesiredValue = "https://2PSR210.2p.garytown.com:1414"
+$SettingName = 'VPNStrings'
+$DesiredValue = "Citrix VPN, Cisco AnyConnect, WireGuard"
 # Delete any existing logfile if it exists
 If (Test-Path $LogPath){Remove-Item $LogPath -Force -ErrorAction SilentlyContinue -Confirm:$false}
 
@@ -37,7 +37,9 @@ Function Write-Log {
     $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
     $LogMessage.Replace("`0","") | Out-File -Append -Encoding UTF8 -FilePath $LogFile
 }
-
+if (Test-Path -Path "$env:ProgramData\Intune" -eq $false) {
+    New-Item -Path "$env:ProgramData\Intune" -ItemType Directory -Force | Out-Null
+}
 Function Get-AppSetting{
     param (
     [Parameter(Mandatory = $true)]
@@ -53,9 +55,7 @@ Function Get-AppSetting{
         Write-Log "Get-Appsetting: Configuration File $PathToConfig Not Found"
     }
 }
-if (Test-Path -Path "$env:ProgramData\Intune" -eq $false) {
-    New-Item -Path "$env:ProgramData\Intune" -ItemType Directory -Force | Out-Null
-}
+
 function Set-AppSetting{
     param (
     [Parameter(Mandatory = $true)]

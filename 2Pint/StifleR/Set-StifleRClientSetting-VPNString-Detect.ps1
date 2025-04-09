@@ -5,9 +5,8 @@
 $ServiceName = "StifleRClient"
 $LogPath = "$env:ProgramData\Intune\StifleRClientConfiguration_Discovery.log"
 $Compliance = "Non-Compliant" # Assume non-compliant, if running script multiple times
-$SettingName = 'StiflerServers'
-$DesiredValue = "https://2PSR210.2p.garytown.com:1414"
-
+$SettingName = 'VPNStrings'
+$DesiredValue = "Citrix VPN, Cisco AnyConnect, WireGuard"
 # Delete any existing logfile if it exists
 If (Test-Path $LogPath){Remove-Item $LogPath -Force -ErrorAction SilentlyContinue -Confirm:$false}
 
