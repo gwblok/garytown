@@ -43,3 +43,7 @@ Function Invoke-SUHelper {
   iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Lenovo/EMPS/SU-InstallBIOSUpdates.ps1)
 }
 
+Function Invoke-MMSDemo2025 {
+  iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Lenovo/EMPS/Lenovo-MMSDemo.ps1)
+}
+
