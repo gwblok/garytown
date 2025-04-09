@@ -85,3 +85,7 @@ if ($Step3Complete -ne $true){
     Write-Output "Step 3 is not complete | SBKey: $SecureBootRegValue"
     exit 3
 }
+if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
+    Write-Output "KB5025885 Complete"
+    exit 0
+}
