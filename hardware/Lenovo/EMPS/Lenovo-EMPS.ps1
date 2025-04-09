@@ -38,6 +38,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 .EXAMPLE
     Import-ModuleLenovoCSM
     Install-LenovoSystemUpdater
+    Set-LenovoSystemUpdaterLogging
     Invoke-LenovoSystemUpdater
     Install-LenovoVantage
     Set-LenovoVantage
@@ -118,6 +119,30 @@ function Install-LenovoSystemUpdater {
     } else {
         Write-Host "Failed to download the file."
     }
+}
+
+Function Set-LenovoSystemUpdaterLogging {
+    #Function to set the logging for Lenovo System Updater
+    [CmdletBinding()]
+    param (
+        [ValidateSet('True','False')]
+        [string]$EnableLogging = 'True'
+    )
+    $LSURegKey = "HKLM:\SOFTWARE\WOW6432Node\Lenovo\System Update\Preferences\UCSettings\Log"
+    $LSURegName = "FileName"
+    $LSURegValue = "tsvu.log"
+    if ($EnableLogging -eq 'True'){
+        if (!(Test-Path $LSURegKey)) {New-Item -Path $LSURegKey -ItemType Directory -Force | Out-Null}
+        Set-ItemProperty -Path $LSURegKey -Name $LSURegName -Value $LSURegValue -Force -Verbose
+        Write-Host -ForegroundColor Magenta "Enabled Logging for Lenovo System Updater"
+        write-host -ForegroundColor Green "Log Location: C:\ProgramData\Lenovo\SystemUpdates\logs"
+    } else {
+        if (!(Test-Path $LSURegKey)) {New-Item -Path $LSURegKey -ItemType Directory -Force | Out-Null}
+        Remove-ItemProperty -Path $LSURegKey -Name $LSURegName -Force -Verbose
+        write-host -ForegroundColor Green "Disabled Logging for Lenovo System Updater"
+    }
+
+
 }
 
 #This is basic pre-programmed right now, will eventually build out to add parameters
