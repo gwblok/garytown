@@ -68,23 +68,6 @@ Get-LnvBiosInfo
 Write-Host ""
 Read-Host
 
-Write-Host "Find-LnvDriverPack | " -ForegroundColor Green -NoNewline; Write-Host "Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest" -ForegroundColor Cyan
-Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest
-Write-Host ""
-Write-Host "$LatestDriverPack = Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest" -ForegroundColor Yellow
-$LatestDriverPack = Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest
-
-Write-Host ""
-Read-Host
-
-Write-Host "Get-LnvDriverPack" -ForegroundColor Green 
-Write-Host 'Get-LnvDriverPack -MachineType (Get-LnvMachineType) -WindowsVersion ($LatestDriverPack.os.Replace("win","")) -OSBuildVersion $LatestDriverPack.version  -DownloadPath c:\drivers' -ForegroundColor Cyan
-Read-Host
-Get-LnvDriverPack -MachineType (Get-LnvMachineType) -WindowsVersion ($LatestDriverPack.os.Replace("win","")) -OSBuildVersion $LatestDriverPack.version -DownloadPath c:\drivers
-
-Write-Host ""
-Read-Host
-
 Write-Host "Lets look at some Updates now" -ForegroundColor Magenta
 Write-Host ""
 Write-Host "Find-LnvUpdate" -ForegroundColor Green
@@ -99,6 +82,24 @@ Write-Host "Find-LnvUpdate -MachineType (Get-LnvMachineType) -ListAll" -Foregrou
 Write-Host ""
 Read-Host
 Find-LnvUpdate -MachineType (Get-LnvMachineType) -ListAll
+
+Write-Host ""
+Read-Host
+
+Write-Host "Find-LnvDriverPack | " -ForegroundColor Green -NoNewline; Write-Host "Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest" -ForegroundColor Cyan
+Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest
+Write-Host ""
+Write-Host '$LatestDriverPack = Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest' -ForegroundColor Yellow
+$LatestDriverPack = Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest
+
+Write-Host ""
+Read-Host
+
+Write-Host "Get-LnvDriverPack" -ForegroundColor Green 
+Write-Host 'Get-LnvDriverPack -MachineType (Get-LnvMachineType) -WindowsVersion ($LatestDriverPack.os.Replace("win","")) -OSBuildVersion $LatestDriverPack.version  -DownloadPath c:\drivers' -ForegroundColor Cyan
+Read-Host
+Get-LnvDriverPack -MachineType (Get-LnvMachineType) -WindowsVersion ($LatestDriverPack.os.Replace("win","")) -OSBuildVersion $LatestDriverPack.version -DownloadPath c:\drivers
+
 
 Write-Host ""
 Read-Host
