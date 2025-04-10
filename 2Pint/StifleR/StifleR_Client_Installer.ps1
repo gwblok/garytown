@@ -1055,16 +1055,6 @@ If (((Get-Variable -Name "Config_*").Value) -or ($EnableBetaFeatures -eq $true) 
 #Install Stifler ETW - REMOVED as client installs ETW by default
 #--------------------------------
 
-#--------------------------------
-#Update Stifler Custom Filter Driver
-#--------------------------------
-$driverfile = "$PSScriptRoot\driver\stiflers.sys"
-if (Test-Path -Path $driverfile){
-    get-service -Name StifleRClient | Stop-Service -Force
-    Start-Sleep -Seconds 5
-    Copy-Item -path $driverfile -Destination 'C:\Program Files\2Pint Software\StifleR Client\Filter\Drv\x64\stiflers.sys' -Force -Verbose
-    Get-Service -Name StifleRClient | Start-Service
-}
 
 write-debug "Exiting - install complete"
 $(TimeStamp) + "Exiting - install complete" | Out-File -FilePath $Logfile -Append -Encoding ascii
