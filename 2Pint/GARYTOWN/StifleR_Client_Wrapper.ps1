@@ -82,7 +82,7 @@ MSILOGFILE=C:\Windows\Temp\StifleRClientMSI.log
 
 
 [CONFIG]
-VPNStrings=Citrix VPN, Cisco AnyConnect
+VPNStrings=Citrix VPN, Cisco AnyConnect, WireGuard
 ForceVPN=0
 Logfile=C:\Windows\Temp\StifleRInstaller.log
 Features=Power, PerformanceCounters, AdminElevatedTracking,EventLog
@@ -94,6 +94,16 @@ DefaultNonRedLeaderDOPolicy=102400
 DefaultNonRedLeaderBITSPolicy=768000
 DefaultDisconnectedDOPolicy=25600
 DefaultDisconnectedBITSPolicy=25600
+
+[CUSTOM]
+;This section is used for custom actions that are not part of the standard installation
+;These settings are used if the EnableSiteDetection param is set to true/1
+DOMAIN=2P
+ProductionStifleRServers=$STIFLERSERVERS
+ProductionStifleRulezUrl=$STIFLERULEZURL
+PreProductionStifleRServers=$STIFLERSERVERS
+PreProductionStifleRServers=$STIFLERULEZURL
+ProductionSMSSiteCode=2CM
 "@
 $StifleRDefaultsini | Out-File -FilePath "$tempDir\StifleRDefaults.ini" -Force -Encoding utf8
 if (Test-path -path "$tempDir\StifleRDefaults.ini") {

@@ -41,8 +41,8 @@
    .NOTES
     AUTHOR: 2Pint Software
     EMAIL: support@2pintsoftware.com
-    VERSION: 2.1.0.0
-    DATE:01/27/2025
+    VERSION: 2.2.0.0
+    DATE:04/10/2025
     
     CHANGE LOG: 
     See GitHub for full change log
@@ -224,6 +224,7 @@ If ($Defaults) {
     $RULESTIMER = $FileContent["MSIPARAMS"]["RULESTIMER"]
     $MSILOGFILE = $FileContent["MSIPARAMS"]["MSILOGFILE"]
 
+
     #Config defaults from ini file
     $filecontent["CONFIG"].GetEnumerator() | ForEach-Object {
         Write-Debug "Setting Config_$($_.Key) to $($_.Value)"
@@ -238,6 +239,7 @@ If ($Defaults) {
         $ProductionStifleRulezUrl = $FileContent["CUSTOM"]["ProductionStifleRulezUrl"]
         $PreProductionStifleRServers = $FileContent["CUSTOM"]["PreProductionStifleRServers"]
         $PreProductionStifleRulezUrl = $FileContent["CUSTOM"]["PreProductionStifleRServers"]
+        $ProductionSMSSiteCode = $FileContent["CUSTOM"]["ProductionSMSSiteCode"]
 
         # ---------------------------
         # BEGIN CUSTOM SITE DETECTION
@@ -278,8 +280,23 @@ If ($Defaults) {
         $StifleRInfo = Get-StifleRURLsFromTempInstallConfig
         if ($null -eq $StifleRInfo) {
             Write-Debug "No StifleR Info found in Temp Config - Exiting"
+            #Gets the SiteCode from the Active TS Environment, the compares to the one in the Defaults INI file.
+            $SiteCode = ($tsenv.Value("_SMSTSPackageID")).substring(0,3)
+            #If Matches, it sets to Production
+            If ($ProductionSMSSiteCode -eq $SiteCode) {  
+                Write-Debug "Production Site Code: $ProductionSMSSiteCode"
+                $STIFLERSERVERS = $ProductionStifleRServers
+                $STIFLERULEZURL = $ProductionStifleRulezUrl
+            }
+            #If No Machine, go to Pre-Production URLs
+            Else {
+                Write-Debug "Pre-Production Site Code: $SiteCode"
+                $STIFLERSERVERS = $PreProductionStifleRServers
+                $STIFLERULEZURL = $PreProductionStifleRulezUrl
+            }
         }
         else{
+            #Uses the Servers found in the StifleR Config File WinPE (When StifleR is integrated into WinPE)
             $STIFLERSERVERS = $StifleRInfo.StiflerServers
             $STIFLERULEZURL = $StifleRInfo.StifleRulezURL
         }

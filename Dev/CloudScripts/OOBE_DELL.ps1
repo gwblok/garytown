@@ -36,3 +36,5 @@ Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
 #Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellBIOSUpdates"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellWarrantyInfo (-Cleanup)" #Temporarily Installs Dell Command Integration Suite to gather warranty info
+Write-Host -ForegroundColor Green "[+] Function: Invoke-DellIntuneAppPublishScript" #Does not install Dell Command Integration Suite to gather warranty info
+

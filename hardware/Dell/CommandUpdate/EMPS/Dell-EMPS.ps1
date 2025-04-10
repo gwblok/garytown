@@ -1178,6 +1178,26 @@ Function Get-DellBIOSUpdates {
     return $Updates |Select-Object -Property "PackageID","Name","ReleaseDate","DellVersion" | Sort-Object -Property ReleaseDate -Descending
 }
 
+Function Invoke-DellIntuneAppPublishScript {
+
+    write-host Write-Host -ForegroundColor Green "[+] Function: Invoke-PublishDellIntuneApp"
+    $Description = "
+    This Functions when invoked will do the below tasks
+        1. show the UI to user to select required application
+        2. Download the application that is posted for admin portal production to customer system
+        3. Extract the contents and read the CreateAPPConfig.json file
+        4. create win32_Lob App in intune
+        5. Get APP file version
+        6. Upload and commit intunewin file to Azure Storage Blob
+        7. Update the file version in the Intune application
+        "
+    Write-Output $Description
+
+    function Invoke-PublishDellIntuneApp{
+        iex (irm https://raw.githubusercontent.com/dell/Endpoint-Management-Script-Library/refs/heads/main/Intune%20Scripts/EnterpriseAppDeployment/Dell_Intune_App_Publish_1.0.ps1 -help)
+    }
+}
+
 <# Placeholders for future functions
 
 #Function to get a specific Update with options to download, install or extract
