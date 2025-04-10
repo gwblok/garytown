@@ -151,7 +151,9 @@ if ($env:SystemDrive -eq 'X:') {
     Write-SectionHeader -Message "Setting Preferences"
     Write-Host -ForegroundColor Gray "Set-DefaultProfilePersonalPref"
     Set-DefaultProfilePersonalPref
+    Set-MyPrefsRegistryValues
 
+    
     #Set-TaskBarStartMenu
     iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/FunctionsSnips/Set-TaskBarStartMenu.ps1')
     Write-Host -ForegroundColor Gray "Set-TaskBarStartMenu"
