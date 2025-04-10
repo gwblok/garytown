@@ -52,7 +52,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 
 #>
 
-$ScriptVersion = "25.02.27"
+$ScriptVersion = "25.4.9"
 Write-Output "Loading Lenovo Tools Script Version $ScriptVersion"
 
 Function Import-ModuleLenovoCSM {

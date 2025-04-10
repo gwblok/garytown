@@ -35,8 +35,13 @@ Read-Host
 Write-Host "Find-LnvModel" -ForegroundColor Green
 Write-Host "Find-LnvModel -MachineType (Get-LnvMachineType)" -ForegroundColor Cyan
 Find-LnvModel -MachineType (Get-LnvMachineType)
+Write-Host ""
 Write-Host "Find-LnvModel -MachineType 11VL" -ForegroundColor Cyan
 Find-LnvModel -MachineType 11VL
+Write-Host ""
+Write-Host "Find-LnvMachineType" -ForegroundColor Green
+Write-Host 'Find-LnvMachineType -ModelName "M80"' -ForegroundColor Cyan
+Find-LnvMachineType -ModelName "M80"
 Write-Host ""
 Write-Host ""
 Read-Host
@@ -86,6 +91,8 @@ Find-LnvUpdate -MachineType (Get-LnvMachineType) -ListAll
 Write-Host ""
 Read-Host
 
+Write-Host "Driver Pack Time!" -ForegroundColor Magenta
+Write-Host ""
 Write-Host "Find-LnvDriverPack | " -ForegroundColor Green -NoNewline; Write-Host "Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest" -ForegroundColor Cyan
 Find-LnvDriverPack -MachineType (Get-LnvMachineType) -Latest
 Write-Host ""

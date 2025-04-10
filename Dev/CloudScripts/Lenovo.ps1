@@ -13,7 +13,7 @@ Write-host -ForegroundColor Cyan "Calling Lenovo-CSM script on GARYTOWN GitHub"
 Write-Host "https://github.com/gwblok/garytown/blob/master/hardware/Lenovo/EMPS/Lenovo-EMPS.ps1"
 Write-Host ""
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Lenovo/EMPS/Lenovo-EMPS.ps1)
-Write-Host -ForegroundColor Green "[+] Import-ModuleLenovoCSM (2.1.0)                    " -NoNewline; Write-Host "Downloads and Installs the Lenovo CSM PS Module" -ForegroundColor Cyan
+Write-Host -ForegroundColor Green "[+] Import-ModuleLenovoCSM (2.2.0)                    " -NoNewline; Write-Host "Downloads and Installs the Lenovo CSM PS Module" -ForegroundColor Cyan
 Write-Host -ForegroundColor Green "[+] Function Install-LenovoVantage (-IncludeSUHelper) " -NoNewline; Write-Host "Downloads and Installs the Lenovo Commercial Vantage" -ForegroundColor Cyan
 Write-Host -ForegroundColor Green "[+] Function Set-LenovoVantage                        " -NoNewline; Write-Host "Configure Settings for LCV" -ForegroundColor Cyan
 Write-Host -ForegroundColor Green "[+] Function Set-LenovoVantageSU                      " -NoNewline; Write-Host "Configure Software Update Settings for LCV" -ForegroundColor Cyan
