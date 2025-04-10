@@ -4,6 +4,8 @@
 $Servers2Add = @(
     @{SERVERNAME = "2PSR210 " ; IPAddress = "192.168.20.25"}
     @{SERVERNAME = "2PSR210.2p.garytown.com" ; IPAddress = "192.168.20.25"}
+    @{SERVERNAME = "2PStifleRMOM " ; IPAddress = "192.168.20.10"}
+    @{SERVERNAME = "2PStifleRMOM.2p.garytown.com" ; IPAddress = "192.168.20.10"}
 )
 
 
