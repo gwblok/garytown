@@ -278,9 +278,10 @@ If ($Defaults) {
     }
     if ($tsenv){
         $StifleRInfo = Get-StifleRURLsFromTempInstallConfig
+        #If no StifleR Config File is found (because it wasn't integrated into WinPE), then fall back to SMSSiteCode using the StifleRDefaults.ini file
         if ($null -eq $StifleRInfo) {
             Write-Debug "No StifleR Info found in Temp Config - Exiting"
-            #Gets the SiteCode from the Active TS Environment, the compares to the one in the Defaults INI file.
+            #Gets the SiteCode from the Active TS Environment, the compares to the one in the StifleRDefaults INI file.
             $SiteCode = ($tsenv.Value("_SMSTSPackageID")).substring(0,3)
             #If Matches, it sets to Production
             If ($ProductionSMSSiteCode -eq $SiteCode) {  
