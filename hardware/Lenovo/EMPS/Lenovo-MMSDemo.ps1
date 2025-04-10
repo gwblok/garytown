@@ -1,4 +1,5 @@
 #Load Lenovo EMPS
+Clear-Host
 
 Write-Host "Loading Lenovo EMPS module..." -ForegroundColor Green
 Write-Host 'iex (irm lenovo.garytown.com)' -ForegroundColor Cyan
