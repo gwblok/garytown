@@ -14,7 +14,7 @@ To do automation, you'll need to know the Platform for the different devices you
 #>
 
 #Basics (To use on a different Model (Platform), use the -Platform parameter and product code for that platfrom
-Write-Host -ForegroundColor Magenta "Building Demos ver 25.4.21.12.24..... please wait...."
+Write-Host -ForegroundColor Magenta "Building Demos ver 25.4.21.12.39..... please wait...."
 #Build Samples to display properly later
 $Example1 = Get-HPDeviceDetails
 $Example2 = Get-HPDeviceDetails -Like "*EliteBook*G11*"
@@ -25,6 +25,7 @@ $Example6 = Get-SoftpaqList
 $Example7 = Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
 
 # Getting Information about the device it runs on
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host "Get-HPDeviceDetails" -ForegroundColor Green
 Read-Host -Prompt "Press Enter to continue"
 Write-Host ""
@@ -33,6 +34,7 @@ Write-Output $Example1 | Out-Host
 Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
 #Find the Platform Code for the device based on Model Name
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host "Find the Platform Code for the device based on Model Name" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -Like "*EliteBook*G11*"' -ForegroundColor Yellow
 Read-Host -Prompt "Press Enter to continue"
@@ -49,21 +51,27 @@ Write-Host 'That was: Get-HPDeviceDetails -like "ProDesk*400*G5*"' -ForegroundCo
 Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
 #Get all HP Comercial Devices in a List
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host "Get all HP Comercial Devices in a List" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -Like "*"' -ForegroundColor Yellow
+Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -Like "*"
 Write-Output $Example4 | Out-Host
 Write-Host ""
 Write-Host 'That was: Get-HPDeviceDetails -Like "*"' -ForegroundColor Cyan
 Read-Host -Prompt "Press Enter to continue"
 # Get List of Windows Builds support by device
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 write-host "Get List of Windows Builds support by device" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -OSList' -ForegroundColor Yellow
+Write-Host 'Get-HPDeviceDetails -Like "*"' -ForegroundColor Yellow
+Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -OSList
 Write-Output $Example5 | Out-Host
 Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
 # Get List of Softpaq Updates for the device
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host "Get List of Softpaq Updates for the device" -ForegroundColor Green
 Write-Host 'Get-SoftpaqList' -ForegroundColor Yellow
 Read-Host -Prompt "Press Enter to continue"
@@ -73,6 +81,7 @@ Write-Host ""
 Write-Host 'That was: Get-SoftpaqList' -ForegroundColor Cyan
 Read-Host
 # Get List of Softpaq Updates for a specific platform and specific OS & Build
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host "Get List of Softpaq Updates for a specific platform and specific OS & Build" -ForegroundColor Yellow
 Write-Host 'Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2' -ForegroundColor Yellow
 Read-Host -Prompt "Press Enter to continue"
@@ -82,6 +91,7 @@ Write-Host 'That was: Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2' -For
 Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
 #Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6):
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 write-host "Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6)" -ForegroundColor Green
 Read-Host -Prompt "Press Enter to continue"
 Write-Host -ForegroundColor yellow '
@@ -98,6 +108,7 @@ Write-Output "Max OS Supported: $MaxOSSupported $MaxOSVer"
 Read-Host -Prompt "Press Enter to continue"
 #Region Find Latest Driver Pack for a Device (Plaform = 8549 - HP EliteBook 840 G6)
 #This is because HP might support newer OS's with updates, but the driver pack might not be updated for that OS
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 write-host "Find Latest Driver Pack for a Device (Plaform = 8549 - HP EliteBook 840 G6)" -ForegroundColor Green
 write-host "this is because HP might support newer OS's with updates, but the driver pack might not be updated for that OS" -ForegroundColor Green
 Write-Host ""
