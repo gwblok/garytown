@@ -1,16 +1,4 @@
 ﻿
-# Set network to move (subnet)
-$NetworkIdToMove = "192.168.29.0"  # Change this to the network you want to move (subnet)
-
-# Define new location settings
-$LocationName = "VPN MN"  #Change this to the name of the location you want to create - You can delete it later after you move your newly created group to the desired location in the console.
-$LocationDescription = "TEMP LOCATION - USING for a way to get a new Group created"  #Create a useful description for the location
-
-# Define new network group settings
-$NetworkGroupName = "VPN" #Change this to the name of the group you want to create - I used "VPN" just to confirm it worked
-$NetworkGroupDescription = "VPNs" #Create a useful description for the group
-$TemplateName = "Test-PowerShellTemplate"  #Change this to the name of the template you want associated with the group - I copied one and named it "Test-PowerShellTemplate" just to confirm it worked
-
 # Function to create a new location
 function Add-Location($LocationName, $LocationDescription) {
     $class = "Locations"
@@ -70,6 +58,7 @@ Function Compare-StifleRMethodParameters($WMIClass, $Method, $CALLINGParams) {
     return 0
 }
 
+# Function to add a network group to a location
 function Add-NetworkGroupToLocation([System.Object]$Location, $NetworkGroupName, $NetworkGroupDescription) {
     write-debug "incoming object is type ($Location.GetType())"
 
@@ -105,6 +94,7 @@ function Add-NetworkGroupToLocation([System.Object]$Location, $NetworkGroupName,
     }
 }
 
+# Function to add a network to a network group
 function Add-NetworkToNetworkGroup([System.Object]$NetGrp, $NetworkId, $NetworkMask, $GatewayMAC) {
     
     write-debug "##########################"
@@ -135,12 +125,85 @@ function Add-NetworkToNetworkGroup([System.Object]$NetGrp, $NetworkId, $NetworkM
     }
 }
 
-function Get-StifleRLocation{
+function Add-StifleRNetwork {
+    <#
+    AddNetwork method of the Networks class
+        
+
+    GatewayMAC - string
+    The gateways MAC address, can be used to script/bundle multiple subnets together. Set to N/A if not known. Otherise in 00-11 or 00:11 or 0011 etc format.
+
+    NetworkGroupId - string
+    The Guid of the network group to add the network do.
+
+    NetworkId - string
+    The Network ID of the new Subnet to add. Like 192.167.1.0 for a 24bit subnet mask.
+
+    NetworkMask - string
+    The Subnet ID of the new Subnet to add. Like 192.167.1.0 for a 24bit subnet mask.
+#>
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$true)]
+        $NetworkID,
+        [Parameter(Mandatory=$true)]
+        $NetworkMask,
+        [Parameter(Mandatory=$false)]
+        $NetworkGroupID,
+        [Parameter(Mandatory=$false)]
+        $GatewayMAC
+    )
+    if ($null -eq $NetworkGroupID){
+        $NetworkGroupID = Get-StifleRNetworkGroups | Select-Object -Property Name, id, Description, ActiveClients | Out-GridView -PassThru -Title "Select the Network Group to add the network to" | Select-Object -ExpandProperty id
+    }
+    $namespace = "ROOT\StifleR"
+    $classname = "Networks"
+    Invoke-CimMethod -Namespace $namespace -ClassName $classname -MethodName "AddNetwork" -Arguments @{
+        NetworkID = $NetworkID
+        NetworkMask = $NetworkMask
+        NetworkGroupID = $NetworkGroupID
+        GatewayMAC = $GatewayMAC
+    }
+}
+function Get-StifleRNetworkGroups {
+    $class = "NetworkGroups"
+    $NetworkGroups = Get-CimInstance -Namespace root\stifler -Query "Select * FROM $class"
+    return $NetworkGroups
+}
+function Get-StifleRLocations{
     $class = "Locations"
     $Locations = Get-CimInstance -Namespace root\StifleR -Query "SELECT * FROM $class"
+    return $Locations
 }
-#-----------------------------------------------------------[Execution]------------------------------------------------------------
 
+function Get-StifleRNetworkGroupSupportServers {
+    $NetworkGroups = Get-CimInstance -Namespace root\stifler -Query "Select * From NetworkGroups" 
+    #Create table to hold the results
+    
+    $ReturnData = New-Object System.Collections.ArrayList
+    
+    foreach ($ng in $NetworkGroups)
+    {
+        $Result = Invoke-CimMethod -InputObject $ng -MethodName GetSupportServers -Arguments @{Filter = [int]0}
+        if ('{}' -eq $Result.ReturnValue){
+            # NO Servers Listed
+        }
+        else {
+            $Data = New-Object -TypeName PSObject
+            $Data | Add-Member -MemberType NoteProperty -Name "SupportServers" -Value $Result.ReturnValue -Force
+	        $Data | Add-Member -MemberType NoteProperty -Name "NetworkGroupName" -Value $ng.Name -Force
+	        $Data | Add-Member -MemberType NoteProperty -Name "NetworkGroupID" -Value $ng.id -Force
+            $ReturnData += $Data
+            #Write-Host "Network Group $($ng.Name) | $($ng.id)" -ForegroundColor Cyan
+            #write-Host " Found Support Server: $($Result.ReturnValue)" -ForegroundColor Yellow
+        }
+    }
+    $ReturnData
+}
+
+
+#-----------------------------------------------------------[Execution]------------------------------------------------------------
+<#
 # Get network settings from the network to move, needed later
 # Abort if the network does not exist, no point in continuing
 $NetworkToMove = Get-CimInstance -Namespace root\StifleR -ClassName Networks -Filter "NetworkId = '$NetworkIdToMove'"
@@ -191,3 +254,4 @@ Else {
     Write-Warning "Could not delete the network. Script failed..."
 }
 
+#>
