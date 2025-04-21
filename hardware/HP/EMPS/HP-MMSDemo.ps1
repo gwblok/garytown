@@ -26,27 +26,28 @@ $Example7 = Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
 
 # Getting Information about the device it runs on
 Write-Host "Get-HPDeviceDetails" -ForegroundColor Green
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
+Write-Host ""
 #Get-HPDeviceDetails
 Write-Output $Example1
 Write-Host ""
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 #Find the Platform Code for the device based on Model Name
 Write-Host "Find the Platform Code for the device based on Model Name" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -Like "*EliteBook*G11*"' -ForegroundColor Yellow
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -Like "*EliteBook*G11*"
 Write-Output $Example2
 Write-Host 'That was: Get-HPDeviceDetails -Like "*EliteBook*G11*"' -ForegroundColor Cyan
 Write-Host ""
 Write-Host ""
 Write-Host 'Get-HPDeviceDetails -like "ProDesk*400*G5*"' -ForegroundColor Yellow
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -like "ProDesk*400*G5*"
 Write-Output $Example3
 Write-Host 'That was: Get-HPDeviceDetails -like "ProDesk*400*G5*"' -ForegroundColor Cyan
 Write-Host ""
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 #Get all HP Comercial Devices in a List
 Write-Host "Get all HP Comercial Devices in a List" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -Like "*"' -ForegroundColor Yellow
@@ -54,18 +55,18 @@ Write-Host 'Get-HPDeviceDetails -Like "*"' -ForegroundColor Yellow
 Write-Output $Example4
 Write-Host ""
 Write-Host 'That was: Get-HPDeviceDetails -Like "*"' -ForegroundColor Cyan
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 # Get List of Windows Builds support by device
 write-host "Get List of Windows Builds support by device" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -OSList' -ForegroundColor Yellow
 #Get-HPDeviceDetails -OSList
 Write-Output $Example5
 Write-Host ""
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 # Get List of Softpaq Updates for the device
 Write-Host "Get List of Softpaq Updates for the device" -ForegroundColor Green
 Write-Host 'Get-SoftpaqList' -ForegroundColor Yellow
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 #Get-SoftpaqList #(uses the current OS & Build of the platform it is running on)
 Write-Output $Example6
 Write-Host ""
@@ -74,7 +75,7 @@ Read-Host
 # Get List of Softpaq Updates for a specific platform and specific OS & Build
 Write-Host "Get List of Softpaq Updates for a specific platform and specific OS & Build" -ForegroundColor Yellow
 Write-Host 'Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2' -ForegroundColor Yellow
-Read-Host
+Read-Host -Prompt "Press Enter to continue"
 #Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
 Write-Output $Example7
 Write-Host 'That was: Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2' -ForegroundColor Cyan
