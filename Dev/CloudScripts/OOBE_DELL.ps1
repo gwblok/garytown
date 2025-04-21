@@ -12,6 +12,8 @@ $SerialNumber = Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandPro
 
 Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPS.ps1')
 Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-EMPSWarranty.ps1')
+
+Write-Host -ForegroundColor Green "[+] Function Invoke-MMSDemo2025"
 function Invoke-MMSDemo2025 {
     Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Dell/CommandUpdate/EMPS/Dell-MMSDemo.ps1')
 }
