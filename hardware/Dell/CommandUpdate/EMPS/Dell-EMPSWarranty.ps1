@@ -20,7 +20,10 @@ function Get-DellWarrantyInfo {
     
     If you use with ConfigMgr DB, assumes the person running has rights to the CM DB.
     
-    Intial Version 24.2.20.1
+    Intial Version 25.2.20.1
+
+    Change Log
+    - 25.4.21 - Updated URL for tool
     #>
 
     [CmdletBinding()]
@@ -47,7 +50,7 @@ function Get-DellWarrantyInfo {
         if (-not(Test-Path $DellWarrantyCLIPath)){
 
             #Download and install Dell Command Integration Suite (DellWarranty-CLI.exe) and Install
-            $DCWarrURL = 'http://dl.dell.com/FOLDER12624112M/1/Dell-Command-Integration-Suite-for-System-Center_G31J8_WIN64_6.6.0_A00.EXE'
+            $DCWarrURL = 'https://dl.dell.com/FOLDER12964322M/1/Dell-Command-Integration-Suite-for-System-Center_5FT6F_WIN64_6.6.1_A00.EXE'
             $DCWarrPath = "$ScratchDir\Dell-Command-Integration-Suite-for-System-Center_G31J8_WIN64_6.6.0_A00.EXE"
             Write-Verbose -Message "Downloading Dell Command Integration Suite"
             Start-BitsTransfer -Source $DCWarrURL -Destination $DCWarrPath -CustomHeaders "User-Agent:BITS 42"

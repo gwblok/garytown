@@ -23,12 +23,12 @@ $Example4 = Get-HPDeviceDetails -Like "*"
 $Example5 = Get-HPDeviceDetails -OSList
 $Example6 = Get-SoftpaqList
 $Example7 = Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
+$Example8 = Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2 -Category Driver | Where-Object {$_.Name -like "*Chipset*"}
 
 # Getting Information about the device it runs on
 write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host "Get-HPDeviceDetails" -ForegroundColor Green
 Read-Host -Prompt "Press Enter to continue"
-Write-Host ""
 #Get-HPDeviceDetails
 Write-Output $Example1 | Out-Host
 Write-Host ""
@@ -42,7 +42,6 @@ Read-Host -Prompt "Press Enter to continue"
 Write-Output $Example2 | Out-Host
 Write-Host 'That was: Get-HPDeviceDetails -Like "*EliteBook*G11*"' -ForegroundColor Cyan
 Write-Host ""
-Write-Host ""
 Write-Host 'Get-HPDeviceDetails -like "ProDesk*400*G5*"' -ForegroundColor Yellow
 Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -like "ProDesk*400*G5*"
@@ -52,11 +51,12 @@ Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
 #Get all HP Comercial Devices in a List
 write-host "---------------------------------------------" -ForegroundColor DarkMagenta
-Write-Host "Get all HP Comercial Devices in a List" -ForegroundColor Green
+Write-Host "Get all HP Commercial Devices in a List" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -Like "*"' -ForegroundColor Yellow
 Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -Like "*"
 Write-Output $Example4 | Out-Host
+Write-Output "Counts:" $Example4.Count | Out-Host
 Write-Host ""
 Write-Host 'That was: Get-HPDeviceDetails -Like "*"' -ForegroundColor Cyan
 Read-Host -Prompt "Press Enter to continue"
@@ -64,7 +64,6 @@ Read-Host -Prompt "Press Enter to continue"
 write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 write-host "Get List of Windows Builds support by device" -ForegroundColor Green
 Write-Host 'Get-HPDeviceDetails -OSList' -ForegroundColor Yellow
-Write-Host 'Get-HPDeviceDetails -Like "*"' -ForegroundColor Yellow
 Read-Host -Prompt "Press Enter to continue"
 #Get-HPDeviceDetails -OSList
 Write-Output $Example5 | Out-Host
@@ -90,6 +89,17 @@ Write-Output $Example7 | Out-Host
 Write-Host 'That was: Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2' -ForegroundColor Cyan
 Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
+# Get List of Softpaq Updates for a specific platform and specific OS & Build
+write-host "---------------------------------------------" -ForegroundColor DarkMagenta
+Write-Host "Get List of Softpaq Updates for a specific platform and specific OS & Build & Category" -ForegroundColor Yellow
+Write-Host 'Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2 -Category Driver | Where-Object {$_.Name -like "*Chipset*"}' -ForegroundColor Yellow
+Read-Host -Prompt "Press Enter to continue"
+#Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
+Write-Output $Example8 | Out-Host
+Write-Host 'That was: Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2 -Category Driver | Where-Object {$_.Name -like "*Chipset*"}' -ForegroundColor Cyan
+Write-Host ""
+Read-Host -Prompt "Press Enter to continue"
+
 #Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6):
 write-host "---------------------------------------------" -ForegroundColor DarkMagenta
 write-host "Get the Max OS & OSVer Supported OS for a Device (Plaform = 8549 - HP EliteBook 840 G6)" -ForegroundColor Green
@@ -223,8 +233,8 @@ Read-Host -Prompt "Press Enter to continue"
 write-host -ForegroundColor Green '
 #Get Current Machine if BIOS Update Available
 # https://developers.hp.com/hp-client-management/doc/get-hpbiosupdates
-#True = BIOS Update Available
-#False = No BIOS Update Available
+#True = NO BIOS Update Available | BIOS ALREADY UP TO DATE (OR NEWER THAN AVAILABLE)
+#False = BIOS Update Available
 '
 Write-Host -ForegroundColor Yellow 'Get-HPBIOSUpdates -Check'
 Get-HPBIOSUpdates -Check | out-host
@@ -262,8 +272,8 @@ Write-Host -ForegroundColor Green '
 
 #Get List of BIOS Updates for a device
 '
-Write-Host -ForegroundColor Yellow 'Get-HPBIOSWindowsUpdates'
-Get-HPBIOSWindowsUpdates | out-host
+Write-Host -ForegroundColor Yellow 'Get-HPBIOSWindowsUpdate'
+Get-HPBIOSWindowsUpdate | out-host
 Write-Host ""
 Read-Host -Prompt "Press Enter to continue"
 Write-Host -ForegroundColor Green '
