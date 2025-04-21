@@ -124,7 +124,7 @@ function Add-NetworkToNetworkGroup([System.Object]$NetGrp, $NetworkId, $NetworkM
         return $Network
     }
 }
-
+#Create a new network group using the static method on the class NetworkGroups
 function Add-StifleRNetwork {
     <#
     AddNetwork method of the Networks class
@@ -165,6 +165,8 @@ function Add-StifleRNetwork {
         GatewayMAC = $GatewayMAC
     }
 }
+
+#basic functions to get information from the stifler database
 function Get-StifleRNetworkGroups {
     $class = "NetworkGroups"
     $NetworkGroups = Get-CimInstance -Namespace root\stifler -Query "Select * FROM $class"
