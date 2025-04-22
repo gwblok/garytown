@@ -43,8 +43,7 @@ function Get-DellWarrantyInfo {
         [switch]$Cleanup #Uninstalls Dell Command Integration Suite after running
     )
     
-    function Get-InstalledApps
-    {
+    function Get-InstalledApps{
         if (![Environment]::Is64BitProcess) {
             $regpath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
         }
@@ -61,8 +60,9 @@ function Get-DellWarrantyInfo {
         if (-not (Test-Path $ScratchDir)) { New-Item -ItemType Directory -Path $ScratchDir |out-null }
         $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
         $DCIS = Get-InstalledApps | Where-Object {$_.DisplayName -match "Integration Suite for System Center"}
+        [Version]$OldVersion = '6.6.0.9'
         if ($null -ne $DCIS){
-            if ($DCIS.DisplayVersion -le 6.6.0.9){
+            if ([Version]$DCIS.DisplayVersion -le $OldVersion){
                 Write-Verbose -Message "Removing old version first"
                 $UninstallString = $DCIS.UninstallString.Replace("MsiExec.exe /I",'/U')
                 Start-Process -FilePath msiexec.exe -ArgumentList "$UninstallString /qb!" -Wait
