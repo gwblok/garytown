@@ -24,6 +24,7 @@ function Get-DellWarrantyInfo {
 
     Change Log
     - 25.4.21 - Updated URL for tool
+    - 25.5.22 - Added Uninstall of older version of the Tool, as older version is broken
     #>
 
     [CmdletBinding()]
@@ -64,7 +65,7 @@ function Get-DellWarrantyInfo {
             if ($DCIS.DisplayVersion -le 6.6.0.9){
                 Write-Verbose -Message "Removing old version first"
                 $UninstallString = $DCIS.UninstallString.Replace("MsiExec.exe /I",'/U')
-                Start-Process -FilePath msiexec.exe -ArgumentList "$UninstallString /qb!"
+                Start-Process -FilePath msiexec.exe -ArgumentList "$UninstallString /qb!" -Wait
             }
         }
         if (-not(Test-Path $DellWarrantyCLIPath)){
