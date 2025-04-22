@@ -22,6 +22,14 @@ function Get-DellWarrantyInfo {
     
     Intial Version 25.2.20.1
 
+    examples
+    Get-DellWarrantyInfo (Run from a Dell Machine)
+    Get-DellWarrantyInfo -ServiceTag 'ABC1234' (Run from any Machine)
+    Get-DellWarrantyInfo -CSVImportPath 'C:\Temp\ServiceTags.csv'
+    Get-DellWarrantyInfo -CMConnectionStringHost 'CMHost' -CMConnectionStringDBName 'CM_XXX' (Person running script needs to have access to CM Database)
+
+    -Cleanup will remove the required Dell Command Integration Suite after running, if you want to keep it, don't use the -Cleanup switch.
+
     Change Log
     - 25.4.21 - Updated URL for tool
     - 25.5.22 - Added Uninstall of older version of the Tool, as older version is broken
@@ -44,6 +52,8 @@ function Get-DellWarrantyInfo {
     )
     
     function Get-InstalledApps{
+        [CmdletBinding()]
+        param()
         if (![Environment]::Is64BitProcess) {
             $regpath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
         }
@@ -56,6 +66,8 @@ function Get-DellWarrantyInfo {
         Get-ItemProperty $regpath | .{process{if($_.DisplayName -and $_.UninstallString) { $_ } }} | Select DisplayName, Publisher, InstallDate, DisplayVersion, UninstallString |Sort DisplayName
     }
     function Install-CommandIntegrationSuite{
+        [CmdletBinding()]
+        param()
         $ScratchDir = "$env:TEMP\Dell"
         if (-not (Test-Path $ScratchDir)) { New-Item -ItemType Directory -Path $ScratchDir |out-null }
         $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
@@ -64,7 +76,8 @@ function Get-DellWarrantyInfo {
         if ($null -ne $DCIS){
             if ([Version]$DCIS.DisplayVersion -le $OldVersion){
                 Write-Verbose -Message "Removing old version first"
-                $UninstallString = $DCIS.UninstallString.Replace("MsiExec.exe /I",'/U')
+                $UninstallString = $DCIS.UninstallString.Replace("MsiExec.exe /I",'/uninstall ')
+                Write-Verbose "Start-Process -FilePath msiexec.exe -ArgumentList $UninstallString /qb! -Wait"
                 Start-Process -FilePath msiexec.exe -ArgumentList "$UninstallString /qb!" -Wait
             }
         }
