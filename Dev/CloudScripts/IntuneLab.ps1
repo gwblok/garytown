@@ -231,7 +231,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     Write-SectionHeader -Message "**Installing StifleR**"
     #Install StifleR
-    Install-StifleRClient210
+    Install-StifleRClient214
 
 
     Write-SectionHeader -Message "**Setting Up Windows Update Settings**"
