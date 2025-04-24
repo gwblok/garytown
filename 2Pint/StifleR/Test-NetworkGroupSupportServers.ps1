@@ -4,7 +4,7 @@ $NetworkGroups = Get-CimInstance -Namespace root\stifler -Query "Select * From N
 foreach ($ng in $NetworkGroups)
 {
     $Result = Invoke-CimMethod -InputObject $ng -MethodName GetSupportServers -Arguments @{Filter = [int]0}
-    if ($null -eq $Result.ReturnValue){
+    if ('{}' -eq $Result.ReturnValue){
         # NO Servers Listed
     }
     else {
