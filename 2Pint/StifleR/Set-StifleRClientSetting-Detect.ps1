@@ -3,7 +3,7 @@
 
 # Variables
 $ServiceName = "StifleRClient"
-$LogPath = "C:\Windows\Temp\StifleRClientConfiguration_Discovery.log"
+$LogPath = "$env:ProgramData\Intune\StifleRClientConfiguration_Discovery.log"
 $Compliance = "Non-Compliant" # Assume non-compliant, if running script multiple times
 $SettingName = 'StiflerServers'
 $DesiredValue = "https://2PSR210.2p.garytown.com:1414"
@@ -36,7 +36,9 @@ Function Write-Log {
     $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
     $LogMessage.Replace("`0","") | Out-File -Append -Encoding UTF8 -FilePath $LogFile
 }
-
+if (Test-Path -Path "$env:ProgramData\Intune" -eq $false) {
+    New-Item -Path "$env:ProgramData\Intune" -ItemType Directory -Force | Out-Null
+}
 Function Get-AppSetting{
     param (
     [Parameter(Mandatory = $true)]

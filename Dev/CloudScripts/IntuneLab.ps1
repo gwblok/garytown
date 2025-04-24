@@ -63,7 +63,6 @@ function Write-SectionSuccess {
 iex (irm functions.garytown.com)
 #region functions
 
-
 function New-SetupCompleteOSDCloudFiles{
     [CmdletBinding()]
     param (
@@ -148,17 +147,33 @@ if ($env:SystemDrive -eq 'X:') {
     Write-SectionHeader -Message "Creating Custom SetupComplete Files"
     New-SetupCompleteOSDCloudFiles -URL2Call "IntuneLab.garytown.com"
 
+    #Set Personal Preferences
+    Write-SectionHeader -Message "Setting Preferences"
+    Write-Host -ForegroundColor Gray "Set-DefaultProfilePersonalPref"
+    Set-DefaultProfilePersonalPref
+    Set-MyPrefsRegistryValues
+
+    
+    #Set-TaskBarStartMenu
+    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/FunctionsSnips/Set-TaskBarStartMenu.ps1')
+    Write-Host -ForegroundColor Gray "Set-TaskBarStartMenu"
+    Set-TaskBarStartMenu -RemoveTaskView -RemoveCopilot -RemoveWidgets -RemoveChat -MoveStartLeft -RemoveSearch -StartMorePins
+
+
     if (Test-Path -Path $env:TEMP\$LogName){
         Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
         Stop-Transcript
         Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
+    Write-SectionHeader -Message "Completed WinPE Phase of $ScriptName1 $ScriptVersion1"
+    Write-Host -ForegroundColor DarkGray "Restarting in 60 Seconds"
+    Start-Sleep -Seconds 60
     restart-computer
 }
 
 #Non-WinPE
 if ($env:SystemDrive -ne 'X:') {
-    Set-ExecutionPolicy Bypass -Force
+
 
     #Setup Post Actions Scheduled Task
     #iex (irm "https://raw.githubusercontent.com/gwblok/garytown/master/Dev/CloudScripts/PostActionsTask.ps1")
@@ -175,8 +190,51 @@ if ($env:SystemDrive -ne 'X:') {
 
 
 
+
+
+    #Trigger Autopilot Enrollment
+    Function Invoke-APConnect {
+        if (Test-Connection -ComputerName wd1tb -ErrorAction SilentlyContinue){
+            Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
+            if (Test-Path -Path W:){
+                Write-Host -ForegroundColor Green "Drive W: Already Mapped"
+            }
+            else{
+                Write-Host -ForegroundColor DarkGray "net use w: \\wd1tb\osd /user:OSDCloud [PASSWORD] /persistent:no"
+                net use w: \\wd1tb\osd /user:OSDCloud P@ssw0rd /persistent:no
+            }
+            start-sleep -s 2
+            if (Test-Path -Path W:\OSDCloud){
+                Write-Host -ForegroundColor Green "Successfully Mapped Drive, triggering Autopilot Enrollment Script"
+                if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1){
+                Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                }
+                else{
+                    Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
+                    Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                }
+            }
+            else{
+                Write-Host -ForegroundColor Red "Failed to Map Drive"
+            }
+        }
+        else{
+            Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
+        }
+    }
+    Write-SectionHeader -Message "**Triggering Autopilot Enrollment**"
+    Invoke-APConnect
+
+    #Install CMTrace
+    Install-CMTrace
+
+    Write-SectionHeader -Message "**Installing StifleR**"
     #Install StifleR
-    Install-StifleRClient210
+    Install-StifleRClient214
+
+
+    Write-SectionHeader -Message "**Setting Up Windows Update Settings**"
 
     #Enable Microsoft Other Updates:
     (New-Object -com "Microsoft.Update.ServiceManager").AddService2("7971f918-a847-4430-9279-4a52d1efe18d",7,"")
@@ -201,10 +259,15 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Running Driver Updates**"
     Start-WindowsUpdateDriver
 
+    #Trigger AP Enrollment (Again)
+    Write-SectionHeader -Message "**Triggering Autopilot Enrollment Again**"
+    Invoke-APConnect
+
     #Store Updates
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
     Write-Host -ForegroundColor Gray "Invoke-UpdateScanMethodMSStore"
     Invoke-UpdateScanMethodMSStore
+    
     #Write-Host -ForegroundColor Gray "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     #winget upgrade --all --accept-package-agreements --accept-source-agreements
 
@@ -234,5 +297,5 @@ if ($env:SystemDrive -ne 'X:') {
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
     Set-TimeZoneFromIP
 
-    Write-SectionHeader -Message  "**Completed Hope.garytown.com sub script**" 
+    Write-SectionHeader -Message  "**Completed IntuneLab.garytown.com sub script**" 
 }

@@ -41,6 +41,7 @@ function Build-ComputerName {
         if ($Model-match " Desktop PC"){$Model = $Model.replace(" Desktop PC","")}
         if ($Model-match " Notebook PC"){$Model = $Model.replace(" Notebook PC","")}
         if ($Model-match " Desktop Mini PC"){$Model = $Model.replace(" Desktop Mini PC","")}
+        if ($Model-match " Desktop Mini"){$Model = $Model.replace(" Desktop Mini","")}
         if ($Model-match "EliteDesk"){$Model = $Model.replace("EliteDesk","ED")}
         elseif($Model-match "EliteBook"){$Model = $Model.replace("EliteBook","EB")}
         elseif($Model-match "Elite Mini"){$Model = $Model.replace("Elite Mini","EM")}

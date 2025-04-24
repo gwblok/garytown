@@ -56,7 +56,7 @@ I'm not going to explain anymore, read the code, it's all there, if you have que
 Push-Location
 
 #!!!!!Update these to fit your Needs!!!!!!
-$StifleR = $false
+$StifleR = $true
 $BranchCache = $true
 $SkipOptionalComponents = $false
 $WinPEBuilderPath = 'D:\WinPEBuilder'
@@ -737,9 +737,15 @@ Mount-WindowsImage -ImagePath $WinPEScratch -Index $WinPEIndex -Path $MountPath
 
 if ((Test-Path "$ADKPath\WinPE_OCs\WinPE-Scripting.cab") -and ($SkipOptionalComponents -ne $true)){
     #Scripting (WinPE-Scripting)
-    Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-Scripting.cab" -Path $MountPath -Verbose
-    Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-Scripting_en-us.cab" -Path $MountPath -Verbose
-    
+    try {
+        Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-Scripting.cab" -Path $MountPath -Verbose
+        Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-Scripting_en-us.cab" -Path $MountPath -Verbose
+    }
+    catch {
+        Write-Host "Failed to add WinPE Components" -ForegroundColor Red
+        dismount-WindowsImage -Path "D:\WinPEBuilder\mount" -Discard
+        Exit 1
+    }
     #Scripting (WinPE-WMI)
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\WinPE-WMI.cab" -Path $MountPath -Verbose
     Add-WindowsPackage -PackagePath "$ADKPath\WinPE_OCs\en-us\WinPE-WMI_en-us.cab" -Path $MountPath -Verbose
@@ -802,6 +808,7 @@ if ($CU_MSU){
     }
     Write-Host -ForegroundColor DarkGray "-----------------------------------------------------"
     foreach ($CU in $CU_MSU){
+        $AVailableCU = ($CU.Name).split("_")[0]
         Write-Host -ForegroundColor Green "Available CU Found: $AvailableCU"
     }
     Write-Host -ForegroundColor DarkGray "-----------------------------------------------------"

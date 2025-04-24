@@ -13,6 +13,7 @@ $ScriptLogPath = "$env:ProgramData\Intune\DiskManagement\DiskManagement.log"
 $CleanDiskLogPath = "$env:ProgramData\Intune\DiskManagement\DiskCleanup.log"
 $DiskHogLog = "$env:ProgramData\Intune\DiskManagement\DiskHog.XML"
 
+<#
 #Connection Creds to JIRA Cloud
 #https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
 $JiraName = "jira@garytown.com" #Not Real Email, Just Example
@@ -20,11 +21,11 @@ $JiraToken = 'kdjlkj2423jlk2j32lk3j' | ConvertTo-SecureString -Force -AsPlainTex
 if (!($Credential)){$Credential = New-Object System.Management.Automation.PsCredential("$JiraName",$JiraToken)}
 $JiraConfigServer = "https://garytown.atlassian.net" #This is real... you'll want to replace with your own
 $JiraProjectID = 'IPR' #Replace with your Project ID in Jira
-
+#>
 <#Functions 
 
 CMTraceLog: https://github.com/gwblok/garytown/blob/master/CM_PowerShell_Snips/Function-CMTracelog.ps1 
-CleanDisk: https://github.com/joshuaallenshaw/KISS-PSScripts/blob/master/KISS-PSScripts/Clean-Disk.ps1
+CleanDisk: https://github.com/joshuaallenshaw/KISS-PSScripts/blob/master/KISS-PSScripts/Invoke-CleanDisk.ps1
 DiskHog: https://gist.github.com/keithga/79b2441b2d75eeefb77f3321e749599e
 
 #>
@@ -53,7 +54,7 @@ function CMTraceLog {
 	    $LogMessage = "<![LOG[$Message $ErrorMessage" + "]LOG]!><time=`"$Time`" date=`"$Date`" component=`"$Component`" context=`"`" type=`"$Type`" thread=`"`" file=`"`">"
 	    $LogMessage.Replace("`0","") | Out-File -Append -Encoding UTF8 -FilePath $LogFile
     }
-Function Clean-Disk {
+Function Invoke-CleanDisk {
 	<#
     .SYNOPSIS
 		Cleans the disk of files and fodlers that can be removed.
@@ -158,12 +159,12 @@ Function Clean-Disk {
 		Dry Run.
 
 	.EXAMPLE
-		Clean-Disk -Mode System -EmptyRecycleBin -EmptyWinTemp -EmptyUserTemp
+		Invoke-CleanDisk -Mode System -EmptyRecycleBin -EmptyWinTemp -EmptyUserTemp
 
 		Empty the Recycle Bin, the Windows TEMP folder and the user TEMP folder for all users.
 
 	.EXAMPLE
-		Clean-Disk -Mode System -EmptyRecycleBin -OtherFilesFolders @("c:\test*.txt","c:\video*.mp4","c:\temp",c:\admintools") -DiskCleanTool 6
+		Invoke-CleanDisk -Mode System -EmptyRecycleBin -OtherFilesFolders @("c:\test*.txt","c:\video*.mp4","c:\temp",c:\admintools") -DiskCleanTool 6
 
 		Empty the Recycle Bin, remove custom set of files and folders asnd run the Windows Disk Cleanup Tool with SageRun value of 6.
 
@@ -749,7 +750,7 @@ Function Clean-Disk {
 		}
 	}
 }
-Function Run-DiskHog {
+Function Invoke-DiskHog {
 
     <#
      .SYNOPSIS
@@ -937,68 +938,76 @@ Function Get-FreeSpace {$DriveInfo = Get-CimInstance Win32_LogicalDisk -Filter "
 CMTraceLog -Message "-----------------------------------------------------------------" -Component "Disk Management" -LogFile $ScriptLogPath
 CMTraceLog -Message "Starting Disk Management Remediation Script" -Component "Disk Management" -LogFile $ScriptLogPath
 
-if (!(Test-Path -Path (split-path -Path $LogPath))){$NULL = New-Item -Path (split-path -Path $LogPath) -ItemType Directory}
+if (!(Test-Path -Path (split-path -Path $ScriptLogPath))){$NULL = New-Item -Path (split-path -Path $ScriptLogPath) -ItemType Directory -Force}
 
-
-if ((Get-FreeSpace) -lt $MinFreeSpace){
-CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -EmptyWinLogs -RemoveWinOld -EmptyWinTemp -RemoveChkDskFragments -ReportStats -LogPath $CleanDiskLogPath" -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -EmptyWinLogs -RemoveWinOld -EmptyWinTemp -RemoveChkDskFragments -ReportStats -LogPath $CleanDiskLogPath
+#Directories I just don't want on my machines  If they exist, I want to delete them.  This is a detection script, so if they exist, it will return a 1 and the remediation script will run.  If they don't exist, it will return a 0 and the remediation script won't run.
+$Directories = @("C:\Drivers","C:\OSDCloud")
+foreach ($Directory in $Directories){
+    if (Test-Path $Directory){
+        Remove-Item -Path $Directory -Recurse -Force -ErrorAction SilentlyContinue
+		CMTraceLog -Message "Removed $Directory" -Component "Disk Management" -LogFile $ScriptLogPath
+    }
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -EmptyWinUpdDownload -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -EmptyWinUpdDownload -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -EmptyWinLogs -RemoveWinOld -EmptyWinTemp -RemoveChkDskFragments -ReportStats -LogPath $CleanDiskLogPath" -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -EmptyWinLogs -RemoveWinOld -EmptyWinTemp -RemoveChkDskFragments -ReportStats -LogPath $CleanDiskLogPath
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -ResetCompStore -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -ResetCompStore -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -EmptyWinUpdDownload -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -EmptyWinUpdDownload -ReportStats -LogPath $CleanDiskLogPath 
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -RemoveJunkFolders -ReportStats -LogPath $CleanDiskLogPath" -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -RemoveJunkFolders -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -ResetCompStore -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -ResetCompStore -ReportStats -LogPath $CleanDiskLogPath 
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -EmptyRecycleBin -ReportStats -LogPath $CleanDiskLogPath" -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -EmptyRecycleBin -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -RemoveJunkFolders -ReportStats -LogPath $CleanDiskLogPath" -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -RemoveJunkFolders -ReportStats -LogPath $CleanDiskLogPath 
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -DiskCleanTool -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -DiskCleanTool -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -EmptyRecycleBin -ReportStats -LogPath $CleanDiskLogPath" -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -EmptyRecycleBin -ReportStats -LogPath $CleanDiskLogPath 
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -DiskCleanTool -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -DiskCleanTool -ReportStats -LogPath $CleanDiskLogPath 
 }
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Clean-Disk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
-Clean-Disk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath 
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath 
+}
+
+if ((Get-FreeSpace) -lt $MinFreeSpace){
+CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
+CMTraceLog -Message "Running Action: Invoke-CleanDisk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath " -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-CleanDisk -Mode System -EmptyUserTemp -EmptyTempInternet -EmptyRDPCache -ReportStats -LogPath $CleanDiskLogPath 
 }
 
 
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "  Current Freespace = $([MATH]::Round(((Get-Freespace)/1GB),2))" -Component "Disk Management" -LogFile $ScriptLogPath
-CMTraceLog -Message "Running Action: Run-DiskHog -IncludeManifest -OutFile $DiskHogLog " -Component "Disk Management" -LogFile $ScriptLogPath
-Run-DiskHog -IncludeManifest -OutFile $DiskHogLog
+CMTraceLog -Message "Running Action: Invoke-DiskHog -IncludeManifest -OutFile $DiskHogLog " -Component "Disk Management" -LogFile $ScriptLogPath
+Invoke-DiskHog -IncludeManifest -OutFile $DiskHogLog
 CMTraceLog -Message "See DiskHog logs for more information: $DiskHogLog" -Component "Disk Management" -LogFile $ScriptLogPath
 }
 
 
 #Summary - Submit Jira Task
-
+<#
 if ((Get-FreeSpace) -lt $MinFreeSpace){
 CMTraceLog -Message "Connecting to Jira to create task" -Component "Disk Management" -LogFile $ScriptLogPath
 
@@ -1033,6 +1042,7 @@ CMTraceLog -Message "Connecting to Jira to create task" -Component "Disk Managem
     if ($JiraIssue){CMTraceLog -Message "Created Jira Task $($JiraIssue.Key)" -Component "Disk Management" -LogFile $ScriptLogPath}
     else {CMTraceLog -Message "Failed to create Jira Task" -Component "Disk Management" -LogFile $ScriptLogPath}
     }
+#>	
 if ((Get-FreeSpace) -lt $MinFreeSpace){
     CMTraceLog -Message "Completed Disk Cleanup Remediation Script and machine Non-Compliant" -Type 2 -Component "Disk Management" -LogFile $ScriptLogPath
     exit 1

@@ -21,12 +21,24 @@ function Set-PendingUpdate {
 
     # Set the orchestrator key to 15
     $OrchestratorPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator"
-    New-ItemProperty -Path $OrchestratorPath -Name "ShutdownFlyoutOptions" -Value 10 -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $OrchestratorPath -Name "EnhancedShutdownEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
+    if (-not (Test-Path $OrchestratorPath)) {New-Item -Path $OrchestratorPath -Force | Out-Null}
+    $Values = get-item -Path $OrchestratorPath
+    if (($Null -eq $Values.GetValue('ShutdownFlyoutOptions')) -or ($Values.GetValue('ShutdownFlyoutOptions') -eq 0)){
+        New-ItemProperty -Path $OrchestratorPath -Name "ShutdownFlyoutOptions" -Value 10 -PropertyType DWord -Force | Out-Null
+    }
+    if (($Null -eq $Values.GetValue('EnhancedShutdownEnabled')) -or ($Values.GetValue('EnhancedShutdownEnabled') -eq 0)){
+        New-ItemProperty -Path $OrchestratorPath -Name "EnhancedShutdownEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
+    }
 
     $RebootDowntimePath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\RebootDowntime"
-    New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateHigh" -Value 1 -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
+    if (-not (Test-Path $RebootDowntimePath)) {New-Item -Path $RebootDowntimePath -Force | Out-Null}
+    $Values = get-item -Path $RebootDowntimePath
+    if (($Null -eq $Values.GetValue('DowntimeEstimateHigh')) -or ($Values.GetValue('DowntimeEstimateHigh') -eq 0)){
+        New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateHigh" -Value 1 -PropertyType DWord -Force | Out-Null
+    }
+    if (($Null -eq $Values.GetValue('DowntimeEstimateLow')) -or ($Values.GetValue('DowntimeEstimateLow') -eq 0)){
+        New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
+    }
 }
 
 #Test if Remediation is applicable
@@ -38,6 +50,10 @@ $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 #April 2024 UBRs
 $AprilPatch = @('19044.4291','19045.4291','22631.3447','22621.3447','22000.2899', '26100.1150','26120.1')
 $MatchedPatch = $AprilPatch | Where-Object {$_ -match $Build}
+if ($null -eq $MatchedPatch){
+    Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
+    exit 5
+}
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
 if ($UBR -ge $MatchedUBR){
@@ -46,14 +62,14 @@ if ($UBR -ge $MatchedUBR){
 else {
     #$OSSupported = $false
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
-    exit 4
+    exit 5
 }
 if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
     #This is required for remediation to work
 }
 else {
     Write-Output "Secure Boot is not enabled."
-    exit 5
+    exit 4
 }
 
 #endregion Applicability
@@ -150,9 +166,6 @@ if ($Step1Complete -eq $true -and $CountOfRebootsSinceRemediation -ge 2){
 if ($Step1Complete -ne $true){
     Write-Output "Applying remediation | Setting Secure Boot Key to 0x40 & RebootCount to 1"
     New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
-    if ($null -eq $Step1Set0x40){
-        New-ItemProperty -Path $RemediationRegPath -Name "Step1Set0x40" -PropertyType string -Value $DetectionTime -Force | Out-Null
-    }
     Set-PendingUpdate
 }
 #If there has been less than 2 reboots since Remediation was set, remediation is needed

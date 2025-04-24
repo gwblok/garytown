@@ -2,7 +2,7 @@ $STIFLERSERVERS = 'https://2psr210.2p.garytown.com:1414'
 $STIFLERULEZURL = 'https://raw.githubusercontent.com/2pintsoftware/StifleRRules/master/StifleRulez.xml'
 
 
-$ClientURL = 'https://github.com/gwblok/garytown/raw/refs/heads/master/2Pint/GARYTOWN/StifleR.ClientApp.Installer64_release2.10_Release_x64_2.10.20313.1943.zip'
+$ClientURL = 'https://github.com/gwblok/garytown/raw/refs/heads/master/2Pint/GARYTOWN/StifleR.ClientApp.Installer64_release2.10_Release_x64_2.10.20417.0004.zip'
 $ClientInstallScript = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/StifleR/StifleR_Client_Installer.ps1'
 
 $packageName = $ClientURL.Split('/')[-1]
@@ -82,7 +82,7 @@ MSILOGFILE=C:\Windows\Temp\StifleRClientMSI.log
 
 
 [CONFIG]
-VPNStrings=Citrix VPN, Cisco AnyConnect
+VPNStrings=Citrix VPN, Cisco AnyConnect, WireGuard
 ForceVPN=0
 Logfile=C:\Windows\Temp\StifleRInstaller.log
 Features=Power, PerformanceCounters, AdminElevatedTracking,EventLog
@@ -94,6 +94,16 @@ DefaultNonRedLeaderDOPolicy=102400
 DefaultNonRedLeaderBITSPolicy=768000
 DefaultDisconnectedDOPolicy=25600
 DefaultDisconnectedBITSPolicy=25600
+
+[CUSTOM]
+;This section is used for custom actions that are not part of the standard installation
+;These settings are used if the EnableSiteDetection param is set to true/1
+DOMAIN=2P
+ProductionStifleRServers=$STIFLERSERVERS
+ProductionStifleRulezUrl=$STIFLERULEZURL
+PreProductionStifleRServers=$STIFLERSERVERS
+PreProductionStifleRServers=$STIFLERULEZURL
+ProductionSMSSiteCode=2CM
 "@
 $StifleRDefaultsini | Out-File -FilePath "$tempDir\StifleRDefaults.ini" -Force -Encoding utf8
 if (Test-path -path "$tempDir\StifleRDefaults.ini") {

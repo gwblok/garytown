@@ -73,7 +73,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
 
 #>
-$ScriptVersion = '25.2.20.4'
+$ScriptVersion = '25.4.22.10.10'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -266,7 +266,9 @@ Function Get-DUPExitInfo {
 }
 Function Install-DCU {
     [CmdletBinding()]
-    param()
+    param(
+        [Switch]$UseWebRequest
+    )
     $temproot = "$env:windir\temp"
     
     $LogFilePath = "$env:ProgramData\EMPS\Logs"
@@ -335,7 +337,13 @@ Function Install-DCU {
                 #Build Required Info to Download and Update CM Package
                 $TargetFilePathName = "$($DellCabExtractPath)\$($TargetFileName)"
                 #Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
-                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if ($UseWebRequest){
+                    Write-Output "Using WebRequest to download the file"
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                else{
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                }
                 if (!(Test-Path $TargetFilePathName)){
                     Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
                 }
@@ -369,7 +377,8 @@ Function Get-DCUAppUpdates {
         [ValidateLength(4,4)]    
         [string]$SystemSKUNumber,
         [switch]$Latest,
-        [switch]$Install
+        [switch]$Install,
+        [switch]$UseWebRequest
     )
     
     $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
@@ -398,8 +407,15 @@ Function Get-DCUAppUpdates {
                 $TargetFileName = ($CommandUpdateAppsLatest.path).Split("/") | Select-Object -Last 1
                 $TargetLink = $CommandUpdateAppsLatest.path
                 $TargetFilePathName = "$($DellCabDownloadsPath)\$($TargetFileName)"
-
-                Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -Priority Low -ErrorVariable err -ErrorAction SilentlyContinue
+                if ($UseWebRequest){
+                    Write-Output "Using WebRequest to download the file"
+                    Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
+                }
+                else{
+                    Write-Output "Using BITS to download the file"
+                    Start-BitsTransfer -Source $TargetLink -Destination $TargetFilePathName -DisplayName $TargetFileName -Description "Downloading Dell Command Update" -ErrorAction SilentlyContinue
+                }
+                
                 if (!(Test-Path $TargetFilePathName)){
                     Invoke-WebRequest -Uri $TargetLink -OutFile $TargetFilePathName -UseBasicParsing -Verbose
                 }
@@ -1160,6 +1176,26 @@ Function Get-DellBIOSUpdates {
         $Updates = Get-DCUUpdateList -SystemSKUNumber $SystemSKUNumber -updateType BIOS
     }
     return $Updates |Select-Object -Property "PackageID","Name","ReleaseDate","DellVersion" | Sort-Object -Property ReleaseDate -Descending
+}
+
+Function Invoke-DellIntuneAppPublishScript {
+
+    write-host Write-Host -ForegroundColor Green "[+] Function: Invoke-PublishDellIntuneApp"
+    $Description = "
+    This Functions when invoked will do the below tasks
+        1. show the UI to user to select required application
+        2. Download the application that is posted for admin portal production to customer system
+        3. Extract the contents and read the CreateAPPConfig.json file
+        4. create win32_Lob App in intune
+        5. Get APP file version
+        6. Upload and commit intunewin file to Azure Storage Blob
+        7. Update the file version in the Intune application
+        "
+    Write-Output $Description
+
+    function Invoke-PublishDellIntuneApp{
+        iex (irm https://raw.githubusercontent.com/dell/Endpoint-Management-Script-Library/refs/heads/main/Intune%20Scripts/EnterpriseAppDeployment/Dell_Intune_App_Publish_1.0.ps1 -help)
+    }
 }
 
 <# Placeholders for future functions

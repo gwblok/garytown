@@ -20,7 +20,19 @@ function Get-DellWarrantyInfo {
     
     If you use with ConfigMgr DB, assumes the person running has rights to the CM DB.
     
-    Intial Version 24.2.20.1
+    Intial Version 25.2.20.1
+
+    examples
+    Get-DellWarrantyInfo (Run from a Dell Machine)
+    Get-DellWarrantyInfo -ServiceTag 'ABC1234' (Run from any Machine)
+    Get-DellWarrantyInfo -CSVImportPath 'C:\Temp\ServiceTags.csv'
+    Get-DellWarrantyInfo -CMConnectionStringHost 'CMHost' -CMConnectionStringDBName 'CM_XXX' (Person running script needs to have access to CM Database)
+
+    -Cleanup will remove the required Dell Command Integration Suite after running, if you want to keep it, don't use the -Cleanup switch.
+
+    Change Log
+    - 25.4.21 - Updated URL for tool
+    - 25.5.22 - Added Uninstall of older version of the Tool, as older version is broken
     #>
 
     [CmdletBinding()]
@@ -39,26 +51,54 @@ function Get-DellWarrantyInfo {
         [switch]$Cleanup #Uninstalls Dell Command Integration Suite after running
     )
     
+    function Get-InstalledApps{
+        [CmdletBinding()]
+        param()
+        if (![Environment]::Is64BitProcess) {
+            $regpath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+        }
+        else {
+            $regpath = @(
+                'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+                'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+            )
+        }
+        Get-ItemProperty $regpath | .{process{if($_.DisplayName -and $_.UninstallString) { $_ } }} | Select DisplayName, Publisher, InstallDate, DisplayVersion, UninstallString |Sort DisplayName
+    }
     function Install-CommandIntegrationSuite{
+        [CmdletBinding()]
+        param()
         $ScratchDir = "$env:TEMP\Dell"
         if (-not (Test-Path $ScratchDir)) { New-Item -ItemType Directory -Path $ScratchDir |out-null }
         $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
-
+        $DCIS = Get-InstalledApps | Where-Object {$_.DisplayName -match "Integration Suite for System Center"}
+        [Version]$OldVersion = '6.6.0.9'
+        if ($null -ne $DCIS){
+            if ([Version]$DCIS.DisplayVersion -le $OldVersion){
+                Write-Verbose -Message "Removing old version first"
+                $UninstallString = $DCIS.UninstallString.Replace("MsiExec.exe /I",'/uninstall ')
+                Write-Verbose "Start-Process -FilePath msiexec.exe -ArgumentList $UninstallString /qb! -Wait"
+                Start-Process -FilePath msiexec.exe -ArgumentList "$UninstallString /qb!" -Wait
+            }
+        }
         if (-not(Test-Path $DellWarrantyCLIPath)){
 
             #Download and install Dell Command Integration Suite (DellWarranty-CLI.exe) and Install
-            $DCWarrURL = 'http://dl.dell.com/FOLDER12624112M/1/Dell-Command-Integration-Suite-for-System-Center_G31J8_WIN64_6.6.0_A00.EXE'
-            $DCWarrPath = "$ScratchDir\Dell-Command-Integration-Suite-for-System-Center_G31J8_WIN64_6.6.0_A00.EXE"
+            $DCWarrURL = 'https://dl.dell.com/FOLDER12964322M/1/Dell-Command-Integration-Suite-for-System-Center_5FT6F_WIN64_6.6.1_A00.EXE'
+            $EXEName = $DCWarrURL.Split("/")[-1]
+            $DCWarrPath = "$ScratchDir\$EXEName"
             Write-Verbose -Message "Downloading Dell Command Integration Suite"
             Start-BitsTransfer -Source $DCWarrURL -Destination $DCWarrPath -CustomHeaders "User-Agent:BITS 42"
             Write-Verbose -Message "Installing Dell Command Integration Suite"
             write-verbose -Message "Start-Process -FilePath $DCWarrPath -ArgumentList `"/S /E=$ScratchDir`" -Wait -NoNewWindow"
             Start-Process -FilePath $DCWarrPath -ArgumentList "/S /E=$ScratchDir" -Wait -NoNewWindow
-            $DCWarrMSI = Get-ChildItem -Path $ScratchDir -Filter 'DCIS*.exe' | Select-Object -ExpandProperty FullName
+            $DCWarrMSI = Get-ChildItem -Path $ScratchDir -Filter 'DCIS*.exe' | Select-Object -ExpandProperty FullName | Select-Object -Last 1
             write-verbose -Message "Start-Process -FilePath $DCWarrMSI -ArgumentList `"/S /V/qn`" -Wait -NoNewWindow"
             Start-Process -FilePath $DCWarrMSI -ArgumentList "/S /V/qn" -Wait -NoNewWindow
         }
     }
+
+
     # Get the service tag
 
     #Create Export Path

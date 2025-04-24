@@ -1244,7 +1244,7 @@ Function Invoke-HPDriverUpdate {
             if ($Details){ #Just adding -verbose to commandline
                 if ($PSCmdlet.ShouldProcess("$($env:computername)","Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -verbose")){
                     Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -verbose"
-                    Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\$($Update.SoftpaqID).exe" -Verbose
+                    Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "$($Update.SoftpaqID).exe" -Verbose
                 }
                 else
                 {
@@ -1255,7 +1255,7 @@ Function Invoke-HPDriverUpdate {
             else {
                 if ($PSCmdlet.ShouldProcess("$($env:computername)","Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe")){
                     Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe"
-                    Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "C:\SWSetup\$($Update.SoftpaqID).exe"
+                    Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "$($Update.SoftpaqID).exe"
                 }
                 else
                 {

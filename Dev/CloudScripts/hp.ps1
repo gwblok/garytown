@@ -36,3 +36,9 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EM
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPAnalyzer"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPDriverUpdate"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/EMPS/Invoke-HPDriverUpdate.ps1)
+
+#Demo for MMS:
+Write-Host -ForegroundColor Green "[+] Function Invoke-MMSDemo2025"
+function Invoke-MMSDemo2025 {
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/HP/EMPS/HP-MMSDemo.ps1')
+}

@@ -41,8 +41,8 @@
    .NOTES
     AUTHOR: 2Pint Software
     EMAIL: support@2pintsoftware.com
-    VERSION: 2.1.0.0
-    DATE:01/27/2025
+    VERSION: 2.2.0.0
+    DATE:04/10/2025
     
     CHANGE LOG: 
     See GitHub for full change log
@@ -224,6 +224,7 @@ If ($Defaults) {
     $RULESTIMER = $FileContent["MSIPARAMS"]["RULESTIMER"]
     $MSILOGFILE = $FileContent["MSIPARAMS"]["MSILOGFILE"]
 
+
     #Config defaults from ini file
     $filecontent["CONFIG"].GetEnumerator() | ForEach-Object {
         Write-Debug "Setting Config_$($_.Key) to $($_.Value)"
@@ -238,6 +239,7 @@ If ($Defaults) {
         $ProductionStifleRulezUrl = $FileContent["CUSTOM"]["ProductionStifleRulezUrl"]
         $PreProductionStifleRServers = $FileContent["CUSTOM"]["PreProductionStifleRServers"]
         $PreProductionStifleRulezUrl = $FileContent["CUSTOM"]["PreProductionStifleRServers"]
+        $ProductionSMSSiteCode = $FileContent["CUSTOM"]["ProductionSMSSiteCode"]
 
         # ---------------------------
         # BEGIN CUSTOM SITE DETECTION
@@ -276,10 +278,26 @@ If ($Defaults) {
     }
     if ($tsenv){
         $StifleRInfo = Get-StifleRURLsFromTempInstallConfig
+        #If no StifleR Config File is found (because it wasn't integrated into WinPE), then fall back to SMSSiteCode using the StifleRDefaults.ini file
         if ($null -eq $StifleRInfo) {
             Write-Debug "No StifleR Info found in Temp Config - Exiting"
+            #Gets the SiteCode from the Active TS Environment, the compares to the one in the StifleRDefaults INI file.
+            $SiteCode = ($tsenv.Value("_SMSTSPackageID")).substring(0,3)
+            #If Matches, it sets to Production
+            If ($ProductionSMSSiteCode -eq $SiteCode) {  
+                Write-Debug "Production Site Code: $ProductionSMSSiteCode"
+                $STIFLERSERVERS = $ProductionStifleRServers
+                $STIFLERULEZURL = $ProductionStifleRulezUrl
+            }
+            #If No Machine, go to Pre-Production URLs
+            Else {
+                Write-Debug "Pre-Production Site Code: $SiteCode"
+                $STIFLERSERVERS = $PreProductionStifleRServers
+                $STIFLERULEZURL = $PreProductionStifleRulezUrl
+            }
         }
         else{
+            #Uses the Servers found in the StifleR Config File WinPE (When StifleR is integrated into WinPE)
             $STIFLERSERVERS = $StifleRInfo.StiflerServers
             $STIFLERULEZURL = $StifleRInfo.StifleRulezURL
         }
@@ -1037,16 +1055,6 @@ If (((Get-Variable -Name "Config_*").Value) -or ($EnableBetaFeatures -eq $true) 
 #Install Stifler ETW - REMOVED as client installs ETW by default
 #--------------------------------
 
-#--------------------------------
-#Update Stifler Custom Filter Driver
-#--------------------------------
-$driverfile = "$PSScriptRoot\driver\stiflers.sys"
-if (Test-Path -Path $driverfile){
-    get-service -Name StifleRClient | Stop-Service -Force
-    Start-Sleep -Seconds 5
-    Copy-Item -path $driverfile -Destination 'C:\Program Files\2Pint Software\StifleR Client\Filter\Drv\x64\stiflers.sys' -Force -Verbose
-    Get-Service -Name StifleRClient | Start-Service
-}
 
 write-debug "Exiting - install complete"
 $(TimeStamp) + "Exiting - install complete" | Out-File -FilePath $Logfile -Append -Encoding ascii

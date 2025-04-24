@@ -1017,6 +1017,89 @@ Function Enable-AutoTimeZoneUpdate {
         Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\tzautoupdate -Name start -Value "3" -Type DWord | out-null
     }
 }
+
+Function Set-MyPrefsRegistryValues {
+    
+    if ($env:SystemDrive -eq 'X:') {
+        $WindowsPhase = 'WinPE'
+    }
+    else {
+        $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
+        if ($env:UserName -eq 'defaultuser0') {$WindowsPhase = 'OOBE'}
+        elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$WindowsPhase = 'Specialize'}
+        elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
+        else {$WindowsPhase = 'Windows'}
+    }
+    Write-Output "Running in $WindowsPhase"
+    if ($WindowsPhase -eq 'WinPE'){
+        
+        # Mount and edit the setup environment's registry
+        $REG_System = "C:\Windows\System32\config\system"
+        $REG_Software = "C:\Windows\system32\config\SOFTWARE"
+        $VirtualRegistryPath_SYSTEM = "HKLM\WinPE_SYSTEM"#Load Command
+        $VirtualRegistryPath_SOFTWARE = "HKLM\WinPE_SOFTWARE"#Load Command
+
+        # $VirtualRegistryPath_LabConfig = $VirtualRegistryPath_Setup + "\LabConfig"
+        reg unload $VirtualRegistryPath_SYSTEM | Out-Null # Just in case...
+        reg unload $VirtualRegistryPath_SOFTWARE | Out-Null # Just in case...
+        Start-Sleep 1
+        reg load $VirtualRegistryPath_SYSTEM $REG_System | Out-Null
+        reg load $VirtualRegistryPath_SOFTWARE $REG_Software | Out-Null
+        
+        New-ItemProperty -Path $VirtualRegistryPath_location -Name "Value" -Value "Allow" -PropertyType String -Force
+        New-ItemProperty -Path $VirtualRegistryPath_tzautoupdate -Name "start" -Value 3 -PropertyType DWord -Force
+        
+        #Disable Content Delivery
+        $Path = "$VirtualRegistryPath_SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+        New-ItemProperty -Path $Path -Name "SystemPaneSuggestionsEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "SubscribedContentEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "SoftLandingEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "SilentInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "PreInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "OemPreInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "FeatureManagementEnabled" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "ContentDeliveryAllowed" -Value 0 -PropertyType Dword -Force | Out-Null
+        
+        #Set DarkMode
+        $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+        New-Item -Path $Path -ItemType Directory -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "AppsUseLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "SystemUsesLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
+
+        #Show Hidden Stuff
+        $Path = "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Explorer\Advanced"
+        New-Item -Path $Path -ItemType Directory -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+        $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+        New-Item -Path $Path -ItemType Directory -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
+        New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null        
+        
+        Start-Sleep 1
+
+    }
+    else {
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SystemPaneSuggestionsEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SubscribedContentEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SoftLandingEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SilentInstalledAppsEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "PreInstalledAppsEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "OemPreInstalledAppsEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "FeatureManagementEnabled" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "ContentDeliveryAllowed" -Value 0 -Type Dword | out-null
+
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "AppsUseLightTheme" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "SystemUsesLightTheme" -Value 0 -Type Dword | out-null
+
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "Hidden" -Value 1 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "HideFileExt" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
+
+    }
+}
 Write-Host -ForegroundColor Green "[+] Function Set-DefaultProfilePersonalPref"
 function Set-DefaultProfilePersonalPref {
     #Set Default User Profile to MY PERSONAL preferences.
@@ -1053,8 +1136,30 @@ function Set-DefaultProfilePersonalPref {
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location"
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Value" -Value Allow -PropertyType String -Force | Out-Null
+    
+    #Set DarkMode
+    $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+    New-Item -Path $Path -ItemType Directory -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "AppsUseLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "SystemUsesLightTheme" -Value 0 -PropertyType Dword -Force | Out-Null
+
+    #Show Hidden Stuff
+    $Path = "$VirtualRegistryPath_software\Policies\Microsoft\Windows\Explorer\Advanced"
+    New-Item -Path $Path -ItemType Directory -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    New-Item -Path $Path -ItemType Directory -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
+    New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+
+
     Start-Sleep -s 1
     reg unload $VirtualRegistryPath_defaultuser | Out-Null
+    Start-Sleep -s 1
+
 }
 Write-Host -ForegroundColor Green "[+] Function Set-DesktopIcons"
 function Set-DesktopIcons {
@@ -1068,3 +1173,11 @@ Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
 function Install-StifleRClient210 {
     iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper.ps1')
 }
+function Install-StifleRClient210Dev {
+    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper_Dev.ps1')
+}
+Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient214"
+function Install-StifleRClient214 {
+    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/214/StifleR_Client_Wrapper214.ps1')
+}
+

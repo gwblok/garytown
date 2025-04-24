@@ -4,7 +4,7 @@ Backup Before Upgrade
 This is current setup using default paths, you may need to adjust for your environment
 Eventually I'll try to make it smarter to detect where you installed the software and adjust accordingly
 
-Basially, I run this script in my lab before I upgrade StifleR Server, it stops the services, backs up the files and database, then restarts the services.  I then take a snap shot of the VM before I upgrade the software.
+Basically, I run this script in my lab before I upgrade StifleR Server, it stops the services, backs up the files and database, then restarts the services.  I then take a snap shot of the VM before I upgrade the software.
 #>
 
 #Do you want to restart the service, or leave it off to do the update?
@@ -14,7 +14,7 @@ $BackupRootFolder = 'C:\Program Files\2Pint Software\StifleR Backups'
 $StifleRServerRootPath = "C:\Program Files\2Pint Software\StifleR"
 $StifleRDashBoardRootPath = "C:\Program Files\2Pint Software\StifleR Dashboards"
 $StifleRDatabasePath  = "C:\ProgramData\2Pint Software\StifleR\Server"
-
+$StifleRUpdatePath = "D:\StifleRInstaller\Latest" #Path to where you downloaded the StifleR Server Installer
 
 
 function Get-InstalledApps
@@ -87,3 +87,44 @@ Write-Host "LicenseKey: $LicenseKey"
 
 $DashBoardConfig = Get-Content -Path "$CurrentBackupFolderPath\StifleR Dashboards\Dashboard Files\assets\config\config.json" | ConvertFrom-Json
 $DashBoardConfig.apiServers
+
+write-host "Press any key to continue - this will start the installer"
+read-host
+
+#Trigger Installers
+if (Test-Path -Path $StifleRUpdatePath){
+    Get-ChildItem -Path $StifleRUpdatePath -Recurse | Unblock-File
+    $Zips = Get-ChildItem -Path $StifleRUpdatePath -Filter *.zip | Where-Object {$_.Name -match "StifleR" -and $_.Name -notmatch "Client"}
+    foreach ($Zip in $Zips){
+        
+        [Version]$InstallerVersion = $zip.BaseName.split('_')[-1]
+        if ($Zip.BaseName -match "StifleR.Installer"){
+            [version]$InstalledVersion = $StifleRServerAppInfo.DisplayVersion
+        }
+        elseif ($Zip.BaseName -match "StifleR.Dashboard"){ 
+            [version]$InstalledVersion = $StifleRDashBoardAppInfo.DisplayVersion
+
+        }
+        if($InstallerVersion -le $InstalledVersion){
+            Write-Host "Installer Version: $InstallerVersion is less than or equal to Installed Version: $InstalledVersion, skipping installer" -ForegroundColor Red
+        }
+        else {
+            Write-Host "Installer Version: $InstallerVersion is greater than Installed Version: $InstalledVersion, Extracting & Running Installer" -ForegroundColor Green
+            $ExtractPath = "$($zip.Directory)\$($Zip.BaseName)"
+            Expand-Archive -Path $Zip.fullname -DestinationPath $ExtractPath -Force
+            $Installer = Get-ChildItem -Path $ExtractPath -Filter *.msi
+            if ($Installer){
+                Write-Host "Running Installer: $($Installer.FullName)"
+                Start-Process -FilePath msiexec.exe -ArgumentList "/i $($Installer.FullName) " -Wait
+                Write-Host "Finished Installer: $($Installer.FullName)"
+            }
+            else {
+                Write-Host "No MSI found in $ExtractPath" -ForegroundColor Red
+            }
+        }
+
+    }
+}
+else{
+    Write-Host "No Installer Folder found" -ForegroundColor Red
+}

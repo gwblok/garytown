@@ -6,7 +6,7 @@ $ServiceName = "StifleRClient"
 $SCStartCmd = {sc.exe start $ServiceName}
 $SCQueryCmd = {sc.exe query $ServiceName}
 $SCStopCmd = {sc.exe stop $ServiceName}
-$LogPath = "C:\Windows\Temp\StifleRClientConfiguration_Remediation.log"
+$LogPath = "$env:ProgramData\Intune\StifleRClientConfiguration_Remediation.log"
 $SettingName = 'StiflerServers'
 $DesiredValue = "https://2PSR210.2p.garytown.com:1414"
 # Delete any existing logfile if it exists
@@ -53,7 +53,9 @@ Function Get-AppSetting{
         Write-Log "Get-Appsetting: Configuration File $PathToConfig Not Found"
     }
 }
-
+if (Test-Path -Path "$env:ProgramData\Intune" -eq $false) {
+    New-Item -Path "$env:ProgramData\Intune" -ItemType Directory -Force | Out-Null
+}
 function Set-AppSetting{
     param (
     [Parameter(Mandatory = $true)]
