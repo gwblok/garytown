@@ -1,6 +1,59 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm win11.garytown.com)
+
+#region Initialization
+function Write-DarkGrayDate {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [System.String]
+        $Message
+    )
+    if ($Message) {
+        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
+    }
+    else {
+        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
+    }
+}
+function Write-DarkGrayHost {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-Host -ForegroundColor DarkGray $Message
+}
+function Write-DarkGrayLine {
+    [CmdletBinding()]
+    param ()
+    Write-Host -ForegroundColor DarkGray '========================================================================='
+}
+function Write-SectionHeader {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]
+        $Message
+    )
+    Write-DarkGrayLine
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Cyan $Message
+}
+function Write-SectionSuccess {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [System.String]
+        $Message = 'Success!'
+    )
+    Write-DarkGrayDate
+    Write-Host -ForegroundColor Green $Message
+}
+#endregion
+
 $ScriptName = 'win11.garytown.com'
-$ScriptVersion = '24.10.11.1'
+$ScriptVersion = '25.01.22.1'
 Write-Host -ForegroundColor Green "$ScriptName $ScriptVersion"
 #iex (irm functions.garytown.com) #Add custom functions used in Script Hosting in GitHub
 #iex (irm functions.osdcloud.com) #Add custom fucntions from OSDCloud
@@ -69,6 +122,7 @@ if (Test-DISMFromOSDCloudUSB -eq $true){
 #Enable HPIA | Update HP BIOS | Update HP TPM
  
 if (Test-HPIASupport){
+    Write-SectionHeader -Message "Detected HP Device, Enabling HPIA, HP BIOS and HP TPM Updates"
     #$Global:MyOSDCloud.DevMode = [bool]$True
     $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
     if ($Product -ne '83B2' -and $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
@@ -94,31 +148,28 @@ if ($Manufacturer -match "Lenovo") {
 
 
 #write variables to console
+Write-SectionHeader "OSDCloud Variables"
 Write-Output $Global:MyOSDCloud
 
 #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
-$ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-import-module "$ModulePath\OSD.psd1" -Force
+#$ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | Select-Object-Object -Last 1).fullname
+#import-module "$ModulePath\OSD.psd1" -Force
 
 #Launch OSDCloud
-Write-Host "Starting OSDCloud" -ForegroundColor Green
+Write-SectionHeader -Message "Starting OSDCloud"
 write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
 Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 
-write-host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Green
+Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
 
-<#
-if (Test-DISMFromOSDCloudUSB){
-    Start-DISMFromOSDCloudUSB
-}
-#>
 
-#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
-$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
-write-output "Updating $OfflineModulePath using $ModulePath"
+
+<#Used in Testing "Beta Gary Modules which I've updated on the USB Stick"
+$OfflineModulePath = (Get-ChildItem -Path "C:\Program Files\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | Select-Object -Last 1).fullname
+write-host -ForegroundColor Yellow "Updating $OfflineModulePath using $ModulePath - For Dev Purposes Only"
 copy-item "$ModulePath\*" "$OfflineModulePath"  -Force -Recurse
-
+#>
 #Copy CMTrace Local:
 if (Test-path -path "x:\windows\system32\cmtrace.exe"){
     copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe" -verbose
@@ -128,6 +179,8 @@ if ($Manufacturer -match "Lenovo") {
     $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
     Write-Host "Copy-PSModuleToFolder -Name LSUClient to $PowerShellSavePath\Modules"
     Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
+    Write-Host "Copy-PSModuleToFolder -Name Lenovo.Client.Scripting to $PowerShellSavePath\Modules"
+    Copy-PSModuleToFolder -Name Lenovo.Client.Scripting -Destination "$PowerShellSavePath\Modules"
 }
 #Restart
 #restart-computer

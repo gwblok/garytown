@@ -29,10 +29,18 @@
 ##*=============================================
 #region VariableDeclaration
 
+Function Get-AzureTenantDisplayNameFromClient {
+    $Items = Get-ChildItem -path HKLM:\SYSTEM\CurrentControlSet\Control\CloudDomainJoin\TenantInfo
+    foreach ($Item in $Items){
+        $Item.GetValue("DisplayName") 
+    }
+}
+
 $ScriptName = "Set-ThisPC-to-name-of-Machine"
 $ScriptVersion = "21.4.9.1"
 $whoami = (whoami).split("\") | Select-Object -Last 1
-$CompanyName = "GARYTOWN"
+$CompanyName = Get-AzureTenantDisplayNameFromClient
+$CompanyName = $CompanyName -replace " ",""
 $LogFolder = "$env:ProgramData\$CompanyName"
 $LogFilePath = "$LogFolder\Logs"
 if (!(Test-path -Path "$LogFilePath")){New-Item -Path "$LogFilePath" -ItemType Directory -Force | Out-Null}
@@ -181,11 +189,12 @@ $RegistryPath = "Registry::HKEY_CLASSES_ROOT\CLSID\{20D04FE0-3AEA-1069-A2D8-0800
 $CurrentValue = Get-ItemPropertyValue -Path $RegistryPath -Name "LocalizedString" -ErrorAction SilentlyContinue
 if ($CurrentValue -match $env:COMPUTERNAME)
     {
-    CMTraceLog -Message  "Value Already Set Correctly" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message  "Value Already Set Correctly | $env:COMPUTERNAME" -Type 1 -LogFile $LogFile
     }
 else
     {
     CMTraceLog -Message  "Value not set, requires Remediation" -Type 1 -LogFile $LogFile
+    CMTraceLog -Message  "Current: $CurrentValue | Desired: $env:COMPUTERNAME" -Type 1 -LogFile $LogFile
     $Compliance = $false
     }
 

@@ -68,6 +68,8 @@ $Global:MyOSDCloud = [ordered]@{
     CheckSHA1 = [bool]$false
 }
 
+#Disable OSDCloud from auto downloading and applying drivers
+$Global:MyOSDCloud.DriverPackName = "None"
 
 #write variables to console
 Write-Host "Pre-Set Varariables for OSDCloud" -ForegroundColor Green

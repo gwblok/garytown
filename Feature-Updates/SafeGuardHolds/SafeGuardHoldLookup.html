@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows SafeGuard Hold ID Lookup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Windows SafeGuard Hold ID Lookup</h1>
+    <input type="text" id="safeguardID" placeholder="Enter Safeguard ID">
+    <button onclick="searchSafeguardID()">Search</button>
+    <div class="result" id="result"></div>
+
+    <script>
+
+        function parseXMLtoJSON(xmlString) {
+            const tagValueRegex = /<(\w+)(?:\s[^>]*)*>(.*?)<\/\1>/g;
+            const selfClosingTagRegex = /<(\w+)(\s[^>]*)?\/>/g;
+            const attributeRegex = /(\w+)="(.*?)"/g;
+
+            let result = {};
+
+            // Extract tag-value pairs
+            xmlString.replace(tagValueRegex, (_, tag, value) => {
+                result[tag] = value.trim();
+            });
+
+            // Extract self-closing tags
+            xmlString.replace(selfClosingTagRegex, (_, tag, attrs) => {
+                result[tag] = {};
+                if (attrs) {
+                    let attrMatches;
+                    while ((attrMatches = attributeRegex.exec(attrs)) !== null) {
+                        result[tag][attrMatches[1]] = attrMatches[2];
+                    }
+                }
+            });
+
+            // Extract attributes inside normal tags
+            xmlString.replace(tagValueRegex, (_, tag, value) => {
+                let attributes = {};
+                let attrMatches;
+                while ((attrMatches = attributeRegex.exec(xmlString)) !== null) {
+                    attributes[attrMatches[1]] = attrMatches[2];
+                }
+                if (Object.keys(attributes).length > 0) {
+                    result[tag] = { value: value.trim(), attributes };
+                }
+            });
+
+            return result;
+        }
+
+        async function searchSafeguardID() {
+            const safeguardID = document.getElementById('safeguardID').value.trim();
+            const response = await fetch('SafeGuardHoldDataBase.json');
+            const data = await response.json();
+            const record = data.find(({SafeguardId}) => SafeguardId === safeguardID);
+            const resultDiv = document.getElementById('result');
+
+            if (record) {
+                const innerXML = parseXMLtoJSON(record.INNERXML);
+                const innerJSON = JSON.stringify(innerXML);
+                resultDiv.innerHTML = `
+                    <h2>Record Found:</h2>
+                    <p><strong>App Name: </strong>` + record.AppName + `</p>
+                    <p><strong>Block Type: </strong>` + record.BlockType + `</p>
+                    <p><strong>Safeguard Id: </strong>` + record.SafeguardId + `</p>
+                    <p><strong>File Name: </strong>` + record.NAME + `</p>
+                    <p><strong>Vendor: </strong>` + record.VENDOR + `</p>
+                    <p><strong>Exe ID: </strong>` + record.EXE_ID + `</p>
+                    <p><strong>Destination OS Greater than or Equal to: </strong>` + record.DEST_OS_GTE + `</p>
+                    <p><strong>Destination OS Less than: </strong>` + record.DEST_OS_LT + `</p>
+                    <p><strong>First Appraiser Date: </strong>` + record.FirstAppraiserDate + `</p>
+                    <p><strong>First Appraiser Versions: </strong>` + record.FirstAppraiserVersions + `</p>
+                    <p><strong>Last Appraiser Date: </strong>` + record.LastAppraiserDate + `</p>
+                    <p><strong>Last Appraiser Versions: </strong>` + record.LastAppraiserVersions + `</p>
+                    <p><strong>INNERXML: </strong>` + innerJSON + `</p>
+                `;
+            } else {
+                resultDiv.innerHTML = '<p>No record found for the given SafeguardID.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

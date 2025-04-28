@@ -1,6 +1,8 @@
 <# Gary Blok @gwblok 
 Used to backup VMs to Network (and Local Server)
 
+Future Enchanments:
+ - Add function to optimize the drives once the VMs are turned off to save space before backup. (Optimize-VHD)
 #>
 
 #Backup Location & Map Drive
