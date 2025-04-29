@@ -45,6 +45,7 @@ catch {throw}
 # Check if sdb2xml.exe exists
 If ((Test-Path -Path "$AppraiserWorkingDirectory\sdb2xml.exe") -eq $false)
 {
+    Invoke-WebRequest -Uri 
     throw "sdb2xml.exe not found at $AppraiserWorkingDirectory\sdb2xml.exe."
 }
 
