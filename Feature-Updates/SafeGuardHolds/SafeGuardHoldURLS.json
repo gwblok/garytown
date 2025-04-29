@@ -2126,5 +2126,45 @@
   {
     "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_03_31_01_05_AMD64.cab",
     "ALTERNATEDATAVERSION": "202503310105"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_10_03_01_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504100301"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_10_03_02_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504100302"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_10_03_03_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504100303"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_10_03_04_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504100304"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_10_03_05_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504100305"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_17_03_01_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504170301"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_17_03_02_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504170302"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_17_03_03_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504170303"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_17_03_04_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504170304"
+  },
+  {
+    "ALTERNATEDATALINK": "http://adl.windows.com/appraiseradl/2025_04_17_03_05_AMD64.cab",
+    "ALTERNATEDATAVERSION": "202504170305"
   }
 ]

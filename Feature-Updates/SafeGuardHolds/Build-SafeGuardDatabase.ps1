@@ -45,8 +45,11 @@ catch {throw}
 # Check if sdb2xml.exe exists
 If ((Test-Path -Path "$AppraiserWorkingDirectory\sdb2xml.exe") -eq $false)
 {
-    Invoke-WebRequest -Uri 
-    throw "sdb2xml.exe not found at $AppraiserWorkingDirectory\sdb2xml.exe."
+    Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Feature-Updates/SafeGuardHolds/sdb2xml.exe' -OutFile "$AppraiserWorkingDirectory\sdb2xml.exe"
+    if ((Test-Path -Path "$AppraiserWorkingDirectory\sdb2xml.exe") -eq $false)
+    {
+        throw "sdb2xml.exe not found at $AppraiserWorkingDirectory\sdb2xml.exe."
+    }
 }
 
 # Check if .Net Framework 3.5 is installed
