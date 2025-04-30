@@ -20,8 +20,16 @@ $Example1 = Get-HPDeviceDetails
 $Example2 = Get-HPDeviceDetails -Like "*EliteBook*G11*"
 $Example3 = Get-HPDeviceDetails -like "ProDesk*400*G5*"
 $Example4 = Get-HPDeviceDetails -Like "*"
-$Example5 = Get-HPDeviceDetails -OSList
-$Example6 = Get-SoftpaqList
+try {$Example5 = Get-HPDeviceDetails -OSList -erroraction SilentlyContinue
+}
+catch {
+    Write-Host "Error getting OSList" -ForegroundColor Red
+    $Example5 = $null
+}
+try {$Example6 = Get-SoftpaqList -erroraction SilentlyContinue}
+catch {
+    $Example6 = Get-SoftpaqList -os win11 -osver 22H2 -erroraction SilentlyContinue 
+}   
 $Example7 = Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2
 $Example8 = Get-SoftpaqList -Platform 8870 -Os win11 -OsVer 23H2 -Category Driver | Where-Object {$_.Name -like "*Chipset*"}
 

@@ -6,6 +6,17 @@ Write-Host 'iex (irm dell.garytown.com)' -ForegroundColor Cyan
 
 iex (irm dell.garytown.com)
 
+#Basics (To use on a different Model (Platform), use the -Platform parameter and product code for that platfrom
+Write-Host -ForegroundColor Magenta "Building Demos ver 25.4.21.12.39..... please wait...."
+#Build Samples to display properly later
+$Example1 = Get-DellDeviceDetails
+$Example2 = Get-DellDeviceDetails -ModelLike "7520"
+$Example3 = Get-DellDeviceDetails -SystemSKUNumber 0D15
+$Example4 = Get-DellDeviceDetails -ModelLike "pro" | Where-Object {$_.RTSDate -match "2025"}
+$Example5 = Get-DellDeviceDriverPack
+$Example6 = Get-DellDeviceDriverPack -SystemSKUNumber 0D4F -OSVer Windows11
+$Example7 = Get-DellBIOSUpdates
+$Example8 = Get-DellBIOSUpdates -Check -Verbose
 
 Write-Host "Press any key to continue..." -ForegroundColor Green
 Read-Host
@@ -13,37 +24,37 @@ Write-Host "Lets Run Several and see what they respond with" -ForegroundColor Ma
 Write-Host ""
 Read-Host
 Write-Host "Get-DellDeviceDetails" -ForegroundColor Green
-Get-DellDeviceDetails
+Write-Output $Example1 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host 'Get-DellDeviceDetails -ModelLike "7520"' -ForegroundColor Cyan
-Get-DellDeviceDetails -ModelLike "7520"
+Write-Output $Example2 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host 'Get-DellDeviceDetails -SystemSKUNumber 0D15' -ForegroundColor Cyan
-Get-DellDeviceDetails -SystemSKUNumber 0D15
+Write-Output $Example3 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host 'Get-DellDeviceDetails -ModelLike "pro" | Where-Object {$_.RTSDate -match "2025"}' -ForegroundColor Cyan
-Get-DellDeviceDetails -ModelLike "pro" | Where-Object {$_.RTSDate -match "2025"}
+Write-Output $Example4 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host "Get-DellDeviceDriverPack" -ForegroundColor Green
-Get-DellDeviceDriverPack
+Write-Output $Example5 | Out-Host
 Write-Host ""
 Write-Host 'Get-DellDeviceDriverPack -SystemSKUNumber 0D4F -OSVer Windows11' -ForegroundColor Cyan
-Get-DellDeviceDriverPack -SystemSKUNumber 0D4F -OSVer Windows11
+Write-Output $Example6 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host "Lets move on to BIOS Updates" -ForegroundColor Magenta
 Write-Host ""
 Read-Host
 Write-Host "Get-DellBIOSUpdates" -ForegroundColor Green
-Get-DellBIOSUpdates
+Write-Output $Example7 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host 'Get-DellBIOSUpdates -Check -Verbose' -ForegroundColor Cyan
-Get-DellBIOSUpdates -Check -Verbose
+Write-Output $Example8 | Out-Host
 Write-Host ""
 Read-Host
 Write-Host 'Get-DellBIOSUpdates -DownloadPath c:\drivers' -ForegroundColor Cyan
