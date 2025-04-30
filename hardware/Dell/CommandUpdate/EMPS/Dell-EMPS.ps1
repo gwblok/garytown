@@ -633,7 +633,20 @@ function Set-DCUSettings {
         }
     }
 }
+function Get-DCUSettings {
+    [CmdletBinding()]
+    param (
+        [switch]$ResetSettings
+    )
+    write-host "Note: Info is in Registry here:" -ForegroundColor Cyan
+    write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -ForegroundColor Yellow
 
+    $Keys = Get-ChildItem -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings"
+    Write-output $Keys
+    if ($ResetSettings){
+        remove-item -path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -Recurse -Force
+    }
+}
 function Invoke-DCU {
     [CmdletBinding()]
     
