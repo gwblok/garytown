@@ -78,7 +78,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 25.4.30.1 - Added Get-DCUSettings Function
 
 #>
-$ScriptVersion = '25.4.30.12.53'
+$ScriptVersion = '25.4.30.12.55'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -645,11 +645,16 @@ function Get-DCUSettings {
     )
     write-host "Note: Info is in Registry here:" -ForegroundColor Cyan
     write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -ForegroundColor Yellow
+    $RegPath = "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings"
+    if (!(Test-Path $RegPath)){
+        Write-Output "No DCU Settings Found"
+        return
+    }
 
-    $Keys = Get-ChildItem -Path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings"
+    $Keys = Get-ChildItem -Path $RegPath 
     Write-output $Keys
     if ($ResetSettings){
-        remove-item -path "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -Recurse -Force
+        remove-item -path $RegPath -Recurse -Force
     }
 }
 function Invoke-DCU {
