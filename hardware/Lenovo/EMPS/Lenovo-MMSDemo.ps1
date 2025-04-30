@@ -48,6 +48,8 @@ Write-Host ""
 Write-Host ""
 Read-Host
 Write-Host "Find-LnvTool" -ForegroundColor Green
+Write-Host "We're going to run this tool with several quick examples" -ForegroundColor yellow
+Read-Host
 Write-Host "Find-LnvTool -Tool DockManager" -ForegroundColor Cyan
 Find-LnvTool -Tool DockManager
 Write-Host ""
