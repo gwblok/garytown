@@ -37,21 +37,25 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 #    - Supports settings like advancedDriverRestore, autoSuspendBitLocker, installationDeferral, systemRestartDeferral, scheduleAction, and scheduleAuto.
 #    - Writes logs for each configuration change.
 
-# 7. Invoke-DCU:
+# 7. Get-DCUSettings:
+#    - Lists the Settings that are already set by looking at Registry
+#    - has parameter -Reset to clear all settings
+
+# 8. Invoke-DCU:
 #    - Invokes Dell Command Update (DCU) actions like scanning for updates or applying updates.
 #    - Supports parameters for updateSeverity, updateType, updateDeviceCategory, autoSuspendBitLocker, reboot, forceupdate, scan, and applyUpdates.
 #    - Builds the argument list based on the selected parameters and executes the DCU action.
 
-# 8. Get-DCUUpdateList:
+# 9. Get-DCUUpdateList:
 #    - Retrieves a list of available updates from Dell Command Update (DCU) for the system.
 #    - Supports filtering by updateType, and updateDeviceCategory.
 #    - Returns an array of objects containing update details like severity, type, category, name, and release date.
 
-# 9. Get-DellDeviceDetails:
+# 10. Get-DellDeviceDetails:
 #    - Retrieves details of the Dell device like model, systemID.
 #    - Supports filtering by systemID and model name
 
-# 10. New-DCUCatalogFile #BETA - Not working yet
+# 11. New-DCUCatalogFile #BETA - Not working yet
 #    - Downloads the Dell Command Update (DCU) catalog file for the system model.
 #    - Supports filtering by systemID
 #    - Returns the path of the downloaded catalog file.
@@ -59,7 +63,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 #    - By default, this will have the updates pull from downloads.dell.com 
 #    - This function is leveraged by the New-DCUOfflineCatalog function to create a catalog file that pulls from a local repository
 
-# 11. New-DCUOfflineCatalog: #BETA - Not working yet
+# 12. New-DCUOfflineCatalog: #BETA - Not working yet
 #    - Downloads the Dell Command Update (DCU) catalog file for the system model.
 #    - Supports filtering by systemID
 #    - Currently it will limit the catalog to the latest version of the drivers available for the system
@@ -71,9 +75,10 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
+25.4.30.1 - Added Get-DCUSettings Function
 
 #>
-$ScriptVersion = '25.4.22.10.10'
+$ScriptVersion = '25.4.30.12.53'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
