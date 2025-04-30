@@ -78,7 +78,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 25.4.30.1 - Added Get-DCUSettings Function
 
 #>
-$ScriptVersion = '25.4.30.12.55'
+$ScriptVersion = '25.4.30.13.09'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -654,7 +654,12 @@ function Get-DCUSettings {
     $Keys = Get-ChildItem -Path $RegPath 
     Write-output $Keys
     if ($ResetSettings){
-        remove-item -path $RegPath -Recurse -Force
+        $Items = Get-ChildItem -Path $RegPath | Get-ItemProperty
+        foreach ($Item in $Items){
+            $ItemName = $Item.PSChildName
+            Write-Output "Deleting $ItemName"
+            Remove-Item -Path $Item.PSPath -Force
+        }
     }
 }
 function Invoke-DCU {
