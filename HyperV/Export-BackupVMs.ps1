@@ -66,6 +66,20 @@ Foreach ($VM in $VMs2Backup){
     else{
         Write-Host "Stopping VM $($VMName)" -ForegroundColor Cyan
         stop-vm -VM $VM -Force
+        $VHDXPaths = $VM.HardDrives.path | Where-Object {$VM.HardDrives.DiskNumber -eq $null}
+        if ($VHDXPaths){
+            ForEach ($VHDXPath in $VHDXPaths){
+                $SizeBefore = (Get-Item -Path $VHDXPath).length
+                Write-Host " Size of $((Get-Item -Path $VHDXPath).Name) = $($SizeBefore/1GB) GB" -ForegroundColor Green
+                Write-Host " Optimzing VHD $VHDXPath on $($VM.Name)" -ForegroundColor Green
+                Optimize-VHD -Path $VHDXPath -Mode Full
+                $SizeAfter = (Get-Item -Path $VHDXPath).length
+                $Diff = $SizeBefore - $SizeAfter
+                Write-Host " Size After: $($SizeAfter/1GB) GB | Saving $($Diff /1GB) GB" -ForegroundColor Green
+            }
+        }
+        else{ Write-Host "$($WorkingVM.Name) Has no associated VHDx Files" -ForegroundColor Yellow
+        }
         if ($HostName -eq "UGreen"){
             $Destination = "$BackupDrivePath\$HostName\$($VMName)\$GetDate"
             [void][System.IO.Directory]::CreateDirectory($Destination)
