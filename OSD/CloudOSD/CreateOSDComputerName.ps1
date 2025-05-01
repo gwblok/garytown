@@ -34,10 +34,8 @@ function Build-ComputerName {
         
         $MachineType =  $ComputerSystemProduct.Name.Substring(0, 4)
         $ComputerName = "L$($Model)-$($MachineType)-$($Serial)"
-        if ($ComputerName.Length -gt 15){
-            [int]$Extra = 15 - $ComputerName.Length -1
-            $LastXofSerial = $Serial.Substring($Serial.Length - $Extra, $Extra)
-            $ComputerName = "$($ComputerName)-$($LastXofSerial)"
+        if ($Serial.Length -ge 15){
+            $ComputerName = $Serial.substring(0,15)
         }
     }
     elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
@@ -70,7 +68,7 @@ function Build-ComputerName {
         $Model = $model.replace(" ","")
         if ($Model.Length -gt 15){$ComputerName = $Model.Substring(0,15)}
         else {$ComputerName = $Model}
-        if ($ComputerName.Length -gt 15){
+        if ($ComputerName.Length -lt 15){
             [int]$Extra = 15 - $ComputerName.Length -1
             $LastXofSerial = $Serial.Substring($Serial.Length - $Extra, $Extra)
             $ComputerName = "$($ComputerName)-$($LastXofSerial)"
