@@ -194,6 +194,13 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Trigger Autopilot Enrollment
     Function Invoke-APConnect {
+        [CmdletBinding()]
+        param (
+
+            [Parameter(Mandatory = $true, Position = 0)]
+            [ValidateSet('GARYTOWN', '2PintLab')]
+            [string]$Tenant
+        )
         if (Test-Connection -ComputerName wd1tb -ErrorAction SilentlyContinue){
             Write-SectionHeader -Message "Mapping Drive W: to \\WD1TB\OSD"
             if (Test-Path -Path W:){
@@ -206,13 +213,27 @@ if ($env:SystemDrive -ne 'X:') {
             start-sleep -s 2
             if (Test-Path -Path W:\OSDCloud){
                 Write-Host -ForegroundColor Green "Successfully Mapped Drive, triggering Autopilot Enrollment Script"
-                if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1){
-                Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
-                Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                
+                if ($Tenant -eq "GARYTOWN"){
+                        if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1){
+                        Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                    Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                    }
+                    else{
+                        Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
+                        Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                    }
                 }
-                else{
-                    Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
-                    Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration.ps1"
+                elseif ($Tenant -eq "2PintLab"){
+                    if (Test-Path -Path W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration-2PintLab.ps1){
+                        Write-Host -ForegroundColor DarkGray "Starting W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration-2PintLab.ps1"
+                        Start-Process powershell.exe -ArgumentList "-File", "W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration-2PintLab.ps1"
+                    }
+                    else{
+                        Write-Host -ForegroundColor Red "Enrollment Script Not Found, Skipping"
+                        Write-Host -ForegroundColor DarkGray "Unable to find: W:\OSDCloud\Config\Scripts\Set-APEnterpriseViaAppRegistration-2PintLab.ps1"
+                    }
+                    <# Action when this condition is true #>
                 }
             }
             else{
@@ -224,7 +245,17 @@ if ($env:SystemDrive -ne 'X:') {
         }
     }
     Write-SectionHeader -Message "**Triggering Autopilot Enrollment**"
-    Invoke-APConnect
+    if ($ENV:COMPUTERNAME -match "GT"){
+        Write-Host -ForegroundColor Green "GARYTOWN Intune Machine, Triggering Enrollment"
+        Invoke-APConnect -Tenant "GARYTOWN"
+    }
+    elseif ($ENV:COMPUTERNAME -match "2P"){ 
+        Write-Host -ForegroundColor Green "2Pint Lab Machine, Triggering Enrollment"
+        Invoke-APConnect -Tenant "2PintLab"
+    }
+    else{
+        Write-Host -ForegroundColor DarkGray "Not an Intune Device, Skipping Enrollment"
+    }
 
     #Install CMTrace
     Install-CMTrace
