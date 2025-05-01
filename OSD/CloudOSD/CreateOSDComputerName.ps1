@@ -22,15 +22,23 @@ function Build-ComputerName {
         [switch]$Apply
     )
 
-    $ComputerSystem = Get-Ciminstance -ClassName Win32_ComputerSystem
+    $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem
+    $ComputerSystemProduct = Get-CimInstance -ClassName Win32_ComputerSystemProduct
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
     $CompanyName = "GARYTOWN"
-    $Serial = (Get-WmiObject -class:win32_bios).SerialNumber
+    $Serial = (Get-CimInstance -ClassName win32_bios).SerialNumber
     
     if ($Manufacturer -match "Lenovo"){
-        $Model = ((Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version).split(" ")[1]
-        $ComputerName = "$($Manufacturer)-$($Model)"
+        $Model = (($ComputerSystemProduct).Version).split(" ")[1]
+        
+        $MachineType =  $ComputerSystemProduct.Name.Substring(0, 4)
+        $ComputerName = "L$($Model)-$($MachineType)-$($Serial)"
+        if ($ComputerName.Length -lt 15){
+            [int]$Extra = 15 - $ComputerName.Length -1
+            $LastXofSerial = $Serial.Substring($Serial.Length - $Extra, $Extra)
+            $ComputerName = "$($ComputerName)-$($LastXofSerial)"
+        }
     }
     elseif (($Manufacturer -match "HP") -or ($Manufacturer -match "Hew")){
         $Manufacturer = "HP"
