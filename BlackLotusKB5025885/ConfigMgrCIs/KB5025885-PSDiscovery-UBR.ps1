@@ -13,23 +13,12 @@ $MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
 $Applicable = $true
 
 if ($UBR -ge $MatchedUBR){
+    
 }
 else {
     #$OSSupported = $false
-    #Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
-    $Applicable = $false
-}
-if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
-    #This is required for remediation to work
-}
-else {
-    #Write-Output "Secure Boot is not enabled."
-    #exit 5
     $Applicable = $false
 }
 
-if ($Applicable -eq $true){
-    write-output "The OS ($Build.$UBR) is supported for this remediation."
-}
-#endregion Applicability
+return $Applicable
 
