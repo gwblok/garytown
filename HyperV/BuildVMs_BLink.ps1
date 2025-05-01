@@ -35,9 +35,9 @@ This script will...
 [int64]$DriveSize = 100 * 1024 * 1024 * 1024 #100GB
 [int]$ProcessorCount = 4
 
-$VMPath = "D:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
+$VMPath = "C:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
 $VMNamePreFix = "VM-CM-"  #The VM will start with this name
-$ISOFolderPath = "D:\HyperV"
+$ISOFolderPath = "C:\HyperV"
 
 try {
     [void][System.IO.Directory]::CreateDirectory($VMPath)
@@ -71,7 +71,7 @@ $AvailableDeploymentCollectionName = "OSD Available Deployment Client"
 [int]$TimeBetweenKickoff = 300 #Time between each VM being turned on by Hyper-V, helps prevent host from being overwhelmed.
 
 
-$CMModulePath = "D:\bin\ConfigurationManager.psd1"
+$CMModulePath = "C:\HyperV\CMConsolePosh\ConfigurationManager.psd1"
 $CMConnected = $null
 
 $Purpose = "AutoPilot", "ConfigMgr", "MikesLab", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
@@ -94,6 +94,9 @@ elseif ($HostName -eq "BEELINK-HOST"){
 }
 elseif ($HostName -eq "MS01"){
     $HostName = 'MS01'
+}
+elseif ($HostName -eq "HPZbookSG10GARY"){
+    $HostName = 'ZBG10'
 }
 else{
     $HostName = 'HVHst'
