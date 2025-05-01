@@ -37,21 +37,25 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 #    - Supports settings like advancedDriverRestore, autoSuspendBitLocker, installationDeferral, systemRestartDeferral, scheduleAction, and scheduleAuto.
 #    - Writes logs for each configuration change.
 
-# 7. Invoke-DCU:
+# 7. Get-DCUSettings:
+#    - Lists the Settings that are already set by looking at Registry
+#    - has parameter -Reset to clear all settings
+
+# 8. Invoke-DCU:
 #    - Invokes Dell Command Update (DCU) actions like scanning for updates or applying updates.
 #    - Supports parameters for updateSeverity, updateType, updateDeviceCategory, autoSuspendBitLocker, reboot, forceupdate, scan, and applyUpdates.
 #    - Builds the argument list based on the selected parameters and executes the DCU action.
 
-# 8. Get-DCUUpdateList:
+# 9. Get-DCUUpdateList:
 #    - Retrieves a list of available updates from Dell Command Update (DCU) for the system.
 #    - Supports filtering by updateType, and updateDeviceCategory.
 #    - Returns an array of objects containing update details like severity, type, category, name, and release date.
 
-# 9. Get-DellDeviceDetails:
+# 10. Get-DellDeviceDetails:
 #    - Retrieves details of the Dell device like model, systemID.
 #    - Supports filtering by systemID and model name
 
-# 10. New-DCUCatalogFile #BETA - Not working yet
+# 11. New-DCUCatalogFile #BETA - Not working yet
 #    - Downloads the Dell Command Update (DCU) catalog file for the system model.
 #    - Supports filtering by systemID
 #    - Returns the path of the downloaded catalog file.
@@ -59,7 +63,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 #    - By default, this will have the updates pull from downloads.dell.com 
 #    - This function is leveraged by the New-DCUOfflineCatalog function to create a catalog file that pulls from a local repository
 
-# 11. New-DCUOfflineCatalog: #BETA - Not working yet
+# 12. New-DCUOfflineCatalog: #BETA - Not working yet
 #    - Downloads the Dell Command Update (DCU) catalog file for the system model.
 #    - Supports filtering by systemID
 #    - Currently it will limit the catalog to the latest version of the drivers available for the system
@@ -71,9 +75,11 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 
 24.9.9.1 - Modified logic in Get-DellDeviceDetails to allow it to work on non-dell devices when you provide a SKU or Model Name
 25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
+25.4.30.1 - Added Get-DCUSettings Function
+25.4.30.2 - Added Logic for Set-DCUSettings | if $scheduleAction -ne 'DownloadInstallAndNotify', then you can't set deferals... because there is nothing to defer. Breaks logic.
 
 #>
-$ScriptVersion = '25.4.22.10.10'
+$ScriptVersion = '25.4.30.13.37'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
@@ -542,81 +548,93 @@ function Set-DCUSettings {
     }
     #Installation Deferral
     if ($installationDeferral){
-        if ($installationDeferral -eq 'Enable'){
-            $installationDeferralVar = "-installationDeferral=$installationDeferral"
-            if ($deferralInstallInterval){
-                [string]$deferralInstallIntervalVar = "-deferralInstallInterval=$deferralInstallInterval"
-            }
-            else {
-                [string]$deferralInstallIntervalVar = "-deferralInstallInterval=5"
-            }
-            if ($deferralInstallCount){
-                [string]$deferralInstallCountVar = "-deferralInstallCount=$deferralInstallCount"
-            }
-            else {
-                [string]$deferralInstallCountVar = "-deferralInstallCount=5"
-            }
-            $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
-            }
+        if ($scheduleAction -ne 'DownloadInstallAndNotify'){
+            Write-Verbose "Schedule Action must be set to DownloadInstallAndNotify to use Installation Deferral"
             
         }
         else {
-            [string]$installationDeferralVar = "-installationDeferral=$installationDeferral"
-            $ArgList = "/configure $installationDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+            if ($installationDeferral -eq 'Enable'){
+                $installationDeferralVar = "-installationDeferral=$installationDeferral"
+                if ($deferralInstallInterval){
+                    [string]$deferralInstallIntervalVar = "-deferralInstallInterval=$deferralInstallInterval"
+                }
+                else {
+                    [string]$deferralInstallIntervalVar = "-deferralInstallInterval=5"
+                }
+                if ($deferralInstallCount){
+                    [string]$deferralInstallCountVar = "-deferralInstallCount=$deferralInstallCount"
+                }
+                else {
+                    [string]$deferralInstallCountVar = "-deferralInstallCount=5"
+                }
+                $ArgList = "/configure $installationDeferralVar $deferralInstallIntervalVar $deferralInstallCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
+                
+            }
+            else {
+                [string]$installationDeferralVar = "-installationDeferral=$installationDeferral"
+                $ArgList = "/configure $installationDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-installationDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
             }
         }
     }
     #System Reboot Deferral
     if ($systemRestartDeferral){
-        if ($systemRestartDeferral -eq 'Enable'){
-            $systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
-            if ($deferralRestartInterval){
-                [string]$deferralRestartIntervalVar = "-deferralRestartInterval=$deferralRestartInterval"
-            }
-            else {
-                [string]$deferralRestartIntervalVar = "-deferralRestartInterval=5"
-            }
-            if ($deferralRestartCount){
-                [string]$deferralRestartCountVar = "-deferralRestartCount=$deferralRestartCount"
-            }
-            else {
-                [string]$deferralRestartCountVar = "-deferralRestartCount=5"
-            }
-            $ArgList = "/configure $systemRestartDeferralVar $deferralRestartIntervalVar $deferralRestartCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
-            }
+        if ($scheduleAction -ne 'DownloadInstallAndNotify'){
+            Write-Verbose "Schedule Action must be set to DownloadInstallAndNotify to use Installation Deferral"
             
         }
         else {
-            [string]$systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
-            $ArgList = "/configure $systemRestartDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
-            Write-Verbose $ArgList
-            $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
-            if ($DCUConfig.ExitCode -ne 0){
-                $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
-                Write-Verbose "Exit: $($DCUConfig.ExitCode)"
-                Write-Verbose "Description: $($ExitInfo.Description)"
-                Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+            if ($systemRestartDeferral -eq 'Enable'){
+                $systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
+                if ($deferralRestartInterval){
+                    [string]$deferralRestartIntervalVar = "-deferralRestartInterval=$deferralRestartInterval"
+                }
+                else {
+                    [string]$deferralRestartIntervalVar = "-deferralRestartInterval=5"
+                }
+                if ($deferralRestartCount){
+                    [string]$deferralRestartCountVar = "-deferralRestartCount=$deferralRestartCount"
+                }
+                else {
+                    [string]$deferralRestartCountVar = "-deferralRestartCount=5"
+                }
+                $ArgList = "/configure $systemRestartDeferralVar $deferralRestartIntervalVar $deferralRestartCountVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
+                
+            }
+            else {
+                [string]$systemRestartDeferralVar = "-systemRestartDeferral=$systemRestartDeferral"
+                $ArgList = "/configure $systemRestartDeferralVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-RestartDeferral.log`""
+                Write-Verbose $ArgList
+                $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+                if ($DCUConfig.ExitCode -ne 0){
+                    $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+                    Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+                    Write-Verbose "Description: $($ExitInfo.Description)"
+                    Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+                }
             }
         }
     }
@@ -633,7 +651,30 @@ function Set-DCUSettings {
         }
     }
 }
+function Get-DCUSettings {
+    [CmdletBinding()]
+    param (
+        [switch]$ResetSettings
+    )
+    write-host "Note: Info is in Registry here:" -ForegroundColor Cyan
+    write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings" -ForegroundColor Yellow
+    $RegPath = "HKLM:\SOFTWARE\Dell\UpdateService\Clients\CommandUpdate\Preferences\Settings"
+    if (!(Test-Path $RegPath)){
+        Write-Output "No DCU Settings Found"
+        return
+    }
 
+    $Keys = Get-ChildItem -Path $RegPath 
+    Write-output $Keys
+    if ($ResetSettings){
+        $Items = Get-ChildItem -Path $RegPath | Get-ItemProperty
+        foreach ($Item in $Items){
+            $ItemName = $Item.PSChildName
+            Write-Output "Deleting $ItemName"
+            Remove-Item -Path $Item.PSPath -Force
+        }
+    }
+}
 function Invoke-DCU {
     [CmdletBinding()]
     

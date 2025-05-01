@@ -1,5 +1,5 @@
 $ScriptName = 'dell.garytown.com'
-$ScriptVersion = '25.4.9.1'
+$ScriptVersion = '25.4.30.13.12'
 
 #region Initialize
 
@@ -32,11 +32,12 @@ Write-Host -ForegroundColor Green "[+] Function: Get-DCUExitInfo"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUAppUpdates"
 #Write-Host -ForegroundColor Green "[+] Function: Install-DCU"
 Write-Host -ForegroundColor Green "[+] Function: Set-DCUSettings"
+Write-Host -ForegroundColor Green "[+] Function: Get-DCUSettings"
 Write-Host -ForegroundColor Green "[+] Function: Invoke-DCU"
 Write-Host -ForegroundColor Green "[+] Function: Get-DCUUpdateList"
 #Write-Host -ForegroundColor Green "[+] Function: New-DCUCatalogFile"
 #Write-Host -ForegroundColor Green "[+] Function: New-DCUOfflineCatalog"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellBIOSUpdates"
 Write-Host -ForegroundColor Green "[+] Function: Get-DellWarrantyInfo (-Cleanup)" #Temporarily Installs Dell Command Integration Suite to gather warranty info
-Write-Host -ForegroundColor Green "[+] Function: Invoke-DellIntuneAppPublishScript" #Does not install Dell Command Integration Suite to gather warranty info
+#Write-Host -ForegroundColor Green "[+] Function: Invoke-DellIntuneAppPublishScript" #Not yet implemented
 

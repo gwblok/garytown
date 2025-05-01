@@ -13,7 +13,6 @@ Write-Host ""
 #Pause The Script 
 Write-Host "Press any key to continue..." -ForegroundColor Green
 Read-Host
-Write-Host ""
 write-host "Listing Lenovo Functions" -ForegroundColor Green
 get-command -Module Lenovo.Client.Scripting
 Write-Host ""
@@ -34,18 +33,23 @@ Read-Host
 
 Write-Host "Find-LnvModel" -ForegroundColor Green
 Write-Host "Find-LnvModel -MachineType (Get-LnvMachineType)" -ForegroundColor Cyan
+Read-Host
 Find-LnvModel -MachineType (Get-LnvMachineType)
 Write-Host ""
 Write-Host "Find-LnvModel -MachineType 11VL" -ForegroundColor Cyan
+Read-Host
 Find-LnvModel -MachineType 11VL
 Write-Host ""
 Write-Host "Find-LnvMachineType" -ForegroundColor Green
 Write-Host 'Find-LnvMachineType -ModelName "M80"' -ForegroundColor Cyan
+Read-Host
 Find-LnvMachineType -ModelName "M80"
 Write-Host ""
 Write-Host ""
 Read-Host
 Write-Host "Find-LnvTool" -ForegroundColor Green
+Write-Host "We're going to run this tool with several quick examples" -ForegroundColor yellow
+Read-Host
 Write-Host "Find-LnvTool -Tool DockManager" -ForegroundColor Cyan
 Find-LnvTool -Tool DockManager
 Write-Host ""
