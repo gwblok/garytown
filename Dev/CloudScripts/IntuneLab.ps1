@@ -196,8 +196,6 @@ if ($env:SystemDrive -ne 'X:') {
     Function Invoke-APConnect {
         [CmdletBinding()]
         param (
-
-            [Parameter(Mandatory = $true, Position = 0)]
             [ValidateSet('GARYTOWN', '2PintLab')]
             [string]$Tenant
         )
@@ -244,13 +242,27 @@ if ($env:SystemDrive -ne 'X:') {
             Write-Host -ForegroundColor DarkGray "No Connection to WD1TB, Skipping Drive Mapping"
         }
     }
+
+    #Do Stuff
     Write-SectionHeader -Message "**Triggering Autopilot Enrollment**"
     if ($ENV:COMPUTERNAME -match "GT"){
         Write-Host -ForegroundColor Green "GARYTOWN Intune Machine, Triggering Enrollment"
-        Invoke-APConnect -Tenant "GARYTOWN"
+        try {
+             Invoke-APConnect -Tenant "GARYTOWN"
+        }
+        catch {
+            Write-Host -ForegroundColor Red "Failed to Trigger Enrollment, trying again"
+        }
+       
     }
     elseif ($ENV:COMPUTERNAME -match "2P"){ 
         Write-Host -ForegroundColor Green "2Pint Lab Machine, Triggering Enrollment"
+        try {
+            Invoke-APConnect -Tenant "2PintLab"
+        }
+        catch {
+            Write-Host -ForegroundColor Red "Failed to Trigger Enrollment, trying again"
+        }
         Invoke-APConnect -Tenant "2PintLab"
     }
     else{
@@ -262,7 +274,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     Write-SectionHeader -Message "**Installing StifleR**"
     #Install StifleR
-    Install-StifleRClient214
+    #Install-StifleRClient214
 
 
     Write-SectionHeader -Message "**Setting Up Windows Update Settings**"
@@ -291,8 +303,8 @@ if ($env:SystemDrive -ne 'X:') {
     Start-WindowsUpdateDriver
 
     #Trigger AP Enrollment (Again)
-    Write-SectionHeader -Message "**Triggering Autopilot Enrollment Again**"
-    Invoke-APConnect
+    #Write-SectionHeader -Message "**Triggering Autopilot Enrollment Again**"
+    #Invoke-APConnect
 
     #Store Updates
     Write-Host -ForegroundColor Gray "**Running Winget Updates**"
