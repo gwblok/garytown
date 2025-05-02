@@ -14,7 +14,7 @@ Write-Host -ForegroundColor Green "[+] Function Install-HPIA"
 Write-Host -ForegroundColor Green "[+] Function Invoke-HPIA"
 Write-Host -ForegroundColor Green "[+] Function Get-HPIAXMLResult"
 Write-Host -ForegroundColor Green "[+] Function Get-HPIAJSONResult"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Invoke-HPIA.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/hardware/HP/HPIA/HPIA-Functions.ps1)
 
 Write-Host -ForegroundColor Cyan " ** HP TPM Functions [TPM 1.2 -> 2.0] **"
 Write-Host -ForegroundColor Green "[+] Function Get-HPTPMDetermine"

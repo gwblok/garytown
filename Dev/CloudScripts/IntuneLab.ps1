@@ -189,7 +189,15 @@ if ($env:SystemDrive -ne 'X:') {
     catch {}
 
 
-
+    #OEM Updates
+    if ($Manufacturer -match "Microsoft"){
+        if ($ComputerModel -match "Virtual Machine"){
+            try {
+                Set-HyperVName
+            }
+            catch {}
+        }
+    }
 
 
     #Trigger Autopilot Enrollment
@@ -325,15 +333,7 @@ if ($env:SystemDrive -ne 'X:') {
     $ManufacturerBaseBoard = ($BaseBoard).Manufacturer
     $ComputerModel = ($ComputerSystem).Model
 
-    #OEM Updates
-    if ($Manufacturer -match "Microsoft"){
-        if ($ComputerModel -match "Virtual Machine"){
-            try {
-                Set-HyperVName
-            }
-            catch {}
-        }
-    }
+
 
 
     #Set Time Zone
