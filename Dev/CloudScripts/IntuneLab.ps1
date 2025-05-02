@@ -253,7 +253,8 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Do Stuff
     Write-SectionHeader -Message "**Triggering Autopilot Enrollment**"
-    if ($ENV:COMPUTERNAME -match "GT"){
+    $HyperVName = Get-HyperVName
+    if ($HyperVName -match "GT"){
         Write-Host -ForegroundColor Green "GARYTOWN Intune Machine, Triggering Enrollment"
         try {
              Invoke-APConnect -Tenant "GARYTOWN"
@@ -263,7 +264,7 @@ if ($env:SystemDrive -ne 'X:') {
         }
        
     }
-    elseif ($ENV:COMPUTERNAME -match "2P"){ 
+    elseif ($HyperVName -match "2P"){ 
         Write-Host -ForegroundColor Green "2Pint Lab Machine, Triggering Enrollment"
         try {
             Invoke-APConnect -Tenant "2PintLab"
