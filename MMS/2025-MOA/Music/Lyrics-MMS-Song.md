@@ -1,5 +1,14 @@
+## Prompt
+ok, now make a song about MMSMOA, and how great the different sponsors are
+
+## Song
+
+Song: "MMSMOA Groove"
+
 (A lively anthem celebrating the Midwest Management Summit at Mall of America and its amazing sponsors)  
+
 (Verse 1)
+
 Down in Minnesota, where the techies all convene,
 MMSMOA’s the summit, it’s the IT dream scene.
 At the Radisson Blu, by the Mall of America’s glow,
@@ -16,7 +25,9 @@ With a hundred sessions, from level 100 to 500 deep,
 We’re geekin’ out on endpoints, no time for sleep.
 Midwest Management Summit, you’re the heart of the game,
 MMSMOA, we’re shoutin’ your name!  
+
 (Chorus)
+
 Oh, MMSMOA Groove, you light up the tech world bright,
 Four days of learnin’, networkin’ through the night.
 With sponsors like 1E, NiCE, and Kelverion too,
@@ -25,7 +36,9 @@ From the Mall of America to the sessions we roam,
 MMSMOA, you feel like home.
 Groove to the rhythm of the IT flow,
 MMSMOA, let’s go, let’s go!  
+
 (Verse 2)
+
 Let’s give a shout to 1E, they’re the endpoint kings,
 Tachyon’s real-time magic, fixin’ all the things.
 At their booth, it’s a party, with swag and a grin,
@@ -45,6 +58,7 @@ At MMSMOA, their passion’s on display,
 Sponsors liftin’ us up in every way.  
 
 (Chorus)
+
 Oh, MMSMOA Groove, you light up the tech world bright,
 Four days of learnin’, networkin’ through the night.
 With sponsors like 1E, NiCE, and Kelverion too,
@@ -53,7 +67,9 @@ From the Mall of America to the sessions we roam,
 MMSMOA, you feel like home.
 Groove to the rhythm of the IT flow,
 MMSMOA, let’s go, let’s go!  
+
 (Bridge)
+
 Cyber Advisors in the mix, with their tech know-how,
 Bloggin’ ‘bout the summit, keepin’ us wowed.  
 
@@ -73,7 +89,9 @@ From Power BI to Intune, we’re learnin’ it all,
 Thanks to sponsors’ support, we answer the call.
 MMSMOA’s a family, a techie retreat,
 With sponsors and pros, the groove’s complete.  
+
 (Verse 3)
+
 The Mall’s right next door, with attractions galore,
 But the real thrill’s the knowledge we explore.
 Red-jacket speakers, like Garth Jones and Dave,
@@ -91,7 +109,9 @@ From early bird tickets to the final day’s cheer,
 The summit’s affordable, knowledge crystal clear.
 MMSMOA, you’re the beat of our heart,
 With sponsors and tech, we’ll never part.  
+
 (Chorus)
+
 Oh, MMSMOA Groove, you light up the tech world bright,
 Four days of learnin’, networkin’ through the night.
 With sponsors like 1E, NiCE, and Kelverion too,
@@ -100,7 +120,9 @@ From the Mall of America to the sessions we roam,
 MMSMOA, you feel like home.
 Groove to the rhythm of the IT flow,
 MMSMOA, let’s go, let’s go!  
+
 (Outro)
+
 So raise a glass to MMS, where the techies unite,
 From the sessions to the parties, we’re geekin’ with delight.
 Sponsors like 1E, NiCE, and Cyber’s crew,
@@ -109,4 +131,5 @@ Midwest Management Summit, you’re the place to be,
 MMSMOA, you’re the groove for me.
 Let’s dance to the rhythm of the IT flow,
 MMSMOA, forever, let’s go!  
-(Fade out with a techy beat and a cheer from the crowd) 
+
+(Fade out with a techy beat and a cheer from the crowd)  

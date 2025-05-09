@@ -1,5 +1,14 @@
-(A long, heartfelt ode to Configuration Manager Task Sequences and Operating System Deployment)  
+## Prompt:
+write a long song about Configuration Manager Task sequences  and Operating System Deployment
+
+## Song
+
+Song: "Task Sequence Blues"
+
+(A long, heartfelt ode to Configuration Manager Task Sequences and Operating System Deployment)
+
 (Verse 1)
+
 Oh, Configuration Manager, you're my guiding star,
 In the world of IT, you’ve raised the bar.
 From the server room to the client’s screen,
@@ -16,7 +25,9 @@ With variables and drivers, you make it flow,
 Task sequence steps, yeah, they steal the show.
 SCCM, you’re the king of the IT parade,
 With every image, a masterpiece made.  
+
 (Chorus)
+
 Oh, Task Sequence Blues, you keep me up at night,
 Configuring steps ‘til the morning light.
 From disk partition to app install,
@@ -25,7 +36,9 @@ With a WDS server and a network so grand,
 You roll out Windows across the land.
 Task Sequence Blues, you’re my guiding flame,
 Configuration Manager, forever my game.  
+
 (Verse 2)
+
 Let’s talk about drivers, oh, what a chore,
 Matching models, versions, and so much more.
 You organize packages, keep ‘em neat in a row,
@@ -42,7 +55,9 @@ But when errors hit, oh, the logs I’ll read,
 SMSTS.log, my heart starts to bleed.
 Exit code 0x80070032, what’s that mean?
 Task Sequence Blues, you’re a troubleshooter’s dream.  
+
 (Chorus)
+
 Oh, Task Sequence Blues, you keep me up at night,
 Configuring steps ‘til the morning light.
 From disk partition to app install,
@@ -51,7 +66,9 @@ With a WDS server and a network so grand,
 You roll out Windows across the land.
 Task Sequence Blues, you’re my guiding flame,
 Configuration Manager, forever my game.  
+
 (Bridge)
+
 Multicast or unicast, you choose the way,
 MDT integration, yeah, it saves the day.
 Custom scripts in PowerShell, they run so clean,
@@ -68,7 +85,9 @@ Reboot loops and missing files,
 Task Sequence Blues, you test my wiles.
 But when it works, oh, the joy I feel,
 A perfect deployment, it’s a big deal.  
+
 (Verse 3)
+
 Let’s talk applications, layered on with care,
 From Office to Adobe, you get ‘em there.
 Supersedence rules and detection scripts,
@@ -85,7 +104,9 @@ Collections and queries, you group ‘em right,
 Target the clients in the middle of the night.
 Configuration Manager, you’re the one I trust,
 For OS deployment, you’re a must.  
+
 (Chorus)
+
 Oh, Task Sequence Blues, you keep me up at night,
 Configuring steps ‘til the morning light.
 From disk partition to app install,
@@ -94,7 +115,9 @@ With a WDS server and a network so grand,
 You roll out Windows across the land.
 Task Sequence Blues, you’re my guiding flame,
 Configuration Manager, forever my game.  
+
 (Outro)
+
 So here’s to the admins, the IT crew,
 Who live and breathe the Task Sequence Blues.
 From the SCCM console to the client’s screen,
@@ -103,4 +126,5 @@ Operating System Deployment, it’s a labor of love,
 With ConfigMgr, you rise above.
 Task Sequence Blues, you’ll always be,
 The heartbeat of IT, the song for me.  
+
 (Fade out with a soft hum of a PXE boot chime)  
