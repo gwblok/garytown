@@ -1,0 +1,25 @@
+# MMS MOA 2025
+
+Thanks everyone who came out, it was great to see you all.  I appreciate you joining my sessions and providing feedback.  Looking forward to seeing you at Nashville and future events at MMS.
+
+## Sessions
+
+Hit the links below to head over to the session information on Sched, you'll find the presentations uploaded there.
+
+--------------------------------------------
+
+### [Task Sequence Tips: From ADKs to Zero Touch and Everything in Between](https://mms2025atmoa.sched.com/event/1uF8I/task-sequence-tips-from-adks-to-zero-touch-and-everything-in-between)
+
+--------------------------------------------
+
+### [Using PowerShell to Manage OEM Tools, Devices and OSD](https://mms2025atmoa.sched.com/event/1uF8n/using-powershell-to-manage-oem-tools-devices-and-osd)
+
+--------------------------------------------
+
+### [Lessons from the Frontlines: Strengthening Security in Education](https://mms2025atmoa.sched.com/event/1uF6t/lessons-from-the-frontlines-strengthening-security-in-education)
+
+--------------------------------------------
+
+### [Mastering Secure Boot: Navigating KB5025885 Challenges](https://mms2025atmoa.sched.com/event/1uF7N/mastering-secure-boot-navigating-kb5025885-challenges)
+
+Note, much of this has changed since the presentation, I'll be updating the scripts (Remediation & ConfigMgr Baselines) to accommodate the simplified methods to lookup the process.
