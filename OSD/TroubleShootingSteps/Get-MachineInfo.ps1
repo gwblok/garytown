@@ -10,8 +10,15 @@ I'm using it as a Run Script to get information from devices over CMG, as I can'
 
 22.10.25 - Added SafeGuard & Win11 Check
 22.10.31 - Added Serial
-
+25.5.12 - Adopted for Task Sequence PowerShell Step
 #>
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $false)]
+    [String]$logPath = "C:\Windows\Temp"
+)
+
+function Get-MachineInfo {
 Function Test-PendingReboot {
     #Pending Reboot From Adam, and I added the part for ConfigMgr
     #https://adamtheautomator.com/pending-reboot-registry/
@@ -928,25 +935,39 @@ Write-Output "GateBlock: $Compliance"
 Write-Output "Windows 11 Info"
 
 
-    Write-Output "Windows 11 Compatiblity: $($outObject.returnResult)"
-    $Global:Readiness.Return = $outObject.returnResult
-    if ($outObject.returnReason)
-        {
-        if ($outObject.returnResult -eq $NOT_CAPABLE_CAPS_STRING){
-            $Reason = $outObject.returnReason
-            $Reason = $Reason.Substring(0,$Reason.Length-2)
-        }
-        else {$Reason = $outObject.returnReason}
-        Write-Output "HR_ReturnReason = $($outObject.returnReason)"
-        $Global:Readiness.Reason = $Reason 
+Write-Output "Windows 11 Compatiblity: $($outObject.returnResult)"
+$Global:Readiness.Return = $outObject.returnResult
+if ($outObject.returnReason)
+    {
+    if ($outObject.returnResult -eq $NOT_CAPABLE_CAPS_STRING){
+        $Reason = $outObject.returnReason
+        $Reason = $Reason.Substring(0,$Reason.Length-2)
     }
-    Write-Output "HR_SecureBoot = $HR_SecureBoot"
-    $Global:Readiness.SecureBoot = $HR_SecureBoot
-    Write-Output "HR_CPU = $HR_CPU"
-    $Global:Readiness.CPU = $HR_CPU
-    Write-Output "HR_TPM = $HR_TPM"
-    $Global:Readiness.TPM = $HR_TPM
-    Write-Output "HR_Memory = $HR_Memory"
-    $Global:Readiness.Memory = $HR_Memory
-    Write-Output "HR_Storage = $HR_Storage"
-    $Global:Readiness.Storage= $HR_Storage
+    else {$Reason = $outObject.returnReason}
+    Write-Output "HR_ReturnReason = $($outObject.returnReason)"
+    $Global:Readiness.Reason = $Reason 
+}
+Write-Output "HR_SecureBoot = $HR_SecureBoot"
+$Global:Readiness.SecureBoot = $HR_SecureBoot
+Write-Output "HR_CPU = $HR_CPU"
+$Global:Readiness.CPU = $HR_CPU
+Write-Output "HR_TPM = $HR_TPM"
+$Global:Readiness.TPM = $HR_TPM
+Write-Output "HR_Memory = $HR_Memory"
+$Global:Readiness.Memory = $HR_Memory
+Write-Output "HR_Storage = $HR_Storage"
+$Global:Readiness.Storage= $HR_Storage
+
+}
+
+#Create log directory if it doesn't exist
+if (Test-Path -path $LogLocation) {
+    Write-Output "Log directory already exists: $LogLocation"
+} else {
+    New-Item -Path $LogLocation -ItemType Directory -Force | Out-Null
+    Write-Output "Created log directory: $LogLocation"
+}
+
+
+$Info = Get-MachineInfo
+$Info | Out-File -FilePath "$logPath\MachineInfo.log" -Append -Force
