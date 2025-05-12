@@ -7,7 +7,9 @@ Get-HardwareDevicesAndDrivers
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
-    [String]$logPath = "C:\Windows\Temp"
+    [String]$logPath = "C:\Windows\Temp",
+    [Parameter(Mandatory = $false)]
+    [String]$logFile = "HardwareDevicesAndDrivers.log"
 )
 
 Function Get-HardwareDevicesAndDrivers {
@@ -42,4 +44,4 @@ if (Test-Path -path $logPath) {
 }
 
 #Create Logs with Information
-Get-HardwareDevicesAndDrivers | Out-File -FilePath "$logPath\HardwareDevicesAndDrivers.log" -Append -Force
+Get-HardwareDevicesAndDrivers | Out-File -FilePath "$logPath\Gather-$logFile " -Append -Force

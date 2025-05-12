@@ -15,7 +15,9 @@ I'm using it as a Run Script to get information from devices over CMG, as I can'
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
-    [String]$logPath = "C:\Windows\Temp"
+    [String]$logPath = "C:\Windows\Temp",
+    [Parameter(Mandatory = $false)]
+    [String]$logFile = "MachineInfo.log"
 )
 
 function Get-MachineInfo {
@@ -970,4 +972,4 @@ if (Test-Path -path $LogLocation) {
 
 
 $Info = Get-MachineInfo
-$Info | Out-File -FilePath "$logPath\MachineInfo.log" -Append -Force
+$Info | Out-File -FilePath "$logPath\Gather-$logFile" -Append -Force

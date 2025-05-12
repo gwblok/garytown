@@ -3,7 +3,9 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
-    [String]$logPath = "C:\Windows\Temp"
+    [String]$logPath = "C:\Windows\Temp",
+    [Parameter(Mandatory = $false)]
+    [String]$logFile = "OSDToolKit.log"
 )
 Function Get-2PintOSDToolkitInfo {
 
@@ -55,8 +57,8 @@ Function Get-2PintOSDToolkitInfo {
 
 $Info = Get-2PintOSDToolkitInfo
 if ($env:SystemDrive -eq "C:") {
-    $Info | Out-File -FilePath "$logPath\FullOS-OSDToolKit.log" -Append -Force
+    $Info | Out-File -FilePath "$logPath\Garther-FullOS-$logFile" -Append -Force
 }
 else{
-    $Info | Out-File -FilePath "$logPath\BootMedia-OSDToolKit.log" -Append -Force
+    $Info | Out-File -FilePath "$logPath\Gather-BootMedia-$logFile" -Append -Force
 }

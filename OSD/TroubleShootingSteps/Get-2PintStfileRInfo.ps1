@@ -3,7 +3,9 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
-    [String]$logPath = "C:\Windows\Temp"
+    [String]$logPath = "C:\Windows\Temp",
+    [Parameter(Mandatory = $false)]
+    [String]$logFile = "StifleRInfo.log"
 )
 function Get-InstalledApps
 {
@@ -23,18 +25,22 @@ $StifleRClientAppInfo = Get-InstalledApps | Where-Object {$_.DisplayName -match 
 
 
 if ($StifleRClientAppInfo) {
-    $StifleRClientService = Get-Service -Name StifleRClient | select-Object -Property Name, DisplayName, Status, BinaryPathName
+    $StifleRClientService = Get-Service -Name StifleRClient | select-Object *
     $StifleRBinaryPath = $StifleRClientService.BinaryPathName
-    $StifleRInstallPath = $StifleRBinaryPath | Split-Path -Parent
+    if ($null -eq $StifleRBinaryPath){
+        $StifleRInstallPath = "$env:ProgramFiles\2Pint Software\StifleR Client"
+    }
+    else{
+        $StifleRInstallPath = $StifleRBinaryPath | Split-Path -Parent
+    }
     if ($env:SystemDrive -eq "C:") {
-        $StifleRClientAppInfo | Out-File -FilePath "$logPath\FULLOS-StifleRClientServiceInfo.log" -Append -Force
-        $StifleRClientService | Out-File -FilePath "$logPath\FULLOS-StifleRClientServiceInfo.log" -Append -Force
-        Copy-Item -Path "$StifleRInstallPath\StifleR.ClientApp.exe.Config" -Destination "$logPath\FULLOS-StifleR.ClientApp.exe.Config" -Force
+        $StifleRClientAppInfo | Out-File -FilePath "$logPath\Gather-FullOS-$logFile" -Append -Force
+        $StifleRClientService | Out-File -FilePath "$logPath\Gather-FullOS-$logFile" -Append -Force
+        Copy-Item -Path "$StifleRInstallPath\StifleR.ClientApp.exe.Config" -Destination "$logPath\Gather-FullOS-StifleR.ClientApp.exe.Config" -Force
     }
     else {
-        $StifleRClientAppInfo | Out-File -FilePath "$logPath\BootMedia-StifleRClientServiceInfo.log" -Append -Force
-        $StifleRClientService | Out-File -FilePath "$logPath\BootMedia-StifleRClientServiceInfo.log" -Append -Force
-        Copy-Item -Path "$StifleRInstallPath\StifleR.ClientApp.exe.Config" -Destination "$logPath\BootMedia-StifleR.ClientApp.exe.Config" -Force
+        $StifleRClientAppInfo | Out-File -FilePath "$logPath\BootMedia-$logFile" -Append -Force
+        $StifleRClientService | Out-File -FilePath "$logPath\BootMedia-$logFile" -Append -Force
+        Copy-Item -Path "$StifleRInstallPath\StifleR.ClientApp.exe.Config" -Destination "$logPath\Gather-BootMedia-StifleR.ClientApp.exe.Config" -Force
     }
 }
-
