@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windows SafeGuard Hold ID Lookup</title>
     <style>
@@ -9,16 +10,18 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
+
         .result {
             margin-top: 20px;
         }
     </style>
 </head>
+
 <body>
     <h1>Windows SafeGuard Hold ID Lookup</h1>
     <input type="text" id="safeguardID" placeholder="Enter Safeguard ID">
     <button onclick="searchSafeguardID()">Search</button>
-    <div class="result" id="result"></div>
+    <pre class="result" id="result"><p>No record found for the given SafeguardID.</p></pre>
 
     <script>
 
@@ -60,6 +63,48 @@
             return result;
         }
 
+        function DOMparseXMLtoJSON(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+            function xmlToJson(node) {
+                let obj = {};
+
+                // Process attributes
+                if (node.attributes) {
+                    for (let attr of node.attributes) {
+                        obj[`@${attr.name}`] = attr.value;
+                    }
+                }
+
+                // Process child nodes
+                for (let child of node.childNodes) {
+                    if (child.nodeType === 3) { // Text node
+                        let text = child.nodeValue.trim();
+                        if (text) {
+                            obj["#text"] = text;
+                        }
+                    } else if (child.nodeType === 1) { // Element node
+                        let childObj = xmlToJson(child);
+                        if (obj[child.nodeName]) {
+                            if (!Array.isArray(obj[child.nodeName])) {
+                                obj[child.nodeName] = [obj[child.nodeName]];
+                            }
+                            obj[child.nodeName].push(childObj);
+                        } else {
+                            obj[child.nodeName] = childObj;
+                        }
+                    }
+                }
+
+                return obj;
+            }
+
+            return xmlToJson(xmlDoc.documentElement);
+        }
+
+
+
         async function searchSafeguardID() {
             const safeguardID = document.getElementById('safeguardID').value.trim();
             const response = await fetch('SafeGuardHoldDataBase.json');
@@ -68,28 +113,37 @@
             const resultDiv = document.getElementById('result');
 
             if (record) {
-                const innerXML = parseXMLtoJSON(record.INNERXML);
+                const innerXML = DOMparseXMLtoJSON("<xml>" + record.INNERXML + "</xml>");
                 const innerJSON = JSON.stringify(innerXML);
-                resultDiv.innerHTML = `
-                    <h2>Record Found:</h2>
-                    <p><strong>App Name: </strong>` + record.AppName + `</p>
-                    <p><strong>Block Type: </strong>` + record.BlockType + `</p>
-                    <p><strong>Safeguard Id: </strong>` + record.SafeguardId + `</p>
-                    <p><strong>File Name: </strong>` + record.NAME + `</p>
-                    <p><strong>Vendor: </strong>` + record.VENDOR + `</p>
-                    <p><strong>Exe ID: </strong>` + record.EXE_ID + `</p>
-                    <p><strong>Destination OS Greater than or Equal to: </strong>` + record.DEST_OS_GTE + `</p>
-                    <p><strong>Destination OS Less than: </strong>` + record.DEST_OS_LT + `</p>
-                    <p><strong>First Appraiser Date: </strong>` + record.FirstAppraiserDate + `</p>
-                    <p><strong>First Appraiser Versions: </strong>` + record.FirstAppraiserVersions + `</p>
-                    <p><strong>Last Appraiser Date: </strong>` + record.LastAppraiserDate + `</p>
-                    <p><strong>Last Appraiser Versions: </strong>` + record.LastAppraiserVersions + `</p>
-                    <p><strong>INNERXML: </strong>` + innerJSON + `</p>
-                `;
+                let content = `
+<h2>Record Found:</h2>
+<strong>App Name: </strong>` + record.AppName + `
+<strong>Block Type: </strong>` + record.BlockType + `
+<strong>Safeguard Id: </strong>` + record.SafeguardId + `
+<strong>File Name: </strong>` + record.NAME + `
+<strong>Vendor: </strong>` + record.VENDOR + `
+<strong>Exe ID: </strong>` + record.EXE_ID + `
+<strong>Destination OS Greater than or Equal to: </strong>` + record.DEST_OS_GTE + `
+<strong>Destination OS Less than: </strong>` + record.DEST_OS_LT + `
+<strong>First Appraiser Date: </strong>` + record.FirstAppraiserDate + `
+<strong>First Appraiser Versions: </strong>` + record.FirstAppraiserVersions + `
+<strong>Last Appraiser Date: </strong>` + record.LastAppraiserDate + `
+<strong>Last Appraiser Versions: </strong>` + record.LastAppraiserVersions + `       
+`;
+
+                let keys = Object.keys(innerXML);
+                let buffer = "<hr /> <h2>InnerXml</h2>";
+
+                buffer += JSON.stringify(innerXML, null, 1)
+                // Apply changes in one go
+                resultDiv.innerHTML = content + buffer;
+
             } else {
                 resultDiv.innerHTML = '<p>No record found for the given SafeguardID.</p>';
             }
         }
     </script>
+
 </body>
+
 </html>
