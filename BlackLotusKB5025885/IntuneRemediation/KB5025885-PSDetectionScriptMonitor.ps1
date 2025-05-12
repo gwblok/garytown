@@ -46,6 +46,33 @@ else {
 
 #endregion Applicability
 
+function Get-LastScheduledTaskResult {
+    param (
+        [string]$TaskName
+    )
+
+    try {
+        $Task = Get-ScheduledTask -TaskName $TaskName
+        if ($null -eq $Task) {
+            Write-Output "Scheduled Task '$TaskName' not found."
+            return $null
+        }
+
+        $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
+        $LastRunTime = $TaskHistory.LastRunTime
+        $LastTaskResult = $TaskHistory.LastTaskResult
+
+        [PSCustomObject]@{
+            TaskName       = $TaskName
+            LastRunTime    = $LastRunTime
+            LastTaskResult = $LastTaskResult
+        }
+    }
+    catch {
+        Write-Error "Error retrieving scheduled task result: $_"
+    }
+}
+
 
 #Registry Keys for Remediation
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
@@ -75,14 +102,17 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 #Check for Step Completion, and also report the current value of the Secure Boot Key
 if ($Step1Complete -ne $true){
     Write-Output "Step 1 is not complete | SBKey: $SecureBootRegValue"
+    Write-Error "1"
     exit 1
 }
 if ($Step2Complete -ne $true){
     Write-Output "Step 2 is not complete | SBKey: $SecureBootRegValue"
+    Write-Error "2"
     exit 2
 }
 if ($Step3Complete -ne $true){
     Write-Output "Step 3 is not complete | SBKey: $SecureBootRegValue"
+    Write-Error "3"
     exit 3
 }
 if ($Step1Complete -eq $true -and $Step2Complete -eq $true -and $Step3Complete -eq $true){
