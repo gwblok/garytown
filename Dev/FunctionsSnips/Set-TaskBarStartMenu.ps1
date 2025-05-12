@@ -5,6 +5,7 @@
     Customize Taskbar in Windows 11
     Sassan Fanai / Jörgen Nilsson
     Version 1.1
+    Version 25.5.12 - Gary Blok - Modified the unload reg path... change Default to DefUser
     Added Option to remove CoPIlot and updated remove Search
 #>
 function Set-TaskBarStartMenu {
@@ -90,7 +91,7 @@ function Set-TaskBarStartMenu {
         Default { 'No parameters were specified' }
     }
     [GC]::Collect()
-    REG UNLOAD HKLM\Default
+    REG UNLOAD HKLM\DefUser
 
     if ($PSBoundParameters.ContainsKey('RunForExistingUsers')) {
         Write-Host "RunForExistingUsers parameter specified."
