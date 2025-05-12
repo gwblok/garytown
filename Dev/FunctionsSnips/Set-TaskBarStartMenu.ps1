@@ -90,7 +90,7 @@ function Set-TaskBarStartMenu {
         Default { 'No parameters were specified' }
     }
     [GC]::Collect()
-    REG UNLOAD HKLM\Default
+    REG UNLOAD HKLM\DefUser
 
     if ($PSBoundParameters.ContainsKey('RunForExistingUsers')) {
         Write-Host "RunForExistingUsers parameter specified."
