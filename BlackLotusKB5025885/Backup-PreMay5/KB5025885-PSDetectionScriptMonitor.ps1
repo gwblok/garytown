@@ -73,6 +73,26 @@ function Get-LastScheduledTaskResult {
     }
 }
 
+#Use Registry Keys
+Function Get-WindowsUEFICA2023Capable{
+    try {
+        $SecureBootServicing = Get-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -ErrorAction Stop
+        $WindowsUEFICA2023Capable = $SecureBootServicing.GetValue('WindowsUEFICA2023Capable')
+        if ($null -eq $WindowsUEFICA2023Capable) {
+            $Step1 = "Non-compliant"
+        }
+    }
+    catch {
+        return 0
+    }
+
+    if ($WindowsUEFICA2023Capable) {
+        return $WIndowsUEFICA2023Capable
+    }
+    else  {
+        return 0
+    }
+}
 
 #Registry Keys for Remediation
 $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'

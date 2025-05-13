@@ -30,3 +30,4 @@ Things are working, but I need to do a rewrite based on the May 5, 2025 changes 
 
 - 25.5.13 - Created readme page
 - 25.5.13.13.6 - Updated ConfigMgr CI Scripts.  The Baseline & Scripts are all good to go
+- 25.5.13.17.9 - Updated Intune Scripts, changed entire process.  Testing FullProcess Remediation Scripts in my lab currently.
