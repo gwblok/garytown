@@ -1165,7 +1165,12 @@ Write-Host -ForegroundColor Green "[+] Function Set-DesktopIcons"
 function Set-DesktopIcons {
     iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/CreateControlPanelDesktopIconsRemedate.ps1')
 }
-
+Write-Host -ForegroundColor Green "[+] Function Set-TaskBarkStartMenu"
+function Set-PersonalPrefTaskBarkStartMenu {
+    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/FunctionsSnips/Set-TaskBarStartMenu.ps1')
+    Write-Host -ForegroundColor Gray "Set-TaskBarStartMenu"
+    Set-TaskBarStartMenu -RemoveTaskView -RemoveCopilot -RemoveWidgets -RemoveChat -MoveStartLeft -RemoveSearch -StartMorePins -RunForExistingUsers
+}
 
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "GARYTOWN LAB ONLY Functions"
