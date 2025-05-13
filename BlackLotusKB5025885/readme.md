@@ -23,10 +23,10 @@ Things are working, but I need to do a rewrite based on the May 5, 2025 changes 
 # TO DO (Updated 25.5.13)
 
 - Update Scripts for the May 5th Changes
-  - ConfigMgr Configuration Item Scripts
   - Intune Remediation Scripts
   - Standalone Functions
 
 # Change Log
 
 - 25.5.13 - Created readme page
+- 25.5.13.13.6 - Updated ConfigMgr CI Scripts.  The Baseline & Scripts are all good to go
