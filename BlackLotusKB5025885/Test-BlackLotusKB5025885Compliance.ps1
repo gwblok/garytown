@@ -1,6 +1,11 @@
-function Check-ComplianceKB5025885{
-    #https://support.microsoft.com/en-us/topic/kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932-41a975df-beb2-40c1-99a3-b3ff139f832d#bkmk_update_boot_media
+ #https://support.microsoft.com/en-us/topic/kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932-41a975df-beb2-40c1-99a3-b3ff139f832d#bkmk_update_boot_media
 
+function Test-BlackLotusKB5025885Compliance { 
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $false)]
+        [switch] $Details = $false
+    )
     
     Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
         [CmdletBinding()]
@@ -112,11 +117,11 @@ function Check-ComplianceKB5025885{
     #endregion Gather Info
 
     $ComplianceTable = @(
-        [PSCustomObject]@{ HexValue = "0x40"; DecValue = 64; Description = "Do Step 1 - Apply the DB update to add the 2023 Cert" }
-        [PSCustomObject]@{ HexValue = "0x100"; DecValue = 256; Description = "Do Step 2 - Update the boot manager" }
-        [PSCustomObject]@{ HexValue = "0x80"; DecValue = 128; Description = "Do Step 3 - Apply the DBX update to revoke the 2011 Cert" }
-        [PSCustomObject]@{ HexValue = "0x200"; DecValue = 512; Description = "Do Step 4 - Apply the SVN update to the firmware" }
-        [PSCustomObject]@{ HexValue = "0x280"; DecValue = 640; Description = "Do Combo Step 3 & 4 - Apply the DBX update & SVN update to the firmware" }
+        [PSCustomObject]@{ HexValue = "0x40"; DecValue = 64; Description = "Step 1 - Apply the DB update to add the 2023 Cert" }
+        [PSCustomObject]@{ HexValue = "0x100"; DecValue = 256; Description = "Step 2 - Update the boot manager" }
+        [PSCustomObject]@{ HexValue = "0x80"; DecValue = 128; Description = "Step 3 - Apply the DBX update to revoke the 2011 Cert" }
+        [PSCustomObject]@{ HexValue = "0x200"; DecValue = 512; Description = "Step 4 - Apply the SVN update to the firmware" }
+        [PSCustomObject]@{ HexValue = "0x280"; DecValue = 640; Description = "Combo Step 3 & 4 - Apply the DBX update & SVN update to the firmware" }
     )
     #$ComplianceTable | Format-Table -AutoSize
 
@@ -171,7 +176,9 @@ if ($null -ne $Applicability){
         if ($SecureBootRegValue.AvailableUpdates -ne 0 -and $null -ne $SecureBootRegValue.AvailableUpdates){
             $CurrentStage = $ComplianceTable | Where-Object {$_.DecValue -eq $SecureBootRegValue.AvailableUpdates}
             Write-Output ""
-            Write-Host "Pending Change in Progress | Boot Registry Value Dec: $($SecureBootRegValue.AvailableUpdates) Hex: $($CurrentStage.HexValue) | $($CurrentStage.Description)" -ForegroundColor Yellow
+            Write-Host "!!! Pending Change in Progress !!!" -ForegroundColor Yellow
+            Write-Host " Boot Registry Value Dec: $($SecureBootRegValue.AvailableUpdates) Hex: $($CurrentStage.HexValue)" -ForegroundColor Yellow
+            write-Host " $($CurrentStage.Description)" -ForegroundColor Yellow
             Write-Output ""
         }
         Write-Output "======================================================================"
