@@ -193,4 +193,32 @@ if ($null -ne $Applicability){
         Write-Output "======================================================================"
     }
     #>
+    if ($Details -eq $true){
+        Write-Output "======================================================================"
+        Write-Output ""
+        Write-Output "Details Requested, additional information about the remediation"
+        Write-Output ""
+        Write-Host "Registry Items used for remediation" -ForegroundColor magenta
+        Write-Host -ForegroundColor Cyan "Secure Boot Key Registry Location: " -NoNewline; Write-Host -ForegroundColor Yellow "$SecureBootRegPath"
+        Write-Host -ForegroundColor Cyan "WindowsUEFICA2023Capable Registry Location: " -NoNewline; Write-Host -ForegroundColor Yellow "HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing"
+        write-Host "Registry Values and Descriptions" -ForegroundColor magenta
+        $ComplianceTable | Format-Table -AutoSize
+        Write-Host -ForegroundColor Cyan  "Trigger Step 1: " -NoNewline; Write-Host -ForegroundColor Yellow " New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x40 -Force"
+        Write-Host -ForegroundColor Cyan  "Trigger Step 2: " -NoNewline; Write-Host -ForegroundColor Yellow " New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x100 -Force"
+        Write-Host -ForegroundColor Cyan  "Trigger Step 3: " -NoNewline; Write-Host -ForegroundColor Yellow " New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x80 -Force"
+        Write-Host -ForegroundColor Cyan  "Trigger Step 4: " -NoNewline; Write-Host -ForegroundColor Yellow " New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x200 -Force"
+        Write-Host -ForegroundColor Cyan  "Trigger Combo : " -NoNewline; Write-Host -ForegroundColor Yellow " New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x280 -Force"
+        Write-Output ""
+        Write-Host "Scheduled Task used for remediation" -ForegroundColor magenta
+        write-Host "\Microsoft\Windows\PI\Secure-Boot-Update" -ForegroundColor Yellow
+        Write-Host -ForegroundColor Cyan  "Trigger: " -NoNewline; Write-Host -ForegroundColor Yellow "  Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'"
+        Write-Host "Do this after you Set the Registry Value, then wait for results... often requires reboot after." -ForegroundColor DarkGray
+        Write-Output ""
+        Write-Host "How to Detect" -ForegroundColor magenta
+        Write-Host -ForegroundColor Cyan  "Step 1 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "((Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -Name 'WindowsUEFICA2023Capable') -ge 1)"
+        Write-Host -ForegroundColor Cyan  "Step 2 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "((Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -Name 'WindowsUEFICA2023Capable') -eq 2)"
+        Write-Host -ForegroundColor Cyan  "Step 3 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "[System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'"
+        Write-Host -ForegroundColor Cyan  "Step 4 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "No Detection Method Available"
+        Write-Output "======================================================================"
+    }
 }
