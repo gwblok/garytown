@@ -233,7 +233,7 @@ Write-Host -ForegroundColor Green "[+] Function Get-WindowsESDFileInfo"
 function Get-WindowsESDFileInfo {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/Get-WindowsESDFileInfo.ps1)}
 
 Write-Host -ForegroundColor Green "[+] Function Check-ComplianceKB5025885"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/BlackLotusKB5025885/KB5025885-CheckCompliance.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/KB5025885-CheckCompliance.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Invoke-ComplianceKB5025885"
 function Invoke-ComplianceKB5025885 {
