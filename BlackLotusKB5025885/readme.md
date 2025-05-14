@@ -23,7 +23,7 @@ Things are working, but I need to do a rewrite based on the May 5, 2025 changes 
 # TO DO (Updated 25.5.13)
 
 - Update Scripts for the May 5th Changes
-  - Intune Remediation Scripts
+  - Intune Remediation Scripts [Working on]
   - Standalone Functions
 
 # Change Log

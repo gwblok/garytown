@@ -107,17 +107,17 @@ $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx
 
 if ($StepsComplete -lt 1){
     Write-Output "Step 1 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-    Write-Error "1 | $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    Write-Error "Step 1 Required (Adding 2023 Cert) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
     exit 1
 }
 if ($StepsComplete -lt 2){
     Write-Output "Step 2 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-    Write-Error "2 | $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    Write-Error "Step 2 Required (Updating Boot Manager) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
     exit 2
 }
 if ($Step3Complete -ne $true){
     Write-Output "Step 3 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-    Write-Error "3 | $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    Write-Error "Step 3 Required (Revoking the 2011 Cert) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
     exit 3
 }
 if ($Step3Complete -eq $true){

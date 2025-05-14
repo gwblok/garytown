@@ -53,11 +53,14 @@ Function Get-ErrorCodeDBInfo {
         $ErrorCodeDB | Where-Object {$_.UnsignedInteger -eq $ErrorCodeUnignedInt}
     }
 }   
-function Get-LastScheduledTaskResult {
-    param (
-        [string]$TaskName
-    )
 
+#Example Function that uses this function when using parameter -OnlineLookup
+function Get-LastScheduledTaskResult {
+    #Leverages the Get-ErrorCodeDBInfo function from https://github.com/gwblok/garytown/tree/master/CodeDependancies
+    param (
+        [string]$TaskName,
+        [Switch]$OnlineLookup = $false
+    )
     try {
         $Task = Get-ScheduledTask -TaskName $TaskName
         if ($null -eq $Task) {
@@ -68,7 +71,12 @@ function Get-LastScheduledTaskResult {
         $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
         $LastRunTime = $TaskHistory.LastRunTime
         $LastTaskResult = $TaskHistory.LastTaskResult
-        $LastTaskResultDescription = (Get-ErrorCodeDBInfo -ErrorCodeUnignedInt $LastTaskResult).ErrorDescription
+        if ($OnlineLookup){
+            $LastTaskResultDescription = (Get-ErrorCodeDBInfo -ErrorCodeUnignedInt $LastTaskResult).ErrorDescription
+        }
+        else{
+            $LastTaskResultDescription = "Unknown"
+        }
         [PSCustomObject]@{
             TaskName       = $TaskName
             LastRunTime    = $LastRunTime

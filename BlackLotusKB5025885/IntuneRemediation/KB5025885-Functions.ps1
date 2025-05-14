@@ -28,38 +28,6 @@ Function Get-WindowsUEFICA2023Capable{
     }
     else  {return 0}
 }
-function Get-LastScheduledTaskResult {
-    param (
-        [string]$TaskName,
-        [Switch]$OnlineLookup = $false
-    )
-    try {
-        $Task = Get-ScheduledTask -TaskName $TaskName
-        if ($null -eq $Task) {
-            Write-Output "Scheduled Task '$TaskName' not found."
-            return $null
-        }
-
-        $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
-        $LastRunTime = $TaskHistory.LastRunTime
-        $LastTaskResult = $TaskHistory.LastTaskResult
-        if ($OnlineLookup){
-            $LastTaskResultDescription = (Get-ErrorCodeDBInfo -ErrorCodeUnignedInt $LastTaskResult).ErrorDescription
-        }
-        else{
-            $LastTaskResultDescription = "Unknown"
-        }
-        [PSCustomObject]@{
-            TaskName       = $TaskName
-            LastRunTime    = $LastRunTime
-            LastTaskResult = $LastTaskResult
-            LastTaskDescription = $LastTaskResultDescription
-        }
-    }
-    catch {
-        Write-Error "Error retrieving scheduled task result: $_"
-    }
-}
 
 Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
     [CmdletBinding()]

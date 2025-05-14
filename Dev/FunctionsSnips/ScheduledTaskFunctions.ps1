@@ -55,3 +55,37 @@ function New-ScheduledTaskItem {
     # Register the scheduled task
     Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $TaskName -TaskPath $TaskPathArg -Description $Description -Force -Principal $principal
 }
+
+function Get-LastScheduledTaskResult {
+    #Leverages the Get-ErrorCodeDBInfo function from https://github.com/gwblok/garytown/tree/master/CodeDependancies
+    param (
+        [string]$TaskName,
+        [Switch]$OnlineLookup = $false
+    )
+    try {
+        $Task = Get-ScheduledTask -TaskName $TaskName
+        if ($null -eq $Task) {
+            Write-Output "Scheduled Task '$TaskName' not found."
+            return $null
+        }
+
+        $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
+        $LastRunTime = $TaskHistory.LastRunTime
+        $LastTaskResult = $TaskHistory.LastTaskResult
+        if ($OnlineLookup){
+            $LastTaskResultDescription = (Get-ErrorCodeDBInfo -ErrorCodeUnignedInt $LastTaskResult).ErrorDescription
+        }
+        else{
+            $LastTaskResultDescription = "Unknown"
+        }
+        [PSCustomObject]@{
+            TaskName       = $TaskName
+            LastRunTime    = $LastRunTime
+            LastTaskResult = $LastTaskResult
+            LastTaskDescription = $LastTaskResultDescription
+        }
+    }
+    catch {
+        Write-Error "Error retrieving scheduled task result: $_"
+    }
+}
