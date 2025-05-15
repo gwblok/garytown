@@ -31,17 +31,26 @@ These functions are created to help you check machines manually on an adhoc basi
 - Test-BlackLotusKB5025885Compliance.ps1
   - This will give you an overview of the device and it's current status of Remediation for Black Lotus
   - -Details provides additional information about how the process works, and how you can manually trigger items
+
 - Invoke-BlackLotusKB5025885Compliance.ps1
   - This function has several parameters, allowing control over which steps you want to enable, or trigger it to enable the next step in the process.  It will also allow you to trigger the scheduled task manually if you're impatiently watching the process, as I've found that the scheduled task doesn't run for 5-10 minutes after a reboot, so sometimes I just trigger it manaully to see the remediation take effect.
 
+![Invoke-BlackLotusKB5025885Compliance](media/BL-InvokeStep3-01.png)
+
 ## Update Boot Manager
-I wrote this to deal with an issue I saw when reimaging a device.  Situation was, I had a fully remediated device that I wanted to reimage.  I disabled Secure Boot, then reimaged with my older tooling.  Once reimaged, I fully patched the device and went to enable Secure Boot, but the device no longer booted.  I came to find out that reimaging the device and then patching did NOT update the BootMgr files with the 2023 cert, and still had the 2011 cert.  To resolve this, I wrote the script "Update-BootMgr2023.ps1 which will update the files in the System Volume with the correct files, you can then enable secure boot. 
+
+I wrote this to deal with an issue I saw when reimaging a device.  Situation was, I had a fully remediated device that I wanted to reimage.  I disabled Secure Boot, then reimaged with my older tooling.  Once reimaged, I fully patched the device and went to enable Secure Boot, but the device no longer booted. (See image below for Status, Step 1 & 3 complete, Secure Boot off)  I came to find out that reimaging the device and then patching did NOT update the BootMgr files with the 2023 cert, and still had the 2011 cert.  To resolve this, I wrote the script "Update-BootMgr2023.ps1 which will update the files in the System Volume with the correct files, you can then enable secure boot.
+
+The Update-BootMgr2023 Script resolves a machine in this state:
+![Catch22](media/BootMgrCatch22.jpg)
+
+# ConfigMgr Folder
+You'll find a Baseline, along with the scripts that are in the exported baseline for reviewing.  There is also a Task Sequence Export (KB5025885 - Media Creator.zip) to use to update a boot.wim file, enabling the 2023 cert in your boot.wim file.  The Task Sequence to apply the Remediation can be found on my blog: https://garytown.com/configmgr-task-sequence-kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932
 
 # TO DO (Updated 25.5.13)
 
 - Update Scripts for the May 5th Changes
   - Intune Remediation Scripts [Working on]
-  - Standalone Functions
 
 # Change Log
 
