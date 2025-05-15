@@ -98,3 +98,5 @@ else {
     Write-Host -ForegroundColor Red "Installation failed with exit code: $($Install.ExitCode)"
 }
 Get-InstalledApps | Where-Object { $_.DisplayName -like "*StifleR*" } | Format-Table -AutoSize
+
+get-service -name StifleRClient | Start-Service
