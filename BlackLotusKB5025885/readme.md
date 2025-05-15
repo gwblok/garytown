@@ -58,6 +58,9 @@ The Update-BootMgr2023 Script resolves a machine in this state:
 # ConfigMgr Folder
 You'll find a Baseline, along with the scripts that are in the exported baseline for reviewing.  There is also a Task Sequence Export (KB5025885 - Media Creator.zip) to use to update a boot.wim file, enabling the 2023 cert in your boot.wim file.  The Task Sequence to apply the Remediation can be found on my blog: https://garytown.com/configmgr-task-sequence-kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932
 
+# Intune Folder
+This will contain scripts used with Intune Remediation feature.  I'll plan to have one script for a "Status Report" which will only be a detection script to give you an overview of devices and their remediation state.  I'll also provide scripts for performing steps 1-3, which you can control via a variable in the script.
+
 # TO DO (Updated 25.5.13)
 
 - Update Scripts for the May 5th Changes
@@ -70,3 +73,4 @@ You'll find a Baseline, along with the scripts that are in the exported baseline
 - 25.5.13.17.9 - Updated Intune Scripts, changed entire process.  Testing FullProcess Remediation Scripts in my lab currently.
 - 25.5.14.10.58 - Added Update-BootMgr2023.ps1 file.  This is for when devices are reimaged while secure boot is disabled and the BootMgr doesn't get set to the 2023 signed version.
 - 25.5.14.10.59 - Moved the Task Sequence "KB5025885 - Media Creator.zip" to this location.
+- 25.5.15.12.26 - Reorganized folder structures and renamed items and updated this readme
