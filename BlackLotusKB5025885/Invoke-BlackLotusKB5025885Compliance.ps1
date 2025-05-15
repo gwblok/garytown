@@ -21,6 +21,37 @@ function Invoke-BlackLotusKB5025885Compliance {
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelectionN')]
         [switch] $NextStep
     ) 
+    Function Get-SecureBootUpdateSTaskStatus {#Check to see if a reboot is required
+        [CmdletBinding()]
+        param ()
+        $taskName = "Secure-Boot-Update"
+        $Task = Get-ScheduledTask -TaskName $TaskName
+        if ($null -eq $Task) {
+            Write-Verbose "Scheduled Task '$TaskName' not found."
+            return $null
+        }
+        $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
+        $LastRunTime = $TaskHistory.LastRunTime
+        $LastTaskResult = $TaskHistory.LastTaskResult
+        if ($TaskHistory.LastTaskResult -eq 0) {
+            $LastTaskResultDescription = "Successfully completed"
+        }
+        elseif ($TaskHistory.LastTaskResult -eq 2147942750) {
+            $LastTaskResultDescription = "No action was taken as a system reboot is required."
+        }
+        elseif ($TaskHistory.LastTaskResult -eq 2147946825) {
+            $LastTaskResultDescription = "Secure Boot is not enabled on this machine."
+        }
+        else {
+            $LastTaskResultDescription = "Unknown error"
+        }
+        [PSCustomObject]@{
+            TaskName       = $TaskName
+            LastRunTime    = $LastRunTime
+            LastTaskResult = $LastTaskResult
+            LastTaskDescription = $LastTaskResultDescription
+        }
+    }
     Function Invoke-Step1 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x40 to enable Step 1"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x40 -Force
@@ -32,8 +63,10 @@ function Invoke-BlackLotusKB5025885Compliance {
     Function Invoke-Step2 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x100 to enable Step 2 (You will need to reboot)"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x100 -Force
+        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 5
+        Write-Output "Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
         Write-Host "Recommend Rebooting, then wait about 5 minutes, then running the Function to Test Compliance again." 
         return $null
     }
