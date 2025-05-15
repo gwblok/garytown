@@ -46,8 +46,6 @@ if ($Step2Complete -eq $false -and $Step1Complete -eq $true -and $Step3Complete 
         $SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
         Copy-Item -Path "$($SystemVolume.Path)\EFI\Microsoft\Boot" -Destination "$($SystemVolume.Path)\EFI\Microsoft\Boot.bak" -Force
         Copy-Item -Path "$TempLocation\EFI\*" -Destination "$($SystemVolume.Path)\EFI\Microsoft\Boot\" -Force -Recurse
-
-        
     }
 }
 

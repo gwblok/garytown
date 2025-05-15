@@ -20,6 +20,23 @@ Things are working, but I need to do a rewrite based on the May 5, 2025 changes 
 - [KB5025885: Dealing with CVE-2023-24932 via Proactive Remediation & Configuration Items – GARYTOWN](https://garytown.com/kb5025885-dealing-cve-2023-24932-with-proactive-remediation-configuration-items)
 - [Slightly clear the fog around BlackLotus mitigations - Red Pill Blogs](https://technet.blogs.ms/blacklotus/)
 
+# Instructions
+
+Each subfolder will have it's own readme with details, but things in this folder, I'll try to explain here.
+
+## Test & Invoke BlackLotusKB5025885Compliance Scripts
+
+These functions are created to help you check machines manually on an adhoc basis.
+
+- Test-BlackLotusKB5025885Compliance.ps1
+  - This will give you an overview of the device and it's current status of Remediation for Black Lotus
+  - -Details provides additional information about how the process works, and how you can manually trigger items
+- Invoke-BlackLotusKB5025885Compliance.ps1
+  - This function has several parameters, allowing control over which steps you want to enable, or trigger it to enable the next step in the process.  It will also allow you to trigger the scheduled task manually if you're impatiently watching the process, as I've found that the scheduled task doesn't run for 5-10 minutes after a reboot, so sometimes I just trigger it manaully to see the remediation take effect.
+
+## Update Boot Manager
+I wrote this to deal with an issue I saw when reimaging a device.  Situation was, I had a fully remediated device that I wanted to reimage.  I disabled Secure Boot, then reimaged with my older tooling.  Once reimaged, I fully patched the device and went to enable Secure Boot, but the device no longer booted.  I came to find out that reimaging the device and then patching did NOT update the BootMgr files with the 2023 cert, and still had the 2011 cert.  To resolve this, I wrote the script "Update-BootMgr2023.ps1 which will update the files in the System Volume with the correct files, you can then enable secure boot. 
+
 # TO DO (Updated 25.5.13)
 
 - Update Scripts for the May 5th Changes
@@ -31,3 +48,5 @@ Things are working, but I need to do a rewrite based on the May 5, 2025 changes 
 - 25.5.13 - Created readme page
 - 25.5.13.13.6 - Updated ConfigMgr CI Scripts.  The Baseline & Scripts are all good to go
 - 25.5.13.17.9 - Updated Intune Scripts, changed entire process.  Testing FullProcess Remediation Scripts in my lab currently.
+- 25.5.14.10.58 - Added Update-BootMgr2023.ps1 file.  This is for when devices are reimaged while secure boot is disabled and the BootMgr doesn't get set to the 2023 signed version.
+- 25.5.14.10.59 - Moved the Task Sequence "KB5025885 - Media Creator.zip" to this location.
