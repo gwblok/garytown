@@ -1,6 +1,14 @@
 #Script Returns the Disk Number for the Desired Disk for installing Windows to during OSD
 #https://garytown.com/osd-with-multi-disk-configs
 #https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/msft-disk
+
+#issue where in WinPE it randomly doesn't show the disk, like 1 in 100...
+$Disks = Get-Disk
+if (!($Disks)){
+    restart-service smphost
+    start-sleep 5
+}
+
 $BusTypes = @('NVMe', 'SATA')
 #if can't find NVMe, grab something else, but NOT these!
 $BusTypesSkip = @("Fiber Channel", "USB", "iSCSI", "Storage Spaces")
