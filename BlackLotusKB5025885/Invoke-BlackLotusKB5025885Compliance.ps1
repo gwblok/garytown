@@ -125,7 +125,9 @@ function Invoke-BlackLotusKB5025885Compliance {
 
 
     if ($null -ne $Applicability){
-        return "Applicability: $($Applicability)"
+        write-host -ForegroundColor red "Applicability: $($Applicability)"
+        write-host -ForegroundColor Yellow "Resolve the Applicability issue before continuing."
+        return $null
     }
 
     if ($Step1Complete  -eq $true){
