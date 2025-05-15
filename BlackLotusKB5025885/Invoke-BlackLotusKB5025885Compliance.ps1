@@ -58,7 +58,6 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
     if ($TriggerScheduledTask){
         Write-Host -ForegroundColor Magenta "Triggering the Scheduled Task to check for Secure Boot Changes"
-        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 3
         Write-Output "Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"

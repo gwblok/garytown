@@ -114,6 +114,9 @@ function Test-BlackLotusKB5025885Compliance {
     if ($Step3Complete -eq $true){$LastStepComplete = 3}
 
     $SecureBootRegValue = Get-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates"
+
+    $LastReboot = (Get-WinEvent -LogName System -MaxEvents 1 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated).TimeCreated
+    $LastTaskRun = (Get-SecureBootUpdateSTaskStatus).LastRunTime
     #endregion Gather Info
 
     $ComplianceTable = @(
@@ -179,6 +182,17 @@ function Test-BlackLotusKB5025885Compliance {
             Write-Host "!!! Pending Change in Progress !!!" -ForegroundColor Yellow
             Write-Host " Boot Registry Value Dec: $($SecureBootRegValue.AvailableUpdates) Hex: $($CurrentStage.HexValue)" -ForegroundColor Yellow
             write-Host " $($CurrentStage.Description)" -ForegroundColor Yellow
+            Write-Host " Last Task Run: $($LastTaskRun)" -ForegroundColor Yellow
+            Write-Host " Last Reboot: $($LastReboot)" -ForegroundColor Yellow
+            if ($LastTaskRun -lt $LastReboot){
+                Write-Host "!!! Task Hasn't Run Since Reboot !!!" -ForegroundColor Yellow
+                Write-Host " Typically take 5-10 Minutes to auto trigger" -ForegroundColor Yellow
+                Write-Host " Feel Free to manually trigger it" -ForegroundColor Yellow
+                Write-Host "Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'" -ForegroundColor DarkGray
+            }
+            else {
+                Write-Host "!!! Reboot Still Needed !!!" -ForegroundColor Red
+            }
             Write-Output ""
         }
         Write-Output "======================================================================"

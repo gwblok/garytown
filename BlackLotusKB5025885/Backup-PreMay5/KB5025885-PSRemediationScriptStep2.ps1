@@ -86,7 +86,7 @@ if (Test-Path -Path $RemediationRegPath){
 else{
     New-Item -Path $RemediationRegPath -Force -ItemType Directory | Out-Null
 }
-$Last9Reboots = (Get-WinEvent -LogName System -MaxEvents 10 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated).TimeCreated
+$Last9Reboots = (Get-WinEvent -LogName System -MaxEvents 1 -FilterXPath "*[System[EventID=6005]]" | Select-Object -Property TimeCreated).TimeCreated
 [datetime]$SecondToLastReboot = $Last9Reboots | Select-Object -First 2 | Select-Object -Last 1
 
 if ($null -ne $Step2Set0x100){
