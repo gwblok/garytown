@@ -236,7 +236,7 @@ Write-Host -ForegroundColor Green "[+] Function Test-BlackLotusKB5025885Complian
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Test-BlackLotusKB5025885Compliance.ps1)
 
 Write-Host -ForegroundColor Green "[+] Function Invoke-BlackLotusKB5025885Compliance"
-iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Inovke-BlackLotusKB5025885Compliance.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Invoke-BlackLotusKB5025885Compliance.ps1)
 
 
 write-host -ForegroundColor DarkGray "========================================================="
