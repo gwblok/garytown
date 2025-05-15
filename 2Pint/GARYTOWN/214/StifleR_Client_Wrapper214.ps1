@@ -2,8 +2,7 @@ $STIFLERSERVERS = 'https://2pstifler.2p.garytown.com:1414'
 $STIFLERULEZURL = 'https://raw.githubusercontent.com/2pintsoftware/StifleRRules/master/StifleRulez.xml'
 
 
-$ClientURL = 'https://garytown.com/Downloads/2Pint/214/StifleR.ClientApp.Installer64_2.14.312.944.zip'
-$ClientInstallScript = 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/StifleR/StifleR_Client_Installer.ps1'
+$ClientURL = 'https://2pstifler.2p.garytown.com/StifleR-ClientApp.zip'
 
 $packageName = $ClientURL.Split('/')[-1]
 $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
@@ -54,71 +53,25 @@ Write-Host -ForegroundColor Cyan "Starting download and extraction of $packageNa
 Start-BitsTransfer -Source $ClientURL -Destination $packagePath
 Expand-Archive -Path $packagePath -DestinationPath $tempDir
 
-#Build Install Script
-#$InstallScript = Invoke-RestMethod -Uri $ClientInstallScript -Method Get
-#$InstallScript | Out-File -FilePath "$tempDir\StifleR_Client_Installer.ps1" -Force -Encoding utf8
-
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-write-host -ForegroundColor DarkGray "Invoke-WebRequest -UseBasicParsing -Uri $ClientInstallScript -OutFile $tempDir\StifleR_Client_Installer.ps1"
-Invoke-WebRequest -UseBasicParsing -Uri $ClientInstallScript -OutFile "$tempDir\StifleR_Client_Installer.ps1"
-
-
-if (Test-path -path "$tempDir\StifleR_Client_Installer.ps1" ) {
-    Write-Output "Successfully Created $tempDir\StifleR_Client_Installer.ps1"  
+if (Test-Path -Path $tempDir){
+    Write-Host -ForegroundColor Green "Download and extraction completed successfully."
+    $MSI = (Get-ChildItem -Path $tempDir -Filter *.msi -Recurse).FullName
 }
-else{
-    Write-Output "Failed to create $tempDir\StifleR_Client_Installer.ps1"
-    exit 253
+else {
+    Write-Host -ForegroundColor Red "Download or extraction failed."
+    return
 }
-#Build Defaults.ini
-$StifleRDefaultsini = @"
-[MSIPARAMS]
-INSTALLFOLDER=C:\Program Files\2Pint Software\StifleR Client
-STIFLERSERVERS=$STIFLERSERVERS
-STIFLERULEZURL=$STIFLERULEZURL
-DEBUGLOG=0
-RULESTIMER=86400
-MSILOGFILE=C:\Windows\Temp\StifleRClientMSI.log
-
-
-[CONFIG]
-VPNStrings=Citrix VPN, Cisco AnyConnect
-ForceVPN=0
-Logfile=C:\Windows\Temp\StifleRInstaller.log
-Features=Power, PerformanceCounters, AdminElevatedTracking,EventLog
-BranchCachePort=1337
-BlueLeaderProxyPort=1338
-GreenLeaderOfferPort=1339
-BranchCachePortForGreenLeader=1336
-DefaultNonRedLeaderDOPolicy=102400
-DefaultNonRedLeaderBITSPolicy=768000
-DefaultDisconnectedDOPolicy=25600
-DefaultDisconnectedBITSPolicy=25600
-"@
-$StifleRDefaultsini | Out-File -FilePath "$tempDir\StifleRDefaults.ini" -Force -Encoding utf8
-if (Test-path -path "$tempDir\StifleRDefaults.ini") {
-    Write-Output "Successfully Created $tempDir\StifleRDefaults.ini"  
+if (Test-Path -Path $MSI){
+    Write-Host -ForegroundColor Green "MSI found: $MSI"
+}
+else {
+    Write-Host -ForegroundColor Red "MSI not found in the extracted files."
+    return
 }
 
-#Build CMD file
-$RunPScmd = @"
-REM - this CMD file checks the platform (x86/64) and then runs the correct PS command line
 
-
-PUSHD %~dp0
-If "%PROCESSOR_ARCHITEW6432%"=="AMD64" GOTO 64bit
-PowerShell.exe -NoProfile -ExecutionPolicy Bypass -Command ".\StifleR_Client_Installer.ps1 -Defaults .\StifleRDefaults.ini -DebugPreference Continue"
-GOTO END
-:64bit
-"%WinDir%\Sysnative\windowsPowershell\v1.0\Powershell.exe" -NoProfile -ExecutionPolicy Bypass -Command ".\StifleR_Client_Installer.ps1 -Defaults .\StifleRDefaults.ini -DebugPreference Continue"
-:END
-POPD
+$OPTIONS = @"
+{"SettingsOptions":{"StifleRulezURL":"$STIFLERULEZURL","LogEventLevel":"Verbose","Notifications":"Administrator","Features":"PolicyCorruption,%20EventLog,%20Power,%20PerformanceCounters,%20AdminElevatedTracking,%20AdminTracking,%20BranchCache,%20SendEndpoints,%20ResMon,%20MeasureBandwidth,%20LocationData,%20Disconnect,%20TcbStats,%20AckJobs,%20DOPolicy,%20RedLeader,%20BlueLeader,%20NotRedLeader,%20InterVlan,%20CreateBITSJobs,%20ExecutePowerShell,%20RunCmdLine,%20ModifyJobs,%20Notify,%20WOL,%20UpdateServers,%20UpdateRules,%20Beacon,%20CacheManagement,%20DiskManagement,%20PhysicalNetworkManagement,%20TSData,%20ClientTools,%20GeoTracking,%20MulticastDetection","StiflerServers":"[\u0022$STIFLERSERVERS\u0022]","MaxPokeBandwidth":"256","DefaultNonRedLeaderBITSPolicy":"256","DefaultDisconnectedBITSPolicy":"512","DefaultDisconnectedDOPolicy":"512","v1MaxSizeLimit":"1048576","CheckInterval":"30000","NoProgressTimeout":"300","MaxPolicyChangeTime":"30","UpdateScreenInterval":"5000","EnableDebugTelemetry":"True","UseServerAsClient":"True","SendGeoData":"True","VPNStrings":"[\u0022VPN\u0022,\u0022Cisco%20AnyConnect\u0022,\u0022Virtual%20Private%20Network\u0022,\u0022SonicWall\u0022]","SRUMInterval":"30","UseFilterDriver":"True","LimitWiFiSpeeds":"True","SignalRLogging":"True"}}
 "@
 
-$RunPScmd | Out-File -FilePath "$tempDir\RunPS.cmd" -Force -Encoding utf8
-if (Test-path -path "$tempDir\RunPS.cmd") {
-    Write-Output "Successfully Created $tempDir\RunPS.cmd"  
-}
-#Trigger RunPS.cmd
-Write-Host "Running $tempDir\RunPS.cmd" -ForegroundColor Green
-Start-Process -FilePath "$tempDir\RunPS.cmd" -Wait
+Start-Process -FilePath msiexec.exe -ArgumentList "/i $MSI /quiet OPTIONS=$OPTIONS" -Wait -PassThru
