@@ -19,8 +19,12 @@ function Invoke-BlackLotusKB5025885Compliance {
         [switch] $Step34Combo,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelectionN')]
-        [switch] $NextStep
+        [switch] $NextStep,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelectionS')]
+        [switch] $TriggerScheduledTask
     ) 
+
     Function Get-SecureBootUpdateSTaskStatus {#Check to see if a reboot is required
         [CmdletBinding()]
         param ()
@@ -52,6 +56,13 @@ function Invoke-BlackLotusKB5025885Compliance {
             LastTaskDescription = $LastTaskResultDescription
         }
     }
+    if ($TriggerScheduledTask){
+        Write-Host -ForegroundColor Magenta "Triggering the Scheduled Task to check for Secure Boot Changes"
+        Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
+        Start-Sleep -Seconds 3
+        Write-Output "Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
+        return $null
+    }
     Function Invoke-Step1 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x40 to enable Step 1"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x40 -Force
@@ -67,7 +78,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 5
         Write-Output "Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-        Write-Host "Recommend Rebooting, then wait about 5 minutes, then running the Function to Test Compliance again." 
+        Write-Host "Recommend Rebooting, then wait about 10 minutes, then running the Function to Test Compliance again." 
         return $null
     }
     Function Invoke-Step3 {
