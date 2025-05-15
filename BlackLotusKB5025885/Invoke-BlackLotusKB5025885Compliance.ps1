@@ -120,11 +120,6 @@ function Invoke-BlackLotusKB5025885Compliance {
     $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
     if ($Step3Complete -eq $false){$Compliance = $false}
 
-    #Get Last Step Complete Status
-    $StepsComplete = Get-WindowsUEFICA2023Capable
-    $LastStepComplete = $StepsComplete
-    if ($Step3Complete -eq $true){$LastStepComplete = 3}
-
     #endregion Gather Info
 
 
