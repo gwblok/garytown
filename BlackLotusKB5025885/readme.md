@@ -27,6 +27,17 @@ Each subfolder will have it's own readme with details, but things in this folder
 ## Test & Invoke BlackLotusKB5025885Compliance Scripts
 
 These functions are created to help you check machines manually on an adhoc basis.
+You can run these via the internet by launching powershell and invoking them with the command: iex (irm blacklotus.garytown.com) as shown below:
+
+```PowerShell
+PS C:\> iex (irm blacklotus.garytown.com)
+[+] blacklotus.garytown.com 25.5.15.1
+=========================================================
+Black Lotus Functions
+[+] Function Test-BlackLotusKB5025885Compliance (-Details)
+[+] Function Invoke-BlackLotusKB5025885Compliance
+[+] Function Update-BootMgr2023
+```
 
 - Test-BlackLotusKB5025885Compliance.ps1
   - This will give you an overview of the device and it's current status of Remediation for Black Lotus
