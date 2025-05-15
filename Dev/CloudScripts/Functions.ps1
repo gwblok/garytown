@@ -232,14 +232,11 @@ function Get-UBR {
 Write-Host -ForegroundColor Green "[+] Function Get-WindowsESDFileInfo"
 function Get-WindowsESDFileInfo {iex (irm https://raw.githubusercontent.com/gwblok/garytown/master/Feature-Updates/Get-WindowsESDFileInfo.ps1)}
 
-Write-Host -ForegroundColor Green "[+] Function Check-Test-BlackLotusKB5025885Compliance"
+Write-Host -ForegroundColor Green "[+] Function Test-BlackLotusKB5025885Compliance"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Test-BlackLotusKB5025885Compliance.ps1)
 
-Write-Host -ForegroundColor Green "[+] Function Invoke-ComplianceKB5025885"
-function Invoke-ComplianceKB5025885 {
-    iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/ConfigMgr/Baselines/CVE-2023-24932/KB5025885-PSRemediationScript_Step1-2_HPCMSL.ps1)
-}
-
+Write-Host -ForegroundColor Green "[+] Function Invoke-BlackLotusKB5025885Compliance"
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Inovke-BlackLotusKB5025885Compliance.ps1)
 
 
 write-host -ForegroundColor DarkGray "========================================================="

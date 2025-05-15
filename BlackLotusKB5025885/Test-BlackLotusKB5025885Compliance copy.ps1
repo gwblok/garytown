@@ -131,7 +131,7 @@ function Test-BlackLotusKB5025885Compliance {
     Write-Output "======================================================================"
     Write-Output ""
 
-if ($null -ne $Applicability){
+    if ($null -ne $Applicability){
         Write-Host "Applicability: $($Applicability)" -ForegroundColor Red
         Write-Output ""
     }
