@@ -58,6 +58,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
     if ($TriggerScheduledTask){
         Write-Host -ForegroundColor Magenta "Triggering the Scheduled Task to check for Secure Boot Changes"
+        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 3
         Write-Output "Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
@@ -66,6 +67,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     Function Invoke-Step1 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x40 to enable Step 1"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x40 -Force
+        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 2
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
@@ -84,6 +86,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     Function Invoke-Step3 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x80 to enable Step 3"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x80 -Force
+        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 2
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
@@ -92,6 +95,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     Function Invoke-Step4 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x200 to enable Step 4"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x200 -Force
+        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 2
         Write-Host "Applied the SVN update to the firmware, but no detection method available." 
@@ -100,6 +104,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     Function Invoke-Step34Combo {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x280 to enable Step 3 & Step 4"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x280 -Force
+        Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 2
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
