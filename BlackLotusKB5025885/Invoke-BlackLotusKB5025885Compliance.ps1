@@ -131,7 +131,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
 
     if ($Step1Complete  -eq $true){
-        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DB update |  1036 | The PCA2023 certificate was added to the DB."
+        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Step 1 | Applying the DB update |  1036 | The PCA2023 certificate was added to the DB."
     }
     else {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DB update |  1036 | The PCA2023 certificate was added to the DB."
@@ -143,7 +143,7 @@ function Invoke-BlackLotusKB5025885Compliance {
 
     Write-Output "======================================================================"
     if ($Step2Complete  -eq $true){
-        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Updating the boot manager |  1799 | The PCA2023 signed boot manager was applied."
+        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Step 2 | Updating the boot manager |  1799 | The PCA2023 signed boot manager was applied."
     }
     else {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Updating the boot manager |  1799 | The PCA2023 signed boot manager was applied."
@@ -154,7 +154,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
     Write-Output "======================================================================"
     if ($Step3Complete  -eq $true){
-        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DBX update |  1037 | The DBX update that untrusts the PCA2011 signing certificate was applied."
+        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Step 3 | Applying the DBX update |  1037 | The DBX update that untrusts the PCA2011 signing certificate was applied."
     }
     else {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DBX update |  1037 | The DBX update that untrusts the PCA2011 signing certificate was applied."
