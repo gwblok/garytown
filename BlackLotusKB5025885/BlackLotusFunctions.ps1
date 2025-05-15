@@ -2,7 +2,8 @@ $ScriptName = 'blacklotus.garytown.com'
 $ScriptVersion = '25.5.15.1'
 #Set-ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
 
-Write-Host -ForegroundColor Green "[+] $ScriptName $ScriptVersion"
+Write-Host -ForegroundColor Green "You are running: $ScriptName $ScriptVersion"
+Write-host -ForegroundColor Cyan " Docs at: https://github.com/gwblok/garytown/tree/master/BlackLotusKB5025885"
 #endregion
 
 
