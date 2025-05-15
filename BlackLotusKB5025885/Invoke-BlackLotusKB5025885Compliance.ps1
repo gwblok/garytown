@@ -137,6 +137,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DB update |  1036 | The PCA2023 certificate was added to the DB."
         if ($Step1 -eq $true -or $NextStep -eq $true){
             Invoke-Step1
+            return $null
         }
     }
 
@@ -148,6 +149,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Updating the boot manager |  1799 | The PCA2023 signed boot manager was applied."
         if ($Step2 -eq $true -or $NextStep -eq $true){
             Invoke-Step2
+            return $null
         }
     }
     Write-Output "======================================================================"
@@ -158,9 +160,11 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DBX update |  1037 | The DBX update that untrusts the PCA2011 signing certificate was applied."
         if ($Step3 -eq $true -or $NextStep -eq $true){
             Invoke-Step3
+            return $null
         }
         if ($Step34Combo -eq $true){
             Invoke-Step34Combo
+            return $null
         }
     }
     Write-Output ""
@@ -169,6 +173,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host -ForegroundColor Yellow "Applying the SVN update even though the detection method is not available."
         if ($Step4 -eq $true){
             Invoke-Step4
+            return $null
         }
     }
 
