@@ -32,7 +32,7 @@ if ($null -eq $StifleRClientAppInfo){
     Write-Host "StifleR Client not installed - Trigger Remediation" -ForegroundColor Red
     exit 1
 }
-if ($StifleRClientAppInfo.DisplayVersion -ge $TargetVersion){
+if ($StifleRClientAppInfo.DisplayVersion -ne $TargetVersion){
     Write-Host "StifleR Client version $($StifleRClientAppInfo.DisplayVersion) is the target version $TargetVersion - No remediation required" -ForegroundColor Green
     exit 0
 }
