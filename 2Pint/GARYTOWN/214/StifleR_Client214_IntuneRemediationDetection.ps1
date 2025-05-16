@@ -16,6 +16,18 @@ function Get-InstalledApps
 
 $StifleRClientAppInfo = Get-InstalledApps | Where-Object {$_.DisplayName -match "StifleR Client"}
 
+$StifleRService = get-service -Name StifleRClient -ErrorAction SilentlyContinue
+if ($null -eq $StifleRService){
+    Write-Host "StifleR Client Service not installed - Trigger Remediation" -ForegroundColor Red
+    exit 1
+}
+if ($StifleRService.Status -ne 'Running'){
+    Start-Service -Name StifleRClient
+}
+if ($StifleRService.StartType -ne 'Automatic'){
+    Set-Service -Name StifleRClient -StartupType Automatic
+}
+
 if ($null -eq $StifleRClientAppInfo){
     Write-Host "StifleR Client not installed - Trigger Remediation" -ForegroundColor Red
     exit 1
