@@ -97,6 +97,14 @@ if ($Install.ExitCode -eq 0) {
 else {
     Write-Host -ForegroundColor Red "Installation failed with exit code: $($Install.ExitCode)"
 }
+
+Start-Sleep -Seconds 5
 Get-InstalledApps | Where-Object { $_.DisplayName -like "*StifleR*" } | Format-Table -AutoSize
 
-get-service -name StifleRClient | Start-Service
+$StifleRService = get-service -Name StifleRClient -ErrorAction SilentlyContinue
+if ($StifleRService.Status -ne 'Running'){
+    Start-Service -Name StifleRClient
+}
+if ($StifleRService.StartType -ne 'Automatic'){
+    Set-Service -Name StifleRClient -StartupType Automatic
+}
