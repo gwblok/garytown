@@ -17,6 +17,12 @@ Run the script "KB5025885-CreateCMNonCompliantCollections.ps1" to create the col
 
 ![ConfigMgrNonCompliantCollectionCreation](media/ConfigMgrNonCompliantCollectionCreation-01.png)
 
+In my console I've just created the collections for both Baseline's CI's that are Non-Compliant.  Most devices haven't reported in yet, but they are starting to, so you can see where they start to fall into buckets.
+
+NOTE: The Remediation Baseline is configured differently than the Reporting Only Baseline.  
+- Remediation Baseline will have a specific machine in only 1 state at a time, depending on where it is in the process.  So if it failed the pre-reqs, it won't show up in any other collection.
+- The Reporting Baseline, a single device could fall into all 5 collections based on the device.  Ex:  A machine was just pulled off the shelf will a really old image, it might be non-compliant for the UBR status, and if a Tech disabled Secure Boot during troubleshooting, it would also fall into the Secure Boot non-compliant collection, and if no steps have been completed on that same device, it would fall into all three of the other collections.
+
 ![ConfigMgrNonCompliantCollectionCreation](media/ConfigMgrNonCompliantCollectionCreation-02.png)
 
 Local Reports for machines at different stages:
