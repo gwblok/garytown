@@ -282,10 +282,10 @@ function Reset-MountPath {
 #Default = AMD64 (x64) WinPE.  Change these variables to give different results.  Note that ARM64 is broken due to ARM64 being removed from OSDCloud recently.
 $IsTemplateWinRE = $false
 $IsTemplateARM64 = $false
-$OSDCloudRootPath = "D:\OSDCloud-ROOT"
-$MountPath = "D:\Mount"
-$WorkSpaceRootDrive = "D:"
-$DriversPath = "D:\OSDCloud-ROOT\Drivers"
+$OSDCloudRootPath = "C:\OSDCloud-ROOT"
+$MountPath = "C:\Mount"
+$WorkSpaceRootDrive = "C:"
+$DriversPath = "C:\OSDCloud-ROOT\Drivers"
 
 #Build Additional Variables based on the ones above - This will be used more later with OSDCloud V2.
 if ($IsTemplateARM64){$Arch = 'ARM64'}
@@ -331,6 +331,9 @@ $OSDisplayNeeded = ($Mappings | Where-Object {$_.Build -match $ADKWinPEInfo.Vers
 try {
     [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\Patches\CU\$OSNameNeeded")
     [void][System.IO.Directory]::CreateDirectory("$OSDCloudRootPath\AKDWinPEWIM")
+    [void][System.IO.Directory]::CreateDirectory("$DriversPath")
+    [void][System.IO.Directory]::CreateDirectory("$DriversPath\WinPE")
+    [void][System.IO.Directory]::CreateDirectory("$DriversPath\WinREAddons")
 }
 catch {throw}
 
@@ -370,8 +373,9 @@ else{
     #Update the Template with the CU (if available)
     $AvailableCU = Get-WinPEMSUpdates
 
-    if ($AvailableCU){
+    if ($AvailableCU -or (Test-Path $DriversPath\WinPE\*)){
         $Path = Get-OSDCloudTemplate
+        $Path = Get-OSDCloudWorkspace
         $BootWIM = (Get-ChildItem -Path $Path -Recurse -Filter *.wim).FullName
         Reset-MountPath -MountPath $MountPath
         Write-Host "Updating $BootWIM in $MountPath" -ForegroundColor Magenta
@@ -380,11 +384,11 @@ else{
         #Add CMTrace while I have the template mounted.
         if (Test-Path -Path "C:\windows\system32\cmtrace.exe"){
             if (!(Test-Path -Path "$MountPath\Windows\System32\cmtrace.exe")){
-                Write-Host "Adding CMTrace to Boot Image" -ForegroundColor Dark Gray
+                Write-Host "Adding CMTrace to Boot Image" -ForegroundColor DarkGray
                 Copy-Item "C:\windows\system32\cmtrace.exe" "$MountPath\Windows\System32\cmtrace.exe" -Force
             }
             else{
-                Write-Host "CMTrace is currently in Boot Image" -ForegroundColor Dark Gray
+                Write-Host "CMTrace is currently in Boot Image" -ForegroundColor DarkGray
             }
         }
         #Add Drivers into Template Which will be used in Boot Media regularly.  If one off, do it in the workspace instead using Edit-OSDCloudWinPE
@@ -400,6 +404,7 @@ else{
         }
         dismount-WindowsImage -Path $MountPath -Save
         Get-WindowsImage -ImagePath "$BootWIM" -Index 1
+        $WinPEVersion = (Get-WindowsImage -ImagePath "$BootWIM" -Index 1).Version
     }
     else{
         $CUPath = "$OSDCloudRootPath\Patches\CU\$OSNameNeeded"
@@ -413,6 +418,9 @@ else{
     }
 }
 
+if ($WinPEVersion){
+    $WorkSpacePath = "$WorkSpacePath-$WinPEVersion"
+}
 
 #Create the WorkSpace
 Write-Host "Creating OSDCloud WorkSpace: $WorkSpacePath" -ForegroundColor Magenta
@@ -503,3 +511,14 @@ Add-WindowsPackage -PackagePath $PatchPath -Path $MountPath -LogLevel Debug -Ver
 Dismount-WindowsImage -Path $MountPath -Save
 
 Get-WindowsImage -ImagePath "$OSDCloudRootPath\AKDWinPEWIM\winpe.wim" -Index 1
+
+
+#Update Flash Drive for 2023 Certs
+
+$OSDCloudUSBFileSystemLabel = 'WINPE'
+$USBBootVolume = Get-Volume | Where-Object {$_.DriveType -eq "Removable" -and $_.FileSystemType -eq "FAT32" -and $_.FileSystemLabel -eq $OSDCloudUSBFileSystemLabel} | Select-Object -First 1
+$USBBootVolumeLetter = $USBBootVolume.DriveLetter
+#https://support.microsoft.com/en-us/topic/how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932-41a975df-beb2-40c1-99a3-b3ff139f832d#bkmk_windows_install_media
+copy-item "$($USBBootVolumeLetter):\EFI\MICROSOFT\BOOT\BCD" "$($USBBootVolumeLetter):\EFI\MICROSOFT\BOOT\BCD.BAK" -Force -Verbose
+Start-Process -FilePath C:\windows\system32\bcdboot.exe -ArgumentList "c:\windows /f UEFI /s $($USBBootVolumeLetter): /bootex" -Wait -NoNewWindow -PassThru
+copy-item "$($USBBootVolumeLetter):\EFI\MICROSOFT\BOOT\BCD.BAK" "$($USBBootVolumeLetter):\EFI\MICROSOFT\BOOT\BCD" -Force -Verbose
