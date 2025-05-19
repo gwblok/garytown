@@ -37,30 +37,44 @@ This script will...
 
 if (Test-Path -path "D:\HyperVLab-Clients" ){
     $VMPath = "D:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
-}else{
+    $HyperVHostRootPath = "D:\HyperV"
+}elseif (Test-Path -path "D:\HyperVLab-Clients" ){
     $VMPath = "C:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
+    $HyperVHostRootPath = "C:\HyperV"
 }
-Write-Host "VM Path: $VMPath" -ForegroundColor Green
-if (Test-path "D:\HyperV"){
-    $HyperVHostRootPath = "D:\HyperV" #The location on the Host you want the ISO files to be stored
+if (!($VMPath)){
+    if (Test-Path -Path "E:\"){
+        $VMPath = "E:\HyperVLab-Clients"
+        $HyperVHostRootPath = "E:\HyperV"
+    }
 }
-else{
-    $HyperVHostRootPath = "C:\HyperV" #The location on the Host you want the ISO files to be stored
+if (!($VMPath)){
+    if (Test-Path -Path "D:\"){
+        $VMPath = "D:\HyperVLab-Clients"
+        $HyperVHostRootPath = "D:\HyperV"
+    }
+    else {
+        $VMPath = "C:\HyperVLab-Clients"
+        $HyperVHostRootPath = "C:\HyperV"
+    }
 }
+
 $ISOFolderPath = $HyperVHostRootPath
+Write-Host "HyperV Lab Clients Path: $VMPath" -ForegroundColor Green
 Write-Host "HyperV Root Tools Path: $HyperVHostRootPath" -ForegroundColor Green
 Write-Host "ISO Path: $ISOFolderPath" -ForegroundColor Green
+try {
+    [void][System.IO.Directory]::CreateDirectory($VMPath)
+    [void][System.IO.Directory]::CreateDirectory($HyperVHostRootPath)
+}
+catch {throw}
+
 
 $CMModulePath = "$HyperVHostRootPath\CMConsolePosh\ConfigurationManager.psd1"
 
 $VMNamePreFix = "VM-CM-"  #The VM will start with this name
 
 
-try {
-    [void][System.IO.Directory]::CreateDirectory($VMPath)
-    [void][System.IO.Directory]::CreateDirectory($HyperVHostRootPath)
-}
-catch {throw}
 
 #$BootISO = "C:\HyperV\StifleR_24H2_x64_Automated.iso"  #If you're booting to an ISO, put the location here.
 $ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
@@ -114,6 +128,9 @@ elseif ($HostName -eq "MS01"){
 }
 elseif ($HostName -eq "HPZbookSG10GARY"){
     $HostName = 'ZBG10'
+}
+elseif ($HostName -match "AURA"){
+    $HostName = 'AURA'
 }
 else{
     $HostName = 'HVHst'
