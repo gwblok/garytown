@@ -282,10 +282,10 @@ function Reset-MountPath {
 #Default = AMD64 (x64) WinPE.  Change these variables to give different results.  Note that ARM64 is broken due to ARM64 being removed from OSDCloud recently.
 $IsTemplateWinRE = $false
 $IsTemplateARM64 = $false
-$OSDCloudRootPath = "D:\OSDCloud-ROOT"
-$MountPath = "D:\Mount"
-$WorkSpaceRootDrive = "D:"
-$DriversPath = "D:\OSDCloud-ROOT\Drivers"
+$OSDCloudRootPath = "C:\OSDCloud-ROOT"
+$MountPath = "C:\Mount"
+$WorkSpaceRootDrive = "C:"
+$DriversPath = "C:\OSDCloud-ROOT\Drivers"
 
 #Build Additional Variables based on the ones above - This will be used more later with OSDCloud V2.
 if ($IsTemplateARM64){$Arch = 'ARM64'}
@@ -365,7 +365,7 @@ else{
         New-OSDCloudTemplate -Name $templateName -Add7Zip
     }
     #Cleanup Languages
-    Remove-OSDCloudMediaLanguageExtras
+    #Remove-OSDCloudMediaLanguageExtras
 
     #Update the Template with the CU (if available)
     $AvailableCU = Get-WinPEMSUpdates
@@ -431,7 +431,7 @@ if ($WinRE){
     Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WifiProfile "$OSDCloudRootPath\Lab-WifiProfile.xml"
 }
 else{
-    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL
+    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL-DriverPath "C:\OSDCloud-ROOT\WinPEDrivers\"
     #Edit-OSDCloudWinPE -StartURL 'https://hope.garytown.com'
     Edit-OSDCloudWinPE -StartURL 'https://intunelab.garytown.com'
 }

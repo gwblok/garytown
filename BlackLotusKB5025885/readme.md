@@ -15,7 +15,8 @@ Things are working, but I need to do a rewrite based on the May 5, 2025 changes 
 - [What's new in the ADK tools](https://learn.microsoft.com/en-us/windows-hardware/get-started/what-s-new-in-kits-and-tools)
 
 ## References from the Community
-
+- [Dealing With CVE-2023-24932, aka Remediating BlackLotus - anthonyfontanez.com](https://ajf.one/blacklotus)
+  - GitHub Scripts and FlowCharts: https://github.com/ajf8729/BlackLotus
 - [KB5025885: How to manage the Windows Boot Manager revocations for Secure Boot changes associated with CVE-2023-24932 – GARYTOWN](https://garytown.com/configmgr-task-sequence-kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932)
 - [KB5025885: Dealing with CVE-2023-24932 via Proactive Remediation & Configuration Items – GARYTOWN](https://garytown.com/kb5025885-dealing-cve-2023-24932-with-proactive-remediation-configuration-items)
 - [Slightly clear the fog around BlackLotus mitigations - Red Pill Blogs](https://technet.blogs.ms/blacklotus/)
