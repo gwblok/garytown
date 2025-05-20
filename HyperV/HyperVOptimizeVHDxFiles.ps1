@@ -53,7 +53,7 @@ Foreach ($VM in $VMs)#{}
                 Write-Host " Size of $((Get-Item -Path $VHDXPath).Name) = $($SizeBefore/1GB) GB" -ForegroundColor Green
                 Write-Host " Optimzing VHD $VHDXPath on $($VM.Name)" -ForegroundColor Green
                 Optimize-VHD -Path $VHDXPath -Mode Full
-                $SizeAfter = (Get-Item -Path $VHDXPath).length
+                $SizeAfter = (Get-Item -Path $VHDXPath -Force).length
                 $Diff = $SizeBefore - $SizeAfter
                 Write-Host " Size After: $($SizeAfter/1GB) GB | Saving $($Diff /1GB) GB" -ForegroundColor Green
                 }
