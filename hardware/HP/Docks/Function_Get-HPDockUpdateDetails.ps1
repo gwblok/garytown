@@ -213,7 +213,7 @@ function Get-HPDockUpdateDetails {
             
         # **** Hardcode URLs in case of no CMSL installed: ****
         #USB-C G5 Essential Dock
-        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155374.exe'  #  01.00.12.00 Rev.C | Oct 9, 2024
+        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp158001-158500/sp158026.exe'  #  01.00.12.00 Rev.E | Apr 15, 2025
             
         #Thunderbolt G4
         $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155361.exe'   #  1.5.25.0 Rev.B | Oct 7, 2024
