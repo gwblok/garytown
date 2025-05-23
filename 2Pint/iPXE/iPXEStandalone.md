@@ -2,7 +2,36 @@
 
 This page is going to cover setting up the iPXE / 2PXE setup for running a standalone server that you'd have your own custom boot media for.  Much of this process is identical to using a ConfigMgr integrated setup, but I'll cover that in a different page.
 
-## Pre-Setup - Server 2025 + SQLExpress
+# Table of contents
+
+- [2Pint iPXE WebService + 2PXE Standalone Quick Start](#2pint-ipxe-webservice--2pxe-standalone-quick-start)
+- [Table of contents](#table-of-contents)
+  - [Pre-Setup - Server 2025 + SQLExpress ](#pre-setup---server-2025--sqlexpress-)
+    - [Extra things I installed because they are useful and my preference ](#extra-things-i-installed-because-they-are-useful-and-my-preference-)
+    - [Lab Information ](#lab-information-)
+    - [SQL Permissions Setup ](#sql-permissions-setup-)
+    - [iPXE WebService \& 2PXE install Docs ](#ipxe-webservice--2pxe-install-docs-)
+  - [Install Process Walk-Through ](#install-process-walk-through-)
+    - [SQL Express 2022 ](#sql-express-2022-)
+    - [SQL Server Management Studio ](#sql-server-management-studio-)
+    - [SQL Server Latest CU ](#sql-server-latest-cu-)
+    - [Extra Features \& SQL DB Permissions ](#extra-features--sql-db-permissions-)
+  - [2Pint iPXE WebService \& 2PXE Setup ](#2pint-ipxe-webservice--2pxe-setup-)
+    - [iPXE Web Service ](#ipxe-web-service-)
+    - [2PXE Install ](#2pxe-install-)
+  - [Post Install Configuration Changes ](#post-install-configuration-changes-)
+    - [Certificate time - Import Root CA ](#certificate-time---import-root-ca-)
+    - [IIS Modifications - MIME Types | Cert | Virtual Directory ](#iis-modifications---mime-types--cert--virtual-directory-)
+      - [Bind Cert ](#bind-cert-)
+      - [Create Virtual Directory ](#create-virtual-directory-)
+      - [MIME Types ](#mime-types-)
+  - [Now we need a bunch of PowerShell Scripts ](#now-we-need-a-bunch-of-powershell-scripts-)
+  - [Working PXE ](#working-pxe-)
+  - [WinPE - Create a Folder and Copy the Required Files ](#winpe---create-a-folder-and-copy-the-required-files-)
+  - [Modifying PowerShell Scripts for your Environment ](#modifying-powershell-scripts-for-your-environment-)
+    - [Booting Hyper-V via iPXE and Generic ADK WinPE ](#booting-hyper-v-via-ipxe-and-generic-adk-winpe-)
+
+## Pre-Setup - Server 2025 + SQLExpress <a name="PreSetup"></a>
 
 Install Server 2025 Standard with Desktop Experience and then I installed:
 
@@ -13,27 +42,27 @@ Install Server 2025 Standard with Desktop Experience and then I installed:
 - SQL Management Studio [MS Learn](https://learn.microsoft.com/en-us/ssms/install/install)
 - Additional Features (WebServer (IIS) & BranchCache)
 
-### Other things I installed because they are useful and my preference
+### Extra things I installed because they are useful and my preference <a name="Extras"></a>
 
 - VSCode
 - Notepad++
 - PowerShell 7
 
-### Lab Information
+### Lab Information <a name="LabInfo"></a>
 
 I've created a new subnet just for this setup as to not mess with my other installation of iPXE.  I create a 192.168.214.0 network, and that is where I will be placing this new iPXE server, and my test clients.  I'm setting the Server's IP Address to 192.168.214.5, and Name to 214-iPXE, and domain = 2p.garytown.com
 
-## SQL Permissions Setup
+### SQL Permissions Setup <a name="SQLPerms"></a>
 
 - You need to make sure SYSTEM has the correct permissions: <https://ipxews.docs.2pintsoftware.com/planning/permissions>
 
-## iPXE WebService & 2PXE install Docs
+### iPXE WebService & 2PXE install Docs <a name="Official"></a>
 
 I originally followed these directions: <https://ipxews.docs.2pintsoftware.com/> and <https://2pxe.docs.2pintsoftware.com/>, they are much more in-depth and will contain links to relative information.  I'd recommend looking them over when you can.  I however will provide my walk through below.
 
-## Install Process Walk-Through
+## Install Process Walk-Through <a name="WalkThrough"></a>
 
-### SQL Express 2022
+### SQL Express 2022 <a name="SQLExpress"></a>
 
 I just went with straight up defaults to get it installed:
 ![Image01](media/SQLExpressSetup01.png)
@@ -50,7 +79,7 @@ New-NetFirewallRule -DisplayName "SQLServer Browser service" -Direction Inbound 
 
 ![Image05](media/SQLExpressSetup05.png)
 
-### SQL Server Management Studio
+### SQL Server Management Studio <a name="SSMS"></a>
 
 Once you download and trigger, I just went with defaults again. Keeping it simple:
 
@@ -60,7 +89,7 @@ Once you download and trigger, I just went with defaults again. Keeping it simpl
 
 We'll reboot in a minute, but lets first do the CU
 
-### SQL Server Latest CU
+### SQL Server Latest CU <a name="SQLCU"></a>
 
 Download from MS.. I typically just Google "SQL Latest CU" and it brings me here: <https://www.microsoft.com/en-US/download/details.aspx?id=105013&msockid=13edcc8571866d890205d97170d06c11>
 
@@ -74,7 +103,7 @@ For me, that was SQLServer2022-KB5054531-x64.  Launch after download and start c
 
 Now Lets Reboot!
 
-### Extra Features & SQL DB Permissions
+### Extra Features & SQL DB Permissions <a name="FeaturesDBPerms"></a>
 
 Lets go ahead and setup the extra features that iPXE/2PXE will need, IIS & BranchCache
 
@@ -94,11 +123,11 @@ Alright, I think we're ready to get to the reason we started this, the 2Pint sof
 From the docs: "If SQL is installed on the same machine as the iPXE Any Where Web Service, the account: NT AUTHORITY\SYSTEM must be granted dbcreator permissions. The service will also grant the local system account db_owner permissions to the iPXE Anywhere database."  So lets add dbceator:
 ![Image05](media/SSMS05.png)
 
-## 2Pint iPXE WebService & 2PXE Setup
+## 2Pint iPXE WebService & 2PXE Setup <a name="2PintSetup"></a>
 
 This section will go over the 2 different installs to have a 2PXE server integrated with the iPXE Web Service.  We'll start by installing the Web Service.
 
-### iPXE Web Service
+### iPXE Web Service <a name="iPXESetup"></a>
 
 I like to open an elevated prompt, and in my case PowerShell by default, and run the command to create a log file as well.  So I will first change directory (cd) to where I have the installer extracted and then launch the installer
 
@@ -142,7 +171,7 @@ Yippee.. we have this installed!  Now if you go back into SQL Server Management 
 
 ![Image11](media/iPXEInstall11.png)
 
-### 2PXE Install
+### 2PXE Install <a name="2PXESetup"></a>
 
 Once again, I like to do it via the command line
 
@@ -189,9 +218,9 @@ Now we have the 2PXE Software installed!  Lets take a look at the services and m
 
 ![Image01](media/Services01.png)
 
-## Post Install Configuration Changes
+## Post Install Configuration Changes <a name="PICC"></a>
 
-### Certficate time - Import Root CA
+### Certificate time - Import Root CA <a name="RootCA"></a>
 
 When the 2PXE service starts, it generates the certificates you need.  One you need to import into trusted CAs on the machine itself, and one you need to bind HTTPS 443 to in IIS.
 
@@ -217,9 +246,9 @@ Confirm the 2PintSoftware cert is there.
 
 ![Image06](media/PostInstallConfig06.png)
 
-### IIS Modifications - MIME Types | Cert | Virtual Directory
+### IIS Modifications - MIME Types | Cert | Virtual Directory <a name="IISMods"></a>
 
-#### Bind Cert
+#### Bind Cert <a name="BindCert"></a>
 
 - Open IIS, Right Click on "Default Web Site" and choose "Edit Bindings..."
 - Click "Add"
@@ -230,7 +259,7 @@ Confirm the 2PintSoftware cert is there.
   
 ![Image01](media/PostInstallIIS01.png)
 
-#### Create Virtual Directory
+#### Create Virtual Directory <a name="VirtualDir"></a>
 
 We need to tell IIS where to get content, so to do that we are going to create a virtual directory in the 2Pint Software 2PXE PROGRAMDATA folder.  This folder is a bit bare at the moment, but this is where you'll be creating folders to put your WinPE / WinRE images.
 
@@ -254,7 +283,7 @@ Once you have added it, it will show up in the console, and if you drill down yo
 
 ![Image04](media/PostInstallIIS04.png)
 
-#### MIME Types
+#### MIME Types <a name="MIME"></a>
 
 Ok, by default IIS doesn't support all of the boot files we need, so we have a script that will go through and add them... sure, you can do this via the GUI, but I'm not going to cover it, go ahead and google it if you must.
 
@@ -297,7 +326,7 @@ To confirm, you can go into the GUI,
 
 ![Image06](media/PostInstallIIS06.png)
 
-## Now we need a bunch of PowerShell Scripts
+## Now we need a bunch of PowerShell Scripts <a name="PSImport"></a>
 
 So we have the majority of this done, but we need to grab some default scripts hosted on 2Pint's GitHub to populate into the Server. [2Pint GitHub Repo](https://github.com/2pintsoftware/2Pint-iPXEAnywhere)
 
@@ -322,7 +351,7 @@ When you're done, you should have a structure like this:
 
 ![Image05](media/PostInstallAddScripts05.png)
 
-## Working PXE
+## Working PXE <a name="WorkingPXE"></a>
 
 At this point you'll have a working iPXE deployment on your subnet.
 
@@ -334,7 +363,7 @@ Once you choose Pin, and type 42, and hit enter, the menu will progress.
 
 These menus are controlled with the PowerShell files you just imported.  So lets get at least 1 boot image setup before we end this guide!
 
-### Create a Folder and Copy the Required Files
+## WinPE - Create a Folder and Copy the Required Files <a name="WinPE"></a>
 
 First, lets create a WinPE folder in the Remoteinstall folder, so it's available via our IIS to iPXE - "C:\ProgramData\2Pint Software\2PXE\Remoteinstall\WinPE"
 
@@ -359,7 +388,7 @@ Once you've gathered there required files, your new folder should look like:
 
 Ok, you now have the bare basics for your WinPE environment to boot from, now we need to modify some scripts to look for these new files.
 
-## Modifying PowerShell Scripts for your Environment
+## Modifying PowerShell Scripts for your Environment <a name="PSMods"></a>
 
 This is why I like to have VSCode installed, I launch it as an admin, then open the FOLDER scripts.
 We're going to look at 2 scripts and keep this super basic for this POC.  We need to modify the iPXEboot.ps1 file, as that's the file that is your main menu and will kick off sub scripts to launch different WinPE environments.
@@ -390,7 +419,7 @@ So in this script, it's almost already exactly what we need, I'm going to update
 
 So now at this point, we should have everything setup to boot a device into WinPE!  Lets give it a try...
 
-### Booting Hyper-V via iPXE and Generic ADK WinPE
+### Booting Hyper-V via iPXE and Generic ADK WinPE <a name="Success"></a>
 
 Ok, you can see the new Menu item is there, and it's now the default instead of "Exit..."
 
@@ -403,6 +432,5 @@ Here you can see that it is successfully finding the files we added to that fold
 And looky looky, we have WinPE loaded up!
 
 ![Image05](media/iPXEBoot05.png)
-
 
 Ok, so that was a bit, but we got there, you now have a functional 2Pint iPXE / 2PXE setup, and you can start to go crazy with using it to boot up whatever you want.  
