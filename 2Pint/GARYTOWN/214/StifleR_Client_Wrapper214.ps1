@@ -1,3 +1,8 @@
+
+$STIFLERSERVERS = 'https://214-StifleR.2p.garytown.com:1414'
+$STIFLERULEZURL = 'https://raw.githubusercontent.com/2pintsoftware/StifleRRules/master/StifleRulez.xml'
+$ClientURL = 'https://2pstifler.2p.garytown.com/StifleR-ClientApp.zip'
+
 function Get-InstalledApps
 {
     if (![Environment]::Is64BitProcess) {
@@ -11,21 +16,6 @@ function Get-InstalledApps
     }
     Get-ItemProperty $regpath | .{process{if($_.DisplayName -and $_.UninstallString) { $_ } }} | Select DisplayName, Publisher, InstallDate, DisplayVersion, UninstallString |Sort DisplayName
 }
-
-
-$STIFLERSERVERS = 'https://214-StifleR.2p.garytown.com:1414'
-$STIFLERULEZURL = 'https://raw.githubusercontent.com/2pintsoftware/StifleRRules/master/StifleRulez.xml'
-
-
-$ClientURL = 'https://2pstifler.2p.garytown.com/StifleR-ClientApp.zip'
-
-$packageName = $ClientURL.Split('/')[-1]
-$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
-$null = New-Item -ItemType Directory -Path $tempDir -Force -ErrorAction SilentlyContinue
-$packagePath = Join-Path -Path $tempDir -ChildPath $packageName
-
-
-#region functions
 function Test-Url {
     param (
         [string]$Url
@@ -54,18 +44,38 @@ function Test-Url {
     }
 }
 
-#endregion
-
-#Test URLs
-if (-not (Test-Url -Url $ClientURL)) {
-    Write-Output "URL is not accessible: $ClientURL"
+$StifleRServerBaseName = $STIFLERSERVERS.Replace('https://', '').Replace(':1414', '')
+if ((Test-NetConnection -ComputerName $StifleRServerBaseName -Port 1414 -WarningAction SilentlyContinue).TcpTestSucceeded -eq $false) {
+    Write-Host -ForegroundColor Red "StifleR Server is not reachable. Please check the server address and port."
     return
 }
 
 
-#Download and extract the package
-Write-Host -ForegroundColor Cyan "Starting download and extraction of $packageName"
-Start-BitsTransfer -Source $ClientURL -Destination $packagePath
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+$packageName = $ClientURL.Split('/')[-1]
+If (Test-Path -path "C:\OSDCloud\Installers\$packageName"){
+    $packagePath = "C:\OSDCloud\Installers\$packageName"
+}
+else {
+    $null = New-Item -ItemType Directory -Path $tempDir -Force -ErrorAction SilentlyContinue
+    $packagePath = Join-Path -Path $tempDir -ChildPath $packageName
+
+    #Test URLs
+    if (-not (Test-Url -Url $ClientURL)) {
+        Write-Output "URL is not accessible: $ClientURL"
+        return
+    }
+    
+    #Download the package
+    Write-Host -ForegroundColor Cyan "Starting download and extraction of $packageName"
+    Start-BitsTransfer -Source $ClientURL -Destination $packagePath
+}
+
+
+
+
+
+#Extract the package
 Expand-Archive -Path $packagePath -DestinationPath $tempDir
 
 if (Test-Path -Path $tempDir){
