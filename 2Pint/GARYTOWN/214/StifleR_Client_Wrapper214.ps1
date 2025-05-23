@@ -13,7 +13,7 @@ function Get-InstalledApps
 }
 
 
-$STIFLERSERVERS = 'https://2pstifler.2p.garytown.com:1414'
+$STIFLERSERVERS = 'https://214-StifleR.2p.garytown.com:1414'
 $STIFLERULEZURL = 'https://raw.githubusercontent.com/2pintsoftware/StifleRRules/master/StifleRulez.xml'
 
 
