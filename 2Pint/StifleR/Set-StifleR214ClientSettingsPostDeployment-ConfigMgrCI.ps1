@@ -19,8 +19,8 @@ if (Test-Path -Path $StifleRRegPath){
     }
     else {
         if ($Remediation){
-            Write-Host -ForegroundColor Yellow "Changing StifleR Server Name from $StifleRServerString to [https://$($DesiredServerName):1414]"
-            Set-ItemProperty -Path $StifleRRegPath -Name 'StiflerServers' -Value "[https://$($DesiredServerName):1414]" -force
+            Write-Host -ForegroundColor Yellow "Changing StifleR Server Name from $StifleRServerString to [`"https://$($DesiredServerName):1414`"]"
+            Set-ItemProperty -Path $StifleRRegPath -Name 'StiflerServers' -Value "[`"https://$($DesiredServerName):1414`"]" -force
         }
         else{
             Write-Host -ForegroundColor Red "Request Value: $DesiredServerName |  Current Value: $StifleRServerString"
@@ -33,7 +33,7 @@ if (Test-Path -Path $StifleRRegPath){
     }
     else {
         if ($Remediation){
-            $UpdatedString = $StifleRVPNClientString.Replace("]", ", `"$DesiredVPNClient`"]")
+            $UpdatedString = $StifleRVPNClientString.Replace("]", ",`"$DesiredVPNClient`"]")
             Write-Host -ForegroundColor Yellow "Changing StifleR VPN Client from $StifleRVPNClientString to $UpdatedString"
             Set-ItemProperty -Path $StifleRRegPath -Name 'VPNStrings' -Value $UpdatedString -force
         }
