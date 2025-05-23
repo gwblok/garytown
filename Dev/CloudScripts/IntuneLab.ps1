@@ -293,6 +293,8 @@ if ($env:SystemDrive -ne 'X:') {
 
     #Enable "Notify me when a restart is required to finish updating"
     New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name RestartNotificationsAllowed2 -PropertyType dword -Value 1
+    #Enable "Get the latest updates as soon as they are available"
+    New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name IsContinuousInnovationOptedIn -PropertyType dword -Value 1
 
     Write-SectionHeader -Message  "**Setting Default Profile Personal Preferences**" 
     Set-DefaultProfilePersonalPref
