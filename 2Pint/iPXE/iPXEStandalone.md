@@ -54,7 +54,9 @@ I've created a new subnet just for this setup as to not mess with my other insta
 
 ### SQL Permissions Setup <a name="SQLPerms"></a>
 
-- You need to make sure SYSTEM has the correct permissions: <https://ipxews.docs.2pintsoftware.com/planning/permissions>
+You need to make sure SYSTEM has the correct permissions: <https://ipxews.docs.2pintsoftware.com/planning/permissions>
+
+I'll cover this in the guide below, and show details on how to do it, just wanted to point it out now.
 
 ### iPXE WebService & 2PXE install Docs <a name="Official"></a>
 
