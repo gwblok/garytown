@@ -1,5 +1,8 @@
 <# Gary Blok
 Simple OSDCloud Setup Script for AMD64 (x64) WinPE
+
+IT IS MEANT TO BE RUN SECTION BY SECTION, so you can see what it is doing.
+
 This script will assist in setting up OSDCloud from scratch, including creating a new template, workspace, and USB drive.
 It will name the template & workspace based on the ADK WinPE version installed on the system.
 #>
