@@ -203,6 +203,37 @@ function Get-StifleRNetworkGroupSupportServers {
     $ReturnData
 }
 
+function Clear-RoamingForeverFlag {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$false)]
+        [switch]$WhatIf
+    )
+    <#
+    Clear the RoamingForever flag on all clients in the StifleR database.
+    This is useful when you want to reset the roaming status of clients.
+    #>
+    $clients = Get-CimInstance -Namespace root\stifler -Query "Select * From Connections"
+    $roamingForever = 0;
+
+    foreach ($client in $clients) {
+        if ($client.ClientFlags -band 4294967296) {
+            $roamingForever++
+            if ($WhatIf) {
+                Write-Verbose "WhatIf: Would reset RoamingForever flag on client with ConnectionId: $($client.ConnectionId)"
+                continue
+            }
+            else{
+                Write-Verbose "Resetting RoamingForever flag on client with ConnectionId: $($client.ConnectionId)"
+                $conn = [wmi]"\root\StifleR:Connections.ConnectionID='$($client.ConnectionId)'"
+                $conn.ResetRoamingForeverFlag();
+                Start-Sleep -Milliseconds 20
+            }
+        }
+    }
+    Write-Host "Total RoamingForever flags on clients: $roamingForever" -ForegroundColor Green
+}
+
 
 #-----------------------------------------------------------[Execution]------------------------------------------------------------
 <#
