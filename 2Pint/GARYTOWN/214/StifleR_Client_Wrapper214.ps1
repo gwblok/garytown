@@ -98,6 +98,12 @@ else {
 $OPTIONS = @"
 {"SettingsOptions":{"StifleRulezURL":"$STIFLERULEZURL","StiflerServers":"[\u0022$STIFLERSERVERS\u0022]","VPNStrings":"[\u0022VPN\u0022,\u0022Cisco%20AnyConnect\u0022,\u0022Virtual%20Private%20Network\u0022,\u0022SonicWall\u0022,\u0022WireGuard\u0022]"}}
 "@
+Write-Host -ForegroundColor DarkGray "-------------------------------------------------------"
+Write-Host -ForegroundColor Cyan "Installing StifleR Client with the following options:"
+write-host -ForegroundColor Green "StifleR Servers: $STIFLERSERVERS"
+write-host -ForegroundColor Green "StifleR Rulez URL: $STIFLERULEZURL"
+write-host -ForegroundColor Green "VPN Strings: VPN, Cisco AnyConnect, Virtual Private Network, SonicWall, WireGuard"
+Write-Host -ForegroundColor DarkGray "-------------------------------------------------------"
 
 $Install = Start-Process -FilePath msiexec.exe -ArgumentList "/i $MSI /l*v $tempDir\install.log /quiet OPTIONS=$OPTIONS" -Wait -PassThru
 
