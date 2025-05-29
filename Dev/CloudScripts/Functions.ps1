@@ -1186,13 +1186,13 @@ function Set-GitUsernameEmail {
 
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
 function Install-StifleRClient210 {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/210/StifleR_Client_Wrapper.ps1')
 }
 function Install-StifleRClient210Dev {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper_Dev.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/210/StifleR_Client_Wrapper_Dev.ps1')
 }
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient214"
 function Install-StifleRClient214 {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/214/StifleR_Client_Wrapper214.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/214/StifleR_Client_Wrapper214.ps1')
 }
 
