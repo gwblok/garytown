@@ -1171,6 +1171,19 @@ function Set-PersonalPrefTaskBarStartMenu {
 
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "GARYTOWN LAB ONLY Functions"
+Write-Host -ForegroundColor Green "[+] Function Set-GitUsernameEmail"
+function Set-GitUsernameEmail {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$GitUsername,
+        [Parameter(Mandatory=$true)]
+        [string]$GitEmail
+    )
+    git config --global user.name $GitUsername
+    git config --global user.email $GitEmail
+}
+
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
 function Install-StifleRClient210 {
     iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper.ps1')
