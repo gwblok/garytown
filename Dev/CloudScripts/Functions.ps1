@@ -1152,12 +1152,12 @@ function Set-DefaultProfilePersonalPref {
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
     New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-    New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
     New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-    New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
 
 
     Start-Sleep -s 1
