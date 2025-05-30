@@ -1068,12 +1068,12 @@ Function Set-MyPrefsRegistryValues {
         New-Item -Path $Path -ItemType Directory -Force | Out-Null
         New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
         New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-        New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+        #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
         $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
         New-Item -Path $Path -ItemType Directory -Force | Out-Null
         New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
         New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-        New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null        
+        #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null        
         
         Start-Sleep 1
 
@@ -1096,11 +1096,11 @@ Function Set-MyPrefsRegistryValues {
 
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "Hidden" -Value 1 -Type Dword | out-null
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "HideFileExt" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
 
         Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "Hidden" -Value 1 -Type Dword | out-null
         Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "HideFileExt" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
+        #Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
 
     }
 }
