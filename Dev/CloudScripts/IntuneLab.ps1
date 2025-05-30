@@ -283,7 +283,7 @@ if ($env:SystemDrive -ne 'X:') {
 
     Write-SectionHeader -Message "**Installing StifleR**"
     #Install StifleR
-    #Install-StifleRClient214
+    Install-StifleRClient210
 
 
     Write-SectionHeader -Message "**Setting Up Windows Update Settings**"
@@ -336,8 +336,30 @@ if ($env:SystemDrive -ne 'X:') {
     $ManufacturerBaseBoard = ($BaseBoard).Manufacturer
     $ComputerModel = ($ComputerSystem).Model
 
+    if (($Manufacturer -match "Microsoft" -or $ManufacturerBaseBoard -match "Microsoft") -and $ComputerModel -match "Virtual Machine") {
+        Write-Host -ForegroundColor Green "Microsoft Hyper-V Machine Detected, Setting Hyper-V Name"
+        Write-SectionHeader -Message "**Setting Hyper-V Name**"
+        try {
+            Set-HyperVName
+        }
+        catch {
+            Write-Host -ForegroundColor Red "Failed to Set Hyper-V Name, trying again"
+            Set-HyperVName
+        }
+        #Do some Extra Cleanup
+        Write-Host -ForegroundColor DarkGray "Backing Up Logs"
+        New-Item -Path "C:\OSDCloudLogs" -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+        Move-Item -Path "C:\OSDCloud\logs" -Destination "C:\OSDCloudLogs" -Force -ErrorAction SilentlyContinue
+        Write-Host -ForegroundColor DarkGray "Removing C:\OSDCloud"
+        Remove-Item -path "c:\OSDCloud" -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host -ForegroundColor DarkGray "Removing C:\Drivers"
+        Remove-Item -path "c:\Drivers" -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    else {
+        Write-Host -ForegroundColor DarkGray "Not a Microsoft Hyper-V Machine, Skipping Hyper-V Name Setting"
+    }
 
-    Set-HyperVName
+    #Set Personal Preferences - Dark Mode
     Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "AppsUseLightTheme" -Value 0 -Type Dword | out-null
     Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "SystemUsesLightTheme" -Value 0 -Type Dword | out-null
 
