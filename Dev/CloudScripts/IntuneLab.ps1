@@ -337,7 +337,8 @@ if ($env:SystemDrive -ne 'X:') {
     $ComputerModel = ($ComputerSystem).Model
 
 
-
+    Set-HyperVName
+    
 
     #Set Time Zone
     Write-Host -ForegroundColor Gray "**Setting TimeZone based on IP**"
