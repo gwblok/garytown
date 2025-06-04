@@ -1068,32 +1068,39 @@ Function Set-MyPrefsRegistryValues {
         New-Item -Path $Path -ItemType Directory -Force | Out-Null
         New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
         New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-        New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+        #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
         $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
         New-Item -Path $Path -ItemType Directory -Force | Out-Null
         New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
         New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-        New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null        
+        #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null        
         
         Start-Sleep 1
 
     }
     else {
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SystemPaneSuggestionsEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SubscribedContentEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SoftLandingEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SilentInstalledAppsEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "PreInstalledAppsEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "OemPreInstalledAppsEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "FeatureManagementEnabled" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "ContentDeliveryAllowed" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SystemPaneSuggestionsEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SubscribedContentEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SoftLandingEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "SilentInstalledAppsEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "PreInstalledAppsEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "OemPreInstalledAppsEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "FeatureManagementEnabled" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager -Name "ContentDeliveryAllowed" -Value 0 -Type Dword | out-null
 
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "AppsUseLightTheme" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "SystemUsesLightTheme" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "AppsUseLightTheme" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "SystemUsesLightTheme" -Value 0 -Type Dword | out-null
+
+        Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "AppsUseLightTheme" -Value 0 -Type Dword | out-null
+        Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name "SystemUsesLightTheme" -Value 0 -Type Dword | out-null
 
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "Hidden" -Value 1 -Type Dword | out-null
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "HideFileExt" -Value 0 -Type Dword | out-null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
+        #Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
+
+        Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "Hidden" -Value 1 -Type Dword | out-null
+        Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "HideFileExt" -Value 0 -Type Dword | out-null
+        #Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name "ShowSuperHidden" -Value 1 -Type Dword | out-null
 
     }
 }
@@ -1145,12 +1152,12 @@ function Set-DefaultProfilePersonalPref {
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
     New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-    New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
     $Path = "$VirtualRegistryPath_software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
     New-Item -Path $Path -ItemType Directory -Force | Out-Null
     New-ItemProperty -Path $Path -Name "Hidden" -Value 1 -PropertyType Dword -Force | Out-Null
     New-ItemProperty -Path $Path -Name "HideFileExt" -Value 0 -PropertyType Dword -Force | Out-Null
-    New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
+    #New-ItemProperty -Path $Path -Name "ShowSuperHidden" -Value 1 -PropertyType Dword -Force | Out-Null
 
 
     Start-Sleep -s 1
@@ -1171,15 +1178,28 @@ function Set-PersonalPrefTaskBarStartMenu {
 
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "GARYTOWN LAB ONLY Functions"
+Write-Host -ForegroundColor Green "[+] Function Set-GitUsernameEmail"
+function Set-GitUsernameEmail {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$GitUsername,
+        [Parameter(Mandatory=$true)]
+        [string]$GitEmail
+    )
+    git config --global user.name $GitUsername
+    git config --global user.email $GitEmail
+}
+
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
 function Install-StifleRClient210 {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/210/StifleR_Client_Wrapper.ps1')
 }
 function Install-StifleRClient210Dev {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/StifleR_Client_Wrapper_Dev.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/210/StifleR_Client_Wrapper_Dev.ps1')
 }
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient214"
 function Install-StifleRClient214 {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/2Pint/GARYTOWN/214/StifleR_Client_Wrapper214.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/214/StifleR_Client_Wrapper214.ps1')
 }
 
