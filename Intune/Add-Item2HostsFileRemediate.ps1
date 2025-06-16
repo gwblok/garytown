@@ -88,7 +88,10 @@ function Add-HostFileEntry {
 foreach ($Server in $Servers2Add) {
     $ServerName = $Server.SERVERNAME
     $IPAddress = $Server.IPAddress
-    if ((Test-HostFileEntry -ServerName $ServerName -IPAddress $IPAddress) -eq $false) {
+    if ((Test-HostFileEntry -ServerName $ServerName -IPAddress $IPAddress) -eq $true) {
+        # If the entry exists, we do not need to do anything
+    }
+    else {
         Add-HostFileEntry -ServerName $ServerName -IPAddress $IPAddress
     }
 }
