@@ -2,10 +2,12 @@
 
 #This Script will be used to add computer names & IPs to the hosts file
 $Servers2Add = @(
-    @{SERVERNAME = "2PSR210 " ; IPAddress = "192.168.20.25"}
+    @{SERVERNAME = "2PSR210" ; IPAddress = "192.168.20.25"}
     @{SERVERNAME = "2PSR210.2p.garytown.com" ; IPAddress = "192.168.20.25"}
-    @{SERVERNAME = "2PStifleRMOM " ; IPAddress = "192.168.20.10"}
+    @{SERVERNAME = "2PStifleRMOM" ; IPAddress = "192.168.20.10"}
     @{SERVERNAME = "2PStifleRMOM.2p.garytown.com" ; IPAddress = "192.168.20.10"}
+    @{SERVERNAME = "nas" ; IPAddress = "192.168.20.60"}
+    @{SERVERNAME = "nas.2p.garytown.com" ; IPAddress = "192.168.20.60"}
 )
 
 
