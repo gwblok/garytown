@@ -47,7 +47,7 @@ function Test-HostFileEntry{
     )
 
     $HostFilePath = "$env:SystemRoot\System32\drivers\etc\hosts"
-    $HostFileEntry = "$ServerName   $IPAddress"
+    $HostFileEntry = "$IPAddress   $ServerName"
     
     # Check if the entry already exists in the hosts file
     if (Select-String -Path $HostFilePath -Pattern $ServerName) {
