@@ -11,14 +11,34 @@ $Servers2Add = @(
 )
 
 
-#Get IP Address and run if IP Address starts with 192.168.1
-$IPAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -like "192.168.1.*" }).IPAddress
+#Approved Subnet Network Ranges for this script to run in.
+#This is very simple and only works for 192.168.X.X networks, you'd have to modify it for other networks.
+$SubnetNetworkRanges = (
+    "192.168.1",
+    "192.168.2",
+    "192.168.3"
+)
+#Get IP Address and run if IP Address starts with 192.168.
+$IPAddress = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -like "192.168.*" }).IPAddress
+write-output "IP Address found: $IPAddress"
 if (-not $IPAddress) {
-    Write-Output "The script will not run because the IP address does not start with 192.168.1."
+    Write-Output "The script will not run because the IP address does not start with 192.168."
     exit
 }
-Write-Output "IP address starts with 192.168.1. Proceeding with the script..."
-
+else {
+    $SubnetNetworkRanceFound = $false
+    ForEach ($SubnetNetworkRange in $SubnetNetworkRanges) {
+        if ([int]$IPAddress.Split(".")[2] -eq [int]"$($SubnetNetworkRange.Split('.')[2])") {
+            Write-Output "IP address matches the subnet range: $SubnetNetworkRange"
+            $SubnetNetworkRanceFound = $true
+            break
+        }
+    }
+    if ($SubnetNetworkRanceFound -eq $false) {
+        Write-Output "The script will not run because the IP address does not match any of the specified subnet ranges."
+        exit
+    }   
+}
 
 function Test-HostFileEntry{
     param (
