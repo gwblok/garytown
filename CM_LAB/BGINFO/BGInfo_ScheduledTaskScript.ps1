@@ -9,7 +9,6 @@ if (-not (Test-Path -Path $ExpandPath)) {
 }
 if (Test-Path -path $ExpandPath\Bginfo64.exe) {
     Write-Output "BGInfo already exists in $ExpandPath, skipping download."
-    exit 0
 }
 else{
     $URL = "https://download.sysinternals.com/files/$FileName"
