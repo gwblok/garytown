@@ -34,7 +34,7 @@ if (Get-WindowsEdition -Online | Where-Object { $_.Edition -match "Server" }) {
     #Download Backgound Image
     if (-not (Test-Path -Path "$ExpandPath\bginfo.png")) {
         Write-Output "Downloading Background Image"
-        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.png"
+        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.bmp"
 
     } else {
         Write-Output "Background Image already exists, skipping download."
@@ -48,7 +48,7 @@ else {
     #Download Backgound Image
     if (-not (Test-Path -Path "$ExpandPath\bginfo.png")) {
         Write-Output "Downloading Background Image"
-        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-icon-text-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.png"
+        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-icon-text-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.bmp"
 
     } else {
         Write-Output "Background Image already exists, skipping download."
