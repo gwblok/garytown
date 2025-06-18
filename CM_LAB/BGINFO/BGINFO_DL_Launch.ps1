@@ -10,9 +10,17 @@ if (-not (Test-Path -Path $ExpandPath)) {
 
 $URL = "https://download.sysinternals.com/files/$FileName"
 Write-Output "Downloading $URL"
-Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
-if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
-else{Write-Output "Failed Downloaded"; exit 255}
+# Check if the file already exists before downloading
+if (Test-Path -Path $env:TEMP\$FileName) {
+    Write-Output "File already exists in TEMP directory, skipping download."
+} else {
+    Write-Output "Downloading $FileName to $env:TEMP"
+    Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
+    if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
+    else{Write-Output "Failed Downloaded"; exit 255}
+}
+
+
 Write-Output "Starting Extraction of $FileName to $ExpandPath"
 Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
 if (Test-Path -Path $ExpandPath){Write-Output "Successfully Extracted Zip File"}
@@ -23,7 +31,13 @@ else{Write-Output "Failed Extract"; exit 255}
 Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/Server.bgi" -OutFile "$ExpandPath\Server_BGInfo.bgi"
 
 #Download Backgound Image
-Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1920x1080.bmp" -OutFile "$ExpandPath\2pint-desktop-product-icons-colour-dark-1920x1080.png"
+if (-not (Test-Path -Path "$ExpandPath\2pint-desktop-product-icons-colour-dark-1920x1080.png")) {
+    Write-Output "Downloading Background Image"
+    Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1920x1080.bmp" -OutFile "$ExpandPath\2pint-desktop-product-icons-colour-dark-1920x1080.png"
+
+} else {
+    Write-Output "Background Image already exists, skipping download."
+}
 
 
 #Create Process Vars
