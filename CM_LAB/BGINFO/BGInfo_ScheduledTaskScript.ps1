@@ -22,13 +22,14 @@ else{
         if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
         else{Write-Output "Failed Downloaded"; exit 255}
     }
+    Write-Output "Starting Extraction of $FileName to $ExpandPath"
+    Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
+    if (Test-Path -Path $ExpandPath){Write-Output "Successfully Extracted Zip File"}
+    else{Write-Output "Failed Extract"; exit 255}
 }
 
 
-Write-Output "Starting Extraction of $FileName to $ExpandPath"
-Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
-if (Test-Path -Path $ExpandPath){Write-Output "Successfully Extracted Zip File"}
-else{Write-Output "Failed Extract"; exit 255}
+
 
 #Server Config and Background Image
 if (Get-WindowsEdition -Online | Where-Object { $_.Edition -match "Server" }) {
