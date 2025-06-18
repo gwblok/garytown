@@ -7,17 +7,22 @@ if (-not (Test-Path -Path $ExpandPath)) {
     Write-Output "Creating Directory: $ExpandPath"
     New-Item -ItemType Directory -Path $ExpandPath -Force
 }
-
-$URL = "https://download.sysinternals.com/files/$FileName"
-Write-Output "Downloading $URL"
-# Check if the file already exists before downloading
-if (Test-Path -Path $env:TEMP\$FileName) {
-    Write-Output "File already exists in TEMP directory, skipping download."
-} else {
-    Write-Output "Downloading $FileName to $env:TEMP"
-    Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
-    if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
-    else{Write-Output "Failed Downloaded"; exit 255}
+if (Test-Path -path $ExpandPath\Bginfo64.exe) {
+    Write-Output "BGInfo already exists in $ExpandPath, skipping download."
+    exit 0
+}
+else{
+    $URL = "https://download.sysinternals.com/files/$FileName"
+    Write-Output "Downloading $URL"
+    # Check if the file already exists before downloading
+    if (Test-Path -Path $env:TEMP\$FileName) {
+        Write-Output "File already exists in TEMP directory, skipping download."
+    } else {
+        Write-Output "Downloading $FileName to $env:TEMP"
+        Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
+        if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
+        else{Write-Output "Failed Downloaded"; exit 255}
+    }
 }
 
 
