@@ -9,6 +9,10 @@ if (-not(Test-Path -path $RegistryKey)){
     New-Item -Path $RegistryKey -ItemType directory -Force | Out-Null
 }
 
+#Determine Screen Resolution
+Add-Type -AssemblyName System.Windows.Forms
+$ResolutionHeight = ([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Size).Height
+
 #Build Solution and Grab Data if running as SYSTEM
 $username = whoami
 if ($username -match "SYSTEM") {
@@ -46,6 +50,9 @@ if ($username -match "SYSTEM") {
     if ($HyperVEnabled){
         New-ItemProperty -Path $RegistryKey -Name 'HyperV' -PropertyType String -Value "HyperV Enabled               VMs: $((Get-VM).count)" -Force | Out-Null
     }
+    else {
+        New-ItemProperty -Path $RegistryKey -Name 'HyperV' -PropertyType String -Value "" -Force | Out-Null
+    }
     #Server Config and Background Image
     if (Get-WindowsEdition -Online | Where-Object { $_.Edition -match "Server" }) {
         Write-Output "Running on Windows Server Edition"
@@ -54,8 +61,12 @@ if ($username -match "SYSTEM") {
         #Download Backgound Image
         if (-not (Test-Path -Path "$ExpandPath\bginfo.png")) {
             Write-Output "Downloading Background Image"
-            Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.bmp"
-            
+            if ($ResolutionHeight -le 800){
+                Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1280x800.bmp" -OutFile "$ExpandPath\bginfo.bmp"
+            }
+            else {
+                Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-product-icons-colour-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.bmp"
+            }
         } else {
             Write-Output "Background Image already exists, skipping download."
         }
@@ -81,7 +92,13 @@ if ($username -match "SYSTEM") {
         #Download Backgound Image
         if (-not (Test-Path -Path "$ExpandPath\bginfo.png")) {
             Write-Output "Downloading Background Image"
-            Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-icon-text-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.bmp"
+            if ($ResolutionHeight -le 800){
+                Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-icon-text-dark-1280x800.bmp" -OutFile "$ExpandPath\bginfo.bmp"
+            }
+            else {
+                Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/2pint-desktop-icon-text-dark-1920x1080.bmp" -OutFile "$ExpandPath\bginfo.bmp"
+            }
+            
             
         } else {
             Write-Output "Background Image already exists, skipping download."
