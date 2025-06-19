@@ -14,9 +14,17 @@ if (-not(Test-Path -path 'HKLM:\SOFTWARE\2Pint Software\BGinfo')){
 $BGInfoScript | Out-File -FilePath "$ExpandPath\BGInfo_ScheduledTaskScript.ps1" -Force -Encoding UTF8
 
 
+# Create Scheduled Task to run at logon with a 2-minute delay
+$Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$ExpandPath\BGInfo_ScheduledTaskScript.ps1`""
+$Trigger = New-ScheduledTaskTrigger -AtLogOn
+$Trigger.delay = 'PT2M'
+$Principal = New-ScheduledTaskPrincipal -GroupId "BUILTIN\Users" -RunLevel Highest
+$Task = New-ScheduledTask -Action $Action -Trigger $Trigger -Principal $Principal -Description "Run BGInfo at user logon with 2-minute delay"
+Register-ScheduledTask -TaskName "BGInfo-USER" -InputObject $Task -Force
+
 #Create Scheduled Task to run at logon
 $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$ExpandPath\BGInfo_ScheduledTaskScript.ps1`""
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
-$Principal = New-ScheduledTaskPrincipal -GroupId "BUILTIN\Users" -RunLevel Highest
+$Principal = New-ScheduledTaskPrincipal "NT Authority\System" -RunLevel Highest
 $Task = New-ScheduledTask -Action $Action -Trigger $Trigger -Principal $Principal -Description "Run BGInfo at user logon"
-Register-ScheduledTask -TaskName "BGInfo" -InputObject $Task -Force
+Register-ScheduledTask -TaskName "BGInfo-SYSTEM" -InputObject $Task -Force
