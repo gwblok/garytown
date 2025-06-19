@@ -1,4 +1,22 @@
-#GARYTOWN.COM
+<#GARYTOWN.COM
+Creates: 
+- C:\ProgramData\BGInfo\ with several files
+- Registry Key HKLM:\SOFTWARE\2Pint Software\BGinfo
+- 2 Scheduled Tasks:
+    - BGInfo-USER: Runs at user logon with a 1-minute delay
+    - BGInfo-SYSTEM: Runs at system logon
+
+Current solution will:
+- Download Script that runs at logon (same script for both user and system logon) but runs differently based on the user context
+- Download BGInfo from Sysinternals
+- Create a scheduled task to run BGInfo at user logon with a 1-minute delay - This triggers BGInfo to load the background image and system information
+- Create a scheduled task to run BGInfo at system logon - This builds the registry keys and directories needed for BGInfo to run correctly
+
+When Scheduled Task runs, it will:
+- Check if the BGInfo.bgi file exists, if not, it will download it from the specified URL
+- Check OS (Client or Server) and set the appropriate background image
+- Check Resolution and set the appropriate background image
+#>
 
 $BGInfoScript = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/BGInfo_ScheduledTaskScript.ps1"
 $ExpandPath = "$env:programdata\BGInfo"
@@ -14,7 +32,7 @@ if (-not(Test-Path -path 'HKLM:\SOFTWARE\2Pint Software\BGinfo')){
 $BGInfoScript | Out-File -FilePath "$ExpandPath\BGInfo_ScheduledTaskScript.ps1" -Force -Encoding UTF8
 
 
-# Create Scheduled Task to run at logon with a 2-minute delay
+# Create Scheduled Task to run at logon with a 1-minute delay
 $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$ExpandPath\BGInfo_ScheduledTaskScript.ps1`""
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
 $Trigger.delay = 'PT1M'
