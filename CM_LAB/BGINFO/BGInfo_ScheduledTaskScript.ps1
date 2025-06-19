@@ -10,7 +10,8 @@ if (-not(Test-Path -path $RegistryKey)){
 }
 
 #Build Solution and Grab Data if running as SYSTEM
-if ($env:USERNAME -eq "SYSTEM") {
+$username = whoami
+if ($username -match "SYSTEM") {
     Write-Output "Running as SYSTEM, skipping BGInfo Scheduled Task creation."
     
     #Download & Extract to System32
