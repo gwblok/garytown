@@ -666,4 +666,33 @@ foreach ($Volume in $Volumes)
         Start-Process -FilePath $Sdelete64Path -ArgumentList $SDeleteArgs -PassThru -Wait
         } Until ($CurrentPass -eq $MaxPasses)
     }
+
+# After SDelete has run, format the drive and remove drive letters (This is more of a safeguard)
+# This Prevents the Task Sequence Engine from placing the SMSTS folder back on the drive after SDelete has ran.
+Write-Output "SDelete runs are completed, now formatting drives and removing drive letters..."
+
+foreach ($Volume in $Volumes) {
+    $partition = Get-Partition -DriveLetter $Volume.DriveLetter
+    
+    Write-Output "Formatting drive $($Volume.DriveLetter): with NTFS"
+    # Format the partition with NTFS
+    try {
+        Format-Volume -Partition $partition -FileSystem NTFS -Confirm:$false -Force
+    }
+    catch {
+        Write-Output "Error formatting drive $($Volume.DriveLetter): $_"
+        continue
+    }
+
+    $driveLetterPath = $partition.AccessPaths | Where-Object { $_ -match "^[A-Z]:\\$" }
+
+    if ($driveLetterPath) {
+        Remove-PartitionAccessPath -DiskNumber $partition.DiskNumber -PartitionNumber $partition.PartitionNumber -AccessPath $driveLetterPath
+        Write-Output "Removed drive letter: $driveLetterPath"
+    }
+    else {
+        Write-Output "No drive letter access path found to remove for $($Volume.DriveLetter):"
+    }
+}
+
 Write-Output "Completed Secure Wipe Script"
