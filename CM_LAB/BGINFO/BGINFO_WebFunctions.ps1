@@ -1,7 +1,8 @@
 # set of functions to be called when I run bginfo.garytown.com
 
 Write-Host "Loading BGInfo Web Functions..." -ForegroundColor Green
-
+write-host -ForegroundColor DarkGray "========================================================="
+write-host -ForegroundColor Cyan "BGInfo Functions"
 
 function Test-ScheduledTaskExists {
     param (
@@ -16,12 +17,12 @@ function Test-ScheduledTaskExists {
     }
 }
 
-
+Write-Host -ForegroundColor Green "[+] Function Build-BGInfoTasks"
 Function Build-BGInfoTasks {
 
     Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/CM_LAB/BGINFO/BGINFO_DL_Launch.ps1')
 }
-
+Write-Host -ForegroundColor Green "[+] Function Invoke-BGInfo"
 Function Invoke-BGInfo {
     if (Test-ScheduledTaskExists -TaskName "BGInfo-USER"){
         Write-Host "Starting Task BGInfo-SYSTEM to populate the registry and directories..." -ForegroundColor Cyan
