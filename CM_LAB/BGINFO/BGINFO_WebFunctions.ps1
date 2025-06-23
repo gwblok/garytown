@@ -23,7 +23,7 @@ Function Build-BGInfoTasks {
 }
 
 Function Invoke-BGInfo {
-    if (Test-ScheduledTaskExists -TaskName "BGInfo-USER" | Out-Null){
+    if (Test-ScheduledTaskExists -TaskName "BGInfo-USER"){
         Write-Host "Starting Task BGInfo-SYSTEM to populate the registry and directories..." -ForegroundColor Cyan
         Start-ScheduledTask -TaskName "BGInfo-SYSTEM" -ErrorAction SilentlyContinue
         Write-Host "Waiting for BGInfo-SYSTEM to complete..." -ForegroundColor Cyan
