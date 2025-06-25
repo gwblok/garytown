@@ -14,7 +14,7 @@
 
 #region ----------------------------------------------- Parameters ------------------------------------------------
 # The directory to output the resulting json file to
-$OutputDirectory = "D:\SafeGuard\AppraiserDatabase"
+$OutputDirectory = "C:\SafeGuard\AppraiserDatabase"
 # The first date you wish to start searching for valid cab file URLs from
 # 20200109 is currently the date of the earliest downloadable cab
 $StartDate = "20200109" # yyyyMMdd
