@@ -206,6 +206,7 @@ Function Invoke-HPIA {
     $ReportsFolder = "$($ReportsFolder)\$($DateTime)"
     $CMTraceLog = "$ReportsFolder\HPIACustomLog.log"
     $script:TempWorkFolder = 'C:\windows\temp\HP\HPIA\TempWorkFolder'
+    $CategoryPassthru = $Category
     [String]$Category = $($Category -join ",").ToString()
     try{
         [void][System.IO.Directory]::CreateDirectory($LogFolder)
@@ -306,7 +307,7 @@ Function Invoke-HPIA {
         Write-Output "Failed to run HPIA Commands in Try/Catch Block: $($_.Exception.Message)" 
     }
     if ($Action -eq 'List'){
-        Get-HPIAXMLResult -Category $Category
+        Get-HPIAXMLResult -Category $CategoryPassthru
     }
 
 }
