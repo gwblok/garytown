@@ -320,6 +320,9 @@ $CabDirectories | ForEach-Object -Parallel {
     [System.gc]::Collect()
 } -ThrottleLimit $ThrottleLimit
 
+
+
+
 # Reset the counter
 $syncHash['Counter'][0] = 0
 #endregion --------------------------------------------------------------------------------------------------------
@@ -330,6 +333,20 @@ $syncHash['Counter'][0] = 0
 # Each unique entry will list the date and appraiser versions of when the block was first seen, as well as the same
 # for when the blocks were last present in an sdb
 $GatedBlocks = $syncHash['GatedBlocks']
+
+#Dump RAW before removing duplicates
+try 
+{
+    [IO.File]::WriteAllLines("$AppraiserWorkingDirectory\SafeGuardHoldDataBaseRAW.json", ($GatedBlocks | ConvertTo-Json), [Text.UTF8Encoding]::new($False))
+    Write-Output "Data exported to $AppraiserWorkingDirectory\SafeGuardHoldDataBaseRAW.json."
+    Write-Output "Count of blocks before removing duplicates: $($GatedBlocks.Count)"
+}
+catch 
+{
+    throw $_.Exception.Message
+}
+
+
 Write-Output "Extracted $($GatedBlocks.Count) blocks from the XML files."
 Write-Output "Removing duplicate blocks..."
 $GroupedCollection = $GatedBlocks | Group-Object -Property EXE_ID

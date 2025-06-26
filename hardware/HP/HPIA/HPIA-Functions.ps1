@@ -316,8 +316,8 @@ Grabs the output from a recent run of HPIA and parses the XML to find recommenda
 #>
 [CmdletBinding()]
     Param (
-        [ValidateSet("All", "BIOS", "Drivers", "Software", "Firmware", "Accessories","BIOS,Drivers")]
-        $Category = "Drivers",
+        [ValidateSet("All", "BIOS", "Drivers", "Software", "Firmware", "Accessories")]
+        [String[]]$Category = @("Drivers"),
         [Parameter(Mandatory=$false)]
         $ReportsFolder = "$env:systemdrive\ProgramData\HP\HPIA",
 	$CMTraceLog = "$env:systemdrive\ProgramData\HP\Logs\HPIACustomLog.log"
