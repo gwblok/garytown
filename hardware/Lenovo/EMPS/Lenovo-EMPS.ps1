@@ -89,7 +89,6 @@ Function Import-ModuleLenovoCSM {
     $LenovoModule = Get-ChildItem -Path $ExtractedFolder -Recurse | Where-Object { $_.Name -eq "Lenovo.Client.Scripting.psm1" } 
     Import-Module -Name $LenovoModule.FullName -Force
 }
-
 function Install-LenovoSystemUpdater {
     # Define the URL and temporary file path
     Import-ModuleLenovoCSM
@@ -492,6 +491,9 @@ function Set-LenovoVantage {
     }
 }
 
+function Invoke-LenovoVantageGUI {
+    Get-AppxPackage *LenovoSettingsforEnterprise* | % {& Explorer.exe $('Shell:AppsFolder\' + $_.PackageFamilyName + ‚!' + $((Get-AppxPackageManifest $_.PackageFullName).Package.Applications.Application.id))} 
+}
 
 function Set-LenovoVantageSU {
     [CmdletBinding()]
@@ -520,7 +522,7 @@ function Set-LenovoVantageSU {
         [ValidateSet('True','False')]
         [string]$SUFilterRecommendedApplication,
         [ValidateSet('True','False')]
-        [string]$SUFilterRecommendedDrivers,
+        [string]$SUFilterRecommendedDriver,
         [ValidateSet('True','False')]
         [string]$SUFilterRecommendedBIOS,
         [ValidateSet('True','False')]
@@ -532,13 +534,13 @@ function Set-LenovoVantageSU {
         [ValidateSet('True','False')]
         [string]$SUFilterOptionalApplication,
         [ValidateSet('True','False')]
-        [string]$SUFilterOptionalDrivers,
+        [string]$SUFilterOptionalDriver,
         [ValidateSet('True','False')]
         [string]$SUFilterOptionalBIOS,
         [ValidateSet('True','False')]
         [string]$SUFilterOptionalFirmware,
         [ValidateSet('True','False')]
-        [string]$SUFilterOptionalOther
+        [string]$SUFilterOptionalOthers
     )
 
     $RegistryPath = "HKLM:\SOFTWARE\Policies\Lenovo\Commercial Vantage"
@@ -842,7 +844,7 @@ function Set-LenovoVantageAutoUpdates {
         [ValidateSet('True','False')]
         [string]$SUFilterRecommendedApplication,
         [ValidateSet('True','False')]
-        [string]$SUFilterRecommendedDrivers,
+        [string]$SUFilterRecommendedDriver,
         [ValidateSet('True','False')]
         [string]$SUFilterRecommendedBIOS,
         [ValidateSet('True','False')]
@@ -854,13 +856,13 @@ function Set-LenovoVantageAutoUpdates {
         [ValidateSet('True','False')]
         [string]$SUFilterOptionalApplication,
         [ValidateSet('True','False')]
-        [string]$SUFilterOptionalDrivers,
+        [string]$SUFilterOptionalDriver,
         [ValidateSet('True','False')]
         [string]$SUFilterOptionalBIOS,
         [ValidateSet('True','False')]
         [string]$SUFilterOptionalFirmware,
         [ValidateSet('True','False')]
-        [string]$SUFilterOptionalOther
+        [string]$SUFilterOptionalOthers
     )
 
     $RegistryPath = "HKLM:\SOFTWARE\Policies\Lenovo\Commercial Vantage"
