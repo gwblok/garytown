@@ -20,14 +20,6 @@ Get-PanasonicDeviceDownloads
 #>
 #PreReqs - PowerShell 7.0 or higher
 
-Write-Host "Functions for Panasonic Device Management" -ForegroundColor Cyan
-$Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
-if ($Manufacturer -match "Panasonic") {
-    $Model = (Get-CimInstance -ClassName Win32_ComputerSystem).Model
-    Write-Host "Manufacturer: $Manufacturer" -ForegroundColor Green
-    Write-Host "Model: $Model" -ForegroundColor Green
-}
-
 #This is used to dynamically generate the ValidateSet for the Category Parameter
 using namespace System.Management.Automation
 class ValidCatGenerator : IValidateSetValuesGenerator {
@@ -36,6 +28,16 @@ class ValidCatGenerator : IValidateSetValuesGenerator {
         return $Values
     }
 }
+
+
+Write-Host "Functions for Panasonic Device Management" -ForegroundColor Cyan
+$Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
+if ($Manufacturer -match "Panasonic") {
+    $Model = (Get-CimInstance -ClassName Win32_ComputerSystem).Model
+    Write-Host "Manufacturer: $Manufacturer" -ForegroundColor Green
+    Write-Host "Model: $Model" -ForegroundColor Green
+}
+
 
 #region Functions
 #Private
