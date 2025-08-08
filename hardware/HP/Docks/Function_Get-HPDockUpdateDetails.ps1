@@ -15,7 +15,7 @@ function Get-HPDockUpdateDetails {
     - make sure you set the $URL to the version of the firmware you want... as the of the day I write this, it's the latest one.
     
     .Requirements
-    PowerShell must have access to the interent to download the Firmware
+    PowerShell must have access to the internet to download the Firmware
     
     .Parameter UIExperience
     Sets the UI experience for the end user.  
@@ -216,13 +216,13 @@ function Get-HPDockUpdateDetails {
         $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp158001-158500/sp158026.exe'  #  01.00.12.00 Rev.E | Apr 15, 2025
             
         #Thunderbolt G4
-        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp155001-155500/sp155361.exe'   #  1.5.25.0 Rev.B | Oct 7, 2024
+        $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp158501-159000/sp158825.exe'   #  1.5.27.0 Rev.C | May 13, 2025
             
         #Thunderbolt G2
         $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153722.exe'   #  1.0.71.1 RevD | July 29, 2024
             
         #USB-C Dock G5
-        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp156001-156500/sp156379.exe'  #  1.0.23.0 Rev.B | Dec 17, 2024
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp157501-158000/sp157961.exe'  #  1.0.24.0 Rev.B | Apr 9, 2025
             
         #USB-C Universal Dock G2
         $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp156001-156500/sp156380.exe'  #  1.1.23.0 Rev.B | Dec 17, 2024
