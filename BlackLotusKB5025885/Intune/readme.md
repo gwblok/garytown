@@ -7,3 +7,4 @@ I've created this for you to get a highlevel overview of your devices and their 
 
 ### Change Log
 - 25.5.15.12.38 - Updated Intune Scripts
+- 25.8.11.15.56 - Updated UBR Check for July 2025 patch level per MS latest requirements

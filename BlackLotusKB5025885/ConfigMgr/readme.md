@@ -1,6 +1,8 @@
 # KB5025885  - Black Lotus for ConfigMgr
 
 - 25.5.13.13.6 - Updated ConfigMgr CI Scripts.  The Baseline & Scripts are all good to go
+- 25.8.11.15.57 - You'll want to update the UBR info after import.  You can check the scripts here to see the change (July 2024 -> July 2025 requirement)
+- 25.8.11.15.59 - Updated all of the individual scripts with the July UBR data
 
 Two Baselines | Remediation | Monitoring
 

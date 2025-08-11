@@ -75,3 +75,4 @@ This will contain scripts used with Intune Remediation feature.  I'll plan to ha
 - 25.5.14.10.58 - Added Update-BootMgr2023.ps1 file.  This is for when devices are reimaged while secure boot is disabled and the BootMgr doesn't get set to the 2023 signed version.
 - 25.5.14.10.59 - Moved the Task Sequence "KB5025885 - Media Creator.zip" to this location.
 - 25.5.15.12.26 - Reorganized folder structures and renamed items and updated this readme
+- 25.8.11.15.56 - Updated UBR Check for July 2025 patch level per MS latest requirements
