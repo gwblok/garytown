@@ -541,6 +541,11 @@ function Install-ExplorerPP {
     Invoke-WebRequest -Uri $URL -OutFile $DownloadPath -UseBasicParsing
     Expand-Archive -Path $DownloadPath -DestinationPath $ExtractPath -Force
 }
+
+Write-Host -ForegroundColor Green "[+] Install-OperaPortable"
+function Install-OperaPortable {
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/AppCustomizations/Opera/Install-OperaW365.ps1)
+}
 Write-Host -ForegroundColor Green "[+] Install-WMIExplorer"
 function Install-WMIExplorer {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-WMIExplorer-Remediate.ps1)

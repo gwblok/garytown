@@ -1,7 +1,12 @@
 #Builds Custom Opera Install and sets things how I want them to be
+if ($env:SystemDrive -eq "X:"){
+    $BuildPath = 'X:\OperaBuild'
+}
+else {
+    $BuildPath = 'C:\OperaBuild'
+}
 
-$BuildPath = 'c:\OperaBuild'
-$CustomConfigsPath = 'c:\OperaBuild\CustomConfigs'
+$CustomConfigsPath = "$BuildPath\CustomConfigs"
 $InstallPath = "$BuildPath\Opera"
 $OperaInstallerPath = "$BuildPath\OperaInstaller.exe"
 $URL = "https://net.geo.opera.com/opera_portable/stable/windows"
