@@ -6,7 +6,7 @@ Run Deduplication on a VM Volume
 
 #Backup Location & Map Drive
 $HostName = $env:computername
-
+$BackupDrivePath = "F:"
 $LogPath = "$BackupDrivePath\Logs"
 $GetDate = Get-Date -Format "yyyy-MM-dd"
 
