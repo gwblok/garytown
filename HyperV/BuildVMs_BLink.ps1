@@ -132,6 +132,9 @@ elseif ($HostName -eq "HPZbookSG10GARY"){
 elseif ($HostName -match "AURA"){
     $HostName = 'AURA'
 }
+elseif ($HostName -match "R640"){
+    $HostName = 'R640'
+}
 else{
     $HostName = 'HVHst'
 }
@@ -337,6 +340,15 @@ else
             $AddNotes = "Environment = CMLAB"
             $NewNotes = $CurrentNotes + "`n" + $AddNotes
             Get-VM -Name $VMname | Set-VM -Notes $NewNotes
+        }
+        elseif ($Purpose -eq "AutoPilot"){ 
+            Write-Host "  Setting Secure Boot to Off, with Microsoft UEFI Certificate Authority" -ForegroundColor Green
+            Set-VMFirmware -EnableSecureBoot Off -VMName $VMName
+            Write-Host "  Setting Test Lab Specific Configurations" -ForegroundColor Green
+            Write-Host " Setting First Boot Device to Network Adapter" -ForegroundColor Green
+            $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
+            Set-VMFirmware -FirstBootDevice  $vmNetworkAdapter -VMName $VMName
+            # Add any Test Lab specific configurations here
         }
         else{
             Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
