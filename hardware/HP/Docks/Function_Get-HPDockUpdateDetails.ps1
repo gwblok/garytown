@@ -75,6 +75,7 @@ function Get-HPDockUpdateDetails {
     24.09.05.01 - adding switch for IntuneApp to assist in deploying the updates via Intune.
     24.10.27.01 - updated USB-C G5 Dock Firmware
     25.01.21.01 - updated USB-C G5 Essential Dock Firmware, USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, and Thunderbolt G4 Firmware URLs
+    25.09.16.01 - updated USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, USB-C G5 Essential Dock Firmware, and Thunderbolt G4 Firmware URLs
 
     .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -213,7 +214,7 @@ function Get-HPDockUpdateDetails {
             
         # **** Hardcode URLs in case of no CMSL installed: ****
         #USB-C G5 Essential Dock
-        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp158001-158500/sp158026.exe'  #  01.00.12.00 Rev.E | Apr 15, 2025
+        $Url_EssG5 = 'https://ftp.hp.com/pub/softpaq/sp161501-162000/sp161681.exe'  #  01.00.12.00 Rev.H | Apr 15, 2025
             
         #Thunderbolt G4
         $Url_TBG4 = 'https://ftp.hp.com/pub/softpaq/sp158501-159000/sp158825.exe'   #  1.5.27.0 Rev.C | May 13, 2025
@@ -222,10 +223,10 @@ function Get-HPDockUpdateDetails {
         $Url_TBG2 = 'https://ftp.hp.com/pub/softpaq/sp153501-154000/sp153722.exe'   #  1.0.71.1 RevD | July 29, 2024
             
         #USB-C Dock G5
-        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp157501-158000/sp157961.exe'  #  1.0.24.0 Rev.B | Apr 9, 2025
+        $Url_UsbG5 = 'https://ftp.hp.com/pub/softpaq/sp161501-162000/sp161510.exe'  #  1.0.25.0 Rev.C | Jul 18, 2025
             
         #USB-C Universal Dock G2
-        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp156001-156500/sp156380.exe'  #  1.1.23.0 Rev.B | Dec 17, 2024
+        $Url_UniG2 = 'https://ftp.hp.com/pub/softpaq/sp161501-162000/sp161512.exe'  #  1.1.24.0 Rev.B | Jul 18, 2025
             
         #USB-C Dock G4
         $Url_UsbG4 = 'https://ftp.hp.com/pub/softpaq/sp88501-89000/sp88999.exe'     #  F.37 | Jul 15, 2018
