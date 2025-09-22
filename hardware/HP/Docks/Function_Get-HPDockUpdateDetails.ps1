@@ -5,6 +5,13 @@ function Get-HPDockUpdateDetails {
     Gary Blok | HP Inc | @gwblok | GARYTOWN.COM
     Dan Felman | HP Inc | @dan_felman 
     
+
+    NOTES... if you have issues, please try to resolve them yourself and then send me the code to help others.  I do not work for HP and I don't have access to many of the docks.
+    What I have:
+    1) HP USB-C G5 Dock
+    2) HP Thunderbolt Dock G2
+    If you would like to donate other docks in help of support of this script, please reach out to me.
+
     .Synopsis
     HP Dock Updater Script
     
