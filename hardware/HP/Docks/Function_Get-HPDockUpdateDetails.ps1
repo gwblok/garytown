@@ -189,8 +189,8 @@ function Get-HPDockUpdateDetails {
         $ThunderBoltDriver = Get-SoftpaqList -Category Driver -Os $MaxOS -OsVer $MaxOSVer | Where-Object { $_.Name -match 'Thunderbolt' -and $_.Name -notmatch "Audio" }
         $InstalledTBDriver = Get-CimInstance -ClassName Win32_PnPSignedDriver | Where-Object { $_.Description -like "*Thunderbolt*Controller*" }
         if (($Null -ne $ThunderBoltDriver) -and ($Null -ne $InstalledTBDriver)) {
-            if ($ThunderBoltDriver.Version -eq $InstalledTBDriver.DriverVersion) {
-                if (($DebugOut) -or ($Transcript)) { write-host -ForegroundColor Green "TB Driver is Updated: Availble Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)" }
+            if ($ThunderBoltDriver.Version -le $InstalledTBDriver.DriverVersion) {
+                if (($DebugOut) -or ($Transcript)) { write-host -ForegroundColor Green "TB Driver is Updated: Available Softpaq: $($ThunderBoltDriver.Version) | Installed: $($InstalledTBDriver.DriverVersion)" }
                 if ($UpdateControllerDriver) {
                     write-host -ForegroundColor Yellow " Skipping Requested Update of Drivers, already current"
                 }
