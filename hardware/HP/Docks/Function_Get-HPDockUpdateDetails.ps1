@@ -2,8 +2,8 @@ function Get-HPDockUpdateDetails {
     
     <#
     .Author 
-    Gary Blok | HP Inc | @gwblok | GARYTOWN.COM
-    Dan Felman | HP Inc | @dan_felman 
+    Gary Blok | 2Pint Software | @gwblok| GARYTOWN.COM
+    Dan Felman | @dan_felman (Method for finding attached Dock) 
     
 
     NOTES... if you have issues, please try to resolve them yourself and then send me the code to help others.  I do not work for HP and I don't have access to many of the docks.
@@ -11,6 +11,22 @@ function Get-HPDockUpdateDetails {
     1) HP USB-C G5 Dock
     2) HP Thunderbolt Dock G2
     If you would like to donate other docks in help of support of this script, please reach out to me.
+
+
+    FYI, the official HP CMSL does support Docks now, so if you want a supported method, I'd recommend moving over to their script library for Dock management
+    
+    PS C:\Users\GaryBlok> Install-Module -Name HPCMSL -AcceptLicense -Force
+    PS C:\Users\GaryBlok> Get-Command -Module HP.Docks
+
+    CommandType     Name                                               Version    Source
+    -----------     ----                                               -------    ------
+    Cmdlet          Get-HPDock                                         1.8.2      HP.Docks
+    Cmdlet          Install-HPDockWmiProvider                          1.8.2      HP.Docks
+    Cmdlet          Update-HPDockFirmware                              1.8.2      HP.Docks
+
+    .SUPPORT
+    Please contact HP Support to get help with their docks and management of their docks.
+    Community support is offered via WinAdmins Discord.  I'd start in the OSDCloud or ConfigMgr channels
 
     .Synopsis
     HP Dock Updater Script
