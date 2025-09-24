@@ -95,7 +95,7 @@ function Get-HPSoftpaqListLatest {
     $CabPath = "$env:TEMP\HPIA.cab"
     $XMLPath = "$env:TEMP\HPIA.xml"
     Write-Verbose "Invoke-WebRequest -Uri $BaseURL -OutFile $CabPath -UseBasicParsing"
-    Invoke-WebRequest -Uri $BaseURL -OutFile $CabPath -UseBasicParsing
+    Invoke-WebRequest -Uri $BaseURL -OutFile $CabPath -UseBasicParsing -ErrorAction SilentlyContinue
     $Expand = expand $CabPath $XMLPath
     [xml]$XML = Get-Content $XMLPath
     $SoftpaqList = $XML.ImagePal.Solutions.UpdateInfo
@@ -181,7 +181,7 @@ function Get-HPDriverPackLatest {
             [int]$Loop_Index = 0
             do {
                 Write-Verbose "Checking for Driver Pack for $OS $($SupportedWinXXBuilds[$loop_index])"
-                $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform | Where-Object {$_.Category -match "Driver Pack"}
+                $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform -ErrorAction SilentlyContinue | Where-Object {$_.Category -match "Driver Pack"}
                 #$DriverPack = Get-SoftpaqList -Category Driverpack -OsVer $($SupportedWinXXBuilds[$loop_index]) -Os "Win11" -ErrorAction SilentlyContinue
             
                 if (!($DriverPack)){$Loop_Index++;}
@@ -203,7 +203,7 @@ function Get-HPDriverPackLatest {
                 [int]$Loop_Index = 0
                 do {
                     Write-Verbose "Checking for Driver Pack for $OS $($SupportedWinXXBuilds[$loop_index])"
-                    $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS  -Platform $MachinePlatform | Where-Object {$_.Category -match "Driver Pack"}
+                    $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform -ErrorAction SilentlyContinue | Where-Object {$_.Category -match "Driver Pack"}
                     #$DriverPack = Get-SoftpaqList -Category Driverpack -OsVer $($SupportedWinXXBuilds[$loop_index]) -Os "Win10" -ErrorAction SilentlyContinue
                     if (!($DriverPack)){$Loop_Index++;}
                     if ($DriverPack){
