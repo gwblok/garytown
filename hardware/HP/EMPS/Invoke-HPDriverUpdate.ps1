@@ -967,7 +967,7 @@ Function Invoke-HPAnalyzer {
     TraceLog -Message '-- Retrieving PnP Drivers list for analysis' 
     if ( -not $Script:TargetFile ) {
         #$PnpSignedDrivers = Get-CimInstance win32_PnpSignedDriver | where { $_.DriverVersion }
-	$PnpSignedDrivers = Get-WMIObject win32_PnpSignedDriver | where { $_.DriverVersion }
+	$PnpSignedDrivers = Get-CimInstance win32_PnpSignedDriver | where { $_.DriverVersion }
     }
     TraceLog -Message '-- Linking to Registry entries (installed apps and UWP)'
     $InstalledApps = Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'

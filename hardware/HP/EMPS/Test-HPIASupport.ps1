@@ -181,9 +181,13 @@ function Get-HPDriverPackLatest {
             [int]$Loop_Index = 0
             do {
                 Write-Verbose "Checking for Driver Pack for $OS $($SupportedWinXXBuilds[$loop_index])"
-                $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform -ErrorAction SilentlyContinue | Where-Object {$_.Category -match "Driver Pack"}
-                #$DriverPack = Get-SoftpaqList -Category Driverpack -OsVer $($SupportedWinXXBuilds[$loop_index]) -Os "Win11" -ErrorAction SilentlyContinue
-            
+                try {
+                    $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform -ErrorAction SilentlyContinue | Where-Object {$_.Category -match "Driver Pack"}
+                    #$DriverPack = Get-SoftpaqList -Category Driverpack -OsVer $($SupportedWinXXBuilds[$loop_index]) -Os "Win11" -ErrorAction SilentlyContinue
+                }
+                catch {
+                    <#Do this if a terminating exception happens#>
+                }
                 if (!($DriverPack)){$Loop_Index++;}
                 if ($DriverPack){
                     Write-Verbose "Windows 11 $($SupportedWinXXBuilds[$loop_index]) Driver Pack Found"
@@ -203,8 +207,13 @@ function Get-HPDriverPackLatest {
                 [int]$Loop_Index = 0
                 do {
                     Write-Verbose "Checking for Driver Pack for $OS $($SupportedWinXXBuilds[$loop_index])"
-                    $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform -ErrorAction SilentlyContinue | Where-Object {$_.Category -match "Driver Pack"}
-                    #$DriverPack = Get-SoftpaqList -Category Driverpack -OsVer $($SupportedWinXXBuilds[$loop_index]) -Os "Win10" -ErrorAction SilentlyContinue
+                    try {
+                        $DriverPack = Get-HPSoftPaqItems -osver $($SupportedWinXXBuilds[$loop_index]) -os $OS -Platform $MachinePlatform -ErrorAction SilentlyContinue | Where-Object {$_.Category -match "Driver Pack"}
+                        #$DriverPack = Get-SoftpaqList -Category Driverpack -OsVer $($SupportedWinXXBuilds[$loop_index]) -Os "Win10" -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                        <#Do this if a terminating exception happens#>
+                    }
                     if (!($DriverPack)){$Loop_Index++;}
                     if ($DriverPack){
                         Write-Verbose "Windows 10 $($SupportedWinXXBuilds[$loop_index]) Driver Pack Found"
