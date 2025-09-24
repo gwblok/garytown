@@ -6,7 +6,7 @@ Write-Host -ForegroundColor Green "[+] Function Get-HPOSSupport"
 Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqListLatest"
 Write-Host -ForegroundColor Green "[+] Function Get-HPSoftpaqItems"
 Write-Host -ForegroundColor Green "[+] Function Get-HPDriverPackLatest"
-iex (irm https://raw.githubusercontent.com/OSDeploy/OSD/master/Public/OSDCloudTS/Test-HPIASupport.ps1)
+iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/HP/EMPS/Test-HPIASupport.ps1)
 
 Write-Host -ForegroundColor Cyan " ** HPIA Functions **"
 Write-Host -ForegroundColor Green "[+] Function Get-HPIALatestVersion"
