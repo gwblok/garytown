@@ -557,6 +557,9 @@ Write-Host -ForegroundColor Green "[+] Install-Git"
 Function Install-Git {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-Git.ps1)
 }
+Write-Host -ForegroundColor Green "[+] Install-VSCode"
+iex (irm https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/DeployR/TSScripts/Functions/Install-VSCode.ps1)
+
 Write-Host -ForegroundColor Green "[+] Install-PowerShell7"
 Function Install-PowerShell7 {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-PowerShellMSI.ps1)
