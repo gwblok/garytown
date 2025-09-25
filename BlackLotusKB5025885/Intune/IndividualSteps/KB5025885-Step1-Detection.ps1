@@ -1,8 +1,8 @@
 <# 
     Gary Blok & Mike Terrill
-    KB5025885 Detection Script
+    KB5025885 Detection Script-Intune
     Step 1 of 4
-    Version: 25.05.10
+    Version: 25.09.25
 #>
 
 #Test if Remediation is applicable
