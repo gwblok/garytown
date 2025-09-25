@@ -1,4 +1,8 @@
 <#
+    Gary Blok & Mike Terrill
+    KB5025885 Monitoring Only Script-Intune
+    Version: 25.09.25
+
 This is a monitoring script for the remediation of KB5025885
 This will not make any changes, but only report on the status of the remediation for KB5025885
 It will exit with different error codes based on the status of the remediation
