@@ -105,7 +105,8 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
     Function Invoke-Step12Combo {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x280 to enable Step 1 & Step 2"
-        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x140 -Force
+        $RegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
+        New-ItemProperty -Path $RegPath -Name 'AvailableUpdates' -PropertyType dword -Value 0x140 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 2
