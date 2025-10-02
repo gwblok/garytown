@@ -15,6 +15,9 @@ function Invoke-BlackLotusKB5025885Compliance {
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection4')]
         [switch] $Step4,
 
+        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection12')]
+        [switch] $Step12Combo,
+
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection34')]
         [switch] $Step34Combo,
 
@@ -100,7 +103,17 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host "Applied the SVN update to the firmware, but no detection method available." 
         return $null
     }
-    Function Invoke-Step34Combo {
+    Function Invoke-Step12Combo {
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x280 to enable Step 1 & Step 2"
+        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x140 -Force
+        Start-Sleep -Seconds 1
+        Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
+        Start-Sleep -Seconds 2
+        Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
+        return $null
+    }
+
+        Function Invoke-Step34Combo {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x280 to enable Step 3 & Step 4"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x280 -Force
         Start-Sleep -Seconds 1
@@ -109,7 +122,6 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
         return $null
     }
-
 
     #Region Applicability
     $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
@@ -187,6 +199,10 @@ function Invoke-BlackLotusKB5025885Compliance {
             Invoke-Step1
             return $null
         }
+        if ($Step12Combo -eq $true){
+            Invoke-Step12Combo
+            return $null
+        }
     }
 
     Write-Output "======================================================================"
@@ -197,6 +213,10 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Updating the boot manager |  1799 | The PCA2023 signed boot manager was applied."
         if ($Step2 -eq $true -or $NextStep -eq $true){
             Invoke-Step2
+            return $null
+        }
+        if ($Step12Combo -eq $true){
+            Invoke-Step12Combo
             return $null
         }
     }

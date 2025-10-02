@@ -3,7 +3,7 @@ param(
     [Switch]$Check = $true
 )
     
-$StagingFolder = "D:\OSDCloudBuild-Catalogs\Check4UpgradedMCT"
+$StagingFolder = "C:\OSDCloudBuild-Catalogs\Check4UpgradedMCT"
 if (!(Test-Path -Path $StagingFolder)){
     new-item -Path $StagingFolder -ItemType Directory | Out-Null
 }
