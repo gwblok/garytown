@@ -349,7 +349,7 @@ function Get-PanasonicDeviceDownloads{
 
     #return $JSONResponse | Select-Object -Property "title","doc_updated_on","doc_no","detail_url" 
 }
-
+write-host "+ Function Install-AllPanasonicModules" -ForegroundColor Green
 Function Install-AllPanasonicModules {
     $Modules = @(
         "PanasonicCommandUpdate",
