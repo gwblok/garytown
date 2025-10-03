@@ -291,72 +291,74 @@ Function Get-PanasonicDeviceDetails {
     }
 }
 Write-Host "+ Function Get-PanasonicDeviceDownloads" -ForegroundColor Green
-function Get-PanasonicDeviceDownloads{
-    [CmdletBinding()]
-    param (
-        [validateSet("FZ-40", "FZ-55", "FZ-A1", "FZ-A2", "FZ-A3", "JT-B1", "FZ-B2", "FZ-E1", "FZ-F1", "FZ-G1", "FZ-G2", "FZ-L1", "FZ-M1", "FZ-N1", "FZ-Q1", "FZ-Q2", "FZ-R1", "FZ-S1", "FZ-T1", "FZ-X1", "FZ-Y1", "UT-MB5", "UT-MA6", "CF-19", "CF-20", "CF-30", "CF-31", "CF-33", "CF-52", "CF-53", "CF-54", "CF-AX2", "CF-AX3", "CF-C1", "CF-C2", "CF-D1", "CF-F9", "CF-FV3", "CF-FV4", "CF-H1", "CF-H2", "CF-LV8", "CF-LX3", "CF-LX6", "CF-MX4", "CF-S9", "CF-S10", "CF-SR4", "CF-SV1", "CF-SV8", "CF-SX1", "CF-SX2", "CF-SX4", "CF-SZ6", "CF-U1", "CF-XZ6", "Option (FZ series)", "Option (CF series)", "All Model")]
-        [string]$Series,
-        [string]$ModelWebID,
-        [Parameter(Mandatory=$true)]
-        [ValidateSet( [ValidCatGenerator] )]
-        [string]$Category,
-        [switch]$Details
-    )
-    $Categories = Get-PanasonicDLCategories
-    $CategoryInfo = $Categories | Where-Object { $_.name -match $Category }
-    $CategoryValue = $CategoryInfo.value
-    Write-Verbose "RequestedCategory: $Category"
-    Write-Verbose "CategoryInfo: $CategoryInfo"
-    #Get-PanasonicDeviceDetails -Series $Series
-    $SeriesInfo = Get-PanasonicSeriesInfo
-    $SeriesID = ($SeriesInfo | Where-Object { $_.Series -eq $Series }).SeriesID
-    write-verbose "Requested Series: $Series"
-    write-verbose "Series Info: $SeriesID"
-    [string]$url = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search"
-    [string]$query = "&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)"
-    $apiurl = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search?q=&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)&p2=$($ModelWebID)"
-    Write-Verbose "Url: $url"
-    Write-Verbose "query: $query"
-    write-verbose "API URL: $apiurl"
-    $response = Get-ApiData -url $apiurl
-    $JSONResponse = $response.search_results | ConvertTo-Json -Depth 5 | ConvertFrom-Json
+if ($PSVersion -ge 7) {
+    function Get-PanasonicDeviceDownloads{
+        [CmdletBinding()]
+        param (
+            [validateSet("FZ-40", "FZ-55", "FZ-A1", "FZ-A2", "FZ-A3", "JT-B1", "FZ-B2", "FZ-E1", "FZ-F1", "FZ-G1", "FZ-G2", "FZ-L1", "FZ-M1", "FZ-N1", "FZ-Q1", "FZ-Q2", "FZ-R1", "FZ-S1", "FZ-T1", "FZ-X1", "FZ-Y1", "UT-MB5", "UT-MA6", "CF-19", "CF-20", "CF-30", "CF-31", "CF-33", "CF-52", "CF-53", "CF-54", "CF-AX2", "CF-AX3", "CF-C1", "CF-C2", "CF-D1", "CF-F9", "CF-FV3", "CF-FV4", "CF-H1", "CF-H2", "CF-LV8", "CF-LX3", "CF-LX6", "CF-MX4", "CF-S9", "CF-S10", "CF-SR4", "CF-SV1", "CF-SV8", "CF-SX1", "CF-SX2", "CF-SX4", "CF-SZ6", "CF-U1", "CF-XZ6", "Option (FZ series)", "Option (CF series)", "All Model")]
+            [string]$Series,
+            [string]$ModelWebID,
+            [Parameter(Mandatory=$true)]
+            [ValidateSet( [ValidCatGenerator] )]
+            [string]$Category,
+            [switch]$Details
+        )
+        $Categories = Get-PanasonicDLCategories
+        $CategoryInfo = $Categories | Where-Object { $_.name -match $Category }
+        $CategoryValue = $CategoryInfo.value
+        Write-Verbose "RequestedCategory: $Category"
+        Write-Verbose "CategoryInfo: $CategoryInfo"
+        #Get-PanasonicDeviceDetails -Series $Series
+        $SeriesInfo = Get-PanasonicSeriesInfo
+        $SeriesID = ($SeriesInfo | Where-Object { $_.Series -eq $Series }).SeriesID
+        write-verbose "Requested Series: $Series"
+        write-verbose "Series Info: $SeriesID"
+        [string]$url = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search"
+        [string]$query = "&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)"
+        $apiurl = "https://global-pc-support.connect.panasonic.com/dl/api/v1/search?q=&dc%5B%5D=$($CategoryValue)&p1=$($SeriesID)&p2=$($ModelWebID)"
+        Write-Verbose "Url: $url"
+        Write-Verbose "query: $query"
+        write-verbose "API URL: $apiurl"
+        $response = Get-ApiData -url $apiurl
+        $JSONResponse = $response.search_results | ConvertTo-Json -Depth 5 | ConvertFrom-Json
 
-    if ($Details){
-        $DownloadDetailsObjectArray = @()
-        foreach ($Download in $JSONResponse){
-            $DetailResponseRAW = Get-ApiData -url $Download.detail_url
-            $DetailResponse = $DetailResponseRAW
-            $DownloadDetailsObject = New-Object PSObject -Property @{
-                Category = $Category
-                Series = $Series
-                ModelWebID = $ModelWebID
-                Title = $Download.title
-                DocumentNumber = $Download.doc_no
-                Updated = $Download.doc_updated_on
-                DocumentURL = $Download.detail_url
-                Path = $DetailResponse.files.Path
+        if ($Details){
+            $DownloadDetailsObjectArray = @()
+            foreach ($Download in $JSONResponse){
+                $DetailResponseRAW = Get-ApiData -url $Download.detail_url
+                $DetailResponse = $DetailResponseRAW
+                $DownloadDetailsObject = New-Object PSObject -Property @{
+                    Category = $Category
+                    Series = $Series
+                    ModelWebID = $ModelWebID
+                    Title = $Download.title
+                    DocumentNumber = $Download.doc_no
+                    Updated = $Download.doc_updated_on
+                    DocumentURL = $Download.detail_url
+                    Path = $DetailResponse.files.Path
+                }
+                $DownloadDetailsObjectArray += $DownloadDetailsObject
             }
-            $DownloadDetailsObjectArray += $DownloadDetailsObject
         }
-    }
-    else{
-        $DownloadDetailsObjectArray = @()
-        foreach ($Download in $JSONResponse){
-            $DownloadDetailsObject = New-Object PSObject -Property @{
-                Category = $Category
-                Series = $Series
-                ModelWebID = $ModelWebID
-                Title = $Download.title
-                DocumentNumber = $Download.doc_no
-                Updated = $Download.doc_updated_on
-                DocumentURL = $Download.detail_url
+        else{
+            $DownloadDetailsObjectArray = @()
+            foreach ($Download in $JSONResponse){
+                $DownloadDetailsObject = New-Object PSObject -Property @{
+                    Category = $Category
+                    Series = $Series
+                    ModelWebID = $ModelWebID
+                    Title = $Download.title
+                    DocumentNumber = $Download.doc_no
+                    Updated = $Download.doc_updated_on
+                    DocumentURL = $Download.detail_url
+                }
+                $DownloadDetailsObjectArray += $DownloadDetailsObject
             }
-            $DownloadDetailsObjectArray += $DownloadDetailsObject
         }
-    }
-    return $DownloadDetailsObjectArray
+        return $DownloadDetailsObjectArray
 
-    #return $JSONResponse | Select-Object -Property "title","doc_updated_on","doc_no","detail_url" 
+        #return $JSONResponse | Select-Object -Property "title","doc_updated_on","doc_no","detail_url" 
+    }
 }
 write-host "+ Function Install-AllPanasonicModules" -ForegroundColor Green
 Function Install-AllPanasonicModules {
