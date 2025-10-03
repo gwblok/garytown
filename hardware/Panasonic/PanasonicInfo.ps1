@@ -29,12 +29,6 @@ if ($PSVersion -ge 7) {
         }
     }
 }
-#This is used to dynamically generate the ValidateSet for the Category Parameter
-
-#>
-
-# Get PowerShell Version
-
 
 Write-Host "Functions for Panasonic Device Management" -ForegroundColor Cyan
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
