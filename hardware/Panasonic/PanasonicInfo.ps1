@@ -37,10 +37,14 @@ if ($Manufacturer -match "Panasonic") {
     Write-Host "Manufacturer: $Manufacturer" -ForegroundColor Green
     Write-Host "Model: $Model" -ForegroundColor Green
     write-host "--------------------------------------------------"
+    Write-Host -ForegroundColor Green "[+] Function Invoke-MMSDemo2025"
+    function Invoke-MMSDemo2025 {
+        Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/hardware/Panasonic/PanasonicMMSDemo.ps1')
+    }
+    write-host "--------------------------------------------------"
     write-host "Notes - Panasonic Command Update requires PowerShell 5 (Not higher)" -ForegroundColor Yellow
     write-host "Panasonic URL: https://global-pc-support.connect.panasonic.com/driver/deployment-support-tools" -ForegroundColor Magenta
 }
-
 
 #region Functions
 #Private
