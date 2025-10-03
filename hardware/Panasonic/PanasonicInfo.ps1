@@ -363,6 +363,11 @@ Function Install-AllPanasonicModules {
         "PanasonicCommandBIOSSettings"
     )
     foreach ($Module in $Modules) {
+        #Check if Module already installed before installing:
+        if (Get-Module -ListAvailable -Name $Module) {
+            Write-Host "Module $Module is already installed." -ForegroundColor Yellow
+            continue
+        }
         Write-Host "Installing Module: $Module" -ForegroundColor Cyan
         try {
             Install-Module -Name $Module -Scope AllUsers -Force -AllowClobber -Repository PSGallery
