@@ -21,6 +21,7 @@ Get-PanasonicDeviceDownloads
 using namespace System.Management.Automation
 $PSVersion = $PSVersionTable.PSVersion.Major
 if ($PSVersion -ge 7) {
+    write-host "loading PowerShell 7 specific code" -ForegroundColor Green
     class ValidCatGenerator : IValidateSetValuesGenerator {
         [string[]] GetValidValues() {
             $Values = (Get-PanasonicDLCategories).Name
