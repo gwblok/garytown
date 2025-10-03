@@ -36,6 +36,8 @@ if ($Manufacturer -match "Panasonic") {
     $Model = (Get-CimInstance -ClassName Win32_ComputerSystem).Model
     Write-Host "Manufacturer: $Manufacturer" -ForegroundColor Green
     Write-Host "Model: $Model" -ForegroundColor Green
+    write-host "--------------------------------------------------"
+    write-host "Notes - Panasonic Command Update requires PowerShell 5 (Not higher)"
 }
 
 
@@ -345,6 +347,24 @@ function Get-PanasonicDeviceDownloads{
     return $DownloadDetailsObjectArray
 
     #return $JSONResponse | Select-Object -Property "title","doc_updated_on","doc_no","detail_url" 
+}
+
+Function Install-AllPanasonicModules {
+    $Modules = @(
+        "PanasonicCommandUpdate",
+        "PanasonicCommandPCSettings",
+        "PanasonicCommandBIOSSettings"
+    )
+    foreach ($Module in $Modules) {
+        Write-Host "Installing Module: $Module" -ForegroundColor Cyan
+        try {
+            Install-Module -Name $Module -Scope AllUsers -Force -AllowClobber -Repository PSGallery
+            Write-Host "Successfully installed $Module" -ForegroundColor Green
+        }
+        catch {
+            Write-Error "Failed to install $Module - $_"
+        }
+    }
 }
 
 
