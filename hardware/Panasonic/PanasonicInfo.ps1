@@ -19,17 +19,22 @@ Get-PanasonicDeviceDownloads
 
 #>
 #PreReqs - PowerShell 7.0 or higher
-
-<#
-#This is used to dynamically generate the ValidateSet for the Category Parameter
 using namespace System.Management.Automation
+$PSVersion = $PSVersionTable.PSVersion.Major
+if ($PSVersion -ge 7) {
 class ValidCatGenerator : IValidateSetValuesGenerator {
     [string[]] GetValidValues() {
         $Values = (Get-PanasonicDLCategories).Name
         return $Values
     }
 }
+}
+#This is used to dynamically generate the ValidateSet for the Category Parameter
+
 #>
+
+# Get PowerShell Version
+
 
 Write-Host "Functions for Panasonic Device Management" -ForegroundColor Cyan
 $Manufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
