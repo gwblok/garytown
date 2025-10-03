@@ -16,18 +16,17 @@ Other?
 Get-PanasonicDeviceDetails
 Get-PanasonicDeviceDownloads
 
-
 #>
 #PreReqs - PowerShell 7.0 or higher
 using namespace System.Management.Automation
 $PSVersion = $PSVersionTable.PSVersion.Major
 if ($PSVersion -ge 7) {
-class ValidCatGenerator : IValidateSetValuesGenerator {
-    [string[]] GetValidValues() {
-        $Values = (Get-PanasonicDLCategories).Name
-        return $Values
+    class ValidCatGenerator : IValidateSetValuesGenerator {
+        [string[]] GetValidValues() {
+            $Values = (Get-PanasonicDLCategories).Name
+            return $Values
+        }
     }
-}
 }
 #This is used to dynamically generate the ValidateSet for the Category Parameter
 
