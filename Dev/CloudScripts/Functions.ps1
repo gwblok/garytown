@@ -1205,8 +1205,28 @@ function Set-GitUsernameEmail {
         [Parameter(Mandatory=$true)]
         [string]$GitEmail
     )
-    git config --global user.name $GitUsername
-    git config --global user.email $GitEmail
+# Log start of configuration
+Write-Host "Starting Git configuration..." -ForegroundColor Green
+
+# Set Git global username
+Write-Host "Setting Git username to: $GitUsername"
+Start-process -FilePath  'C:\Program Files\Git\bin\git.exe' -ArgumentList "config --global user.name $GitUsername" -wait -NoNewWindow
+
+# Verify username was set
+Write-Host "Current Git username:" -ForegroundColor Cyan
+$configuredEmail = Start-process -FilePath  'C:\Program Files\Git\bin\git.exe' -ArgumentList "config --global user.name" -NoNewWindow -Wait -PassThru
+
+
+# Set Git global email
+Write-Host "Setting Git email to: $gitEmail"
+Start-process -FilePath  'C:\Program Files\Git\bin\git.exe' -ArgumentList "config --global user.email $gitEmail" -wait -NoNewWindow
+
+# Verify email was set
+Write-Host "Current Git email:" -ForegroundColor Cyan
+$configuredEmail = Start-process -FilePath  'C:\Program Files\Git\bin\git.exe' -ArgumentList "config --global user.email" -NoNewWindow -Wait -PassThru
+
+# Log completion
+Write-Host "Git configuration completed successfully!" -ForegroundColor Green
 }
 
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
