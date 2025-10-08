@@ -1,69 +1,17 @@
 #to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)
 
-#region Initialization
-function Write-DarkGrayDate {
-    [CmdletBinding()]
-    param (
-        [Parameter(Position = 0)]
-        [System.String]
-        $Message
-    )
-    if ($Message) {
-        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
-    }
-    else {
-        Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-    }
-}
-function Write-DarkGrayHost {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]
-        $Message
-    )
-    Write-Host -ForegroundColor DarkGray $Message
-}
-function Write-DarkGrayLine {
-    [CmdletBinding()]
-    param ()
-    Write-Host -ForegroundColor DarkGray '========================================================================='
-}
-function Write-SectionHeader {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]
-        $Message
-    )
-    Write-DarkGrayLine
-    Write-DarkGrayDate
-    Write-Host -ForegroundColor Cyan $Message
-}
-function Write-SectionSuccess {
-    [CmdletBinding()]
-    param (
-        [Parameter(Position = 0)]
-        [System.String]
-        $Message = 'Success!'
-    )
-    Write-DarkGrayDate
-    Write-Host -ForegroundColor Green $Message
-}
-
-#endregion
 
 #https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1
-$ScriptName = 'TyDoneRight'
+$ScriptName = 'OSDCloudWrapperDemo'
 $ScriptVersion = '25.2.3.1'
 
 
-
+#Only Run this section from in WinPE
 if ($env:SystemDrive -eq 'X:') {
-    $LogName = "TyDoneRight-$((Get-Date).ToString('yyyy-MM-dd-HHmmss')).log"
+    $LogName = "OSDCloudDemo-$((Get-Date).ToString('yyyy-MM-dd-HHmmss')).log"
     Start-Transcript -Path $env:TEMP\$LogName -Append -Force
 
-    Write-SectionHeader -Message "Starting $ScriptName $ScriptVersion"
+    Write-Host "Starting $ScriptName $ScriptVersion"
     write-host "Added Function New-SetupCompleteOSDCloudFiles" -ForegroundColor Green
 
 
@@ -109,7 +57,7 @@ if ($env:SystemDrive -eq 'X:') {
     #Enable HPIA | Update HP BIOS | Update HP TPM
     
     if (Test-HPIASupport){
-        Write-SectionHeader -Message "Detected HP Device, Enabling HPIA, HP BIOS and HP TPM Updates"
+        Write-Host "Detected HP Device, Enabling HPIA, HP BIOS and HP TPM Updates"
         #$Global:MyOSDCloud.DevMode = [bool]$True
         $Global:MyOSDCloud.HPTPMUpdate = [bool]$True
         if ($Product -ne '83B2' -and $Model -notmatch "zbook"){$Global:MyOSDCloud.HPIAALL = [bool]$true} #I've had issues with this device and HPIA
@@ -121,7 +69,7 @@ if ($env:SystemDrive -eq 'X:') {
 
 
     #write variables to console
-    Write-SectionHeader "OSDCloud Variables"
+    Write-Host "OSDCloud Variables"
     Write-Output $Global:MyOSDCloud
 
     #Update Files in Module that have been updated since last PowerShell Gallery Build (Testing Only)
@@ -129,61 +77,12 @@ if ($env:SystemDrive -eq 'X:') {
     #import-module "$ModulePath\OSD.psd1" -Force
 
     #Launch OSDCloud
-    Write-SectionHeader -Message "Starting OSDCloud"
+    Write-Host "Starting OSDCloud"
     write-host "Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage"
 
     Start-OSDCloud -OSName $OSName -OSEdition $OSEdition -OSActivation $OSActivation -OSLanguage $OSLanguage
 
-    #region Functions
-    function Write-DarkGrayDate {
-        [CmdletBinding()]
-        param (
-            [Parameter(Position = 0)]
-            [System.String]
-            $Message
-        )
-        if ($Message) {
-            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) $Message"
-        }
-        else {
-            Write-Host -ForegroundColor DarkGray "$((Get-Date).ToString('yyyy-MM-dd-HHmmss')) " -NoNewline
-        }
-    }
-    function Write-DarkGrayHost {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $true, Position = 0)]
-            [System.String]
-            $Message
-        )
-        Write-Host -ForegroundColor DarkGray $Message
-    }
-    function Write-DarkGrayLine {
-        [CmdletBinding()]
-        param ()
-        Write-Host -ForegroundColor DarkGray '========================================================================='
-    }
-    function Write-SectionHeader {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory = $true, Position = 0)]
-            [System.String]
-            $Message
-        )
-        Write-DarkGrayLine
-        Write-DarkGrayDate
-        Write-Host -ForegroundColor Cyan $Message
-    }
-    function Write-SectionSuccess {
-        [CmdletBinding()]
-        param (
-            [Parameter(Position = 0)]
-            [System.String]
-            $Message = 'Success!'
-        )
-        Write-DarkGrayDate
-        Write-Host -ForegroundColor Green $Message
-    }
+    
     function New-SetupCompleteOSDCloudFiles{
         
         $SetupCompletePath = "C:\OSDCloud\Scripts\SetupComplete"
@@ -210,31 +109,32 @@ if ($env:SystemDrive -eq 'X:') {
         #Create PowerShell File to do actions
 
         New-Item -Path $PSFilePath -ItemType File -Force
-        Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete TyDoneRight Script Process'"
-        Add-Content -path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'"
+        Add-Content -path $PSFilePath "Write-Output 'Starting SetupComplete OSDCloudWrapperDemo Script Process'"
+        Add-Content -path $PSFilePath "Write-Output 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/OSDCloudWrapperDemo.ps1)'"
         Add-Content -path $PSFilePath 'if ((Test-WebConnection) -ne $true){Write-error "No Internet, Sleeping 2 Minutes" ; start-sleep -seconds 120}'
-        Add-Content -path $PSFilePath 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)'
+        Add-Content -path $PSFilePath 'iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/OSDCloudWrapperDemo.ps1)'
     }
-    #endregion
-    Write-SectionHeader -Message "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot"
-
-    Write-SectionHeader -Message "Creating Custom SetupComplete Files for Hope"
+    Write-Host "==================================================" -ForegroundColor DarkGray
+    Write-Host "OSDCloud Process Complete, Running Custom Actions From Script Before Reboot" -ForegroundColor Magenta
+    Write-Host "Creating Custom SetupComplete Files for Hope" -ForegroundColor Cyan
     
     New-SetupCompleteOSDCloudFiles
 
-    #Copy CMTrace Local:
+    #Copy CMTrace Local if in WinPE Media
     if (Test-path -path "x:\windows\system32\cmtrace.exe"){
         copy-item "x:\windows\system32\cmtrace.exe" -Destination "C:\Windows\System\cmtrace.exe" -verbose
     }
 
+    #Copy LSUClient Module to Program Files if Lenovo Device
+    #This is needed for the LenovoBIOSUpdate to work in Windows
     if ($Manufacturer -match "Lenovo") {
         $PowerShellSavePath = 'C:\Program Files\WindowsPowerShell'
         Write-Host "Copy-PSModuleToFolder -Name LSUClient to $PowerShellSavePath\Modules"
         Copy-PSModuleToFolder -Name LSUClient -Destination "$PowerShellSavePath\Modules"
     }
-
+    #Copy Logs if available
     if (Test-Path -Path $env:TEMP\$LogName){
-        Write-DarkGrayHost -Message "Copying Log to C:\OSDCloud\Logs"
+        Write-Host -ForegroundColor DarkGray "Copying Log to C:\OSDCloud\Logs"
         Stop-Transcript
         Copy-Item -Path $env:TEMP\$LogName -Destination C:\OSDCloud\Logs -Force
     }
@@ -243,7 +143,8 @@ if ($env:SystemDrive -eq 'X:') {
 }
 else {
     <# This will happen from inside Setup Complete #>
-    Write-SectionHeader -Message "Starting $ScriptName $ScriptVersion"
-    Write-Output "If you see this, then it worked!"
+    Write-Host "Starting $ScriptName $ScriptVersion"
+    Write-Output "If you see this, then it worked! (Wrapper Script injected into SetupComplete)"
+    #IF you want to add more things to do inside of Setup Complete, add them here!
 }
 
