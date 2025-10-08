@@ -1,9 +1,9 @@
-#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1)
+#to Run, boot OSDCloudUSB, at the PS Prompt: iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/OSDCloudWrapperDemo.ps1)
 
 
-#https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/TyDoneRight.ps1
+#https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Dev/CloudScripts/OSDCloudWrapperDemo.ps1
 $ScriptName = 'OSDCloudWrapperDemo'
-$ScriptVersion = '25.2.3.1'
+$ScriptVersion = '25.10.7.1'
 
 
 #Only Run this section from in WinPE
