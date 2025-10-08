@@ -58,6 +58,24 @@ else{
     Write-Host "Using IntuneWinAppUtil: $IntuneUtilPath" -ForegroundColor Green
 }
 
+$MSI = Get-ChildItem -Path $App.FullName -Filter *.msi
+if ($MSI) {
+    $WindowsInstaller = New-Object -ComObject WindowsInstaller.Installer
+    $Database = $WindowsInstaller.OpenDatabase($MSI.FullName, 0)
+    $View = $Database.OpenView("SELECT Value FROM Property WHERE Property = 'ProductCode'")
+    $View.Execute()
+    $Record = $View.Fetch()
+    if ($Record) {
+        $ProductCode = $Record.StringData(1)
+        Write-Output "Product Code: $ProductCode"
+    } else {
+        Write-Output "Product Code not found."
+    }
+    $View.Close()
+    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($WindowsInstaller) | Out-Null
+} else {
+    Write-Output "No MSI file found."
+}
 
 $App = get-item -Path $SourceAppPath
 $SetupCMD = Get-ChildItem -Path $App.FullName -Filter *.cmd
@@ -75,3 +93,4 @@ write-Host "& $IntuneUtilPath -c $SetupFolder -s $($SetupEXE.FullName) -o $Outpu
 & $IntuneUtilPath -c $SetupFolder -s $SetupEXE.FullName -o $OutputAppPath -q
 
 Write-Host "Finished App for Intune: $OutputAppPath" -ForegroundColor Green
+if ($MSI){Write-Output "Product Code: $ProductCode"}
