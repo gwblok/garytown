@@ -99,6 +99,7 @@ function Get-HPDockUpdateDetails {
     24.10.27.01 - updated USB-C G5 Dock Firmware
     25.01.21.01 - updated USB-C G5 Essential Dock Firmware, USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, and Thunderbolt G4 Firmware URLs
     25.09.16.01 - updated USB-C G5 Dock Firmware, USB-C Universal Dock G2 Firmware, USB-C G5 Essential Dock Firmware, and Thunderbolt G4 Firmware URLs
+    25.10.21.01 - Added Edits from morpheuz1911: https://github.com/morpheuz1911/garytown/commit/0187419700d0255fbc9acaef7364235fd0401170
 
     .Notes
     This will ONLY create a transcription log IF the dock is attached and it starts the process to test firmware.  If no dock is detected, no logging is created.
@@ -592,7 +593,10 @@ function Get-HPDockUpdateDetails {
             else {
                 Try {
                     $Error.Clear()
+                    Get-ChildItem -Path "HKLM:\SOFTWARE\HP\HP Firmware Installer" | Remove-Item -Recurse -Force -Confirm:$false
                     $HPFirmwareTest = Start-Process -FilePath "$OutFilePath\$SPNumber\$FirmwareInstallerName" -ArgumentList "-C" -PassThru -Wait -NoNewWindow
+                    $HPFirmwareTestCode = Get-ChildItem -Path "HKLM:\SOFTWARE\HP\HP Firmware Installer\*" | Get-ItemProperty -Name ErrorCode | Select-Object -ExpandProperty ErrorCode
+                    
                 }
                 Catch {
                     if (($DebugOut) -or ($Transcript)) { write-Host $error[0].exception }
@@ -609,7 +613,7 @@ function Get-HPDockUpdateDetails {
                     
                     
                     
-                switch ( $HPFirmwareTest.ExitCode ) {
+                switch ( $HPFirmwareTestCode ) {
                     0 { 
                         if (($DebugOut) -or ($Transcript)) { Write-Host " Firmware is up to date" -ForegroundColor Green }
                         $InstalledVersion = Get-PackageVersion $Dock.Dock_Attached $VersionFile
@@ -644,7 +648,6 @@ function Get-HPDockUpdateDetails {
                                     }
                                 }
                                 if (($DebugOut) -or ($Transcript)) { Write-Host " Starting Dock Firmware Update" -ForegroundColor Magenta }
-                                    
                                 $HPFirmwareUpdate = Start-Process -FilePath "$OutFilePath\$SPNumber\HPFirmwareInstaller.exe" -ArgumentList "$FirmwareArgList" -PassThru -Wait -NoNewWindow
                                 $ExitInfo = $HPFIrmwareUpdateReturnValues | Where-Object { $_.Code -eq $HPFirmwareUpdate.ExitCode }
                                 if ($ExitInfo.Code -eq "0") {
@@ -670,12 +673,12 @@ function Get-HPDockUpdateDetails {
                 New-ItemProperty -Path $DockEssentialRegPath -Name 'AvailablePackageVersion' -Value $PackageVersion -PropertyType string -Force | Out-Null
                 New-ItemProperty -Path $DockEssentialRegPath -Name 'LastChecked' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
                 New-ItemProperty -Path $DockEssentialRegPath -Name 'InstalledPackageVersion' -Value $InstalledVersion -PropertyType string -Force | Out-Null
-                New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $HPFirmwareTest.ExitCode -PropertyType dword -Force | Out-Null
+                New-ItemProperty -Path $DockEssentialRegPath -Name 'ErrorCode' -Value $HPFirmwareTestCode -PropertyType dword -Force | Out-Null
                 New-ItemProperty -Path $DockEssentialRegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
-                if ($HPFirmwareTest.ExitCode -eq "0") {
+                if ($HPFirmwareTestCode -eq "0") {
                     New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
                 }
-                elseif ($HPFirmwareTest.ExitCode -eq "105") {
+                elseif ($HPFirmwareTestCode -eq "105") {
                     if ($update) {
                         New-ItemProperty -Path $DockEssentialRegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
                         if ($ExitInfo.Code -eq "0") {
@@ -713,10 +716,10 @@ function Get-HPDockUpdateDetails {
                     New-Item -Path $DockTB2RegPath -Force | Out-Null
                 }
                 New-ItemProperty -Path $DockTB2RegPath -Name 'MACAddress' -Value $MACAddress -PropertyType string -Force | Out-Null
-                if ($HPFirmwareTest.ExitCode -eq "0") {
+                if ($HPFirmwareTestCode -eq "0") {
                     New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateStatus' -Value "Success" -PropertyType string -Force | Out-Null
                 }
-                elseif ($HPFirmwareTest.ExitCode -eq "105") {
+                elseif ($HPFirmwareTestCode -eq "105") {
                     if ($update) {
                         New-ItemProperty -Path $DockTB2RegPath -Name 'LastUpdateRun' -Value $(Get-Date -Format "yyyy/MM/dd HH:mm:ss") -PropertyType string -Force | Out-Null
                         if ($ExitInfo.Code -eq "0") {
@@ -751,3 +754,7 @@ function Get-HPDockUpdateDetails {
         }   
     }
 }
+
+
+
+### Function Ends
