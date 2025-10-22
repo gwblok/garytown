@@ -135,6 +135,9 @@ elseif ($HostName -match "AURA"){
 elseif ($HostName -match "R640"){
     $HostName = 'R640'
 }
+elseif ($HostName -match "HPZBSG10-GWB"){
+    $HostName = 'ZBG10'
+}
 else{
     $HostName = 'HVHst'
 }
