@@ -579,7 +579,7 @@ function Install-CMTrace {
     $AppName = "CMTrace"
     $FileName = "CMTrace.exe"
     $InstallPath = "$env:windir\system32"
-    $URL = "https://raw.githubusercontent.com/gwblok/garytown/master/OSD/CloudOSD/CMTrace.exe"
+    $URL = "https://patchmypc.com/cmtrace"
     $AppPath = "$InstallPath\$FileName"
     $ShortCutFolderPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
     
