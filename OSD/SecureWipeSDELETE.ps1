@@ -621,11 +621,15 @@ Write-Output "--------------------------------------"
 Write-Output "     Starting Secure Wipe Script"
 
 #Download & Extract to System32
+#Added -Headers parameter to ensure successful download (prevents server rejection). Sysinternals server may reject requests without proper Accept-Encoding header.
 $FileName = "SDelete.zip"
 $ExpandPath = "$env:windir\system32"
 $URL = "https://download.sysinternals.com/files/$FileName"
+$Headers = @{
+        "Accept-Encoding" = "gzip, deflate, br, zstd"
+    }
 Write-Output "Downloading $URL"
-Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $env:TEMP\$FileName
+Invoke-WebRequest -UseBasicParsing -Uri $URL -Headers $Headers -OutFile $env:TEMP\$FileName
 if (Test-Path -Path $env:TEMP\$FileName){Write-Output "Successfully Downloaded"}
 else{Write-Output "Failed Downloaded"; exit 255}
 Write-Output "Starting Extraction of SDelete64 to $ExpandPath"
