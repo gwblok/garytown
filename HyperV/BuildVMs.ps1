@@ -29,29 +29,57 @@ This script will...
 [int]$DesiredVMs = 1  #The Number of VMs that are going to be created this run.
 [int]$WaitBetweenNext = 15 #Time in Minutes before starting the next VM - works nice if you don't want to kill your WAN while creating OSDCloud machines.
 
-[int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB
-[int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB
-[int64]$DynamicMemoryHigh = 4 * 1024 * 1024 * 1024 #6GB
+[int64]$StartingMemory = 4 * 1024 * 1024 * 1024  #4GB - Static Memory (not dynamic)
+#[int64]$DynamicMemoryLow = 4 * 1024 * 1024 * 1024 #4GB - Not used (static memory)
+#[int64]$DynamicMemoryHigh = 4 * 1024 * 1024 * 1024 #6GB - Not used (static memory)
 [int64]$DriveSize = 100 * 1024 * 1024 * 1024 #100GB
 [int]$ProcessorCount = 4
 
-if (Test-Path -path "D:\HyperVLab-Clients" ){
-    $VMPath = "D:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
-    $HyperVHostRootPath = "D:\HyperV"
-}elseif (Test-Path -path "D:\HyperVLab-Clients" ){
-    $VMPath = "C:\HyperVLab-Clients" #The location on the Host you want the VMs to be created and stored
-    $HyperVHostRootPath = "C:\HyperV"
-}
-if (!($VMPath)){
-    if (Test-Path -Path "E:\"){
-        $VMPath = "E:\HyperVLab-Clients"
-        $HyperVHostRootPath = "E:\HyperV"
+# Search for HyperVLab-Clients folder across all available volumes
+$availableVolumes = Get-Volume | Where-Object {$_.DriveLetter -and $_.DriveType -eq 'Fixed'} | Sort-Object DriveLetter
+$foundPaths = @()
+
+foreach ($volume in $availableVolumes) {
+    $testPath = "$($volume.DriveLetter):\HyperVLab-Clients"
+    if (Test-Path -Path $testPath) {
+        $foundPaths += [PSCustomObject]@{
+            DriveLetter = $volume.DriveLetter
+            VMPath = $testPath
+            HyperVHostRootPath = "$($volume.DriveLetter):\HyperV"
+        }
     }
 }
-if (!($VMPath)){
-    if (Test-Path -Path "D:\"){
+
+if ($foundPaths.Count -gt 1) {
+    # Check if only C and D drives exist
+    $driveLetters = ($availableVolumes | Select-Object -ExpandProperty DriveLetter) | Sort-Object
+    if (($driveLetters.Count -eq 2) -and ($driveLetters -contains 'C') -and ($driveLetters -contains 'D')) {
+        # Auto-default to D drive
+        $selectedPath = $foundPaths | Where-Object {$_.DriveLetter -eq 'D'}
+        Write-Host "Auto-selecting D:\HyperVLab-Clients (C & D drives detected)" -ForegroundColor Yellow
+    }
+    else {
+        # Prompt user to select
+        Write-Host "Multiple HyperVLab-Clients folders found:" -ForegroundColor Yellow
+        $selectedPath = $foundPaths | Out-GridView -Title "Select HyperVLab-Clients Location" -PassThru
+    }
+    $VMPath = $selectedPath.VMPath
+    $HyperVHostRootPath = $selectedPath.HyperVHostRootPath
+}
+elseif ($foundPaths.Count -eq 1) {
+    # Only one found, use it
+    $VMPath = $foundPaths[0].VMPath
+    $HyperVHostRootPath = $foundPaths[0].HyperVHostRootPath
+}
+else {
+    # No existing folders found, create default based on available drives
+    if (Test-Path -Path "D:\") {
         $VMPath = "D:\HyperVLab-Clients"
         $HyperVHostRootPath = "D:\HyperV"
+    }
+    elseif (Test-Path -Path "E:\") {
+        $VMPath = "E:\HyperVLab-Clients"
+        $HyperVHostRootPath = "E:\HyperV"
     }
     else {
         $VMPath = "C:\HyperVLab-Clients"
@@ -78,13 +106,22 @@ $VMNamePreFix = "VM-CM-"  #The VM will start with this name
 
 #$BootISO = "C:\HyperV\StifleR_24H2_x64_Automated.iso"  #If you're booting to an ISO, put the location here.
 $ISList = Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Out-GridView -Title "Pick Boot Media ISO" -PassThru
-$BootISO = $ISList[0].FullName
+
+if ($ISList) {
+    $BootISO = $ISList[0].FullName
+}
+else {
+    Write-Host "No ISO selected or found. Continuing without boot ISO." -ForegroundColor Yellow
+    $BootISO = $null
+}
 
 #Get Sitecode from ISO name
 #$ProviderMachineName = ($BootISO.Split("_")[5]).replace("iso","2p.garytown.com")
 $ProviderMachineName = "2CM.2p.garytown.com"
 
-$SiteCode = $BootISO.Split("_")[3]
+if ($BootISO) {
+    $SiteCode = $BootISO.Split("_")[3]
+}
 if (!($sitecode)){
     $SiteCode = "2CM" #ConfigMgr Site Code
 }
@@ -138,14 +175,16 @@ elseif ($HostName -match "R640"){
 elseif ($HostName -match "HPZBSG10-GWB"){
     $HostName = 'ZBG10'
 }
+elseif ($HostName -eq "DELL-P7920"){
+    $HostName = 'P7920'
+}
 else{
     $HostName = 'HVHst'
 }
 
 if ($Purpose -eq "AutoPilot"){
-    $Tenant = "GARYTOWN", "OSDCloud","2PintLab" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
+    $Tenant = "GARYTOWN", "2PintLab" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
     if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-$HostName-GT-"; $ExtraNotes = "Environment = GTIntune"}
-    elseif ($Tenant -eq "OSDCloud"){$VMNamePreFix = "VM-$HostName-OC-"}
     elseif ($Tenant -eq "2PintLab"){$VMNamePreFix = "VM-$HostName-2P-"; $ExtraNotes = "Environment = 2PIntune"}
     }
 if ($Purpose -eq "Other"){
@@ -313,8 +352,8 @@ else
         #If you want this to boot from ISO, change "NetworkAdapter to CD"
         #$NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes 1024MB  -BootDevice NetworkAdapter  -SwitchName $VMSwitch.Name -Generation 2
         $NewVM = New-VM -Name $VMName -Path $VMPath -MemorystartupBytes $StartingMemory   -BootDevice CD -SwitchName $VMSwitch.Name -Generation 2
-        Write-Host "  Setting Memory to Dynamic, $DynamicMemoryLow - $DynamicMemoryHigh" -ForegroundColor Green
-        set-vm -Name $VMName -DynamicMemory -MemoryMinimumBytes $DynamicMemoryLow -MemoryMaximumBytes $DynamicMemoryHigh
+        Write-Host "  Setting Memory to Static 4GB" -ForegroundColor Green
+        Set-VMMemory -VMName $VMName -DynamicMemoryEnabled $false -StartupBytes $StartingMemory
         Write-Host "  Setting VHDx to Dynamic, $DriveSize located here: $VHDxFile" -ForegroundColor Green
         $NewVHD = New-VHD -Path $VHDxFile  -SizeBytes $DriveSize -Dynamic
         Add-VMHardDiskDrive -VMName $VMName -Path $VHDxFile
@@ -330,8 +369,8 @@ else
         }
         Write-Host "  Setting Processors to $ProcessorCount" -ForegroundColor Green
         Set-VMProcessor -VMName $VMName -Count $ProcessorCount        
-        write-host "  Setting Video Resolution to 1280x800" -ForegroundColor Green
-        Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1280 -VerticalResolution 800
+        write-host "  Setting Video Resolution to 1600x900 (16:9)" -ForegroundColor Green
+        Set-VMVideo -VMName $VMName -ComputerName $env:COMPUTERNAME -ResolutionType Single -HorizontalResolution 1600 -VerticalResolution 900
 
         if ($Purpose -eq "ConfigMgr"){
             Write-Host "  Setting Secure Boot to Off" -ForegroundColor Green
