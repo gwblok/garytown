@@ -439,7 +439,7 @@ if ($WinRE){
     Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -WifiProfile "$OSDCloudRootPath\Lab-WifiProfile.xml"
 }
 else{
-    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL-DriverPath "C:\OSDCloud-ROOT\WinPEDrivers\"
+    Edit-OSDCloudWinPE -PSModuleInstall HPCMSL -DriverPath "C:\OSDCloud-ROOT\WinPEDrivers\"
     #Edit-OSDCloudWinPE -StartURL 'https://hope.garytown.com'
     Edit-OSDCloudWinPE -StartURL 'https://intunelab.garytown.com'
 }
