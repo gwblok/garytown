@@ -2,6 +2,8 @@
 Gary Blok
 Just a collection of Code & Notes to deal with the KB5025885 Remediation Process
 
+NOTE: Step 2 doesn't work in PowerShell ISE.  If you run launch PowerShell directly, or use VSCode, it works fine.
+
 #>
 
 #Old Methods to get Information, look below for the new methods based on May 2025 information
