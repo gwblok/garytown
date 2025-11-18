@@ -4,6 +4,10 @@
 - 25.8.11.15.57 - You'll want to update the UBR info after import.  You can check the scripts here to see the change (July 2024 -> July 2025 requirement)
 - 25.8.11.15.59 - Updated all of the individual scripts with the July UBR data
 
+## NOTE
+NOTE: Step 2 doesn't work in PowerShell ISE.  If you run launch PowerShell directly, or use VSCode, it works fine.
+If you're testing manually, don't use PowerShell ISE
+
 Two Baselines | Remediation | Monitoring
 
 ## Monitoring
