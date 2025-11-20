@@ -1238,6 +1238,6 @@ function Install-StifleRClient210Dev {
 }
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient214"
 function Install-StifleRClient214 {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/214/StifleR_Client_Wrapper214.ps1')
+    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/30/StifleR_Client_Wrapper30.ps1')
 }
 
