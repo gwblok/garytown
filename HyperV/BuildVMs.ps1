@@ -166,6 +166,9 @@ elseif ($HostName -eq "MS01"){
 elseif ($HostName -eq "HPZbookSG10GARY"){
     $HostName = 'ZBG10'
 }
+elseif ($HostName -eq "HPZBStudiox360G"){
+    $HostName = 'ZBSG5'
+}
 elseif ($HostName -match "AURA"){
     $HostName = 'AURA'
 }
