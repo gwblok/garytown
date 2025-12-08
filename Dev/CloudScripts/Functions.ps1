@@ -238,6 +238,37 @@ iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Bla
 Write-Host -ForegroundColor Green "[+] Function Invoke-BlackLotusKB5025885Compliance"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Invoke-BlackLotusKB5025885Compliance.ps1)
 
+Write-Host -ForegroundColor Green "[+] Function Get-WindowsOEMProductKey"
+function Get-WindowsOEMProductKey {
+    $ProductKey = (Get-CimInstance -ClassName SoftwareLicensingService).OA3xOriginalProductKey
+    return $ProductKey
+}
+Write-Host -ForegroundColor Green "[+] Function Set-WindowsOEMActivation"
+function Set-WindowsOEMActivation {
+    $ProductKey = Get-WindowsOEMProductKey
+    Write-Output "Starting Process to Set Windows Licence to OEM Value in BIOS"
+    if ($ProductKey) {
+        try {
+            Write-Output " Setting Key: $ProductKey" 
+            $service = get-wmiObject -query "select * from SoftwareLicensingService"
+            if ($service){
+                $service.InstallProductKey($ProductKey) | Out-Null
+                $service.RefreshLicenseStatus() | Out-Null
+                $service.RefreshLicenseStatus() | Out-Null
+                Write-Output  " Successfully Applied Key"
+            }
+            else {
+                Write-Output " Failed to connect to Service to Apply Key"
+            }
+        }
+        catch {
+            Write-Output " Failed try statement to Apply Key"
+        }
+    }
+    else{
+	    Write-Output ' Key not found!'
+    }
+}
 
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "Update Functions"
