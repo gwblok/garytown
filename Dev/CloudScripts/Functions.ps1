@@ -250,19 +250,24 @@ function Set-WindowsOEMActivation {
     if ($ProductKey) {
         try {
             Write-Output " Setting Key: $ProductKey" 
-            $service = get-wmiObject -query "select * from SoftwareLicensingService"
+            $service = Get-CimInstance -ClassName SoftwareLicensingService
             if ($service){
-                $service.InstallProductKey($ProductKey) | Out-Null
-                $service.RefreshLicenseStatus() | Out-Null
-                $service.RefreshLicenseStatus() | Out-Null
-                Write-Output  " Successfully Applied Key"
+                $result = Invoke-CimMethod -InputObject $service -MethodName InstallProductKey -Arguments @{ProductKey = $ProductKey}
+                if ($result.ReturnValue -eq 0) {
+                    Invoke-CimMethod -InputObject $service -MethodName RefreshLicenseStatus | Out-Null
+                    Write-Output  " Successfully Applied Key"
+                }
+                else {
+                    Write-Output " Failed to install key. Return code: $($result.ReturnValue)"
+                }
             }
             else {
                 Write-Output " Failed to connect to Service to Apply Key"
             }
         }
         catch {
-            Write-Output " Failed try statement to Apply Key"
+            Write-Output " Failed to Apply Key: $($_.Exception.Message)"
+            Write-Output " Error Details: $($_.Exception.InnerException)"
         }
     }
     else{
