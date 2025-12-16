@@ -1245,9 +1245,5 @@ function Install-StifleRClient30 {
 
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient"
 Write-Host -ForegroundColor Gray "ForceVersion, UseCurrentStifleRServer, STIFLERSERVERS, etc"
-function Install-StifleRClient {
-    iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/30/StifleR_Client_Wrapper_Combo.ps1')
+iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/30/StifleR_Client_Wrapper_Combo.ps1')
     
-}
-
-
