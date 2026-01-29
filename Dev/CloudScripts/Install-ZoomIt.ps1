@@ -28,10 +28,10 @@ function Install-ProcessMonitor {
     else{Write-Output "Failed Downloaded"; exit 255}
     Write-Output "Starting Extraction of $FileName to $ExpandPath"
     Expand-Archive -Path $env:TEMP\$FileName -DestinationPath $ExpandPath -Force
-    if (Test-Path -Path $ExpandPath\ZoomIt.exe){
+    if (Test-Path -Path $ExpandPath\Procmon.exe){
         Write-Output "Successfully Extracted Zip File to temp"
-        Write-Output "Copying ZoomIt.exe to System32"
-        Copy-Item -Path "$ExpandPath\ZoomIt.exe" -Destination "$env:windir\system32\ZoomIt.exe" -Force
+        Write-Output "Copying Procmon.exe to System32"
+        Copy-Item -Path "$ExpandPath\Procmon.exe" -Destination "$env:windir\system32\Procmon.exe" -Force
     }
     else{Write-Output "Failed Extract"; exit 255}
 }
