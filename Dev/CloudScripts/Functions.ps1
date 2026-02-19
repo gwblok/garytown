@@ -567,6 +567,9 @@ Function Install-PowerShell7 {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/Intune/Install-PowerShellMSI.ps1)
 }
 
+Function Install-7Zip{
+    iex (irm https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/DeployR/TSScripts/Functions/Install-7ZipFromCloud.ps1)
+}
 Write-Host -ForegroundColor Green "[+] Install-CMTrace"
 function Install-CMTrace {
     
