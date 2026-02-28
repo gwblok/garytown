@@ -70,7 +70,11 @@ param(
 )
 
 Set-StrictMode -Version Latest
-
+# Check for Administrator role
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Error "This script must be run as Administrator."
+    exit 1
+}
 # Container for created VM info
 $CreatedVMs = @()
 
@@ -152,8 +156,17 @@ if ($BootMethod -eq 'ISO') {
         }
         else {
             # non-interactive: pick first ISO if present
-            $BootISO = (Get-ChildItem -Path $ISOFolderPath -Filter *.iso | Select-Object -First 1).FullName
-            if (-not $BootISO) { Write-Warning "No ISO found in $ISOFolderPath; switching to iPXE"; $BootMethod = 'iPXE' }
+            $BootISO = Get-ChildItem -Path $ISOFolderPath -Filter *.iso
+            if ($BootISO -ne $null){
+                if ($BootISO.Count -gt 0) {
+                    $BootISO = $BootISO[0].FullName
+                    Write-Host "Non-interactive mode: selected first ISO found: $BootISO" -ForegroundColor Yellow
+                }
+            }
+            else {
+                Write-Warning "No ISO found in $ISOFolderPath; switching to iPXE"
+                $BootMethod = 'iPXE'
+            }
         }
     }
     else {
@@ -181,12 +194,44 @@ $Usable = 0
 $NameTable = @()
 
 # Get VM Switches (Make sure you have at least 1 External Switch created in HyperV Manager)
-$VMSwitches = @(Get-VMSwitch | Where-Object { $_.SwitchType -eq 'External' })
+$VMSwitches = @(Get-VMSwitch -ErrorAction SilentlyContinue | Where-Object { $_.SwitchType -eq 'External' })
 
 switch ($VMSwitches.Count) {
     0 {
-        Write-Host "No external Virtual Switch found. Check Hyper-V network configuration." -ForegroundColor Red
-        Throw "Stopping"
+        Write-Host "No external Virtual Switch found. Prompting to create one." -ForegroundColor Yellow
+
+        # Find usable physical adapters
+        $netAdapters = Get-NetAdapter -Physical -ErrorAction SilentlyContinue | Where-Object { $_.Status -ne 'Disconnected' }
+        if (-not $netAdapters) { Throw "No physical network adapters found to create an External switch." }
+
+        if ($netAdapters.Count -eq 1) {
+            $adapterName = $netAdapters[0].Name
+        }
+        else {
+            if ($Interactive) {
+                $selAdapter = $netAdapters | Out-GridView -Title 'Select physical adapter for External VMSwitch' -PassThru
+                if (-not $selAdapter) { Throw "No adapter selected." }
+                $adapterName = $selAdapter.Name
+            }
+            else {
+                for ($i=0; $i -lt $netAdapters.Count; $i++) {
+                    Write-Host "[$($i+1)] $($netAdapters[$i].Name) - $($netAdapters[$i].InterfaceDescription)"
+                }
+                $choice = Read-Host "Select adapter number (1-$($netAdapters.Count))"
+                if (-not ($choice -as [int]) -or ([int]$choice -lt 1) -or ([int]$choice -gt $netAdapters.Count)) { Throw "Invalid adapter selection." }
+                $adapterName = $netAdapters[[int]$choice - 1].Name
+            }
+        }
+
+        # Ask whether to allow management OS to share the adapter
+        $defaultShare = 'Y'
+        $shareInput = Read-Host "Share adapter with the host OS? (Y=Share / N=Dedicate) [$defaultShare]"
+        $allowManagement = if (($shareInput -eq '') -or ($shareInput -match '^[Yy]')) { $true } else { $false }
+
+        $switchName = 'External'
+        Write-Host "Creating External VMSwitch '$switchName' on adapter '$adapterName' (AllowManagementOS=$allowManagement)" -ForegroundColor Green
+        New-VMSwitch -Name $switchName -NetAdapterName $adapterName -AllowManagementOS:$allowManagement -Notes "Created by script" -ErrorAction Stop
+        $VMSwitch = Get-VMSwitch -Name $switchName -ErrorAction Stop
         break
     }
     1 {
@@ -212,7 +257,7 @@ switch ($VMSwitches.Count) {
     do {
         $StartNumberPad = "{0:00}" -f $StartNumber
         #Checks for if Machine Name already exist in HyperV Host
-        if (("$($VMNamePreFix)$($StartNumberPad)" -in ($CurrentVMS.name)) -or ("$($VMNamePreFix)$($StartNumberPad)A" -in ($CurrentVMS.name)))
+        if ($CurrentVMS -and (("$($VMNamePreFix)$($StartNumberPad)" -in ($CurrentVMS.name)) -or ("$($VMNamePreFix)$($StartNumberPad)A" -in ($CurrentVMS.name))))
         {
             if ("$($VMNamePreFix)$($StartNumberPad)" -in ($CurrentVMS.name)){ 
                 Write-Host "Name $($VMNamePreFix)$($StartNumberPad) Exist on HyperV Host" -ForegroundColor Yellow
