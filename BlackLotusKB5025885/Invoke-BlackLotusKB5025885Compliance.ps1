@@ -28,7 +28,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         [switch] $TriggerScheduledTask,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection5944')]
-        [switch] $5944
+        [switch] $Apply5944
     ) 
 
     Function Get-SecureBootUpdateSTaskStatus {#Check to see if a reboot is required
@@ -257,8 +257,8 @@ function Invoke-BlackLotusKB5025885Compliance {
             return $null
         }
     }
-    
-    if ($5944){
+
+    if ($Trigger5944){
         Invoke-5944
         return $null
     }
