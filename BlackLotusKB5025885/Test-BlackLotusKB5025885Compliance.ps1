@@ -120,11 +120,24 @@ function Test-BlackLotusKB5025885Compliance {
     #endregion Gather Info
 
     $ComplianceTable = @(
-        [PSCustomObject]@{ HexValue = "0x40"; DecValue = 64; Description = "Step 1 - Apply the DB update to add the 2023 Cert" }
-        [PSCustomObject]@{ HexValue = "0x100"; DecValue = 256; Description = "Step 2 - Update the boot manager" }
-        [PSCustomObject]@{ HexValue = "0x80"; DecValue = 128; Description = "Step 3 - Apply the DBX update to revoke the 2011 Cert" }
-        [PSCustomObject]@{ HexValue = "0x200"; DecValue = 512; Description = "Step 4 - Apply the SVN update to the firmware" }
-        [PSCustomObject]@{ HexValue = "0x280"; DecValue = 640; Description = "Combo Step 3 & 4 - Apply the DBX update & SVN update to the firmware" }
+        # Individual bits used for certificate servicing (per MS Secure Boot troubleshooting guide KB5085046)
+        # Order reflects the sequence the Secure-Boot-Update task processes each bit
+        [PSCustomObject]@{ HexValue = "0x0004"; DecValue = 4;     Order = 4; Description = "This bit tells the scheduled task to look for a Key Exchange Key signed by the device's Platform Key (PK). The PK is managed by the OEM. OEMs sign the Microsoft KEK with their PK and deliver it to Microsoft where it's included in monthly cumulative updates."; SuccessEvent = 1043 }
+        [PSCustomObject]@{ HexValue = "0x0040"; DecValue = 64;    Order = 1; Description = "This bit tells the scheduled task to add the Windows UEFI CA 2023 certificate to the Secure Boot DB. This allows Windows to trust boot managers signed by this certificate."; SuccessEvent = 1036 }
+        [PSCustomObject]@{ HexValue = "0x0080"; DecValue = 128;   Order = $null; Description = "Apply the DBX update to revoke PCA 2011 signing certificate"; SuccessEvent = 1037 }
+        [PSCustomObject]@{ HexValue = "0x0100"; DecValue = 256;   Order = 5; Description = "This bit tells the scheduled task to apply the boot manager, signed by the Windows UEFI CA 2023, to the boot partition. This will replace the Microsoft Windows Production PCA 2011 signed boot manager."; SuccessEvent = 1799 }
+        [PSCustomObject]@{ HexValue = "0x0200"; DecValue = 512;   Order = $null; Description = "Apply the SVN update to the firmware"; SuccessEvent = $null }
+        [PSCustomObject]@{ HexValue = "0x0280"; DecValue = 640;   Order = $null; Description = "Combo - Apply the DBX update & SVN update to the firmware"; SuccessEvent = $null }
+        [PSCustomObject]@{ HexValue = "0x0800"; DecValue = 2048;  Order = 2; Description = "This bit tells the scheduled task to apply the Microsoft Option ROM UEFI CA 2023 to the DB. When the 0x4000 flag is set, the scheduled task will first check the database for the Microsoft Corporation UEFI CA 2011 certificate. It will apply the Microsoft Option ROM UEFI CA 2023 certificate only if the 2011 certificate is present."; SuccessEvent = 1044 }
+        [PSCustomObject]@{ HexValue = "0x1000"; DecValue = 4096;  Order = 3; Description = "This bit tells the scheduled task to apply the Microsoft UEFI CA 2023 to the DB. When the 0x4000 flag is set, the scheduled task will first check the database for the Microsoft Corporation UEFI CA 2011 certificate. It will apply the Microsoft UEFI CA 2023 certificate only if the 2011 certificate is present."; SuccessEvent = 1045 }
+        [PSCustomObject]@{ HexValue = "0x4000"; DecValue = 16384; Order = $null; Description = "This bit modifies the behavior of the 0x0800 and 0x1000 bits so that the Microsoft UEFI CA 2023 and Microsoft Option ROM UEFI CA 2023 are applied only if the DB already contains the Microsoft Corporation UEFI CA 2011. To help ensure that the device's security profile remains the same, this bit only applies these new certificates if the device trusts the Microsoft Corporation UEFI CA 2011 certificate. Not all Windows devices trust this certificate. This bit remains set after all other bits are processed."; SuccessEvent = $null }
+        # Expected progression values when using 0x5944 (all certificate servicing steps)
+        [PSCustomObject]@{ HexValue = "0x5944"; DecValue = 22852; Order = $null; Description = "Initial state before Secure Boot certificate servicing begins."; SuccessEvent = $null }
+        [PSCustomObject]@{ HexValue = "0x5904"; DecValue = 22788; Order = $null; Description = "After Order 1 (0x0040) - Windows UEFI CA 2023 is added to the Secure Boot DB."; SuccessEvent = 1036 }
+        [PSCustomObject]@{ HexValue = "0x5104"; DecValue = 20740; Order = $null; Description = "After Order 2 (0x0800) - Add Microsoft Option ROM UEFI CA 2023 to the DB if the device previously trusted the Microsoft UEFI CA 2011."; SuccessEvent = 1044 }
+        [PSCustomObject]@{ HexValue = "0x4104"; DecValue = 16644; Order = $null; Description = "After Order 3 (0x1000) - Microsoft UEFI CA 2023 is added to the DB if the device previously trusted the Microsoft UEFI CA 2011."; SuccessEvent = 1045 }
+        [PSCustomObject]@{ HexValue = "0x4100"; DecValue = 16640; Order = $null; Description = "After Order 4 (0x0004) - New Microsoft KEK 2K CA 2023 signed by the OEM platform key is applied."; SuccessEvent = 1043 }
+        [PSCustomObject]@{ HexValue = "0x4000"; DecValue = 16384; Order = $null; Description = "After Order 5 (0x0100) - Boot manager signed by Windows UEFI CA 2023 is installed. Final value of 0x4000 indicates successful completion of all applicable update actions."; SuccessEvent = 1799 }
     )
     #$ComplianceTable | Format-Table -AutoSize
 
@@ -179,9 +192,9 @@ function Test-BlackLotusKB5025885Compliance {
         if ($SecureBootRegValue.AvailableUpdates -ne 0 -and $null -ne $SecureBootRegValue.AvailableUpdates){
             $CurrentStage = $ComplianceTable | Where-Object {$_.DecValue -eq $SecureBootRegValue.AvailableUpdates}
             Write-Output ""
-            Write-Host "!!! Pending Change in Progress !!!" -ForegroundColor Yellow
             Write-Host " Boot Registry Value Dec: $($SecureBootRegValue.AvailableUpdates) Hex: $($CurrentStage.HexValue)" -ForegroundColor Yellow
-            write-Host " $($CurrentStage.Description)" -ForegroundColor Yellow
+            $WrappedDesc = ($CurrentStage.Description) -split "(?<=\. )" | ForEach-Object { "   $_" }
+            $WrappedDesc | ForEach-Object { Write-Host $_ -ForegroundColor DarkGray }
             Write-Host " Last Task Run: $($LastTaskRun)" -ForegroundColor Yellow
             Write-Host " Last Reboot: $($LastReboot)" -ForegroundColor Yellow
             if ($LastTaskRun -lt $LastReboot){
@@ -189,9 +202,6 @@ function Test-BlackLotusKB5025885Compliance {
                 Write-Host " Typically take 5-10 Minutes to auto trigger" -ForegroundColor Yellow
                 Write-Host " Feel Free to manually trigger it" -ForegroundColor Yellow
                 Write-Host "Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'" -ForegroundColor DarkGray
-            }
-            else {
-                Write-Host "!!! Reboot Still Needed !!!" -ForegroundColor Red
             }
             Write-Output ""
         }
