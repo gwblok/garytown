@@ -209,6 +209,18 @@ function Test-BlackLotusKB5025885Compliance {
             Write-Output ""
         }
     Write-Output "================================================================================"
+
+    #How Results for SecureBoot SVN
+    if (Get-SecureBootSVN -ErrorAction SilentlyContinue) {
+        $CurrentSVN = Get-SecureBootSVN
+        Write-Output "Current Secure Boot SVN: "
+        $CurrentSVN
+     }
+     else {
+        Write-Output "Unable to retrieve current Secure Boot SVN."
+     }
+Write-Output "================================================================================"
+
     <# No longer using after Cinco de Mayo 2025
     if (Test-Path -Path HKLM:\SOFTWARE\Remediation\KB5025885){
         $Key = Get-Item -Path HKLM:\SOFTWARE\Remediation\KB5025885

@@ -258,7 +258,8 @@ function Invoke-BlackLotusKB5025885Compliance {
         }
     }
 
-    if ($Trigger5944){
+    if ($Apply5944){
+        Write-Host -ForegroundColor Yellow "Applying Value 5944 - AKA, Let MS deal with it for me."
         Invoke-5944
         return $null
     }
