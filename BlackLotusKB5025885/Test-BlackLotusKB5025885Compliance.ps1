@@ -175,21 +175,24 @@ function Test-BlackLotusKB5025885Compliance {
     Write-Output ""
     
     if ($Compliance -eq $true){
-        Write-Output "======================================================================"
+        Write-Output "================================================================================"
         Write-Output ""
-        Write-Output "CVE-2023-24932 SUCCESSFULLY REMEDIATED"
+        Write-Output "CVE-2023-24932 SUCCESSFULLY REMEDIATED - 2011 Cert Revoked and 2023 Cert Trusted"
         Write-Output ""
         Write-Output "Current Secure Boot Registry Value: $($SecureBootRegValue.AvailableUpdates)"
-        Write-Output "======================================================================"
+        Write-Output "================================================================================"
     }
     else {
-        Write-Output "======================================================================"
+        Write-Output "================================================================================"
         Write-Host -ForegroundColor Magenta "                     BLACK LOTUS STATUS OVERVIEW"
         Write-Output "Additional Items need to be completed for CVE-2023-24932"
         Write-Output "Last Step Complete: $LastStepComplete"
         Write-Output "Current Secure Boot Registry Value: $($SecureBootRegValue.AvailableUpdates)"
         Write-Output "Last Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-        if ($SecureBootRegValue.AvailableUpdates -ne 0 -and $null -ne $SecureBootRegValue.AvailableUpdates){
+        
+        Write-Output "================================================================================"
+    }
+    if ($SecureBootRegValue.AvailableUpdates -ne 0 -and $null -ne $SecureBootRegValue.AvailableUpdates){
             $CurrentStage = $ComplianceTable | Where-Object {$_.DecValue -eq $SecureBootRegValue.AvailableUpdates}
             Write-Output ""
             Write-Host " Boot Registry Value Dec: $($SecureBootRegValue.AvailableUpdates) Hex: $($CurrentStage.HexValue)" -ForegroundColor Yellow
@@ -205,8 +208,7 @@ function Test-BlackLotusKB5025885Compliance {
             }
             Write-Output ""
         }
-        Write-Output "======================================================================"
-    }
+    Write-Output "================================================================================"
     <# No longer using after Cinco de Mayo 2025
     if (Test-Path -Path HKLM:\SOFTWARE\Remediation\KB5025885){
         $Key = Get-Item -Path HKLM:\SOFTWARE\Remediation\KB5025885
