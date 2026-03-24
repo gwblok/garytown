@@ -1,3 +1,6 @@
+# MODIFIED from original script - Removed Saving of Output and removed Exit, so it wouldn't quit. :-)
+
+
 <#
 .SYNOPSIS
     Detects Secure Boot certificate update status for fleet-wide monitoring.
@@ -758,21 +761,15 @@ if (-not [string]::IsNullOrEmpty($OutputPath)) {
     # Save to HOSTNAME_latest.json
     $outputFile = Join-Path $OutputPath "$($hostname)_latest.json"
     try {
-        $jsonOutput | Out-File -FilePath $outputFile -Encoding UTF8 -Force
-        Write-Host "JSON saved to: $outputFile" -ForegroundColor Green
+        #$jsonOutput | Out-File -FilePath $outputFile -Encoding UTF8 -Force
+        #Write-Host "JSON saved to: $outputFile" -ForegroundColor Green
     } catch {
         Write-Warning "Could not write to file: $outputFile - $_"
         # Fall back to stdout
-        Write-Output $jsonOutput
+        #Write-Output $jsonOutput
     }
 } else {
     # Original behavior - output to stdout
-    Write-Output $jsonOutput
+    #Write-Output $jsonOutput
 }
 
-# Exit code: "Updated" is the success value per the playbook
-if ($secureBootEnabled -and $uefica2023Status -eq "Updated") {
-    exit 0  # Without issue
-} else {
-    exit 1  # With issue
-}
