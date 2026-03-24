@@ -21,3 +21,15 @@ Write-Host -ForegroundColor Green "[+] Function Update-BootMgr2023"
 function Update-BootMgr2023 {
     iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/Update-BootMgr2023.ps1)
 }
+write-Host ""
+Write-Host "========================================================="
+write-host "Default MS Scripts"
+write-Host -ForegroundColor Green "[+] Function Detect-SecureBootCertUpdateStatus"
+function Detect-SecureBootCertUpdateStatus {
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/MSScripts/Detect-SecureBootCertUpdateStatus.ps1)
+}   
+
+write-Host -ForegroundColor Green "[+] Function Enable-SecureBootUpdateTask"
+function Enable-SecureBootUpdateTask {
+    iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/BlackLotusKB5025885/MSScripts/Enable-SecureBootUpdateTask.ps1)
+}

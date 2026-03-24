@@ -25,7 +25,10 @@ function Invoke-BlackLotusKB5025885Compliance {
         [switch] $NextStep,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelectionS')]
-        [switch] $TriggerScheduledTask
+        [switch] $TriggerScheduledTask,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection5944')]
+        [switch] $5944
     ) 
 
     Function Get-SecureBootUpdateSTaskStatus {#Check to see if a reboot is required
@@ -66,6 +69,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Output "Secure Boot Update Scheduled Task Status: $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
         return $null
     }
+
     Function Invoke-Step1 {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x40 to enable Step 1"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x40 -Force
@@ -114,7 +118,7 @@ function Invoke-BlackLotusKB5025885Compliance {
         return $null
     }
 
-        Function Invoke-Step34Combo {
+    Function Invoke-Step34Combo {
         Write-Host -ForegroundColor Magenta "Setting Registry Value to 0x280 to enable Step 3 & Step 4"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x280 -Force
         Start-Sleep -Seconds 1
@@ -123,7 +127,15 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
         return $null
     }
-
+    Function Invoke-5944 {
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 5944 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
+        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x5944 -Force
+        Start-Sleep -Seconds 1
+        Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
+        Start-Sleep -Seconds 2
+        Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
+        return $null
+    }
     #Region Applicability
     $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $Build = $CurrentOSInfo.GetValue('CurrentBuild')
@@ -245,7 +257,11 @@ function Invoke-BlackLotusKB5025885Compliance {
             return $null
         }
     }
-
+    
+    if ($5944){
+        Invoke-5944
+        return $null
+    }
     if ($Compliance -eq $true){
         Write-Output "=========================================================================================="
         Write-Output ""
