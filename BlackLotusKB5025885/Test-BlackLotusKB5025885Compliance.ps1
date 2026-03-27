@@ -295,7 +295,7 @@ Write-Output "==================================================================
         Write-Host -ForegroundColor Cyan  "Step 1 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "((Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -Name 'WindowsUEFICA2023Capable') -ge 1)"
         Write-Host -ForegroundColor Cyan  "Step 2 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "((Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -Name 'WindowsUEFICA2023Capable') -eq 2)"
         Write-Host -ForegroundColor Cyan  "Step 3 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "[System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'"
-        Write-Host -ForegroundColor Cyan  "Step 4 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "No Detection Method Available"
+        Write-Host -ForegroundColor Cyan  "Step 4 Complete: " -NoNewline; Write-Host -ForegroundColor Yellow "Run Get-SecureBootSVN to see if the SVN was successfully updated by the scheduled task. The expected value after a successful update is 0x2 or higher depending on the current SVN version of the device."
         Write-Output "======================================================================"
     }
 }
