@@ -127,6 +127,17 @@ Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
         LastTaskDescription = $LastTaskResultDescription
     }
 }
+
+#Individual Cert Results Confirmation - Applying the DB updates
+$MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
+if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
+$MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
+if ($MSCA2023Present -eq $false){$Step1Compliance = $false}
+$OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
+if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
+$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+if ($Win2023Present -eq $false){$Step1Compliance = $false}
+
 $StepsComplete = Get-WindowsUEFICA2023Capable
 $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
@@ -146,14 +157,14 @@ if ((Get-SecureBootUpdateSTaskStatus).LastTaskResult -eq 2147942750){
     exit 0
 }
 
-if ($StepsComplete -eq 0){
+if ($StepsComplete -eq 0 -or $Step1Compliance -eq $false){
     if ($EnableStep1){
-        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x40 -Force
+        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1844 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
         Start-Sleep -Seconds 1
         Set-PendingUpdate
-        Write-Error "Setting Value for Step 1 | 0x40"
+        Write-Error "Setting Value for Step 1 | 0x1844"
     }
     else{
         Write-Error "Step 1 is not enabled for remediation"
@@ -163,12 +174,12 @@ if ($StepsComplete -eq 0){
 #If the first 2 steps are complete, remediation is needed, exit 
 if ($StepsComplete -eq 1){
     if ($EnableStep2){
-        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x100 -Force
+        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1944 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
         Start-Sleep -Seconds 1
         Set-PendingUpdate
-        Write-Error "Setting Value for Step 2 | 0x100"
+        Write-Error "Setting Value for Step 2 | 0x1944"
     }
     else{
         Write-Error "Step 2 is not enabled for remediation"

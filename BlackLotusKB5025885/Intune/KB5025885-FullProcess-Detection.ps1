@@ -97,6 +97,18 @@ Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
 $StepsComplete = Get-WindowsUEFICA2023Capable
 $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
+
+#Individual Cert Results Confirmation - Applying the DB updates
+$MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
+if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
+$MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
+if ($MSCA2023Present -eq $false){$Step1Compliance = $false}
+$OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
+if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
+$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+if ($Win2023Present -eq $false){$Step1Compliance = $false}
+
+
 $LastStepComplete = $StepsComplete
 if ($Step3Complete -eq $true){$LastStepComplete = 3}
 #endregion Test if Remediation is already applied for each Step
@@ -110,9 +122,15 @@ if ((Get-SecureBootUpdateSTaskStatus).LastTaskResult -eq 2147942750){
     Write-Error "Reboot Required, Triggering Remediation"
     exit 1
 }
-if ($StepsComplete -eq 0){
+if ($StepsComplete -eq 0 -or $Step1Compliance -eq $false){
    if ($EnableStep1){
-        Write-Error "No Steps are yet complete - Remediation is needed"
+        Write-Error "Step 1 is not yet complete - Remediation is needed"
+        Write-Error ""
+        if ($MSKEKPresent -eq $false){Write-Error "  Microsoft Corporation KEK 2K CA 2023 is not present in the KEK Store"}
+        if ($MSCA2023Present -eq $false){Write-Error "  Microsoft UEFI CA 2023 is not present in the DB Store"}
+        if ($OptionROM2023Present -eq $false){Write-Error "  Microsoft Option ROM UEFI CA 2023 is not present in the DB Store"}
+        if ($Win2023Present -eq $false){Write-Error "  Windows UEFI CA 2023 is not present in the DB Store"}
+
         exit 1
     }
     else{
