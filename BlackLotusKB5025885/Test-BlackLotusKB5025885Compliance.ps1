@@ -161,10 +161,10 @@ function Test-BlackLotusKB5025885Compliance {
 
     if ($Step1Complete  -eq $true){
         Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the cert updates."
-        write-Host -ForegroundColor Gray   "[x] Microsoft Corporation KEK 2K CA 2023"
-        write-Host -ForegroundColor Gray   "[x] Microsoft UEFI CA 2023"
-        write-Host -ForegroundColor Gray   "[x] Microsoft Option ROM UEFI CA 2023"
-        Write-Host -ForegroundColor Gray   "[x] Windows UEFI CA 2023"
+        write-Host -ForegroundColor Gray   "✓ Microsoft Corporation KEK 2K CA 2023"
+        write-Host -ForegroundColor Gray   "✓ Microsoft UEFI CA 2023"
+        write-Host -ForegroundColor Gray   "✓ Microsoft Option ROM UEFI CA 2023"
+        Write-Host -ForegroundColor Gray   "✓ Windows UEFI CA 2023"
     }
     else {
         Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the cert updates."
