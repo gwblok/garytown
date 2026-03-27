@@ -83,9 +83,16 @@ function Test-BlackLotusKB5025885Compliance {
 
     #region Gather Info
 
-    #Step 1 Results Confirmation - Applying the DB update
-    $Step1Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
-    if ($Step1Complete -eq $false){$Compliance = $false}
+    #Step 1 Results Confirmation - Applying the DB updates
+    $MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
+    if ($MSKEKPresent -eq $false){$Compliance = $false}
+    $MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
+    if ($MSCA2023Present -eq $false){$Compliance = $false}
+    $OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
+    if ($OptionROM2023Present -eq $false){$Compliance = $false}
+    $Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+    if ($Win2023Present -eq $false){$Compliance = $false}
+    $Step1Complete = $Compliance
 
     #Step 2 Results Confirmation - Updating the boot manager
     #Check Signing Cert on bootmgfw file
@@ -153,10 +160,42 @@ function Test-BlackLotusKB5025885Compliance {
     }
 
     if ($Step1Complete  -eq $true){
-        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DB update |  1036 | The PCA2023 certificate was added to the DB."
+        Write-Host -ForegroundColor Green "SUCCESS: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the cert updates."
+        write-Host -ForegroundColor Gray   "[x] Microsoft Corporation KEK 2K CA 2023"
+        write-Host -ForegroundColor Gray   "[x] Microsoft UEFI CA 2023"
+        write-Host -ForegroundColor Gray   "[x] Microsoft Option ROM UEFI CA 2023"
+        Write-Host -ForegroundColor Gray   "[x] Windows UEFI CA 2023"
     }
     else {
-        Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the DB update |  1036 | The PCA2023 certificate was added to the DB."
+        Write-Host -ForegroundColor Yellow "Not Complete: " -NoNewline; Write-Host -ForegroundColor Gray "Applying the cert updates."
+        Write-Host -ForegroundColor Yellow "Status for the 4 Certs that need to be updated: "
+        if ($MSCA2023Present -eq $true){
+            Write-Host -ForegroundColor Green "Microsoft UEFI CA 2023: $MSCA2023Present"
+        }
+        else {
+            Write-Host -ForegroundColor Red "Microsoft UEFI CA 2023: $MSCA2023Present"
+            Write-Host -ForegroundColor Yellow "0x1000 needs to be applied"
+        }
+        if ($OptionROM2023Present -eq $true){
+            Write-Host -ForegroundColor Green "Microsoft Option ROM UEFI CA 2023: $OptionROM2023Present"
+            
+        }
+        else {
+            Write-Host -ForegroundColor Red "Microsoft Option ROM UEFI CA 2023: $OptionROM2023Present"
+            Write-Host -ForegroundColor Yellow "0x0800 needs to be applied after cert update 0x1000"
+        }
+        if ($Win2023Present -eq $true){
+            Write-Host -ForegroundColor Green "Windows UEFI CA 2023: $Win2023Present"
+        }
+        else {
+            Write-Host -ForegroundColor Red "Windows UEFI CA 2023: $Win2023Present"
+        }
+        if ($MSKEKPresent -eq $true){
+            Write-Host -ForegroundColor Green "Microsoft Corporation KEK 2K CA 2023: $MSKEKPresent"
+        }
+        else {
+            Write-Host -ForegroundColor Red "Microsoft Corporation KEK 2K CA 2023: $MSKEKPresent"
+        }
     }
     Write-Output "======================================================================"
     if ($Step2Complete  -eq $true){

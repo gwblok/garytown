@@ -28,7 +28,13 @@ function Invoke-BlackLotusKB5025885Compliance {
         [switch] $TriggerScheduledTask,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection5944')]
-        [switch] $Apply5944
+        [switch] $Apply5944,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection1000')]
+        [switch] $MS20231000,
+        
+        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection800')]
+        [switch] $OptionROM800
     ) 
 
     Function Get-SecureBootUpdateSTaskStatus {#Check to see if a reboot is required
@@ -136,6 +142,27 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
         return $null
     }
+
+    Function Invoke-0800 {
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 0800 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
+        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x0800 -Force
+        Start-Sleep -Seconds 1
+        Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
+        Start-Sleep -Seconds 2
+        Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
+        return $null
+    }
+
+    Function Invoke-1000 {
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 1000 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
+        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x1000 -Force
+        Start-Sleep -Seconds 1
+        Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
+        Start-Sleep -Seconds 2
+        Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
+        return $null
+    }
+
     #Region Applicability
     $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $Build = $CurrentOSInfo.GetValue('CurrentBuild')
@@ -261,6 +288,16 @@ function Invoke-BlackLotusKB5025885Compliance {
     if ($Apply5944){
         Write-Host -ForegroundColor Yellow "Applying Value 5944 - AKA, Let MS deal with it for me."
         Invoke-5944
+        return $null
+    }
+    if ($MS20231000){
+        Write-Host -ForegroundColor Yellow "Applying Value 1000 - Microsoft UEFI CA 2023."
+        Invoke-1000
+        return $null
+    }
+    if ($OptionROM800){
+        Write-Host -ForegroundColor Yellow "Applying Value 800 - Microsoft Option ROM UEFI CA 2023."
+        Invoke-0800
         return $null
     }
     if ($Compliance -eq $true){
