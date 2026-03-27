@@ -284,7 +284,6 @@ function Invoke-BlackLotusKB5025885Compliance {
             return $null
         }
     }
-
     if ($Apply1944){
         Write-Host -ForegroundColor Yellow "Applying Value 1944 - AKA, Let MS deal with it for me."
         Invoke-1944
@@ -299,13 +298,5 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host -ForegroundColor Yellow "Applying Value 800 - Microsoft Option ROM UEFI CA 2023."
         Invoke-0800
         return $null
-    }
-    if ($Compliance -eq $true){
-        Write-Output "=========================================================================================="
-        Write-Output ""
-        Write-Output "CVE-2023-24932 SUCCESSFULLY REMEDIATED"
-        Write-Output ""
-        Write-Output "STEP 4 - Apply the SVN update to the firmware is Unknown, no detection method available"
-        Write-Output "=========================================================================================="
     }
 }
