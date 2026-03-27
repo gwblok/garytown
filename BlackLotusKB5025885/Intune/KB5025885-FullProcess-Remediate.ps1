@@ -48,14 +48,16 @@ $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVers
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
-#July 2025 UBRs
-$JulyPatch = @('19045.6093','22621.5624','22631.5624','26100.4652','26200.4652')
-$MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
+
+#March 2026 UBRs
+$MinimumPatch = @('19045.7058','22631.6783','26100.8037','26200.8037')
+$MatchedPatch = $MinimumPatch | Where-Object {$_ -match $Build}
 if ($null -eq $MatchedPatch){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     Write-Error "Exit 5 - OS Version not supported"
     exit 5
 }
+
 [int]$MatchedUBR = $MatchedPatch.split(".")[1]
 
 if ($UBR -ge $MatchedUBR){
