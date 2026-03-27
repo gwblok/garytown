@@ -27,8 +27,8 @@ function Invoke-BlackLotusKB5025885Compliance {
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelectionS')]
         [switch] $TriggerScheduledTask,
 
-        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection5944')]
-        [switch] $Apply5944,
+        [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection1944')]
+        [switch] $Apply1944,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'StepSelection1000')]
         [switch] $MS20231000,
@@ -133,9 +133,9 @@ function Invoke-BlackLotusKB5025885Compliance {
         Write-Host "Recommend Waiting a minute, then running the Function to Test Compliance again." 
         return $null
     }
-    Function Invoke-5944 {
-        Write-Host -ForegroundColor Magenta "Setting Registry Value to 5944 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
-        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x5944 -Force
+    Function Invoke-1944 {
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 1944 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
+        New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x1944 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
         Start-Sleep -Seconds 2
@@ -144,7 +144,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
 
     Function Invoke-0800 {
-        Write-Host -ForegroundColor Magenta "Setting Registry Value to 0800 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 0800 - Microsoft Option ROM UEFI CA 2023"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x0800 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
@@ -154,7 +154,7 @@ function Invoke-BlackLotusKB5025885Compliance {
     }
 
     Function Invoke-1000 {
-        Write-Host -ForegroundColor Magenta "Setting Registry Value to 1000 - Deploy all needed certificates and update to the PCA2023 signed boot manager"
+        Write-Host -ForegroundColor Magenta "Setting Registry Value to 1000 - Microsoft UEFI CA 2023"
         New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'   -Name 'AvailableUpdates' -PropertyType dword -Value 0x1000 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName '\Microsoft\Windows\PI\Secure-Boot-Update'
@@ -285,9 +285,9 @@ function Invoke-BlackLotusKB5025885Compliance {
         }
     }
 
-    if ($Apply5944){
-        Write-Host -ForegroundColor Yellow "Applying Value 5944 - AKA, Let MS deal with it for me."
-        Invoke-5944
+    if ($Apply1944){
+        Write-Host -ForegroundColor Yellow "Applying Value 1944 - AKA, Let MS deal with it for me."
+        Invoke-1944
         return $null
     }
     if ($MS20231000){
