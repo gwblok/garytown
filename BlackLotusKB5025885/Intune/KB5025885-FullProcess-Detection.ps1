@@ -18,7 +18,7 @@ $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 
 
 #March 2026 UBRs
-$MinimumPatch = @('19045.7058','22631.6783','26100.8037','26200.8037')
+$MinimumPatch = @('19045.7058','22631.6783','26100.8037','26200.8037','26300.8037')
 $MatchedPatch = $MinimumPatch | Where-Object {$_ -match $Build}
 if ($null -eq $MatchedPatch){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
