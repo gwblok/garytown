@@ -23,9 +23,9 @@ $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVers
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
-#July 2025 UBRs
-$JulyPatch = @('19045.6093','22621.5624','22631.5624','26100.4652','26200.4652')
-$MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
+#March 2026 UBRs
+$MinimumPatch = @('19045.7058','22631.6783','26100.8037','26200.8037','26300.8037')
+$MatchedPatch = $MinimumPatch | Where-Object {$_ -match $Build}
 if ($null -eq $MatchedPatch){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     Write-Error "Exit 5 - OS Version not supported"
@@ -105,13 +105,28 @@ Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
 $StepsComplete = Get-WindowsUEFICA2023Capable
 $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
+#Individual Cert Results Confirmation - Applying the DB updates
+$MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
+if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
+$MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
+if ($MSCA2023Present -eq $false){$Step1Compliance = $false}
+$OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
+if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
+$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+if ($Win2023Present -eq $false){$Step1Compliance = $false}
+
 #endregion Test if Remediation is already applied for each Step
 
 #Check for Step Completion, and also report the current value of the Secure Boot Key
 
-if ($StepsComplete -lt 1){
+if ($StepsComplete -lt 1 -or $Step1Compliance -eq $false){
     Write-Output "Step 1 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-    Write-Error "Step 1 Required (Adding 2023 Cert) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    Write-Error "Step 1 Required (Adding Certs) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    if ($MSKEKPresent -eq $false){Write-Error "  Microsoft Corporation KEK 2K CA 2023 is not present in the KEK Store"}
+    if ($MSCA2023Present -eq $false){Write-Error "  Microsoft UEFI CA 2023 is not present in the DB Store"}
+    if ($OptionROM2023Present -eq $false){Write-Error "  Microsoft Option ROM UEFI CA 2023 is not present in the DB Store"}
+    if ($Win2023Present -eq $false){Write-Error "  Windows UEFI CA 2023 is not present in the DB Store"}
+
     exit 1
 }
 if ($StepsComplete -lt 2){
