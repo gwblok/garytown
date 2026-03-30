@@ -122,10 +122,10 @@ if ($Win2023Present -eq $false){$Step1Compliance = $false}
 if ($StepsComplete -lt 1 -or $Step1Compliance -eq $false){
     Write-Output "Step 1 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
     Write-Error "Step 1 Required (Adding Certs) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
-    if ($MSKEKPresent -eq $false){Write-Error "  Microsoft Corporation KEK 2K CA 2023 is not present in the KEK Store"}
-    if ($MSCA2023Present -eq $false){Write-Error "  Microsoft UEFI CA 2023 is not present in the DB Store"}
-    if ($OptionROM2023Present -eq $false){Write-Error "  Microsoft Option ROM UEFI CA 2023 is not present in the DB Store"}
-    if ($Win2023Present -eq $false){Write-Error "  Windows UEFI CA 2023 is not present in the DB Store"}
+    if ($MSKEKPresent -eq $false){Write-Output "  Microsoft Corporation KEK 2K CA 2023 is not present in the KEK Store"}
+    if ($MSCA2023Present -eq $false){Write-Output "  Microsoft UEFI CA 2023 is not present in the DB Store"}
+    if ($OptionROM2023Present -eq $false){Write-Output "  Microsoft Option ROM UEFI CA 2023 is not present in the DB Store"}
+    if ($Win2023Present -eq $false){Write-Output "  Windows UEFI CA 2023 is not present in the DB Store"}
 
     exit 1
 }
