@@ -1,50 +1,20 @@
 <#
     Gary Blok & Mike Terrill
     KB5025885 Monitoring Only Script-Intune
-    Version: 26.04.01
-
-    Changes
-    - Updated applicability checks to match the latest UBR requirements for the March 2026 update
-    - Updated output messages to be more user friendly and informative about the status of the remediation
-    - Added more detailed comments throughout the script for clarity
-    - Updated for the 4 certs vs the 1 cert
-
+    Version: 25.09.25
 
 This is a monitoring script for the remediation of KB5025885
 This will not make any changes, but only report on the status of the remediation for KB5025885
 It will exit with different error codes based on the status of the remediation
 
 0 = Remediation is not required (Already Complete)
-1 = Step 1 is not complete "Install the updated certificates definitions to the DB & KEK"
+1 = Step 1 is not complete "Install the updated certificate definitions to the DB"
 2 = Step 2 is not complete "Update the Boot Manager on your device."
 3 = Step 3 is not complete "Enable the revocation."
 4 = SecureBoot is not enabled
 5 = Windows Version needs to be updated first
 
 #https://support.microsoft.com/en-us/topic/how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932-41a975df-beb2-40c1-99a3-b3ff139f832d
-
-# Step Results Matrix:
-#              Col1    Col2    Col3    Col4    Col5    Col6    Col7    Col8
-# Step 1       Fail    Pass    Fail    Pass    Fail    Pass    Fail    Pass
-# Step 2       Fail    Fail    Pass    Pass    Pass    Pass    Pass    Pass
-# Step 3       Fail    Fail    Fail    Fail    Pass    Pass    Pass    Pass
-# Step 4       Fail    Fail    Fail    Fail    Fail    Fail    Pass    Pass
-#
-# Overall      Fail    Fail    Fail    **Pass  Fail    *Pass   Fail    Pass
-#
-# Output       Fail    Step 2  Step 1  Step 3  Step 1  Step 4  Step 1  Pass
-#                      Incomp  Incomp  Incomp  Incomp  Incomp  Incomp
-#
-#              Not up                  **Up                    *Up             Up to
-#              to date                 to date                 to date         date
-#
-# Output options:
-# Not up to date - missing everything
-# Not up to date - missing certificates
-# Not up to date - missing boot manager
-# **Up to date - missing revocation & SVN
-# *Up to date - missing SVN
-# Up to date - everything complete
 #>
 
 #Test if Remediation is applicable
@@ -132,9 +102,9 @@ Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
         LastTaskDescription = $LastTaskResultDescription
     }
 }
+$StepsComplete = Get-WindowsUEFICA2023Capable
+$Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
-#Step1 | The Certificates
-$Step1Compliance = $true
 #Individual Cert Results Confirmation - Applying the DB updates
 $MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
 if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
@@ -144,48 +114,32 @@ $OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootU
 if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
 $Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
 if ($Win2023Present -eq $false){$Step1Compliance = $false}
-$Step1Complete = $Step1Compliance
-
-#Step 2 | test: Updating the boot manager
-$Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
-$SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
-$SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
-$SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
-$FilePath = "$($SystemVolume.Path)\EFI\Microsoft\Boot\bootmgfw.efi"
-$CertCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
-$CertCollection.Import($FilePath, $null, 'DefaultKeySet')
-If ($CertCollection.Subject -like "*Windows UEFI CA 2023*") {$Step2Complete = $true}
-else {$Step2Complete = $false}
-
-#Step 3 | test: Applying the DBX update for the Microsoft Windows Production PCA 2011 revocation
-$Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
-
-$Step4Complete = if ((Get-SecureBootSVN -ErrorAction Continue).FirmwareSVN -ge 1.0){$true} else {$false}
 
 #endregion Test if Remediation is already applied for each Step
 
-#Write the Output based on the results of the tests above using the Chart from the matrix above
-if ($Step1Complete -and $Step2Complete -and $Step3Complete -and $Step4Complete) {
-    Write-Output "Up to date - everything complete"
-    exit 0
+#Check for Step Completion, and also report the current value of the Secure Boot Key
+
+if ($StepsComplete -lt 1 -or $Step1Compliance -eq $false){
+    Write-Output "Step 1 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
+    Write-Error "Step 1 Required (Adding Certs) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    if ($MSKEKPresent -eq $false){Write-Output "  Microsoft Corporation KEK 2K CA 2023 is not present in the KEK Store"}
+    if ($MSCA2023Present -eq $false){Write-Output "  Microsoft UEFI CA 2023 is not present in the DB Store"}
+    if ($OptionROM2023Present -eq $false){Write-Output "  Microsoft Option ROM UEFI CA 2023 is not present in the DB Store"}
+    if ($Win2023Present -eq $false){Write-Output "  Windows UEFI CA 2023 is not present in the DB Store"}
+
+    exit 1
 }
-elseif ($Step1Complete -and $Step2Complete -and $Step3Complete -and -not $Step4Complete) {
-    Write-Output "*Up to date (Certs, BootMgr & Revocation) - missing SVN"
-    exit 0
-}
-elseif ($Step1Complete -and $Step2Complete -and -not $Step3Complete) {
-    Write-Output "**Up to date (Certs & BootMgr) - missing revocation & SVN"
-    exit 3
-}
-elseif ($Step1Complete -and -not $Step2Complete) {
-    Write-Output "Not up to date (Certs) - missing boot manager, revocation & SVN"
+if ($StepsComplete -lt 2){
+    Write-Output "Step 2 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
+    Write-Error "Step 2 Required (Updating Boot Manager) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
     exit 2
 }
-elseif (-not $Step1Complete -and -not $Step2Complete -and -not $Step3Complete -and -not $Step4Complete) {
-    Write-Output "Not up to date - missing everything | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present | Win2023: $Win2023Present"
-    exit 1
+if ($Step3Complete -ne $true){
+    Write-Output "Step 3 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
+    Write-Error "Step 3 Required (Revoking the 2011 Cert) | SecureBoot Registry Key Value: $SecureBootRegValue | Secure Boot Update Scheduled Task last Result $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+    exit 3
 }
-else {
-    Write-Output "Not up to date - missing certificates | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present | Win2023: $Win2023Present"
-    exit 1
+if ($Step3Complete -eq $true){
+    Write-Output "KB5025885 Complete"
+    exit 0
 }
