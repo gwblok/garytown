@@ -182,10 +182,10 @@ elseif ($Step1Complete -and -not $Step2Complete) {
     exit 2
 }
 elseif (-not $Step1Complete -and -not $Step2Complete -and -not $Step3Complete -and -not $Step4Complete) {
-    Write-Output "Not up to date - missing everything | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present | Win2023: $Win2023Present"
+    Write-Output "Not up to date - missing everything | Win2023: $Win2023Present | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present "
     exit 1
 }
 else {
-    Write-Output "Not up to date - missing certificates | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present | Win2023: $Win2023Present"
+    Write-Output "Not up to date - missing certificates | Win2023: $Win2023Present | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present "
     exit 1
 }
