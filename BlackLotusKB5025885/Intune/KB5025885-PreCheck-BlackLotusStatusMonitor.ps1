@@ -160,6 +160,13 @@ else {$Step2Complete = $false}
 #Step 3 | test: Applying the DBX update for the Microsoft Windows Production PCA 2011 revocation
 $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
+$SVN = Get-SecureBootSVN -ErrorAction Continue
+if ($null -ne $SVN){
+    $Step4Complete = if ($SVN.FirmwareSVN -eq $SVN.BootManagerSVN){$true} else {$false}
+}
+else {
+    $Step4Complete = $false
+}
 $Step4Complete = if ((Get-SecureBootSVN -ErrorAction Continue).FirmwareSVN -ge 1.0){$true} else {$false}
 
 #endregion Test if Remediation is already applied for each Step
