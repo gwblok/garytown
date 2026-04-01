@@ -167,7 +167,6 @@ if ($null -ne $SVN){
 else {
     $Step4Complete = $false
 }
-$Step4Complete = if ((Get-SecureBootSVN -ErrorAction Continue).FirmwareSVN -ge 1.0){$true} else {$false}
 
 #endregion Test if Remediation is already applied for each Step
 
