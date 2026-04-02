@@ -19,7 +19,7 @@ $OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootU
 if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
 
 
-$MSCA2011Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Corporation UEFI CA 2011'
+#$MSCA2011Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Corporation UEFI CA 2011'
 #$Win2011Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2011'
 
 
