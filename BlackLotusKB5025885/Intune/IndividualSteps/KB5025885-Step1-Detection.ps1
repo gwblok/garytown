@@ -2,7 +2,12 @@
     Gary Blok & Mike Terrill
     KB5025885 Detection Script-Intune
     Step 1 of 4
-    Version: 25.09.25
+    Version: 26.04.01
+    Changes
+    - Updated applicability checks to match the latest UBR requirements for the March 2026 update
+    - Updated output messages to be more user friendly and informative about the status of the remediation
+    - Added more detailed comments throughout the script for clarity
+    - Updated for the 4 certs vs the 1 cert
 #>
 
 #Test if Remediation is applicable
@@ -11,9 +16,9 @@ $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVers
 $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
-#July 2025 UBRs
-$JulyPatch = @('19045.6093','22621.5624','22631.5624','26100.4652','26200.4652')
-$MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
+#March 2026 UBRs
+$MinimumPatch = @('19045.7058','22631.6783','26100.8037','26200.8037','26300.8037')
+$MatchedPatch = $MinimumPatch | Where-Object {$_ -match $Build}
 if ($null -eq $MatchedPatch){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     Write-Error "Exit 5 - OS Version not supported"
@@ -47,65 +52,31 @@ $SecureBootKey = Get-Item -Path $SecureBootRegPath
 $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
 
 #region Test if Remediation is already applied for each Step
-Function Get-WindowsUEFICA2023Capable{
-    try {
-        $SecureBootServicing = Get-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -ErrorAction Stop
-        $WindowsUEFICA2023Capable = $SecureBootServicing.GetValue('WindowsUEFICA2023Capable')
-    }
-    catch {return 0}
-    if ($WindowsUEFICA2023Capable) {
-        return $WIndowsUEFICA2023Capable
-    }
-    else  {return 0}
+
+#Individual Cert Results Confirmation - Applying the DB updates
+$MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
+if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
+$MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
+if ($MSCA2023Present -eq $false){$Step1Compliance = $false}
+$OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
+if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
+$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+if ($Win2023Present -eq $false){$Step1Compliance = $false}
+
+$MissingCerts = @()
+if (-not $MSKEKPresent)        { $MissingCerts += "MSKEK" }
+if (-not $MSCA2023Present)     { $MissingCerts += "MSCA2023" }
+if (-not $OptionROM2023Present){ $MissingCerts += "OptionROM2023" }
+if (-not $Win2023Present)      { $MissingCerts += "Win2023" }
+
+if ($MissingCerts.Count -gt 0) {
+    Write-Output "Missing Certs: $($MissingCerts -join ', ')"
+}
+else {
+    Write-Output "All Certs Present"
 }
 
-Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
-    [CmdletBinding()]
-    param ()
-    $taskName = "Secure-Boot-Update"
-    $Task = Get-ScheduledTask -TaskName $TaskName
-    if ($null -eq $Task) {
-        Write-Verbose "Scheduled Task '$TaskName' not found."
-        return $null
-    }
-    $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
-    $LastRunTime = $TaskHistory.LastRunTime
-    $LastTaskResult = $TaskHistory.LastTaskResult
-    if ($TaskHistory.LastTaskResult -eq 0) {
-        $LastTaskResultDescription = "Successfully completed"
-    }
-    elseif ($TaskHistory.LastTaskResult -eq 2147942750) {
-        $LastTaskResultDescription = "No action was taken as a system reboot is required."
-    }
-    elseif ($TaskHistory.LastTaskResult -eq 2147946825) {
-        $LastTaskResultDescription = "Secure Boot is not enabled on this machine."
-    }
-    else {
-        $LastTaskResultDescription = "Unknown error"
-    }
-    [PSCustomObject]@{
-        TaskName       = $TaskName
-        LastRunTime    = $LastRunTime
-        LastTaskResult = $LastTaskResult
-        LastTaskDescription = $LastTaskResultDescription
-    }
-}
-$StepsComplete = Get-WindowsUEFICA2023Capable
-$Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
-#endregion Test if Remediation is already applied for each Step
-
-#region Remediation
-
-#If we detect step one is done, and we stamped the registry, we can assume the reboots are complete and we're good
-if ($StepsComplete -ge 1){
-    Write-Output "Step 1 Complete | SBKey: $SecureBootRegValue"
-    exit 0
-}
-#If the first 2 steps are complete, remediation is needed, exit 
-if ($StepsComplete -lt 1){
-    Write-Output "Step 1 is not complete | SBKey: $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskDescription)"
-    Write-Error "1 | $SecureBootRegValue | $((Get-SecureBootUpdateSTaskStatus).LastTaskResult)"
+if ($Step1Compliance -eq $false){
     exit 1
 }
-
-#endregion Remediation
+#endregion Test if Remediation is already applied for each Step
