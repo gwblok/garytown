@@ -250,14 +250,19 @@ function Test-BlackLotusKB5025885Compliance {
     Write-Output "================================================================================"
 
     #How Results for SecureBoot SVN
-    if (Get-SecureBootSVN -ErrorAction SilentlyContinue) {
-        $CurrentSVN = Get-SecureBootSVN
-        Write-Output "Current Secure Boot SVN: "
-        $CurrentSVN
-     }
-     else {
-        Write-Output "Unable to retrieve current Secure Boot SVN."
-     }
+    try {
+        if (Get-Command -Name Get-SecureBootSVN -ErrorAction SilentlyContinue) {
+            $CurrentSVN = Get-SecureBootSVN
+            Write-Output "Current Secure Boot SVN: "
+            $CurrentSVN
+        }
+        else {
+            Write-Output "Unable to retrieve current Secure Boot SVN."
+        } 
+    }
+    catch {
+        <#Do this if a terminating exception happens#>
+    }
 Write-Output "================================================================================"
 
     <# No longer using after Cinco de Mayo 2025
