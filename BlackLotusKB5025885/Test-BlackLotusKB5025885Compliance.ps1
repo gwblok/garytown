@@ -257,11 +257,11 @@ function Test-BlackLotusKB5025885Compliance {
             $CurrentSVN
         }
         else {
-            Write-Output "Unable to retrieve current Secure Boot SVN."
+            Write-Host "Unable to retrieve current Secure Boot SVN." -foregroundColor Yellow
         } 
     }
     catch {
-        <#Do this if a terminating exception happens#>
+        Write-Output "Unable to retrieve current Secure Boot SVN." -foregroundColor Red
     }
 Write-Output "================================================================================"
 
