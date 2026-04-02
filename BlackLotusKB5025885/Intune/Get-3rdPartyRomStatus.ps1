@@ -48,9 +48,9 @@ function Get-3rdPartyUEFICAStatus {
     }
 
     # ── Vendor-Specific: Query BIOS setting via WMI ──
-    $biosSettingName  = $null
-    $biosSettingValue = $null
-    $vendorLabel      = $null
+    # Collect all matching settings as an array of @{ Name; Value } hashtables
+    $biosMatches = [System.Collections.Generic.List[hashtable]]::new()
+    $vendorLabel = $null
 
     # Known BIOS setting name patterns for the 3rd-party UEFI CA toggle across vendors
     $settingPatterns = @(
@@ -66,6 +66,25 @@ function Get-3rdPartyUEFICAStatus {
         '*Enable*UEFI CA*'          # HP variant
     )
 
+    # Helper: add unique matches from a collection to $biosMatches
+    function Add-MatchedSettings {
+        param(
+            [object[]]$Settings,
+            [string]$NameProperty,
+            [string]$ValueProperty
+        )
+        $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        foreach ($pattern in $settingPatterns) {
+            foreach ($s in $Settings) {
+                $sName  = $s.$NameProperty
+                $sValue = $s.$ValueProperty
+                if ($sName -like $pattern -and $seen.Add($sName)) {
+                    $biosMatches.Add(@{ Name = $sName; Value = $sValue })
+                }
+            }
+        }
+    }
+
     switch -Wildcard ($manufacturer) {
 
         { $_ -like '*HP*' -or $_ -like '*Hewlett*' } {
@@ -73,24 +92,13 @@ function Get-3rdPartyUEFICAStatus {
             Write-Verbose "Detected HP device - querying root\HP\InstrumentedBIOS"
             try {
                 $settings = Get-CimInstance -Namespace 'root\HP\InstrumentedBIOS' -ClassName HP_BIOSEnumeration -ErrorAction Stop
-                foreach ($pattern in $settingPatterns) {
-                    $match = $settings | Where-Object { $_.Name -like $pattern }
-                    if ($match) {
-                        $biosSettingName  = $match.Name
-                        $biosSettingValue = $match.CurrentValue
-                        break
-                    }
-                }
+                Add-MatchedSettings -Settings $settings -NameProperty 'Name' -ValueProperty 'CurrentValue'
+
                 # HP may also expose it under HP_BIOSSetting (non-enumeration)
-                if (-not $biosSettingName) {
+                if ($biosMatches.Count -eq 0) {
                     $allSettings = Get-CimInstance -Namespace 'root\HP\InstrumentedBIOS' -ClassName HP_BIOSSetting -ErrorAction SilentlyContinue
-                    foreach ($pattern in $settingPatterns) {
-                        $match = $allSettings | Where-Object { $_.Name -like $pattern }
-                        if ($match) {
-                            $biosSettingName  = $match.Name
-                            $biosSettingValue = $match.CurrentValue
-                            break
-                        }
+                    if ($allSettings) {
+                        Add-MatchedSettings -Settings $allSettings -NameProperty 'Name' -ValueProperty 'CurrentValue'
                     }
                 }
             }
@@ -104,13 +112,8 @@ function Get-3rdPartyUEFICAStatus {
             Write-Verbose "Detected Dell device - querying root\dcim\sysman\biosattributes"
             try {
                 $enumSettings = Get-CimInstance -Namespace 'root\dcim\sysman\biosattributes' -ClassName EnumerationAttribute -ErrorAction SilentlyContinue
-                foreach ($pattern in $settingPatterns) {
-                    $match = $enumSettings | Where-Object { $_.AttributeName -like $pattern }
-                    if ($match) {
-                        $biosSettingName  = $match.AttributeName
-                        $biosSettingValue = $match.CurrentValue
-                        break
-                    }
+                if ($enumSettings) {
+                    Add-MatchedSettings -Settings $enumSettings -NameProperty 'AttributeName' -ValueProperty 'CurrentValue'
                 }
             }
             catch {
@@ -123,6 +126,7 @@ function Get-3rdPartyUEFICAStatus {
             Write-Verbose "Detected Lenovo device - querying root\wmi Lenovo_BiosSetting"
             try {
                 $settings = Get-CimInstance -Namespace 'root\wmi' -ClassName Lenovo_BiosSetting -ErrorAction Stop
+                $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                 foreach ($s in $settings) {
                     if (-not [string]::IsNullOrWhiteSpace($s.CurrentSetting)) {
                         $parts = $s.CurrentSetting -split ',', 2
@@ -130,13 +134,10 @@ function Get-3rdPartyUEFICAStatus {
                         $settValue = if ($parts.Count -gt 1) { $parts[1] } else { '' }
 
                         foreach ($pattern in $settingPatterns) {
-                            if ($settName -like $pattern) {
-                                $biosSettingName  = $settName
-                                $biosSettingValue = $settValue
-                                break
+                            if ($settName -like $pattern -and $seen.Add($settName)) {
+                                $biosMatches.Add(@{ Name = $settName; Value = $settValue })
                             }
                         }
-                        if ($biosSettingName) { break }
                     }
                 }
             }
@@ -150,11 +151,8 @@ function Get-3rdPartyUEFICAStatus {
             $vendorLabel = 'Microsoft (Surface)'
             Write-Verbose "Detected Microsoft/Surface device"
             try {
-                # Surface devices may expose UEFI settings via the Surface UEFI namespace
                 $surfaceSettings = Get-CimInstance -Namespace 'root\wmi' -ClassName SurfaceUefiManager -ErrorAction SilentlyContinue
                 if ($surfaceSettings) {
-                    # On Surface, the 3rd party UEFI CA toggle is typically tied to Secure Boot
-                    # and exposed as a setting.
                     Write-Verbose "Surface UEFI Manager detected"
                 }
             }
@@ -169,31 +167,49 @@ function Get-3rdPartyUEFICAStatus {
         }
     }
 
-    # ── Determine overall status ──
-    # The 3rd-party UEFI CA is "enabled" if either:
-    #   - The vendor BIOS setting says enabled/on
-    #   - The Microsoft Corporation UEFI CA 2011 (or 2023) cert is in the Secure Boot DB
+    # ── Determine overall ThirdPartyUEFICAEnabled status ──
+    # Enabled if any vendor BIOS setting says enabled/on, or certs are in Secure Boot DB
     $isEnabled = $null
-    if ($biosSettingValue) {
-        $isEnabled = $biosSettingValue -in @('Enable', 'Enabled', 'On', 'True', '1', 'Yes')
+    $enabledValues = @('Enable', 'Enabled', 'On', 'True', '1', 'Yes')
+    if ($biosMatches.Count -gt 0) {
+        $isEnabled = ($biosMatches | Where-Object { $_.Value -in $enabledValues }).Count -gt 0
     }
     elseif ($secureBootDBCheck) {
         $isEnabled = $cert2011Present -or $cert2023Present
     }
 
-    # ── Output ──
-    [PSCustomObject]@{
-        Manufacturer              = $vendorLabel
-        Model                     = $model
-        BIOSSettingName           = if ($biosSettingName) { $biosSettingName } else { 'N/A (no vendor WMI match)' }
-        BIOSSettingValue          = if ($biosSettingValue) { $biosSettingValue } else { 'N/A' }
-        ThirdPartyUEFICAEnabled   = $isEnabled
-        SecureBootEnabled         = (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue)
-        MSCorpUEFICA2011InDB      = $cert2011Present
-        MSUEFICA2023InDB          = $cert2023Present
+    $secureBootEnabled = Confirm-SecureBootUEFI -ErrorAction SilentlyContinue
+
+    # ── Output: one object per matched BIOS setting ──
+    if ($biosMatches.Count -gt 0) {
+        foreach ($bios in $biosMatches) {
+            [PSCustomObject]@{
+                Manufacturer            = $vendorLabel
+                Model                   = $model
+                BIOSSettingName         = $bios.Name
+                BIOSSettingValue        = $bios.Value
+                ThirdPartyUEFICAEnabled = $isEnabled
+                SecureBootEnabled       = $secureBootEnabled
+                MSCorpUEFICA2011InDB    = $cert2011Present
+                MSUEFICA2023InDB        = $cert2023Present
+            }
+        }
+    }
+    else {
+        # No vendor BIOS settings matched - still output Secure Boot DB info
+        [PSCustomObject]@{
+            Manufacturer            = $vendorLabel
+            Model                   = $model
+            BIOSSettingName         = 'N/A (no vendor WMI match)'
+            BIOSSettingValue        = 'N/A'
+            ThirdPartyUEFICAEnabled = $isEnabled
+            SecureBootEnabled       = $secureBootEnabled
+            MSCorpUEFICA2011InDB    = $cert2011Present
+            MSUEFICA2023InDB        = $cert2023Present
+        }
     }
 }
 
 # Run and display results
-$result = Get-3rdPartyUEFICAStatus -Verbose
-$result | Format-List
+$results = Get-3rdPartyUEFICAStatus -Verbose
+$results | Format-Table -AutoSize
