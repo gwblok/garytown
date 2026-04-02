@@ -63,7 +63,8 @@ function Get-3rdPartyUEFICAStatus {
         '*Allow*3rd*Party*',        # Generic allow pattern
         '*Microsoft*3rd*Party*',    # Microsoft Surface variant
         '*MS UEFI CA*',             # HP: "Enable MS UEFI CA key" / "Ready to disable MS UEFI CA Key"
-        '*Enable*UEFI CA*'          # HP variant
+        '*Enable*UEFI CA*',         # HP variant
+        '*MSUefiCA*'                # Dell: "MSUefiCA"
     )
 
     # Helper: add unique matches from a collection to $biosMatches
