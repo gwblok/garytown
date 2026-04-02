@@ -1,6 +1,6 @@
 <# 
     Gary Blok & Mike Terrill
-    KB5025885 Remediation Script-Intune
+    KB5025885 Detection Script-Intune
     Step 1 of 4
     Version: 26.04.01
     Changes
@@ -9,36 +9,6 @@
     - Added more detailed comments throughout the script for clarity
     - Updated for the 4 certs vs the 1 cert
 #>
-
-#Function to help indicate a pending update
-function Set-PendingUpdate {
-    # Set the registry key to indicate a pending update
-    $RebootRequiredPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"
-    if (-not (Test-Path $RebootRequiredPath)) {New-Item -Path $RebootRequiredPath -Force | Out-Null}
-    # Create a value to indicate a pending update
-    New-ItemProperty -Path $RebootRequiredPath -Name "UpdatePending" -Value 1 -PropertyType DWord -Force | Out-Null
-
-    # Set the orchestrator key to 15
-    $OrchestratorPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator"
-    if (-not (Test-Path $OrchestratorPath)) {New-Item -Path $OrchestratorPath -Force | Out-Null}
-    $Values = get-item -Path $OrchestratorPath
-    if (($Null -eq $Values.GetValue('ShutdownFlyoutOptions')) -or ($Values.GetValue('ShutdownFlyoutOptions') -eq 0)){
-        New-ItemProperty -Path $OrchestratorPath -Name "ShutdownFlyoutOptions" -Value 10 -PropertyType DWord -Force | Out-Null
-    }
-    if (($Null -eq $Values.GetValue('EnhancedShutdownEnabled')) -or ($Values.GetValue('EnhancedShutdownEnabled') -eq 0)){
-        New-ItemProperty -Path $OrchestratorPath -Name "EnhancedShutdownEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
-    }
-
-    $RebootDowntimePath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\RebootDowntime"
-    if (-not (Test-Path $RebootDowntimePath)) {New-Item -Path $RebootDowntimePath -Force | Out-Null}
-    $Values = get-item -Path $RebootDowntimePath
-    if (($Null -eq $Values.GetValue('DowntimeEstimateHigh')) -or ($Values.GetValue('DowntimeEstimateHigh') -eq 0)){
-        New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateHigh" -Value 1 -PropertyType DWord -Force | Out-Null
-    }
-    if (($Null -eq $Values.GetValue('DowntimeEstimateLow')) -or ($Values.GetValue('DowntimeEstimateLow') -eq 0)){
-        New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
-    }
-}
 
 #Test if Remediation is applicable
 #Region Applicability
@@ -81,6 +51,8 @@ $SecureBootRegPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot'
 $SecureBootKey = Get-Item -Path $SecureBootRegPath
 $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
 
+#region Test if Remediation is already applied for each Step
+
 #Individual Cert Results Confirmation - Applying the DB updates
 $MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
 if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
@@ -91,13 +63,20 @@ if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
 $Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
 if ($Win2023Present -eq $false){$Step1Compliance = $false}
 
+$MissingCerts = @()
+if (-not $MSKEKPresent)        { $MissingCerts += "MSKEK" }
+if (-not $MSCA2023Present)     { $MissingCerts += "MSCA2023" }
+if (-not $OptionROM2023Present){ $MissingCerts += "OptionROM2023" }
+if (-not $Win2023Present)      { $MissingCerts += "Win2023" }
 
+if ($MissingCerts.Count -gt 0) {
+    Write-Output "Missing Certs: $($MissingCerts -join ', ')"
+}
+else {
+    Write-Output "All Certs Present"
+}
 
 if ($Step1Compliance -eq $false){
-    New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1844 -Force
-    Start-Sleep -Seconds 1
-    Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
-    Start-Sleep -Seconds 1
-    Set-PendingUpdate
-    Write-Error "Setting Value for for Certificate Updates | 0x1844"
+    exit 1
 }
+#endregion Test if Remediation is already applied for each Step
