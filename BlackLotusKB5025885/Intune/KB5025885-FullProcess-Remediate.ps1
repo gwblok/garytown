@@ -1,25 +1,68 @@
 <# 
-    Gary Blok & Mike Terrill
-    KB5025885 Detection Script
-    Version: 25.05.13
+Gary Blok & Mike Terrill
+KB5025885 Detection Script
+Version: 26.04.02
 
-    Changes
-    25.6.3 - Added Set-PendingUpdate back to script
+Changes
+- Updated applicability checks to match the latest UBR requirements for the March 2026 update
+- Updated output messages to be more user friendly and informative about the status of the remediation
+- Added more detailed comments throughout the script for clarity
+- Added Step 4 (SVN Update) Detection & Remediation options
+
+
 #>
 
 #Control the Remediation Process
-$EnableStep1 = $true
-$EnableStep2 = $true
-$EnableStep3 = $false
+$EnableStep1 = $true #Certificate Updates
+$EnableStep2 = $true #Boot Manager Update
+$EnableStep3 = $false #DBX Update - OPTIONAL - This will revoke the 2011 Compromised Certificate, but also potentially make your life harder.
+$EnableStep4 = $false #Enable the SVN to highest Level (Use Get-SecureBootSVN to check current level) - OPTIONAL - This will prevent any rollback of the Boot Manager, but also potentially make your life harder if you have any issues with the new Boot Manager and need to roll back.   
 
 #This function sets the registry keys to indicate a pending update (orange circle in the shutdown flyout)
+#region functions
+Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
+    [CmdletBinding()]
+    param ()
+    $taskName = "Secure-Boot-Update"
+    $Task = Get-ScheduledTask -TaskName $TaskName
+    if ($null -eq $Task) {
+        Write-Verbose "Scheduled Task '$TaskName' not found."
+        return $null
+    }
+    $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
+    $LastRunTime = $TaskHistory.LastRunTime
+    $LastTaskResult = $TaskHistory.LastTaskResult
+    $RebootRequired = $false
+    if ($TaskHistory.LastTaskResult -eq 0) {
+        $LastTaskResultDescription = "Successfully completed"
+    }
+    elseif ($TaskHistory.LastTaskResult -eq 2147942750) {
+        $LastTaskResultDescription = "No action was taken as a system reboot is required."
+        $RebootRequired = $true
+    }
+    elseif ($TaskHistory.LastTaskResult -eq 2147946825) {
+        $LastTaskResultDescription = "Secure Boot is not enabled on this machine."
+    }
+    else {
+        $LastTaskResultDescription = "Unknown error"
+    }
+    [PSCustomObject]@{
+        TaskName       = $TaskName
+        LastRunTime    = $LastRunTime
+        LastTaskResult = $LastTaskResult
+        LastTaskDescription = $LastTaskResultDescription
+        RebootRequired = $RebootRequired
+    }
+}
+
+#Function to help indicate a pending update
 function Set-PendingUpdate {
     # Set the registry key to indicate a pending update
     $RebootRequiredPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"
     if (-not (Test-Path $RebootRequiredPath)) {New-Item -Path $RebootRequiredPath -Force | Out-Null}
     # Create a value to indicate a pending update
     New-ItemProperty -Path $RebootRequiredPath -Name "UpdatePending" -Value 1 -PropertyType DWord -Force | Out-Null
-
+    
     # Set the orchestrator key to 15
     $OrchestratorPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator"
     if (-not (Test-Path $OrchestratorPath)) {New-Item -Path $OrchestratorPath -Force | Out-Null}
@@ -30,7 +73,7 @@ function Set-PendingUpdate {
     if (($Null -eq $Values.GetValue('EnhancedShutdownEnabled')) -or ($Values.GetValue('EnhancedShutdownEnabled') -eq 0)){
         New-ItemProperty -Path $OrchestratorPath -Name "EnhancedShutdownEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
     }
-
+    
     $RebootDowntimePath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\RebootDowntime"
     if (-not (Test-Path $RebootDowntimePath)) {New-Item -Path $RebootDowntimePath -Force | Out-Null}
     $Values = get-item -Path $RebootDowntimePath
@@ -41,6 +84,7 @@ function Set-PendingUpdate {
         New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
     }
 }
+#endregion functions   
 
 #Test if Remediation is applicable
 #Region Applicability
@@ -86,50 +130,8 @@ $SecureBootKey = Get-Item -Path $SecureBootRegPath
 $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
 
 #region Test if Remediation is already applied for each Step
-Function Get-WindowsUEFICA2023Capable{
-    try {
-        $SecureBootServicing = Get-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\Servicing' -ErrorAction Stop
-        $WindowsUEFICA2023Capable = $SecureBootServicing.GetValue('WindowsUEFICA2023Capable')
-    }
-    catch {return 0}
-    if ($WindowsUEFICA2023Capable) {
-        return $WIndowsUEFICA2023Capable
-    }
-    else  {return 0}
-}
 
-Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
-    [CmdletBinding()]
-    param ()
-    $taskName = "Secure-Boot-Update"
-    $Task = Get-ScheduledTask -TaskName $TaskName
-    if ($null -eq $Task) {
-        Write-Verbose "Scheduled Task '$TaskName' not found."
-        return $null
-    }
-    $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
-    $LastRunTime = $TaskHistory.LastRunTime
-    $LastTaskResult = $TaskHistory.LastTaskResult
-    if ($TaskHistory.LastTaskResult -eq 0) {
-        $LastTaskResultDescription = "Successfully completed"
-    }
-    elseif ($TaskHistory.LastTaskResult -eq 2147942750) {
-        $LastTaskResultDescription = "No action was taken as a system reboot is required."
-    }
-    elseif ($TaskHistory.LastTaskResult -eq 2147946825) {
-        $LastTaskResultDescription = "Secure Boot is not enabled on this machine."
-    }
-    else {
-        $LastTaskResultDescription = "Unknown error"
-    }
-    [PSCustomObject]@{
-        TaskName       = $TaskName
-        LastRunTime    = $LastRunTime
-        LastTaskResult = $LastTaskResult
-        LastTaskDescription = $LastTaskResultDescription
-    }
-}
-
+#Test: Applying the DB certificate updates (Step 1)
 #Individual Cert Results Confirmation - Applying the DB updates
 $MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
 if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
@@ -139,13 +141,60 @@ $OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootU
 if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
 $Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
 if ($Win2023Present -eq $false){$Step1Compliance = $false}
+$Step1Complete = $Step1Compliance
 
-$StepsComplete = Get-WindowsUEFICA2023Capable
+#Test: Updating the boot manager (Step 2)
+$Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
+$SystemDisk = Get-Disk | Where-Object {$_.IsSystem -eq $true}
+$SystemPartition = Get-Partition -DiskNumber $SystemDisk.DiskNumber | Where-Object {$_.IsSystem -eq $true}  
+$SystemVolume = $Volume | Where-Object {$_.UniqueId -match $SystemPartition.Guid}
+$FilePath = "$($SystemVolume.Path)\EFI\Microsoft\Boot\bootmgfw.efi"
+$CertCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+$CertCollection.Import($FilePath, $null, 'DefaultKeySet')
+If ($CertCollection.Subject -like "*Windows UEFI CA 2023*") {$Step2Complete = $true}
+else {$Step2Complete = $false}
+
+#Test: Applying the DBX update (Step 3)
 $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
-$LastStepComplete = $StepsComplete
-if ($Step3Complete -eq $true){$LastStepComplete = 3}
+#Test: Checking Current SVN against the highest level (Step 4)
+
+if ($EnableStep4 -eq $true){
+    $Step4Complete = $false
+    try {
+        if (Get-Command -Name Get-SecureBootSVN -ErrorAction SilentlyContinue) {
+            $CurrentSVN = Get-SecureBootSVN
+            #Write-Output "Current Secure Boot SVN: "
+            if ($CurrentSVN.FirmwareSVN -eq $CurrentSVN.BootManagerSVN){
+                $Step4Complete = $true
+            }
+        }
+        else {
+            Write-Error "Unable to retrieve current Secure Boot SVN." 
+        } 
+    }
+    catch {
+        Write-Error "Unable to retrieve current Secure Boot SVN." 
+    }
+}
 #endregion Test if Remediation is already applied for each Step
+
+#Confirm Applicability for Remediation, to confirm which steps are needed, This will ensure previous steps are complete before moving ahead.
+if ($Step1Complete -eq $true){
+    $LastStepComplete = 1
+}
+else {
+    $LastStepComplete = 0
+}
+if ($Step2Complete -eq $true -and $LastStepComplete -eq 1){
+    $LastStepComplete = 2
+}
+if ($Step3Complete -eq $true -and $LastStepComplete -eq 2){
+    $LastStepComplete = 3
+}
+if ($Step4Complete -eq $true -and $LastStepComplete -eq 3){
+    $LastStepComplete = 4
+}
 
 #region Remediation
 
@@ -159,13 +208,16 @@ if ((Get-SecureBootUpdateSTaskStatus).LastTaskResult -eq 2147942750){
     exit 0
 }
 
-if ($StepsComplete -eq 0 -or $Step1Compliance -eq $false){
+if ($LastStepComplete -eq 0 -or $Step1Compliance -eq $false){
     if ($EnableStep1){
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1844 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
-        Start-Sleep -Seconds 1
-        Set-PendingUpdate
+        Start-Sleep -Seconds 10
+        $GetTaskResults = Get-SecureBootUpdateSTaskStatus
+        if ($GetTaskResults.RebootRequired){
+            Set-PendingUpdate
+        }
         Write-Error "Setting Value for Step 1 | 0x1844"
     }
     else{
@@ -174,13 +226,16 @@ if ($StepsComplete -eq 0 -or $Step1Compliance -eq $false){
     exit 0
 }
 #If the first 2 steps are complete, remediation is needed, exit 
-if ($StepsComplete -eq 1){
+if ($LastStepComplete -eq 1){
     if ($EnableStep2){
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1944 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
-        Start-Sleep -Seconds 1
-        Set-PendingUpdate
+        Start-Sleep -Seconds 10
+        $GetTaskResults = Get-SecureBootUpdateSTaskStatus
+        if ($GetTaskResults.RebootRequired){
+            Set-PendingUpdate
+        }
         Write-Error "Setting Value for Step 2 | 0x1944"
     }
     else{
@@ -188,22 +243,36 @@ if ($StepsComplete -eq 1){
     }
     exit 0
 }
-if ($StepsComplete -eq 2){
+if ($LastStepComplete -eq 2){
     if ($EnableStep3){
         New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x80 -Force
         Start-Sleep -Seconds 1
         Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
-        Start-Sleep -Seconds 1
-        Set-PendingUpdate
-        Write-Error "Setting Value for Step 3 | 0x80"
+        Start-Sleep -Seconds 10
+        $GetTaskResults = Get-SecureBootUpdateSTaskStatus
+        if ($GetTaskResults.RebootRequired){
+            Set-PendingUpdate
+        }
+        Write-Error "Setting Value for DBX Update (Step 3) | 0x80"
     }
     else{
         Write-Error "Step 3 is not enabled for remediation"
     }
     exit 0
 }
-if ($Step3Complete -eq $true){
-    Write-Error "KB5025885 Complete - No Remediation Needed"
+if ($LastStepComplete -eq 3){
+    if ($EnableStep4){
+        New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x200 -Force
+        Write-Error "Running Remediation for SVN Update (Step 4)"
+        exit 3
+    }
+    else{
+        Write-Error "SVN Update (Step 4) is not enabled for remediation"
+        exit 0
+    }
+}
+if ($LastStepComplete -eq 4){
+    Write-Error "Secure Boot Updates Complete - No Remediation Needed"
     exit 0
 }
 #endregion Detection

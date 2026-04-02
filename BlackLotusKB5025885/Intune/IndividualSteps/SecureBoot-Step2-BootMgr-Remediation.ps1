@@ -70,7 +70,7 @@ function Set-PendingUpdate {
         New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
     }
 }
-#end region functions   
+#endregion functions   
 
 #Test if Remediation is applicable
 #Region Applicability
