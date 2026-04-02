@@ -170,6 +170,11 @@ else {
 
 #endregion Test if Remediation is already applied for each Step
 
+$Win2023Status = if ($Win2023Present) {"Present"} else {"Missing"}
+$MSKEKStatus = if ($MSKEKPresent) {"Present"} else {"Missing"}
+$MSCA2023Status = if ($MSCA2023Present) {"Present"} else {"Missing"}
+$OptionROM2023Status = if ($OptionROM2023Present) {"Present"} else {"Missing"} 
+
 #Write the Output based on the results of the tests above using the Chart from the matrix above
 if ($Step1Complete -and $Step2Complete -and $Step3Complete -and $Step4Complete) {
     Write-Output "Up to date - everything complete"
@@ -188,10 +193,10 @@ elseif ($Step1Complete -and -not $Step2Complete) {
     exit 2
 }
 elseif (-not $Step1Complete -and -not $Step2Complete -and -not $Step3Complete -and -not $Step4Complete) {
-    Write-Output "Not up to date - missing everything | Win2023: $Win2023Present | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present "
+    Write-Output "Not up to date - missing everything | Win2023: $Win2023Status | MSKEK: $MSKEKStatus | MSCA2023: $MSCA2023Status | OptionROM2023: $OptionROM2023Status  "
     exit 1
 }
 else {
-    Write-Output "Not up to date - missing certificates | Win2023: $Win2023Present | MSKEK: $MSKEKPresent | MSCA2023: $MSCA2023Present | OptionROM2023: $OptionROM2023Present "
+    Write-Output "Not up to date - missing certificates | Win2023: $Win2023Status | MSKEK: $MSKEKStatus | MSCA2023: $MSCA2023Status | OptionROM2023: $OptionROM2023Status "
     exit 1
 }

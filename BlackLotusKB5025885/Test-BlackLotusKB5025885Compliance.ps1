@@ -19,11 +19,13 @@ function Test-BlackLotusKB5025885Compliance {
         $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
         $LastRunTime = $TaskHistory.LastRunTime
         $LastTaskResult = $TaskHistory.LastTaskResult
+        $RebootRequired = $false
         if ($TaskHistory.LastTaskResult -eq 0) {
             $LastTaskResultDescription = "Successfully completed"
         }
         elseif ($TaskHistory.LastTaskResult -eq 2147942750) {
             $LastTaskResultDescription = "No action was taken as a system reboot is required."
+            $RebootRequired = $true
         }
         elseif ($TaskHistory.LastTaskResult -eq 2147946825) {
             $LastTaskResultDescription = "Secure Boot is not enabled on this machine."
@@ -36,6 +38,7 @@ function Test-BlackLotusKB5025885Compliance {
             LastRunTime    = $LastRunTime
             LastTaskResult = $LastTaskResult
             LastTaskDescription = $LastTaskResultDescription
+            RebootRequired = $RebootRequired
         }
     }
     Function Get-WindowsUEFICA2023Capable{

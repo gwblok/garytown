@@ -10,6 +10,43 @@
     - Updated for the 4 certs vs the 1 cert
 #>
 
+
+#region functions
+Function Get-SecureBootUpdateSTaskStatus{#Check to see if a reboot is required
+    [CmdletBinding()]
+    param ()
+    $taskName = "Secure-Boot-Update"
+    $Task = Get-ScheduledTask -TaskName $TaskName
+    if ($null -eq $Task) {
+        Write-Verbose "Scheduled Task '$TaskName' not found."
+        return $null
+    }
+    $TaskHistory = Get-ScheduledTaskInfo -InputObject $Task
+    $LastRunTime = $TaskHistory.LastRunTime
+    $LastTaskResult = $TaskHistory.LastTaskResult
+    $RebootRequired = $false
+    if ($TaskHistory.LastTaskResult -eq 0) {
+        $LastTaskResultDescription = "Successfully completed"
+    }
+    elseif ($TaskHistory.LastTaskResult -eq 2147942750) {
+        $LastTaskResultDescription = "No action was taken as a system reboot is required."
+        $RebootRequired = $true
+    }
+    elseif ($TaskHistory.LastTaskResult -eq 2147946825) {
+        $LastTaskResultDescription = "Secure Boot is not enabled on this machine."
+    }
+    else {
+        $LastTaskResultDescription = "Unknown error"
+    }
+    [PSCustomObject]@{
+        TaskName       = $TaskName
+        LastRunTime    = $LastRunTime
+        LastTaskResult = $LastTaskResult
+        LastTaskDescription = $LastTaskResultDescription
+        RebootRequired = $RebootRequired
+    }
+}
+ 
 #Function to help indicate a pending update
 function Set-PendingUpdate {
     # Set the registry key to indicate a pending update
@@ -39,7 +76,7 @@ function Set-PendingUpdate {
         New-ItemProperty -Path $RebootDowntimePath -Name "DowntimeEstimateLow" -Value 1 -PropertyType DWord -Force | Out-Null
     }
 }
-
+#end region functions   
 #Test if Remediation is applicable
 #Region Applicability
 $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
@@ -97,7 +134,10 @@ if ($Step1Compliance -eq $false){
     New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1844 -Force
     Start-Sleep -Seconds 1
     Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
-    Start-Sleep -Seconds 1
-    Set-PendingUpdate
+    Start-Sleep -Seconds 10
+    $GetTaskResults = Get-SecureBootUpdateSTaskStatus
+    if ($GetTaskResults.RebootRequired){
+        Set-PendingUpdate
+    }
     Write-Error "Setting Value for for Certificate Updates | 0x1844"
 }
