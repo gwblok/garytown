@@ -61,7 +61,9 @@ function Get-3rdPartyUEFICAStatus {
         '*Third*Party*UEFI*',       # Dell / generic
         '*ThirdParty*',             # Dell variant
         '*Allow*3rd*Party*',        # Generic allow pattern
-        '*Microsoft*3rd*Party*'     # Microsoft Surface variant
+        '*Microsoft*3rd*Party*',    # Microsoft Surface variant
+        '*MS UEFI CA*',             # HP: "Enable MS UEFI CA key" / "Ready to disable MS UEFI CA Key"
+        '*Enable*UEFI CA*'          # HP variant
     )
 
     switch -Wildcard ($manufacturer) {
@@ -173,7 +175,7 @@ function Get-3rdPartyUEFICAStatus {
     #   - The Microsoft Corporation UEFI CA 2011 (or 2023) cert is in the Secure Boot DB
     $isEnabled = $null
     if ($biosSettingValue) {
-        $isEnabled = $biosSettingValue -in @('Enable', 'Enabled', 'On', 'True', '1')
+        $isEnabled = $biosSettingValue -in @('Enable', 'Enabled', 'On', 'True', '1', 'Yes')
     }
     elseif ($secureBootDBCheck) {
         $isEnabled = $cert2011Present -or $cert2023Present
