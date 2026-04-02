@@ -1,4 +1,4 @@
-# KB5025885  - Black Lotus
+# Secure Boot 2023 Updates and Black Lotus
 
 I'll be keeping this updated with latest scripts for both ConfigMgr Configuration Items (CIs) and for Intune Remediation Scripts.  I'll also keep other useful scripts here.
 
@@ -6,8 +6,13 @@ I'll plan to create a change log, which will be listed on this page, once I get 
 
 Things are working, but I need to do a rewrite based on the May 5, 2025 changes Microsoft released.  The current scripts are based on the 2 reboots per step, which has now changed.  You can use them, but I will be updating soon... so stay tuned.
 
+## Intune
+
+I've created several scripts to use inside Intune's remediation script feature. Some are just detections to provide info, while others can be used to update your systems, please see the sub folder "Intune" for details.
+
 ## References from Microsoft
 
+- [aka.ms/SecureBoot](aka.ms/SecureBoot)
 - [How to manage the Windows Boot Manager revocations for Secure Boot changes associated with CVE-2023-24932](https://support.microsoft.com/en-us/topic/how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932-41a975df-beb2-40c1-99a3-b3ff139f832d)
 - [Enterprise Deployment Guidance for CVE-2023-24932](https://support.microsoft.com/en-us/topic/enterprise-deployment-guidance-for-cve-2023-24932-88b8f034-20b7-4a45-80cb-c6049b0f9967)
 - [Updating Windows bootable media to use the PCA2023 signed boot manager](https://support.microsoft.com/en-us/topic/updating-windows-bootable-media-to-use-the-pca2023-signed-boot-manager-d4064779-0e4e-43ac-b2ce-24f434fcfa0f)
@@ -62,10 +67,6 @@ You'll find a Baseline, along with the scripts that are in the exported baseline
 # Intune Folder
 This will contain scripts used with Intune Remediation feature.  I'll plan to have one script for a "Status Report" which will only be a detection script to give you an overview of devices and their remediation state.  I'll also provide scripts for performing steps 1-3, which you can control via a variable in the script.
 
-# TO DO (Updated 25.5.13)
-
-- Update Scripts for the May 5th Changes
-  - Intune Remediation Scripts [Working on]
 
 # Change Log
 
@@ -76,3 +77,6 @@ This will contain scripts used with Intune Remediation feature.  I'll plan to ha
 - 25.5.14.10.59 - Moved the Task Sequence "KB5025885 - Media Creator.zip" to this location.
 - 25.5.15.12.26 - Reorganized folder structures and renamed items and updated this readme
 - 25.8.11.15.56 - Updated UBR Check for July 2025 patch level per MS latest requirements
+- 26.4.2 - MAJOR OVERHAUL based on so many changes MS made in March 2026
+  - Renamed several script to simplify and added a lot of notes
+  - Updated Scripts to require devices have the March 2026 CUs installed.
