@@ -79,7 +79,7 @@ function Get-3rdPartyUEFICAStatus {
             foreach ($s in $Settings) {
                 $sName  = $s.$NameProperty
                 $sValue = $s.$ValueProperty
-                if ($sName -like $pattern -and $seen.Add($sName)) {
+                if ($sName -like $pattern -and $sName -notlike '*Ready to disable*' -and $seen.Add($sName)) {
                     $biosMatches.Add(@{ Name = $sName; Value = $sValue })
                 }
             }
@@ -212,5 +212,22 @@ function Get-3rdPartyUEFICAStatus {
 }
 
 # Run and display results
-$results = Get-3rdPartyUEFICAStatus -Verbose
-$results | Format-Table -AutoSize
+$results = Get-3rdPartyUEFICAStatus
+$BIOSSettingName = $results.BIOSSettingName -join '; '
+$BIOSSettingValue = $results.BIOSSettingValue -join '; '
+$3rdPartyStatus = if ($results.ThirdPartyUEFICAEnabled) { 'Enabled' } elseif ($results.ThirdPartyUEFICAEnabled -eq $false) { 'Disabled' } else { 'Unknown' }
+if ($BIOSSettingName -ne 'N/A (no vendor WMI match)') {
+    if ($3rdPartyStatus -eq 'Enabled') {
+        Write-Output "PASS: Manufacturer: $($results.Manufacturer) | BIOS Setting(s): $BIOSSettingName = $BIOSSettingValue | 3rd Party UEFI CA Status: Enabled"
+        exit 0
+    }
+    else{
+        Write-Output "FAIL: Manufacturer: $($results.Manufacturer) | BIOS Setting(s): $BIOSSettingName = $BIOSSettingValue | 3rd Party UEFI CA Status: Disabled"
+        exit 1
+    }
+    exit 0
+}
+else {
+    Write-Output "NA:Manufacturer: $($results.Manufacturer) | No vendor-specific BIOS setting found. Secure Boot DB cert status - MS UEFI CA 2011: $($results.MSCorpUEFICA2011InDB), MS UEFI CA 2023: $($results.MSUEFICA2023InDB)"
+    exit 0
+}
