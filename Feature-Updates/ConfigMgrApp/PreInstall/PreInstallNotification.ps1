@@ -152,7 +152,7 @@ $ProgressBar = [Microsoft.Toolkit.Uwp.Notifications.AdaptiveProgressBar]@{
 }
 
 
-$ToastContent = $ToastContentBuilder.AddText("Upgrading Windows 10...").
+$ToastContent = $ToastContentBuilder.AddText("Upgrading Windows...").
     AddVisualChild($ProgressBar).
     AddText("Please do not reboot until you're notified...").
     GetToastContent()
@@ -164,7 +164,7 @@ $dict = New-Object 'System.Collections.Generic.Dictionary[[string],[string]]'
 $dict.Add("progressValue","$SetupProgressNumber")
 $dict.Add("progressValueString","$SetupProgress% Complete")
 $dict.Add("progressStatus","Installing...")
-$dict.Add("progressTitle","Processing Feature Update of Windows to 20H2")
+$dict.Add("progressTitle","Processing Feature Update of Windows to vNext")
 
 $Toast.Data = [Windows.UI.Notifications.NotificationData]::new($dict, 0)
 
