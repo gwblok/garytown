@@ -63,6 +63,17 @@ else {$Step2Complete = $false}
 $Step3Complete = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI dbx).bytes) -match 'Microsoft Windows Production PCA 2011'
 
 #Creating Mapping from $true or $false to 'Present' or 'Missing' for easier readability in outputs
+#Individual Cert Results Confirmation - Applying the DB updates
+$MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
+if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
+$MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
+if ($MSCA2023Present -eq $false){$Step1Compliance = $false}
+$OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
+if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
+$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+if ($Win2023Present -eq $false){$Step1Compliance = $false}
+
+
 $Win2023Status = if ($Win2023Present) {"Present"} else {"Missing"}
 $MSKEKStatus = if ($MSKEKPresent) {"Present"} else {"Missing"}
 $MSCA2023Status = if ($MSCA2023Present) {"Present"} else {"Missing"}
