@@ -113,16 +113,18 @@ $SecureBootKey = Get-Item -Path $SecureBootRegPath
 $SecureBootRegValue = $SecureBootKey.GetValue("AvailableUpdates")
 
 #Individual Cert Results Confirmation - Applying the DB updates
+#These two are required:
 $MSKEKPresent = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI kek).bytes) -match 'Microsoft Corporation KEK 2K CA 2023'
 if ($MSKEKPresent -eq $false){$Step1Compliance = $false}
+$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
+if ($Win2023Present -eq $false){$Step1Compliance = $false}
+#These two are optional based on your UEFI configuration, but should be present in most cases, for step 2, we'll ignore.
+<#
 $MSCA2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft UEFI CA 2023'
 if ($MSCA2023Present -eq $false){$Step1Compliance = $false}
 $OptionROM2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Microsoft Option ROM UEFI CA 2023'
 if ($OptionROM2023Present -eq $false){$Step1Compliance = $false}
-$Win2023Present = [System.Text.Encoding]::ASCII.GetString((Get-SecureBootUEFI db).bytes) -match 'Windows UEFI CA 2023'
-if ($Win2023Present -eq $false){$Step1Compliance = $false}
-
-
+#>
 
 #Test: Updating the boot manager
 $Volume = Get-Volume | Where-Object {$_.FileSystemType -eq "FAT32" -and $_.DriveType -eq "Fixed"}
