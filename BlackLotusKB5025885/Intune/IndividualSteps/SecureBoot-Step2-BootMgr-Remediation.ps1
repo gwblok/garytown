@@ -153,7 +153,7 @@ if ($Step1Compliance -eq $false){
     Write-Error "Setting Value for for Certificate Updates | 0x1844"
 }
 if ($Step2Complete -eq $false){
-    New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1844 -Force
+    New-ItemProperty -Path $SecureBootRegPath -Name "AvailableUpdates" -PropertyType dword -Value 0x1944 -Force
     Start-Sleep -Seconds 1
     Start-ScheduledTask -TaskName "\Microsoft\Windows\PI\Secure-Boot-Update"
     Start-Sleep -Seconds 10
