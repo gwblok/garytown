@@ -12,7 +12,7 @@
     Version 26.06.17
     Mike Marable
     Changes
-    - [Line 147] Changed from using "Write-Error" to "Write-Output" as the Write-Error was causing Intune to see the script as failing
+    - [Original Line 142] Changed from using "Write-Error" to "Write-Output" as the Write-Error was causing Intune to see the script as failing
 #>
 
 
