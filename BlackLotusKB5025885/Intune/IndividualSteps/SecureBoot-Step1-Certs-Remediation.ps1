@@ -8,6 +8,11 @@
     - Updated output messages to be more user friendly and informative about the status of the remediation
     - Added more detailed comments throughout the script for clarity
     - Updated for the 4 certs vs the 1 cert
+
+    Version 26.06.17
+    Mike Marable
+    Changes
+    - [Line 147] Changed from using "Write-Error" to "Write-Output" as the Write-Error was causing Intune to see the script as failing
 #>
 
 
@@ -139,5 +144,6 @@ if ($Step1Compliance -eq $false){
     if ($GetTaskResults.RebootRequired){
         Set-PendingUpdate
     }
-    Write-Error "Setting Value for for Certificate Updates | 0x1844"
+    #Write-Error "Setting Value for for Certificate Updates | 0x1844"
+    Write-Output "Setting Value for for Certificate Updates | 0x1844"
 }
