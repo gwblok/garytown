@@ -3,6 +3,11 @@
     KB5025885 Remediation Script-Intune
     Step 2 of 4
     Version: 25.09.25
+
+    Version 26.06.17
+    Mike Marable
+    Changes
+    - [Original Line 166] Changed from using "Write-Error" to "Write-Output" as the Write-Error was causing Intune to see the script as failing
 #>
 
 #region functions
@@ -163,7 +168,8 @@ if ($Step2Complete -eq $false){
     if ($GetTaskResults.RebootRequired){
         Set-PendingUpdate
     }
-    Write-Error "Setting Value for for BootMgr Updates | 0x1944"
+    #Write-Error "Setting Value for for BootMgr Updates | 0x1944"
+    Write-Output "Setting Value for for BootMgr Updates | 0x1944"
 }
 #endregion Remediation
     
