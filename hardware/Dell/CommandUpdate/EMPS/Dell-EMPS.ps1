@@ -80,7 +80,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 26.7.1.1  - Added Logic for Set-DCUSettings for delayDays | https://github.com/gwblok/garytown/issues/43
 
 #>
-$ScriptVersion = '25.4.30.13.37'
+$ScriptVersion = '26.7.1.16.06'
 Write-Output "Dell Command Update Functions Loaded - Version $ScriptVersion"
 function Get-DellSupportedModels {
     [CmdletBinding()]
