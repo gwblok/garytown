@@ -5,7 +5,7 @@ USE AT YOUR OWN RISK. I TAKE NO RESPONSIBILITY FOR ANYTHING THIS SCRIPT DOES. TE
 ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT INTO ONE SCRIPT.
 
 
-#https://dl.dell.com/content/manual13608255-dell-command-update-version-5-x-reference-guide.pdf?language=en-us
+#https://www.dell.com/support/manuals/en-us/command-update/dcu_rg/dell-command-%7C-update-cli-commands?guid=guid-92619086-5f7c-4a05-bce2-0d560c15e8ed&lang=en-us
 
 # Summary of Functions:
 
@@ -77,6 +77,7 @@ ALL INFORMATION IS PUBLICLY AVAILABLE ON THE INTERNET. I JUST CONSOLIDATED IT IN
 25.2.11.1 - Changed the Logic on Get-DellBIOSUpdates -Check, some folks reported that it wasn't working with the -Latest switch.
 25.4.30.1 - Added Get-DCUSettings Function
 25.4.30.2 - Added Logic for Set-DCUSettings | if $scheduleAction -ne 'DownloadInstallAndNotify', then you can't set deferals... because there is nothing to defer. Breaks logic.
+26.7.1.1  - Added Logic for Set-DCUSettings for delayDays | https://github.com/gwblok/garytown/issues/43
 
 #>
 $ScriptVersion = '25.4.30.13.37'
@@ -488,7 +489,9 @@ function Set-DCUSettings {
     [ValidateSet('NotifyAvailableUpdates','DownloadAndNotify','DownloadInstallAndNotify')]
     [string]$scheduleAction = 'DownloadInstallAndNotify',
     [switch]$scheduleAuto,
-    [string]$CustomCatalogPath #Path to a custom catalog file for Offline DCU or just to lock in a specific catalog 
+    [string]$CustomCatalogPath, #Path to a custom catalog file for Offline DCU or just to lock in a specific catalog
+    [ValidateRange(1,45)]
+    [int]$ExcludeUpdatesFromLastNDays #Excludes updates released within the last N days from being applied
     )
     
     $DCUPath = (Get-DCUInstallDetails).DCUPath
@@ -643,6 +646,18 @@ function Set-DCUSettings {
         $ArgList = "/configure $CustomCatalogPathVar -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-CustomCatalogPath.log`""
         Write-Verbose $ArgList
         $DCUConfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
+        if ($DCUConfig.ExitCode -ne 0){
+            $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
+            Write-Verbose "Exit: $($DCUConfig.ExitCode)"
+            Write-Verbose "Description: $($ExitInfo.Description)"
+            Write-Verbose "Resolution: $($ExitInfo.Resolution)"
+        }
+    }
+    if ($ExcludeUpdatesFromLastNDays){
+        $ExcludeUpdatesFromLastNDaysVar = "-delaydays=$ExcludeUpdatesFromLastNDays -outputlog=`"$LogPath\DCU-CLI-$($DateTimeStamp)-Configure-ExcludeUpdatesFromLastNDays.log`""
+        $ArgList = "/configure $ExcludeUpdatesFromLastNDaysVar"
+        Write-Verbose $ArgList
+        $DCUCOnfig = Start-Process -FilePath "$DCUPath\dcu-cli.exe" -ArgumentList $ArgList -NoNewWindow -PassThru -Wait
         if ($DCUConfig.ExitCode -ne 0){
             $ExitInfo = Get-DCUExitInfo -DCUExit $DCUConfig.ExitCode
             Write-Verbose "Exit: $($DCUConfig.ExitCode)"
