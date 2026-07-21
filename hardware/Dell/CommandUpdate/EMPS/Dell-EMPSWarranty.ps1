@@ -7,6 +7,11 @@ and then copy the C:\Program Files (x86)\Dell\CommandIntegrationSuite\ folder (y
 Since I'm hosting this script on GitHub, I didn't want to host the Dell Warranty CLI files, so I'm downloading the entire Suite Installer from Dell's site.
 
 If my explaination of how you could create your own package to use doesn't make sense, let me know, and I'll try to explain it better.
+
+Changes:
+26.6.21 - Added -DCWarrURL param, as if the URL is updated to new verison, you can just pass it in without having to modify the script.  I am not staying on top of versions.
+
+
 #>
 
 
@@ -27,6 +32,7 @@ function Get-DellWarrantyInfo {
     Get-DellWarrantyInfo -ServiceTag 'ABC1234' (Run from any Machine)
     Get-DellWarrantyInfo -CSVImportPath 'C:\Temp\ServiceTags.csv'
     Get-DellWarrantyInfo -CMConnectionStringHost 'CMHost' -CMConnectionStringDBName 'CM_XXX' (Person running script needs to have access to CM Database)
+    Get-DellWarrantyInfo -DCWarrURL 'https://dl.dell.com/FOLDER14342117M/2/Dell-Command-Integration-Suite-for-System-Center_F4HNN_WIN64_6.7.1_A00.EXE'
 
     -Cleanup will remove the required Dell Command Integration Suite after running, if you want to keep it, don't use the -Cleanup switch.
 
@@ -45,6 +51,8 @@ function Get-DellWarrantyInfo {
         [string]$CMConnectionStringHost, #SCCM Host
         [Parameter(Mandatory=$false)]
         [string]$CMConnectionStringDBName, #SCCM DB Name (CM_XXX)
+        [Parameter(Mandatory=$false)]
+        [string]$DCWarrURL = 'https://dl.dell.com/FOLDER14342117M/2/Dell-Command-Integration-Suite-for-System-Center_F4HNN_WIN64_6.7.1_A00.EXE',
         #[Parameter(Mandatory=$false)]
         #[switch]$CMConnectionIntegratedSecurity, #Disabled, this is all I'm supporting, I'm assuing you have rights.       
         [Parameter(Mandatory=$false)]
@@ -67,7 +75,10 @@ function Get-DellWarrantyInfo {
     }
     function Install-CommandIntegrationSuite{
         [CmdletBinding()]
-        param()
+        param(
+            [Parameter(Mandatory=$true)]
+            [string]$DCWarrURL
+        )
         $ScratchDir = "$env:TEMP\Dell"
         if (-not (Test-Path $ScratchDir)) { New-Item -ItemType Directory -Path $ScratchDir |out-null }
         $DellWarrantyCLIPath = "C:\Program Files (x86)\Dell\CommandIntegrationSuite\DellWarranty-CLI.exe"
@@ -84,7 +95,6 @@ function Get-DellWarrantyInfo {
         if (-not(Test-Path $DellWarrantyCLIPath)){
 
             #Download and install Dell Command Integration Suite (DellWarranty-CLI.exe) and Install
-            $DCWarrURL = 'https://dl.dell.com/FOLDER12964322M/1/Dell-Command-Integration-Suite-for-System-Center_5FT6F_WIN64_6.6.1_A00.EXE'
             $EXEName = $DCWarrURL.Split("/")[-1]
             $DCWarrPath = "$ScratchDir\$EXEName"
             Write-Verbose -Message "Downloading Dell Command Integration Suite"
@@ -114,7 +124,7 @@ function Get-DellWarrantyInfo {
             return
         }
         #write-verbose -Message "Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList `"/I=$($CSVImportPath) /E=$($ExportPath)`" -Wait -WindowStyle Hidden"
-        Install-CommandIntegrationSuite
+        Install-CommandIntegrationSuite -DCWarrURL $DCWarrURL
         $CLI = Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList "/Ics=`"Data Source=$($CMConnectionStringHost);Database=$($CMConnectionStringDBName);Integrated Security=true;`" /E=$($ExportPath)" -Wait -WindowStyle Hidden -PassThru
         Write-Verbose -Message "CLI Exit Code: $($CLI.ExitCode)"
         $Data = Get-Content -Path $ExportPath | ConvertFrom-Csv
@@ -125,7 +135,7 @@ function Get-DellWarrantyInfo {
 
     #If a CSVImportPath is passed, use that, otherwise create a CSV file with the Service Tag
     if ($CSVImportPath) {
-        Install-CommandIntegrationSuite
+        Install-CommandIntegrationSuite -DCWarrURL $DCWarrURL
         $ServiceTag = (Get-Content -Path $CSVImportPath).Trim()
         Write-Verbose -Message "CSVImportPath Path: $CSVImportPath"
         write-verbose -Message "Start-Process -FilePath $DellWarrantyCLIPath -ArgumentList `"/I=$($CSVImportPath) /E=$($ExportPath)`" -Wait -WindowStyle Hidden"
@@ -157,7 +167,7 @@ function Get-DellWarrantyInfo {
     
     if ($ServiceTag){
         $ServiceTag | Out-File -FilePath $CSVPath -Encoding utf8 -Force
-        Install-CommandIntegrationSuite
+        Install-CommandIntegrationSuite -DCWarrURL $DCWarrURL
     }
     else{Write-Host "No Service Tag found" -ForegroundColor Red; return}
     
