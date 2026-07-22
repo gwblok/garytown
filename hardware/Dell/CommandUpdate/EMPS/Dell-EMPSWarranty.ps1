@@ -12,6 +12,8 @@ Changes:
 26.6.21 - Added -DCWarrURL param, as if the URL is updated to new verison, you can just pass it in without having to modify the script.  I am not staying on top of versions.
 
 
+Future plans will be to add a process that looks up the latest Integration Suite installer automatically so this script doesn't need to be maintained.
+
 #>
 
 
