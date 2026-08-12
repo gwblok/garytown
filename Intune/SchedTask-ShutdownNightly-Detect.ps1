@@ -1,4 +1,4 @@
-$TaskName = "Shutdown Computer Daily 6PM"
+$TaskName = "Shutdown Computer Daily 530PM"
 $Compliance = $true
 
 
