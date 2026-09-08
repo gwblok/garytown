@@ -1,4 +1,10 @@
-<#Gary Blok - @gwblok - GARYTOWN.COM
+<#
+NOTICE: This EMPS folder is no longer maintained.
+New development is in the OEMWrapPS repository: https://github.com/gwblok/OEMWrapPS
+The OEMWrapPS module is available from PowerShell Gallery:
+https://www.powershellgallery.com/packages/OEMWrapPS
+
+Gary Blok - @gwblok - GARYTOWN.COM
 
 DISCLAIMER: THIS IS NOT AN OFFICIAL DELL SCRIPT. I DO NOT WORK FOR DELL. 
 USE AT YOUR OWN RISK. I TAKE NO RESPONSIBILITY FOR ANYTHING THIS SCRIPT DOES. TEST IN A LAB FIRST.

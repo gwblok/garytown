@@ -1,4 +1,9 @@
 <# Notes
+NOTICE: This EMPS folder is no longer maintained.
+New development is in the OEMWrapPS repository: https://github.com/gwblok/OEMWrapPS
+The OEMWrapPS module is available from PowerShell Gallery:
+https://www.powershellgallery.com/packages/OEMWrapPS
+
 Gary Blok | GARYTOWN.COM
 This script will download and install Dell Command Integration Suite if it is not already installed, then get the warranty information for the system
 If you do NOT want to download and install the Dell Command Integration Suite, you can do it on a single test machine,
