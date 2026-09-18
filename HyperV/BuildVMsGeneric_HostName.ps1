@@ -57,7 +57,7 @@ param(
 
     [Parameter()]
     [string]
-    $VMNamePreFix = "VM-OSD-",
+    $VMNamePreFix,
 
     [Parameter()]
     [switch]
@@ -177,6 +177,54 @@ if ($BootMethod -eq 'ISO') {
 else {
     Write-Host "iPXE Boot Method selected" -ForegroundColor Green
 }
+
+# If no custom prefix was provided, build one from host abbreviation.
+if ([string]::IsNullOrWhiteSpace($VMNamePreFix)) {
+    $HostName = $env:COMPUTERNAME
+    if ($HostName -match "HPED800G6-HOST") {
+        $HostName = '800G6'
+    }
+    elseif ($HostName -eq "D-P-5810-VMHOST") {
+        $HostName = 'P5180'
+    }
+    elseif ($HostName -eq "HP-Z2-SFF-G5") {
+        $HostName = 'Z2G5'
+    }
+    elseif ($HostName -eq "UGREEN") {
+        $HostName = 'UGNAS'
+    }
+    elseif ($HostName -eq "BEELINK-HOST") {
+        $HostName = 'BLink'
+    }
+    elseif ($HostName -eq "MS01") {
+        $HostName = 'MS01'
+    }
+    elseif ($HostName -eq "HPZbookSG10GARY") {
+        $HostName = 'ZBG10'
+    }
+    elseif ($HostName -eq "HPZBStudiox360G") {
+        $HostName = 'ZBSG5'
+    }
+    elseif ($HostName -match "AURA") {
+        $HostName = 'AURA'
+    }
+    elseif ($HostName -match "R640") {
+        $HostName = 'R640'
+    }
+    elseif ($HostName -match "HPZBSG10-GWB") {
+        $HostName = 'ZBG10'
+    }
+    elseif ($HostName -eq "DELL-P7920") {
+        $HostName = 'P7920'
+    }
+    else {
+        $HostName = 'HVHst'
+    }
+
+    $VMNamePreFix = "VM-$HostName-"
+}
+
+Write-Host "VM Name Prefix: $VMNamePreFix" -ForegroundColor Green
 
 
 ## note: $StartNumber, $EndNumber and $VMNamePreFix moved into param() block
