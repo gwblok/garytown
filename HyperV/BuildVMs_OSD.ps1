@@ -148,7 +148,7 @@ $AvailableDeploymentCollectionName = "OSD Available Deployment Client"
 
 $CMConnected = $null
 
-$Purpose = "AutoPilot", "ConfigMgr", "MikesLab", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
+$Purpose = "AutoPilot", "ConfigMgr 2P Domain Join", "MikesLab", "DeployR 2P Domain Join", "Other" | Out-GridView -Title "Select the Build you want to update" -PassThru #Automated includes SMSTSPreferredAdvertID, and AllowUnattended
 
 $HostName = $env:COMPUTERNAME
 if ($HostName -match "HPED800G6-HOST"){
@@ -192,9 +192,10 @@ else{
 }
 
 if ($Purpose -eq "AutoPilot"){
-    $Tenant = "GARYTOWN", "2PintLab" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
+    $Tenant = "GARYTOWN", "2PintLab", "2PintDemo" | Out-GridView -Title "Select the Tenant you want to Join" -PassThru
     if ($Tenant -eq "GARYTOWN"){$VMNamePreFix = "VM-$HostName-GT-"; $ExtraNotes = "Environment = GTIntune"}
-    elseif ($Tenant -eq "2PintLab"){$VMNamePreFix = "VM-$HostName-2P-"; $ExtraNotes = "Environment = 2PIntune"}
+    elseif ($Tenant -eq "2PintLab"){$VMNamePreFix = "VM-$HostName-2PL-"; $ExtraNotes = "Environment = 2PLIntune"}
+    elseif ($Tenant -eq "2PintDemo"){$VMNamePreFix = "VM-$HostName-2PD-"; $ExtraNotes = "Environment = 2PDIntune"}
     }
 if ($Purpose -eq "Other"){
     $VMNamePreFix = "VM-$HostName-"
@@ -239,10 +240,10 @@ $NameTable = @()
 
 
 
-if ($Purpose -eq "ConfigMgr"){
+if ($Purpose -eq "ConfigMgr 2P Domain Join"){
 
 
-    $VMNamePreFix = "VM-$($SiteCode)-$($HostName)-"
+    $VMNamePreFix = "VM-$($HostName)-$($SiteCode)-"
     if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){New-PSDrive -PSProvider CMSite -Name $SiteCode -Root $ProviderMachineName -ErrorAction SilentlyContinue}
     if (!(Get-PSDrive -Name $SiteCode -ErrorAction SilentlyContinue)){
         if (!($Creds)){$Creds = Get-Credential}
@@ -262,9 +263,12 @@ elseif ($Purpose -eq "AutoPilot"){
 
 }
 elseif ($Purpose -eq "MikesLab"){
-    $VMNamePreFix = "VM-MT-$($HostName)-"
+    $VMNamePreFix = "VM-$($HostName)-MT-"
 }
-  
+elseif ($Purpose -eq "DeployR 2P Domain Join"){
+    $VMNamePreFix = "VM-$($HostName)-2P-"
+}
+
 Set-location "c:"     
 
 #Get Name of VMs Currently in HyperV
@@ -404,15 +408,13 @@ else
         else{
             Write-Host "  Setting Boot ISO to $BootISO" -ForegroundColor Green
             Set-VMDvdDrive -VMName $VMName -Path $BootISO
-            
-            if ($ExtraNotes){
-                $CurrentNotes = Get-VM -Name $VMname | Select-Object -ExpandProperty Notes
-                $NewNotes = $CurrentNotes + "`n" + $ExtraNotes
-                Get-VM -Name $VMname | Set-VM -Notes $NewNotes
-            }
-
-
         }
+        if ($ExtraNotes){
+            $CurrentNotes = Get-VM -Name $VMname | Select-Object -ExpandProperty Notes
+            $NewNotes = $CurrentNotes + "`n" + $ExtraNotes
+            Get-VM -Name $VMname | Set-VM -Notes $NewNotes
+        }
+
         #THis line below is commented out because I'm skipping adding the ISO and just having it boot to Network Adapter
         
         Write-Host "  Setting CheckPoints to Standard" -ForegroundColor Green

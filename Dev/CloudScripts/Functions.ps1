@@ -950,10 +950,19 @@ Function Update-OfflineOSDModuleFromWinPEVersion {
 }
 write-host -ForegroundColor DarkGray "========================================================="
 write-host -ForegroundColor Cyan "Tweaks Functions"
-Write-Host -ForegroundColor Green "[+] Function Set-BranchCache"
-function Set-BranchCache {
-    iex (irm 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/MAIN_REMEDIATE.ps1')
-    iex (irm 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/CacheSize_REMEDIATE.ps1')
+Write-Host -ForegroundColor Green "[+] Function Set-BranchCacheBaseline"
+
+function Set-BranchCacheBaseline {
+    #URLS from https://github.com/2pintsoftware/BranchCache/tree/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source
+    $BCScript00URL = 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/00%20BranchCache%20Distributed%20Mode%20Remediate%201.0.1.4.ps1'
+    $BCScript01URL = 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/01%20BranchCache%20Cache%20Size%20Remediate%201.0.1.4.ps1'
+    $BCScript02URL = 'https://raw.githubusercontent.com/2pintsoftware/BranchCache/refs/heads/master/ConfigMgr%20Configuration%20Item%20(CI)%20to%20Enable%20and%20Tune%20BranchCache/Source/02%20BranchCache%20RepubQuorum%20Size%20Remediate%201.0.1.4.ps1'
+    #Run Scripts  
+    iex (irm $BCScript00URL)
+    iex (irm $BCScript01URL)
+    iex (irm $BCScript02URL)
+    write-host -ForegroundColor Green "[+] BranchCache Baseline Set"
+    write-host -ForegroundColor Green "[+] Scripts from 2Pint Software GitHub BranchCache Repo (ConfigMgr Configuration Item (CI) to Enable and Tune BranchCache)"
 }
 
 Write-Host -ForegroundColor Green "[+] Unblock-Folder"

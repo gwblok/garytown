@@ -1,3 +1,10 @@
+<#
+NOTICE: This EMPS folder is no longer maintained.
+New development is in the OEMWrapPS repository: https://github.com/gwblok/OEMWrapPS
+The OEMWrapPS module is available from PowerShell Gallery:
+https://www.powershellgallery.com/packages/OEMWrapPS
+#>
+
 #https://github.com/dell/Endpoint-Management-Script-Library/blob/main/Intune%20Scripts/EnterpriseAppDeployment/Dell_Intune_App_Publish_1.0.ps1
 
 

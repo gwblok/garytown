@@ -1,4 +1,4 @@
-$TaskName = "Shutdown Computer Daily 6PM"
+$TaskName = "Shutdown Computer Daily 530PM"
 $Compliance = $true
 
 
@@ -20,7 +20,7 @@ if ($Compliance -eq $false){
     
     #$A = New-ScheduledTaskAction -Execute "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -Argument 'Stop-Computer -Force'
     $A = New-ScheduledTaskAction -Execute "shutdown.exe" -Argument '-s -f -t 120'
-    $T = New-ScheduledTaskTrigger -Daily -DaysInterval 1 -At 6PM
+    $T = New-ScheduledTaskTrigger -Daily -DaysInterval 1 -At '5:30PM'
     $P = New-ScheduledTaskPrincipal "NT Authority\System" -RunLevel Highest
     $S = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 1) -RestartCount 3 -RestartInterval (New-TimeSpan -Hours 1)
     $S.CimInstanceProperties.Item('MultipleInstances').Value = 3
