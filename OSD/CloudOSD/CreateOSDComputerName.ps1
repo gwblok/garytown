@@ -15,7 +15,6 @@ try {
 catch{
     #Write-Output "Not in TS"
 }
-
 function Build-ComputerName {
     [CmdletBinding()]
     param(
@@ -26,7 +25,7 @@ function Build-ComputerName {
     $ComputerSystemProduct = Get-CimInstance -ClassName Win32_ComputerSystemProduct
     $Manufacturer = $ComputerSystem.Manufacturer
     $Model = $ComputerSystem.Model
-    $CompanyName = "GARYTOWN"
+    $CompanyName = "2Pint"
     $Serial = (Get-CimInstance -ClassName win32_bios).SerialNumber
     
     if ($Manufacturer -match "Lenovo"){
@@ -94,8 +93,25 @@ function Build-ComputerName {
         }
     }
     elseif ($Manufacturer -match "Intel"){
+        
         $ComputerName = "$($Model)-$($Serial)"
         $ComputerName = $ComputerName.Substring(0,15)
+    }
+    elseif ($Manufacturer -match "Panasonic"){
+        $Model = $Model.Replace("-","")
+        $PreFix = "P$($Model)-"
+        $SuffixLenght = 15 - $PreFix.Length
+        #Get Serial Number, but truncate it to the last $SuffixLenght characters
+        if ($Serial.Length -gt $SuffixLenght){
+            $Serial = $Serial.Substring($Serial.Length - $SuffixLenght, $SuffixLenght)
+        }
+        else {
+            $Serial = $Serial.PadLeft($SuffixLenght, '0')
+        }
+        $ComputerName = "$($PreFix)$($Serial)"
+        if ($ComputerName.Length -gt 15){
+            $ComputerName = $ComputerName.Substring(0,15)
+        }
     }
     else {
         if ($Serial.Length -ge 15){
@@ -119,6 +135,7 @@ function Build-ComputerName {
     }
     return $ComputerName
 }
+
 if ($tsenv){
     $ComputerName = Build-ComputerName
     Write-Output "====================================================="
