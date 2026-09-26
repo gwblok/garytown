@@ -2,6 +2,9 @@ Set-StrictMode -Version 2.0
 $script:DellWmiRuleCache = @{}
 $script:DellRuleWarnings = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $script:DellProcessorArchitectures = $null
+$script:DellNativeInventory = $null
+$script:DellSystemTypeId = $null
+$script:DellNativeBiosDescriptions = @()
 
 foreach ($sourceDirectory in @('private', 'public')) {
     $directoryPath = Join-Path $PSScriptRoot $sourceDirectory

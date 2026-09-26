@@ -25,11 +25,13 @@ function Get-DellUpdate {
         Attach ApplicabilityRuleStatus and InstallRuleStatus to every returned
         update object and include status details in verbose output.
 
-    .NOTES
-        Dell model-specific rules use WMI classes in Root\Dell\sysinv. Install
-        Dell OpenManage Inventory Agent (DSIA) so the Dell system identity and
-        software inventory predicates can be evaluated. Unknown predicates are
-        treated as indeterminate and are excluded from normal results.
+        .NOTES
+            Dell model-specific rules use WMI classes in Root\Dell\sysinv. When
+            that namespace is unavailable, the module uses native SMBIOS, BIOS,
+            PnP driver, OS, and MSI registry data to evaluate supported predicates.
+            Some Dell inventory identities cannot be reconstructed exactly; those
+            remain indeterminate and are excluded from normal results. DSIA can
+            improve coverage, but it is not a prerequisite.
     #>
     [CmdletBinding()]
     param(
@@ -67,6 +69,7 @@ function Get-DellUpdate {
 
         $installableNode = $package.SelectSingleNode("./*[local-name()='IsInstallable']")
         if (-not $installableNode) { continue }
+            Set-DellNativeRuleContext -Node $package
         $installabilityStatus = Test-DellCatalogRule -Rule ([System.Xml.XmlElement]$installableNode.FirstChild)
         if ($installabilityStatus -ne 1) { continue }
         $installabilityPassCount++
@@ -88,6 +91,7 @@ function Get-DellUpdate {
         if (-not $title) { $title = $packageId }
 
         foreach ($item in $package.SelectNodes("./*[local-name()='InstallableItem']")) {
+            Set-DellNativeRuleContext -Node $item
             $itemInstallable = $item.SelectSingleNode("./*[local-name()='ApplicabilityRules']/*[local-name()='IsInstallable']")
             $itemApplicabilityStatus = if ($itemInstallable) {
                 Test-DellCatalogRule -Rule ([System.Xml.XmlElement]$itemInstallable.FirstChild)
