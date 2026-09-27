@@ -101,8 +101,15 @@ function Get-DellUpdate {
             Type = if ($typeNode) { $typeNode.InnerText.Trim() } else { $component.SelectSingleNode("./*[local-name()='ComponentType']").GetAttribute('value') }
             Category = if ($categoryNode) { $categoryNode.InnerText.Trim() } else { '' }
             Size = [long]$component.GetAttribute('size')
+            FileSize = [long]$component.GetAttribute('size')
             DownloadUri = [uri]::new("https://$baseLocation/$relativePath")
+            URL = [uri]::new("https://$baseLocation/$relativePath")
             Sha256 = if ($sha256Node) { $sha256Node.InnerText.Trim() } else { '' }
+            Installer = [pscustomobject]@{
+                Program = [IO.Path]::GetFileName($relativePath)
+                Arguments = '/s'
+                Unattended = $true
+            }
             IsApplicable = $true
             IsInstalled = if ($NoTestInstalled) { $null } else { [bool]$state.IsInstalled }
             ApplicabilityRuleStatus = 1

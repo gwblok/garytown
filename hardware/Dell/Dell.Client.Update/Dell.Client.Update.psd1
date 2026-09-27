@@ -1,6 +1,6 @@
 @{
     RootModule = 'Dell.Client.Update.psm1'
-    ModuleVersion = '0.2.0'
+    ModuleVersion = '0.3.0'
     GUID = 'f0ce0f0b-7b7c-44f4-9eb9-364a09f6bd9d'
     Author = 'OEMWrapPS-Local'
     CompanyName = 'Community'

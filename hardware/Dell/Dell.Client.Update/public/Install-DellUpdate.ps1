@@ -1,151 +1,261 @@
 function Install-DellUpdate {
     <#
     .SYNOPSIS
-        Downloads and installs a Dell update returned by Get-DellUpdate.
+        Installs applicable Dell updates.
 
     .DESCRIPTION
-        Accepts Dell update objects from the pipeline, verifies the catalog
-        digest for downloaded payloads, and invokes the MSI or command-line
-        installer declared by Dell. Objects not marked applicable and not
-        installed are rejected.
+        Accepts update objects from Get-DellUpdate through the pipeline or
+        searches by package ID. The command lists selected updates and asks
+        for confirmation unless -Force is specified. Payloads are downloaded
+        over HTTPS, validated with Dell's SHA-256 digest, silently installed,
+        logged, and removed from the temporary download directory.
 
-    .PARAMETER Update
-        Dell update object returned by Get-DellUpdate.
+    .PARAMETER PackageIds
+        Install only these Dell package or release IDs. Multiple IDs may be
+        supplied as an array or as comma-separated values. Cannot be combined
+        with -Packages.
+
+    .PARAMETER Packages
+        Update objects returned by Get-DellUpdate. Accepts pipeline input.
+        Cannot be combined with -PackageIds.
+
+    .PARAMETER ExcludePackageIds
+        Exclude these package or release IDs from installation.
+
+    .PARAMETER NoLog
+        Do not create an installation log.
+
+    .PARAMETER Force
+        Start installation without the confirmation prompt.
+
+    .PARAMETER AcceptLicense
+        Accept the license terms for selected Dell update packages. Required
+        for installation, but not for -WhatIf.
+
+    .PARAMETER Category
+        Install BIOS updates, driver updates, or all selected updates.
+
+    .PARAMETER Severities
+        Install only updates matching the specified severity values. Dell's
+        Urgent, Recommended, and Optional values are supported along with the
+        Panasonic-style Critical, Important, Moderate, Low, and Unspecified
+        aliases.
 
     .PARAMETER Path
-        Directory used to store downloaded installer files. Defaults to
-        C:\Windows\Temp\Dell\Packages.
+        Optional payload download directory. When omitted, a protected folder
+        under ProgramData is created and removed automatically.
 
     .EXAMPLE
-        Get-DellUpdate | Install-DellUpdate -WhatIf
+        Get-DellUpdate | Install-DellUpdate -AcceptLicense
+
+    .EXAMPLE
+        Install-DellUpdate -PackageIds G896W, 4YHV8 -AcceptLicense -Force
+
+    .EXAMPLE
+        Get-DellUpdate | Install-DellUpdate -ExcludePackageIds 4YHV8 -WhatIf
     #>
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Search', ConfirmImpact = 'Medium')]
     param(
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [psobject]$Update,
-        [string]$Path = 'C:\Windows\Temp\Dell\Packages'
+        [Parameter(Position = 0, ParameterSetName = 'Search')]
+        [Alias('PackageId')]
+        [string[]]$PackageIds,
+
+        [Parameter(Position = 0, ValueFromPipeline, ParameterSetName = 'Packages')]
+        [Alias('Package', 'Update')]
+        [psobject[]]$Packages,
+
+        [string[]]$ExcludePackageIds,
+        [switch]$NoLog,
+        [switch]$Force,
+        [switch]$AcceptLicense,
+        [switch]$SkipSignatureCheck,
+
+        [uri]$Proxy,
+        [pscredential]$ProxyCredential,
+        [switch]$ProxyUseDefaultCredentials,
+
+        [ValidateSet('OnlyBios', 'OnlyDrivers', 'All')]
+        [string]$Category = 'All',
+
+        [ValidateSet('Urgent', 'Recommended', 'Optional', 'Critical', 'Important', 'Moderate', 'Low', 'Unspecified')]
+        [string[]]$Severities,
+
+        [string]$Path
     )
 
+    begin {
+        $pipelinePackages = [System.Collections.Generic.List[object]]::new()
+    }
+
     process {
-        if ($Update.PSObject.TypeNames -notcontains 'Dell.Client.Update.DellUpdate') {
-            throw 'Install-DellUpdate requires an update object returned by Get-DellUpdate.'
+        foreach ($package in @($Packages)) {
+            if ($null -ne $package) { $pipelinePackages.Add($package) }
         }
-        if ($Update.IsApplicable -ne $true -or $Update.IsInstalled -ne $false) {
-            throw "Refusing to install '$($Update.Title)': it is not positively marked applicable and not installed."
+    }
+
+    end {
+        function Expand-DellPackageIdList {
+            param([string[]]$Values)
+            @($Values | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
         }
 
-        if (-not $PSCmdlet.ShouldProcess($Update.Title, 'Download and install Dell catalog update')) {
+        function Write-DellInstallationLog {
+            param([string]$Message)
+            if ($NoLog -or -not $logPath) { return }
+            Add-Content -LiteralPath $logPath -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message" -Encoding UTF8
+        }
+
+        $requestedIds = @(Expand-DellPackageIdList -Values $PackageIds)
+        $excludedIds = @(Expand-DellPackageIdList -Values $ExcludePackageIds)
+        $selectedPackages = if ($PSCmdlet.ParameterSetName -eq 'Packages') {
+            @($pipelinePackages)
+        }
+        else {
+            @(Get-DellUpdate)
+        }
+
+        if ($requestedIds.Count) {
+            $selectedPackages = @($selectedPackages | Where-Object { $_.PackageID -in $requestedIds -or $_.ReleaseID -in $requestedIds -or $_.ID -in $requestedIds })
+        }
+        if ($excludedIds.Count) {
+            $selectedPackages = @($selectedPackages | Where-Object { $_.PackageID -notin $excludedIds -and $_.ReleaseID -notin $excludedIds -and $_.ID -notin $excludedIds })
+        }
+
+        if ($Category -eq 'OnlyBios') {
+            $selectedPackages = @($selectedPackages | Where-Object { $_.Type -match 'BIOS' -or $_.Category -eq 'BIOS' })
+        }
+        elseif ($Category -eq 'OnlyDrivers') {
+            $selectedPackages = @($selectedPackages | Where-Object { $_.Type -eq 'Driver' })
+        }
+
+        if ($PSBoundParameters.ContainsKey('Severities')) {
+            $severityMap = @{
+                Critical = @('Critical', 'Urgent')
+                Important = @('Important', 'Recommended')
+                Moderate = @('Moderate')
+                Low = @('Low', 'Optional')
+                Unspecified = @('Unspecified', '')
+                Urgent = @('Urgent')
+                Recommended = @('Recommended')
+                Optional = @('Optional')
+            }
+            $acceptedSeverities = @($Severities | ForEach-Object { $severityMap[$_] } | Select-Object -Unique)
+            $selectedPackages = @($selectedPackages | Where-Object { $_.Severity -in $acceptedSeverities })
+        }
+
+        $selectedPackages = @($selectedPackages | Sort-Object ReleaseID -Unique)
+        if (-not $selectedPackages.Count) {
+            Write-Verbose 'No applicable Dell updates matched the specified criteria.'
             return
         }
 
-        $modelCatalogPackage = $Update.PSObject.Properties['DownloadUri'] -and $Update.DownloadUri
-        $commandLineData = $null
-        $msiData = $null
-        if ($modelCatalogPackage) {
-            $sourceUri = [uri]$Update.DownloadUri
-            $installerFileName = [IO.Path]::GetFileName($sourceUri.AbsolutePath)
-            $installerArguments = '/s'
-        }
-        else {
-            $item = $Update.CatalogItem
-            $commandLineData = $item.SelectSingleNode("./*[local-name()='CommandLineInstallerData']")
-            $msiData = $item.SelectSingleNode("./*[local-name()='MsiInstallerData']")
-            $originFiles = @($item.SelectNodes("./*[local-name()='OriginFile']"))
-        }
-
-        if (-not $modelCatalogPackage -and $commandLineData) {
-            $programName = $commandLineData.GetAttribute('Program')
-            $origin = $originFiles | Where-Object { [IO.Path]::GetFileName($_.GetAttribute('FileName')) -ieq [IO.Path]::GetFileName($programName) } | Select-Object -First 1
-            if (-not $programName -or -not $origin) {
-                throw "Catalog installer source is missing for '$($Update.Title)'."
+        foreach ($package in $selectedPackages) {
+            if ($package.PSObject.TypeNames -notcontains 'Dell.Client.Update.DellUpdate') {
+                throw 'Install-DellUpdate requires update objects returned by Get-DellUpdate.'
             }
-            $installerFileName = [IO.Path]::GetFileName($programName)
-            $installerArguments = $commandLineData.GetAttribute('Arguments')
-        }
-        elseif (-not $modelCatalogPackage -and $msiData) {
-            $msiFile = $msiData.GetAttribute('MsiFile')
-            $origin = $originFiles | Where-Object { [IO.Path]::GetFileName($_.GetAttribute('FileName')) -ieq [IO.Path]::GetFileName($msiFile) } | Select-Object -First 1
-            if (-not $origin) { throw "Catalog MSI source is missing for '$($Update.Title)'." }
-            $installerFileName = [IO.Path]::GetFileName($msiFile)
-            $msiProperties = $msiData.GetAttribute('CommandLine')
-            $installerArguments = "/i `"$(Join-Path $Path $installerFileName)`" /qn /norestart $msiProperties"
-        }
-        elseif (-not $modelCatalogPackage) {
-            throw "Unsupported installer format for '$($Update.Title)'. Only Dell catalog MSI and command-line installer records are supported."
-        }
-
-        if (-not $modelCatalogPackage) { $sourceUri = $origin.GetAttribute('OriginUri') }
-        if ($sourceUri -notmatch '^https://') { throw "Refusing non-HTTPS catalog payload URI: '$sourceUri'." }
-        $null = New-Item -Path $Path -ItemType Directory -Force
-        $installerPath = Join-Path $Path $installerFileName
-
-        Write-Verbose "Downloading '$($Update.Title)' from $sourceUri"
-        Invoke-WebRequest -Uri $sourceUri -OutFile $installerPath -UseBasicParsing -ErrorAction Stop
-        if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) {
-            throw "Download did not create installer file '$installerPath'."
-        }
-
-        $expectedDigest = if ($modelCatalogPackage) { [string]$Update.Sha256 } else { $origin.GetAttribute('Digest') }
-        if ($modelCatalogPackage -and $expectedDigest) {
-            $actualDigest = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
-            if ($actualDigest -ine $expectedDigest) {
-                Remove-Item -LiteralPath $installerPath -Force -ErrorAction SilentlyContinue
-                throw "Catalog SHA-256 validation failed for '$($Update.Title)'."
+            if ($package.IsApplicable -ne $true -or $package.IsInstalled -ne $false) {
+                throw "Refusing to install '$($package.Title)': it is not positively marked applicable and not installed."
             }
-        }
-        elseif ($expectedDigest) {
-            $actualDigest = Get-DellCatalogFileDigest -Path $installerPath
-            if ($actualDigest -ne $expectedDigest) {
-                Remove-Item -LiteralPath $installerPath -Force -ErrorAction SilentlyContinue
-                throw "Catalog SHA-1 digest validation failed for '$($Update.Title)'."
+            if (-not $package.DownloadUri -or -not $package.Sha256) {
+                throw "Dell model catalog payload metadata is incomplete for '$($package.Title)'."
             }
         }
 
-        if ($modelCatalogPackage) {
-            $executable = $installerPath
+        if (-not $WhatIfPreference -and -not $AcceptLicense) {
+            throw '-AcceptLicense is required before installing Dell update packages.'
         }
-        elseif ($msiData) {
-            $executable = Join-Path $env:SystemRoot 'System32\msiexec.exe'
+
+        if (-not $Force -and -not $WhatIfPreference) {
+            Write-Host 'The following Dell updates will be installed:'
+            $selectedPackages | Select-Object ReleaseID, Name, Version, Severity | Format-Table -AutoSize | Out-Host
+            if (-not $PSCmdlet.ShouldContinue("Install $($selectedPackages.Count) Dell update package(s)?", 'Install Dell updates')) {
+                return
+            }
+        }
+
+        $isAdministrator = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+        if (-not $WhatIfPreference -and -not $isAdministrator) {
+            throw 'Install-DellUpdate must be run from an elevated PowerShell session.'
+        }
+
+        $removePayloadDirectory = [string]::IsNullOrWhiteSpace($Path)
+        $payloadDirectory = if ($removePayloadDirectory) {
+            Join-Path $env:ProgramData "Dell\ClientUpdate\Temp\$([guid]::NewGuid().ToString('N'))"
         }
         else {
-            $executable = $installerPath
+            $Path
+        }
+        $logPath = $null
+        if (-not $NoLog -and -not $WhatIfPreference) {
+            $logDirectory = 'C:\util2\DellClientUpdate'
+            $null = New-Item -Path $logDirectory -ItemType Directory -Force
+            $logPath = Join-Path $logDirectory "$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+            Write-DellInstallationLog "Selected $($selectedPackages.Count) Dell update package(s)."
         }
 
-        Write-Verbose "Starting '$($Update.Title)': $executable $installerArguments"
-        $processResult = Start-Process -FilePath $executable -ArgumentList $installerArguments -WorkingDirectory $Path -Wait -PassThru
-        $catalogReturnCode = $null
-        if ($commandLineData) {
-            $catalogReturnCode = $commandLineData.SelectSingleNode("./*[local-name()='ReturnCode'][@Code='$($processResult.ExitCode)']")
-        }
+        try {
+            foreach ($package in $selectedPackages) {
+                if (-not $PSCmdlet.ShouldProcess($package.Title, 'Download, verify, and install Dell update')) { continue }
 
-        if ($modelCatalogPackage) {
-            $success = $processResult.ExitCode -in @(0, 2)
-            $reboot = $processResult.ExitCode -eq 2
-        }
-        elseif ($catalogReturnCode) {
-            $success = $catalogReturnCode.GetAttribute('Result') -eq 'Succeeded'
-            $reboot = $catalogReturnCode.GetAttribute('Reboot') -eq 'true'
-        }
-        elseif ($commandLineData) {
-            $defaultResult = $commandLineData.GetAttribute('DefaultResult')
-            $success = ($processResult.ExitCode -eq 0 -or $defaultResult -eq 'Succeeded')
-            $reboot = $commandLineData.GetAttribute('RebootByDefault') -eq 'true'
-        }
-        else {
-            $success = $processResult.ExitCode -in @(0, 3010, 1641)
-            $reboot = $processResult.ExitCode -in @(3010, 1641)
-        }
+                $sourceUri = [uri]$package.DownloadUri
+                if ($sourceUri.Scheme -ne 'https') { throw "Refusing non-HTTPS catalog payload URI: '$sourceUri'." }
+                $null = New-Item -Path $payloadDirectory -ItemType Directory -Force
+                $installerPath = Join-Path $payloadDirectory ([IO.Path]::GetFileName($sourceUri.AbsolutePath))
 
-        $result = [pscustomobject]@{
-            ID = $Update.ID
-            Title = $Update.Title
-            Success = [bool]$success
-            PendingAction = if ($reboot) { 'REBOOT_MANDATORY' } else { 'NONE' }
-            ExitCode = $processResult.ExitCode
-            InstallerPath = $installerPath
-            Runtime = $processResult.ExitTime - $processResult.StartTime
+                $actualDigest = if (Test-Path -LiteralPath $installerPath -PathType Leaf) {
+                    (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
+                }
+                if ($actualDigest -ine [string]$package.Sha256) {
+                    $webRequestParameters = @{
+                        Uri = $sourceUri
+                        OutFile = $installerPath
+                        UseBasicParsing = $true
+                        ErrorAction = 'Stop'
+                    }
+                    if ($Proxy) { $webRequestParameters.Proxy = $Proxy }
+                    if ($ProxyCredential) { $webRequestParameters.ProxyCredential = $ProxyCredential }
+                    if ($ProxyUseDefaultCredentials) { $webRequestParameters.ProxyUseDefaultCredentials = $true }
+                    Write-DellInstallationLog "Downloading $($package.ReleaseID) from $sourceUri"
+                    Invoke-WebRequest @webRequestParameters
+                    $actualDigest = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
+                }
+                if ($actualDigest -ine [string]$package.Sha256) {
+                    throw "Catalog SHA-256 validation failed for '$($package.Title)'."
+                }
+                if (-not $SkipSignatureCheck) {
+                    $signature = Get-AuthenticodeSignature -LiteralPath $installerPath
+                    if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or $signature.SignerCertificate.Subject -notmatch '(?i)\bDell\b') {
+                        throw "Authenticode signature validation failed for '$($package.Title)': $($signature.StatusMessage)"
+                    }
+                }
+
+                Write-DellInstallationLog "Starting $($package.ReleaseID): $installerPath /s"
+                $processResult = Start-Process -FilePath $installerPath -ArgumentList '/s' -WorkingDirectory $payloadDirectory -Wait -PassThru
+                $success = $processResult.ExitCode -in @(0, 2)
+                $rebootRequired = $processResult.ExitCode -eq 2
+                Write-DellInstallationLog "Completed $($package.ReleaseID) with exit code $($processResult.ExitCode)."
+
+                $result = [pscustomobject]@{
+                    ID = $package.ID
+                    PackageID = $package.PackageID
+                    ReleaseID = $package.ReleaseID
+                    Title = $package.Title
+                    Success = [bool]$success
+                    RebootRequired = [bool]$rebootRequired
+                    PendingAction = if ($rebootRequired) { 'REBOOT_MANDATORY' } else { 'NONE' }
+                    ExitCode = $processResult.ExitCode
+                    FailureReason = if ($success) { '' } else { "Dell update package exited with code $($processResult.ExitCode)." }
+                    LogPath = $logPath
+                    Runtime = $processResult.ExitTime - $processResult.StartTime
+                }
+                $result.PSObject.TypeNames.Insert(0, 'Dell.Client.Update.DellInstallResult')
+                $result
+            }
         }
-        $result.PSObject.TypeNames.Insert(0, 'Dell.Client.Update.DellInstallResult')
-        $result
+        finally {
+            if ($removePayloadDirectory -and (Test-Path -LiteralPath $payloadDirectory)) {
+                Remove-Item -LiteralPath $payloadDirectory -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
 }
