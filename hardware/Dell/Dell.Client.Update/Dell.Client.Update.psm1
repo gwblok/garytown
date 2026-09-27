@@ -15,4 +15,4 @@ foreach ($sourceDirectory in @('private', 'public')) {
         ForEach-Object { . $_.FullName }
 }
 
-Export-ModuleMember -Function Get-DellUpdate, Install-DellUpdate
+Export-ModuleMember -Function Get-DellUpdate, Get-DellUpdateHist, Install-DellUpdate

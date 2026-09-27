@@ -21,7 +21,7 @@ function Get-DellUpdate {
 
     .PARAMETER WorkingDirectory
         Directory for catalog downloads and extracted XML. Defaults to
-        C:\Windows\Temp\Dell.
+        C:\ProgramData\DellPSUpdate\Catalogs.
 
     .PARAMETER CatalogUrl
         Dell model catalog index CAB URL.
@@ -36,7 +36,7 @@ function Get-DellUpdate {
         [switch]$UseCachedCatalog,
         [switch]$ExplainRules,
         [uri]$CatalogUrl = 'https://downloads.dell.com/catalog/CatalogIndexPC.cab',
-        [string]$WorkingDirectory = 'C:\Windows\Temp\Dell'
+        [string]$WorkingDirectory = (Join-Path $env:ProgramData 'DellPSUpdate\Catalogs')
     )
 
     if ($NoTestInstalled -and -not $All) {
