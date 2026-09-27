@@ -144,7 +144,7 @@ function Write-DellUpdateHistorySession {
 
     if (-not $Records.Count) { return $null }
     $null = New-Item -Path $HistoryPath -ItemType Directory -Force
-    $historyFile = Join-Path $HistoryPath "InstallHist-$(Get-Date -Format 'yyyyMMdd_HHmmss_fff').json"
+    $historyFile = Join-Path $HistoryPath "InstallHist-$(Get-Date -Format 'yyyyMMdd_HHmmss_fff')-$([guid]::NewGuid().ToString('N')).json"
     @($Records) | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $historyFile -Encoding UTF8
     return $historyFile
 }

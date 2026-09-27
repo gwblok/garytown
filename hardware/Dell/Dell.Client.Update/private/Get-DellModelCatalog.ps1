@@ -50,6 +50,7 @@ function Get-DellModelCatalogXml {
     if (-not $manifest) { throw "Dell model catalog index does not contain system ID '$SystemId'." }
 
     $manifestInformation = $manifest.SelectSingleNode("./*[local-name()='ManifestInformation']")
+    if (-not $manifestInformation) { throw "Dell model catalog entry for system ID '$SystemId' has no manifest information." }
     $relativePath = $manifestInformation.GetAttribute('path')
     if ([string]::IsNullOrWhiteSpace($relativePath) -or $relativePath -match '(^[\\/]|\.\.)') {
         throw "Dell model catalog path '$relativePath' is invalid."

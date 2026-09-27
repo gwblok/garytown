@@ -98,7 +98,10 @@ function Get-DellUpdate {
             DellVersion = $dellVersion
             Severity = if ($severityNode) { $severityNode.InnerText.Trim() } else { '' }
             ReleaseDate = $releaseDate
-            Type = if ($typeNode) { $typeNode.InnerText.Trim() } else { $component.SelectSingleNode("./*[local-name()='ComponentType']").GetAttribute('value') }
+            Type = if ($typeNode) { $typeNode.InnerText.Trim() } else {
+                $componentTypeNode = $component.SelectSingleNode("./*[local-name()='ComponentType']")
+                if ($componentTypeNode) { $componentTypeNode.GetAttribute('value') } else { '' }
+            }
             Category = if ($categoryNode) { $categoryNode.InnerText.Trim() } else { '' }
             Size = [long]$component.GetAttribute('size')
             FileSize = [long]$component.GetAttribute('size')

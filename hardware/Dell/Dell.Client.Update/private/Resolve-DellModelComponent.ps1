@@ -1,3 +1,15 @@
+function ConvertTo-DellIdentityVersion {
+    param([string]$Version)
+
+    if ([string]::IsNullOrWhiteSpace($Version)) { return $null }
+    if ($Version -match '^A(?<number>\d+)[A-Z]?$') {
+        return ('0001.{0}.0000' -f $Matches.number.PadLeft(4, '0'))
+    }
+    $parts = @($Version -split '\.')
+    if ($parts.Count -lt 2 -or $parts.Count -gt 4 -or @($parts | Where-Object { $_ -notmatch '^\d+$' }).Count) { return $null }
+    return (($parts | ForEach-Object { $_.PadLeft(4, '0') }) -join '.')
+}
+
 function Get-DellModelInventory {
     $inventory = [System.Collections.Generic.List[object]]::new()
     foreach ($driver in (Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction Stop)) {
@@ -6,7 +18,9 @@ function Get-DellModelInventory {
 
         $hardwareIds = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         if ($driver.DeviceID) { $null = $hardwareIds.Add([string]$driver.DeviceID) }
-        if ($driver.HardWareID) { $null = $hardwareIds.Add([string]$driver.HardWareID) }
+        foreach ($hardwareId in @($driver.HardWareID)) {
+            if ($hardwareId) { $null = $hardwareIds.Add([string]$hardwareId) }
+        }
 
         $inventory.Add([pscustomobject]@{
             DeviceName = [string]$driver.DeviceName
@@ -73,7 +87,7 @@ function Test-DellModelOperatingSystem {
     $currentArchitecture = if ([Environment]::Is64BitOperatingSystem) { 'x64' } else { 'x86' }
     foreach ($supportedSystem in $supportedSystems) {
         $display = $supportedSystem.SelectSingleNode("./*[local-name()='Display']")
-        if ($supportedSystem.GetAttribute('osArch') -ieq $currentArchitecture -and $display.InnerText -like "$currentFamily*") {
+        if ($display -and $supportedSystem.GetAttribute('osArch') -ieq $currentArchitecture -and $display.InnerText -like "$currentFamily*") {
             return $true
         }
     }
@@ -198,7 +212,9 @@ function Get-DellModelComponentState {
         [Parameter(Mandatory)][object]$Inventory
     )
 
-    $componentType = $Component.SelectSingleNode("./*[local-name()='ComponentType']").GetAttribute('value')
+    $componentTypeNode = $Component.SelectSingleNode("./*[local-name()='ComponentType']")
+    if (-not $componentTypeNode) { return $null }
+    $componentType = $componentTypeNode.GetAttribute('value')
     if ($componentType -eq 'BIOS') {
         $installedVersion = ConvertTo-DellIdentityVersion -Version ([string](Get-CimInstance -ClassName Win32_BIOS -ErrorAction Stop).SMBIOSBIOSVersion)
         $expectedVersion = ConvertTo-DellIdentityVersion -Version $Component.GetAttribute('dellVersion')

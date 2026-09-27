@@ -51,7 +51,14 @@ function Get-DellUpdateHist {
     foreach ($historyFile in (Get-ChildItem -LiteralPath $historyPath -Filter 'InstallHist-*.json' -File -ErrorAction Stop)) {
         try {
             $fileRecords = @(Get-Content -LiteralPath $historyFile.FullName -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop)
-            foreach ($record in $fileRecords) {
+        }
+        catch {
+            Write-Warning "Could not read Dell update history file '$($historyFile.FullName)': $($_.Exception.Message)"
+            continue
+        }
+
+        foreach ($record in $fileRecords) {
+            try {
                 $timestamp = [datetime]::MinValue
                 if (-not [datetime]::TryParse([string]$record.Timestamp, [ref]$timestamp)) {
                     throw "Record has an invalid Timestamp value."
@@ -60,9 +67,9 @@ function Get-DellUpdateHist {
                 $record.PSObject.TypeNames.Insert(0, 'Dell.Client.Update.DellUpdateHistory')
                 $records.Add($record)
             }
-        }
-        catch {
-            Write-Warning "Could not read Dell update history file '$($historyFile.FullName)': $($_.Exception.Message)"
+            catch {
+                Write-Warning "Could not read a record in Dell update history file '$($historyFile.FullName)': $($_.Exception.Message)"
+            }
         }
     }
 
