@@ -58,18 +58,20 @@ function Get-DellModelCatalogXml {
 
     $baseLocation = $indexDocument.DocumentElement.GetAttribute('baseLocation')
     if ([string]::IsNullOrWhiteSpace($baseLocation)) { $baseLocation = 'downloads.dell.com' }
+    if ($baseLocation -ine 'downloads.dell.com') { throw "Dell model catalog base location '$baseLocation' is not trusted." }
     $modelCatalogUri = [uri]::new("https://$baseLocation/$relativePath")
     $modelCabPath = Join-Path $DownloadDirectory ([IO.Path]::GetFileName($modelCatalogUri.AbsolutePath))
 
     Write-Host "Downloading Dell model catalog for system ID $SystemId ..."
     Invoke-WebRequest -Uri $modelCatalogUri -OutFile $modelCabPath -UseBasicParsing -ErrorAction Stop
     $sha256Node = $manifest.SelectSingleNode(".//*[local-name()='Hash' and translate(@algorithm, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')='SHA256']")
-    if ($sha256Node) {
-        $actualHash = (Get-FileHash -LiteralPath $modelCabPath -Algorithm SHA256).Hash
-        if ($actualHash -ine $sha256Node.InnerText.Trim()) {
-            Remove-Item -LiteralPath $modelCabPath -Force -ErrorAction SilentlyContinue
-            throw "Dell model catalog SHA-256 validation failed for '$modelCatalogUri'."
-        }
+    if (-not $sha256Node -or [string]::IsNullOrWhiteSpace($sha256Node.InnerText)) {
+        throw "Dell model catalog index does not provide a SHA-256 digest for '$modelCatalogUri'."
+    }
+    $actualHash = (Get-FileHash -LiteralPath $modelCabPath -Algorithm SHA256).Hash
+    if ($actualHash -ine $sha256Node.InnerText.Trim()) {
+        Remove-Item -LiteralPath $modelCabPath -Force -ErrorAction SilentlyContinue
+        throw "Dell model catalog SHA-256 validation failed for '$modelCatalogUri'."
     }
 
     $extractDirectory = Join-Path $WorkingDirectory "Model_$SystemId"

@@ -228,7 +228,7 @@ function Install-DellUpdate {
         if (-not $NoLog -and -not $WhatIfPreference) {
             $logDirectory = Get-DellPSUpdatePath -Name Logs
             $null = New-Item -Path $logDirectory -ItemType Directory -Force
-            $logPath = Join-Path $logDirectory "$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+            $logPath = Join-Path $logDirectory "$(Get-Date -Format 'yyyyMMdd_HHmmss_fff')-$([guid]::NewGuid().ToString('N')).log"
             Write-DellInstallationLog "Selected $($selectedPackages.Count) Dell update package(s)."
         }
 
@@ -265,7 +265,7 @@ function Install-DellUpdate {
                         throw "Catalog SHA-256 validation failed for '$($package.Title)'."
                     }
                     $signature = Get-AuthenticodeSignature -LiteralPath $installerPath
-                    if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or $signature.SignerCertificate.Subject -notmatch '(?i)\bDell\b') {
+                    if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or $signature.SignerCertificate.Subject -notmatch '(?i)(?:^|,\s*)O=Dell(?: Technologies)? Inc\.(?:,|$)') {
                         throw "Authenticode signature validation failed for '$($package.Title)': $($signature.StatusMessage)"
                     }
 
