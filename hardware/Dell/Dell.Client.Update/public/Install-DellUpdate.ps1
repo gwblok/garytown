@@ -13,7 +13,8 @@ function Install-DellUpdate {
         Dell update object returned by Get-DellUpdate.
 
     .PARAMETER Path
-        Directory used to store downloaded installer files.
+        Directory used to store downloaded installer files. Defaults to
+        C:\Windows\Temp\Dell\Packages.
 
     .EXAMPLE
         Get-DellUpdate | Install-DellUpdate -WhatIf
@@ -22,7 +23,7 @@ function Install-DellUpdate {
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [psobject]$Update,
-        [string]$Path = (Join-Path $env:ProgramData 'DellPSUPdater\Packages')
+        [string]$Path = 'C:\Windows\Temp\Dell\Packages'
     )
 
     process {
@@ -37,12 +38,22 @@ function Install-DellUpdate {
             return
         }
 
-        $item = $Update.CatalogItem
-        $commandLineData = $item.SelectSingleNode("./*[local-name()='CommandLineInstallerData']")
-        $msiData = $item.SelectSingleNode("./*[local-name()='MsiInstallerData']")
-        $originFiles = @($item.SelectNodes("./*[local-name()='OriginFile']"))
+        $modelCatalogPackage = $Update.PSObject.Properties['DownloadUri'] -and $Update.DownloadUri
+        $commandLineData = $null
+        $msiData = $null
+        if ($modelCatalogPackage) {
+            $sourceUri = [uri]$Update.DownloadUri
+            $installerFileName = [IO.Path]::GetFileName($sourceUri.AbsolutePath)
+            $installerArguments = '/s'
+        }
+        else {
+            $item = $Update.CatalogItem
+            $commandLineData = $item.SelectSingleNode("./*[local-name()='CommandLineInstallerData']")
+            $msiData = $item.SelectSingleNode("./*[local-name()='MsiInstallerData']")
+            $originFiles = @($item.SelectNodes("./*[local-name()='OriginFile']"))
+        }
 
-        if ($commandLineData) {
+        if (-not $modelCatalogPackage -and $commandLineData) {
             $programName = $commandLineData.GetAttribute('Program')
             $origin = $originFiles | Where-Object { [IO.Path]::GetFileName($_.GetAttribute('FileName')) -ieq [IO.Path]::GetFileName($programName) } | Select-Object -First 1
             if (-not $programName -or -not $origin) {
@@ -51,7 +62,7 @@ function Install-DellUpdate {
             $installerFileName = [IO.Path]::GetFileName($programName)
             $installerArguments = $commandLineData.GetAttribute('Arguments')
         }
-        elseif ($msiData) {
+        elseif (-not $modelCatalogPackage -and $msiData) {
             $msiFile = $msiData.GetAttribute('MsiFile')
             $origin = $originFiles | Where-Object { [IO.Path]::GetFileName($_.GetAttribute('FileName')) -ieq [IO.Path]::GetFileName($msiFile) } | Select-Object -First 1
             if (-not $origin) { throw "Catalog MSI source is missing for '$($Update.Title)'." }
@@ -59,11 +70,11 @@ function Install-DellUpdate {
             $msiProperties = $msiData.GetAttribute('CommandLine')
             $installerArguments = "/i `"$(Join-Path $Path $installerFileName)`" /qn /norestart $msiProperties"
         }
-        else {
+        elseif (-not $modelCatalogPackage) {
             throw "Unsupported installer format for '$($Update.Title)'. Only Dell catalog MSI and command-line installer records are supported."
         }
 
-        $sourceUri = $origin.GetAttribute('OriginUri')
+        if (-not $modelCatalogPackage) { $sourceUri = $origin.GetAttribute('OriginUri') }
         if ($sourceUri -notmatch '^https://') { throw "Refusing non-HTTPS catalog payload URI: '$sourceUri'." }
         $null = New-Item -Path $Path -ItemType Directory -Force
         $installerPath = Join-Path $Path $installerFileName
@@ -74,8 +85,15 @@ function Install-DellUpdate {
             throw "Download did not create installer file '$installerPath'."
         }
 
-        $expectedDigest = $origin.GetAttribute('Digest')
-        if ($expectedDigest) {
+        $expectedDigest = if ($modelCatalogPackage) { [string]$Update.Sha256 } else { $origin.GetAttribute('Digest') }
+        if ($modelCatalogPackage -and $expectedDigest) {
+            $actualDigest = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
+            if ($actualDigest -ine $expectedDigest) {
+                Remove-Item -LiteralPath $installerPath -Force -ErrorAction SilentlyContinue
+                throw "Catalog SHA-256 validation failed for '$($Update.Title)'."
+            }
+        }
+        elseif ($expectedDigest) {
             $actualDigest = Get-DellCatalogFileDigest -Path $installerPath
             if ($actualDigest -ne $expectedDigest) {
                 Remove-Item -LiteralPath $installerPath -Force -ErrorAction SilentlyContinue
@@ -83,7 +101,10 @@ function Install-DellUpdate {
             }
         }
 
-        if ($msiData) {
+        if ($modelCatalogPackage) {
+            $executable = $installerPath
+        }
+        elseif ($msiData) {
             $executable = Join-Path $env:SystemRoot 'System32\msiexec.exe'
         }
         else {
@@ -97,7 +118,11 @@ function Install-DellUpdate {
             $catalogReturnCode = $commandLineData.SelectSingleNode("./*[local-name()='ReturnCode'][@Code='$($processResult.ExitCode)']")
         }
 
-        if ($catalogReturnCode) {
+        if ($modelCatalogPackage) {
+            $success = $processResult.ExitCode -in @(0, 2)
+            $reboot = $processResult.ExitCode -eq 2
+        }
+        elseif ($catalogReturnCode) {
             $success = $catalogReturnCode.GetAttribute('Result') -eq 'Succeeded'
             $reboot = $catalogReturnCode.GetAttribute('Reboot') -eq 'true'
         }

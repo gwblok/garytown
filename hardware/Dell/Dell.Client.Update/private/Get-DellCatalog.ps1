@@ -11,16 +11,17 @@ function Get-DellCatalogXml {
     $xmlPath = Join-Path $WorkingDirectory 'DellSDPCatalogPC.xml'
 
     if ($UseCachedCatalog -and (Test-Path -LiteralPath $xmlPath -PathType Leaf)) {
-        Write-Verbose "Using cached Dell catalog XML: $xmlPath"
+        Write-Host "Using cached Dell catalog XML: $xmlPath"
         return $xmlPath
     }
 
-    Write-Verbose "Downloading Dell catalog from $CatalogUrl"
+    Write-Host "Downloading Dell catalog from $CatalogUrl to $cabPath ..."
     Invoke-WebRequest -Uri $CatalogUrl -OutFile $cabPath -UseBasicParsing -ErrorAction Stop
     if (-not (Test-Path -LiteralPath $cabPath -PathType Leaf)) {
         throw "Dell catalog CAB was not downloaded to '$cabPath'."
     }
 
+    Write-Host "Catalog downloaded. Extracting XML to $WorkingDirectory ..."
     Remove-Item -LiteralPath $xmlPath -Force -ErrorAction SilentlyContinue
     $expandPath = Join-Path $env:SystemRoot 'System32\expand.exe'
     $expandOutput = & $expandPath '-F:DellSDPCatalogPC.xml' $cabPath $WorkingDirectory 2>&1
@@ -28,6 +29,7 @@ function Get-DellCatalogXml {
         throw "Could not extract DellSDPCatalogPC.xml. expand.exe exit code: $LASTEXITCODE. $($expandOutput -join ' ')"
     }
 
+    Write-Host "Catalog XML ready: $xmlPath"
     return $xmlPath
 }
 
@@ -50,7 +52,7 @@ function Get-DellCatalogPackageDocuments {
                 $document = [System.Xml.XmlDocument]::new()
                 $document.XmlResolver = $null
                 $document.Load($subtree)
-                Write-Output -NoEnumerate $document
+                Write-Output $document
             }
             finally {
                 $subtree.Dispose()
@@ -69,7 +71,8 @@ function Get-DellXmlText {
     )
 
     $selected = $Node.SelectSingleNode($XPath)
-    if ($selected) { return $selected.InnerText.Trim() }
+    if ($selected -is [System.Xml.XmlAttribute]) { return ([string]$selected.Value).Trim() }
+    if ($selected) { return ([string]$selected.InnerText).Trim() }
     return ''
 }
 

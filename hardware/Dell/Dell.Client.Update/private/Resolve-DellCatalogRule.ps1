@@ -42,12 +42,19 @@ function Test-DellCatalogWmiQuery {
         return $script:DellWmiRuleCache[$cacheKey]
     }
 
+    if ($namespace -ieq 'Root\Dell\sysinv' -and $script:DellSysInvUnavailable) {
+        $status = Test-DellNativeInventoryWql -Query $query
+        $script:DellWmiRuleCache[$cacheKey] = $status
+        return $status
+    }
+
     try {
         $instances = @(Get-CimInstance -Namespace $namespace -Query $query -ErrorAction Stop)
         $status = if ($instances.Count) { 1 } else { 0 }
     }
     catch {
         if ($namespace -ieq 'Root\Dell\sysinv') {
+            $script:DellSysInvUnavailable = $true
             $status = Test-DellNativeInventoryWql -Query $query
             if ($status -lt 0) {
                 Write-DellRuleWarningOnce "Dell inventory WMI is unavailable and this catalog rule could not be safely derived from Windows inventory: $query"
@@ -61,6 +68,29 @@ function Test-DellCatalogWmiQuery {
 
     $script:DellWmiRuleCache[$cacheKey] = $status
     return $status
+}
+
+function Test-DellCatalogItemTargetsSystem {
+    param([Parameter(Mandatory)][System.Xml.XmlElement]$Item)
+
+    if ($null -eq $script:DellNativeInventory) {
+        $null = Get-DellNativeInventoryRows -ClassName 'Dell_OEMComputerSystem'
+    }
+    if (-not $script:DellSystemTypeId) { return $true }
+
+    $container = $Item.SelectSingleNode("./*[local-name()='ApplicabilityRules']/*[local-name()='IsInstallable']")
+    if (-not $container) { return $true }
+    $root = @(Get-DellXmlElementChildren -Node $container)[0]
+    if (-not $root -or $root.LocalName -ne 'And') { return $true }
+
+    foreach ($child in (Get-DellXmlElementChildren -Node $root)) {
+        if ($child.LocalName -ne 'WmiQuery' -or $child.GetAttribute('WqlQuery') -notmatch '(?i)FROM\s+Dell_OEMComputerSystem\b') {
+            continue
+        }
+        $systemTypeIds = @([regex]::Matches($child.GetAttribute('WqlQuery'), "SystemTypeID\s*=\s*'(?<id>\d+)'", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase) | ForEach-Object { $_.Groups['id'].Value })
+        if ($systemTypeIds.Count -and $script:DellSystemTypeId -notin $systemTypeIds) { return $false }
+    }
+    return $true
 }
 
 function ConvertTo-DellIdentityVersion {
@@ -78,9 +108,15 @@ function ConvertTo-DellIdentityVersion {
 function ConvertTo-DellDriverIdentityDescription {
     param([string]$HardwareId)
 
+    if ($HardwareId -match '(?i)^SWC\\(?<Identity>.+)$') {
+        return "Dell:DRVR_SWC\\$($Matches.Identity)_"
+    }
+    if ($HardwareId -match '(?i)^SWD\\DRIVERENUM\\(?<Identity>\{[0-9A-F-]+\})#') {
+        return "Dell:DRVR_$($Matches.Identity)_"
+    }
     if ($HardwareId -match '(?i)^PCI\\VEN_(?<Vendor>[0-9A-F]{4})&DEV_(?<Device>[0-9A-F]{4})(?:&SUBSYS_(?<SubDevice>[0-9A-F]{4})(?<SubVendor>[0-9A-F]{4}))?') {
         $description = "Dell:DRVR_$($Matches.Device)_$($Matches.Vendor)"
-        if ($Matches.SubDevice) { $description += "_$($Matches.SubDevice)_$($Matches.SubVendor)" }
+        if ($Matches.ContainsKey('SubDevice')) { $description += "_$($Matches.SubDevice)_$($Matches.SubVendor)" }
         return "$description`_"
     }
     return $null
@@ -118,14 +154,23 @@ function Get-DellNativeInventoryRows {
             catch { }
 
             foreach ($hardwareId in ($hardwareIds | Select-Object -Unique)) {
+                $descriptions = [System.Collections.Generic.List[string]]::new()
                 $description = ConvertTo-DellDriverIdentityDescription -HardwareId $hardwareId
-                $softwareRows.Add([pscustomobject]@{
-                    HardwareID = $hardwareId
-                    Description = $description
-                    VersionString = $driverVersion
-                    PackageVersion = $driverVersion
-                    OSBuildNumber = $osBuild
-                })
+                if ($description) { $descriptions.Add($description) }
+                if ($hardwareId -match '(?i)^PCI\\VEN_(?<Vendor>[0-9A-F]{4})&DEV_(?<Device>[0-9A-F]{4})') {
+                    $descriptions.Add("Dell:DRVR_$($Matches.Device)_$($Matches.Vendor)_0000_$($Matches.Vendor)_")
+                    $descriptions.Add("Dell:DRVR_$($Matches.Device)_$($Matches.Vendor)_$($Matches.Vendor)_$($Matches.Device)_")
+                }
+
+                foreach ($identityDescription in ($descriptions | Select-Object -Unique)) {
+                    $softwareRows.Add([pscustomobject]@{
+                        HardwareID = $hardwareId
+                        Description = $identityDescription
+                        VersionString = $driverVersion
+                        PackageVersion = $driverVersion
+                        OSBuildNumber = $osBuild
+                    })
+                }
             }
         }
 
@@ -139,6 +184,17 @@ function Get-DellNativeInventoryRows {
                 PackageVersion = $biosVersion
                 OSBuildNumber = $osBuild
             })
+        }
+
+        $script:DellNativeDescriptionIndex = @{}
+        foreach ($softwareRow in $softwareRows) {
+            if (-not $softwareRow.Description) { continue }
+            foreach ($descriptionKey in @($softwareRow.Description, $softwareRow.Description.TrimEnd('_')) | Select-Object -Unique) {
+                if (-not $script:DellNativeDescriptionIndex.ContainsKey($descriptionKey)) {
+                    $script:DellNativeDescriptionIndex[$descriptionKey] = [System.Collections.Generic.List[object]]::new()
+                }
+                $script:DellNativeDescriptionIndex[$descriptionKey].Add($softwareRow)
+            }
         }
 
         $script:DellNativeInventory = @{
@@ -280,11 +336,33 @@ function Test-DellWqlExpressionForInstance {
 function Test-DellNativeInventoryWql {
     param([Parameter(Mandatory)][string]$Query)
     if ($Query -notmatch '(?is)^\s*SELECT\s+\*\s+FROM\s+(?<Class>[A-Za-z_][A-Za-z0-9_]*)\s+WHERE\s+(?<Where>.+?)\s*$') { return -1 }
-    $rpn = ConvertFrom-DellWqlWhere -WhereClause $Matches.Where
+    $className = $Matches.Class
+    $whereClause = $Matches.Where
+
+    if ($className -eq 'Dell_OEMComputerSystem' -and $whereClause -notmatch '(?i)\b(?!OR\b|SystemTypeID\b)[A-Za-z_][A-Za-z0-9_]*\b') {
+        if ($null -eq $script:DellNativeInventory) { $null = Get-DellNativeInventoryRows -ClassName $className }
+        if (-not $script:DellSystemTypeId) { return -1 }
+        $systemTypeIds = @([regex]::Matches($whereClause, "SystemTypeID\s*=\s*'(?<id>\d+)'", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase) | ForEach-Object { $_.Groups['id'].Value })
+        if ($systemTypeIds.Count) { return [int]($script:DellSystemTypeId -in $systemTypeIds) }
+    }
+
+    $descriptionVersionPattern = "^\s*\(?Description\s+LIKE\s+'(?<description>[^']+)%'\)?\s+AND\s+(?<property>VersionString|PackageVersion)\s*(?<operator>>=|<=|<>|!=|=|>|<)\s*'(?<version>[^']+)'\s*$"
+    if ($className -eq 'Dell_SoftwareIdentity' -and $whereClause -match $descriptionVersionPattern) {
+        if ($null -eq $script:DellNativeInventory) { $null = Get-DellNativeInventoryRows -ClassName $className }
+        $descriptionPrefix = $Matches.description
+        $rows = @($script:DellNativeInventory[$className] | Where-Object { $_.Description.StartsWith($descriptionPrefix, [StringComparison]::OrdinalIgnoreCase) })
+        $predicate = [pscustomobject]@{ Property = $Matches.property; Operator = $Matches.operator; Expected = $Matches.version }
+        foreach ($instance in $rows) {
+            if (Test-DellWqlPredicate -Predicate $predicate -Instance $instance) { return 1 }
+        }
+        return 0
+    }
+
+    $rpn = ConvertFrom-DellWqlWhere -WhereClause $whereClause
     if (-not $rpn) { return -1 }
-    $instances = @(Get-DellNativeInventoryRows -ClassName $Matches.Class)
+    $instances = @(Get-DellNativeInventoryRows -ClassName $className)
     if (-not $instances.Count) {
-        if ($Matches.Class -in @('Dell_OEMComputerSystem', 'Dell_SoftwareIdentity')) { return -1 }
+        if ($className -in @('Dell_OEMComputerSystem', 'Dell_SoftwareIdentity')) { return -1 }
         return 0
     }
     foreach ($instance in $instances) {
