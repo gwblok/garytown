@@ -6,7 +6,15 @@ function Get-DellPSUpdatePath {
     )
 
     $rootPath = Join-Path $env:ProgramData 'DellPSUpdate'
-    $path = if ($Name -eq 'Root') { $rootPath } else { Join-Path $rootPath $Name }
+    $path = if ($Name -eq 'Downloads') {
+        Join-Path $env:SystemRoot 'Temp\Dell'
+    }
+    elseif ($Name -eq 'Root') {
+        $rootPath
+    }
+    else {
+        Join-Path $rootPath $Name
+    }
     if ($Create) { $null = New-Item -Path $path -ItemType Directory -Force }
     return $path
 }

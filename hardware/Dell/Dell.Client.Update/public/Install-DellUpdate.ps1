@@ -59,8 +59,7 @@ function Install-DellUpdate {
 
     .PARAMETER Path
         Optional payload download directory. When omitted, a protected folder
-        under C:\ProgramData\DellPSUpdate\Downloads is created and removed
-        automatically.
+        under C:\Windows\Temp\Dell is created and removed automatically.
 
     .EXAMPLE
         Get-DellUpdate | Install-DellUpdate

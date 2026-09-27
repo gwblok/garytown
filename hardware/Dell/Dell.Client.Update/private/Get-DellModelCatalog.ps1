@@ -13,12 +13,14 @@ function Get-DellModelCatalogXml {
     param(
         [Parameter(Mandatory)][string]$SystemId,
         [Parameter(Mandatory)][string]$WorkingDirectory,
+        [string]$DownloadDirectory = (Get-DellPSUpdatePath -Name Downloads),
         [switch]$UseCachedCatalog,
         [uri]$CatalogIndexUrl = 'https://downloads.dell.com/catalog/CatalogIndexPC.cab'
     )
 
     $null = New-Item -Path $WorkingDirectory -ItemType Directory -Force
-    $indexCabPath = Join-Path $WorkingDirectory 'CatalogIndexPC.cab'
+    $null = New-Item -Path $DownloadDirectory -ItemType Directory -Force
+    $indexCabPath = Join-Path $DownloadDirectory 'CatalogIndexPC.cab'
     $indexXmlPath = Join-Path $WorkingDirectory 'CatalogIndexPC.xml'
     $indexExtractDirectory = Join-Path $WorkingDirectory 'CatalogIndex'
     $modelXmlPath = Join-Path $WorkingDirectory "Model_$SystemId.xml"
@@ -56,7 +58,7 @@ function Get-DellModelCatalogXml {
     $baseLocation = $indexDocument.DocumentElement.GetAttribute('baseLocation')
     if ([string]::IsNullOrWhiteSpace($baseLocation)) { $baseLocation = 'downloads.dell.com' }
     $modelCatalogUri = [uri]::new("https://$baseLocation/$relativePath")
-    $modelCabPath = Join-Path $WorkingDirectory ([IO.Path]::GetFileName($modelCatalogUri.AbsolutePath))
+    $modelCabPath = Join-Path $DownloadDirectory ([IO.Path]::GetFileName($modelCatalogUri.AbsolutePath))
 
     Write-Host "Downloading Dell model catalog for system ID $SystemId ..."
     Invoke-WebRequest -Uri $modelCatalogUri -OutFile $modelCabPath -UseBasicParsing -ErrorAction Stop
