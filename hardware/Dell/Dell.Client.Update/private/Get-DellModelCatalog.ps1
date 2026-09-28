@@ -14,20 +14,20 @@ function Get-DellExtractedXmlFile {
         [Parameter(Mandatory)][string]$ExpectedRoot
     )
 
-    $matches = [System.Collections.Generic.List[IO.FileInfo]]::new()
+    $xmlFiles = [System.Collections.Generic.List[IO.FileInfo]]::new()
     foreach ($file in (Get-ChildItem -LiteralPath $Directory -File -ErrorAction Stop)) {
         try {
             $document = [System.Xml.XmlDocument]::new()
             $document.XmlResolver = $null
             $document.Load($file.FullName)
-            if ($document.DocumentElement.LocalName -eq $ExpectedRoot) { $matches.Add($file) }
+            if ($document.DocumentElement.LocalName -eq $ExpectedRoot) { $xmlFiles.Add($file) }
         }
         catch [System.Xml.XmlException] { }
     }
-    if ($matches.Count -ne 1) {
-        throw "Expected exactly one '$ExpectedRoot' XML document in '$Directory'; found $($matches.Count)."
+    if ($xmlFiles.Count -ne 1) {
+        throw "Expected exactly one '$ExpectedRoot' XML document in '$Directory'; found $($xmlFiles.Count)."
     }
-    return $matches[0]
+    return $xmlFiles[0]
 }
 
 function Get-DellModelCatalogXml {
@@ -54,7 +54,7 @@ function Get-DellModelCatalogXml {
     }
 
     Write-Host "Downloading Dell catalog index from $CatalogIndexUrl ..."
-    Invoke-WebRequest -Uri $CatalogIndexUrl -OutFile $indexCabPath -UseBasicParsing -ErrorAction Stop
+    Invoke-DellDownload -Source $CatalogIndexUrl -Destination $indexCabPath
     Remove-Item -LiteralPath $indexXmlPath -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $indexExtractDirectory -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -Path $indexExtractDirectory -ItemType Directory -Force
@@ -86,7 +86,7 @@ function Get-DellModelCatalogXml {
     $modelCabPath = Join-Path $DownloadDirectory ([IO.Path]::GetFileName($modelCatalogUri.AbsolutePath))
 
     Write-Host "Downloading Dell model catalog for system ID $SystemId ..."
-    Invoke-WebRequest -Uri $modelCatalogUri -OutFile $modelCabPath -UseBasicParsing -ErrorAction Stop
+    Invoke-DellDownload -Source $modelCatalogUri -Destination $modelCabPath
     $sha256Node = $manifest.SelectSingleNode(".//*[local-name()='Hash' and translate(@algorithm, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')='SHA256']")
     if (-not $sha256Node -or [string]::IsNullOrWhiteSpace($sha256Node.InnerText)) {
         throw "Dell model catalog index does not provide a SHA-256 digest for '$modelCatalogUri'."

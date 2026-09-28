@@ -28,7 +28,7 @@ Describe 'Dell.Client.Update module' {
                 Logs = Get-DellPSUpdatePath -Name Logs
             }
         }
-        $paths.Downloads | Should Be (Join-Path $env:SystemRoot 'Temp\Dell')
+        $paths.Downloads | Should Be (Join-Path $env:ProgramData 'DellPSUpdate\Downloads')
         $paths.Catalogs | Should Be (Join-Path $env:ProgramData 'DellPSUpdate\Catalogs')
         $paths.History | Should Be (Join-Path $env:ProgramData 'DellPSUpdate\History')
         $paths.Logs | Should Be (Join-Path $env:ProgramData 'DellPSUpdate\Logs')
@@ -48,6 +48,19 @@ Describe 'Dell.Client.Update module' {
         ($severityValues -join ',') | Should Be 'Urgent,Recommended'
     }
 
+    It 'supports concise and detailed update output' {
+        $parameters = (Get-Command Get-DellUpdate).Parameters
+        $parameters.ContainsKey('Details') | Should Be $true
+        $parameters.ContainsKey('HonorDCUPolicy') | Should Be $true
+        $delayRange = @($parameters['DelayDays'].Attributes | Where-Object { $_ -is [System.Management.Automation.ValidateRangeAttribute] })[0]
+        $delayRange.MinRange | Should Be 1
+        $delayRange.MaxRange | Should Be 45
+    }
+
+    It 'rejects conflicting delay options' {
+        { Get-DellUpdate -HonorDCUPolicy -DelayDays 14 } | Should Throw '-HonorDCUPolicy and -DelayDays cannot be used together.'
+    }
+
     It 'supports registry and WMI reporting switches' {
         $parameters = (Get-Command Install-DellUpdate).Parameters
         $parameters.ContainsKey('SaveBIOSUpdateInfoToRegistry') | Should Be $true
@@ -58,6 +71,24 @@ Describe 'Dell.Client.Update module' {
         $parameters = (Get-Command Install-DellUpdate).Parameters
         $parameters.ContainsKey('AcceptLicense') | Should Be $false
         $parameters.ContainsKey('SkipSignatureCheck') | Should Be $false
+    }
+
+    It 'treats a current base driver as installed when stale extension INFs remain' {
+        Mock Get-DellModelComponentMatches {
+            @(
+                [pscustomobject]@{ InstalledVersion = [version]'10.0.26200.21387'; ExpectedVersion = [version]'10.0.26200.21387'; IdentityType = 'PnP'; InfType = 'base' },
+                [pscustomobject]@{ InstalledVersion = [version]'10.0.22000.1'; ExpectedVersion = [version]'10.0.26200.1'; IdentityType = 'Extension'; InfType = 'extension' }
+            )
+        } -ModuleName Dell.Client.Update
+        [xml]$document = '<SoftwareComponent vendorVersion="10.0.26200.21387"><ComponentType value="DRVR" /></SoftwareComponent>'
+
+        $state = & (Get-Module Dell.Client.Update) {
+            param($component)
+            Get-DellModelComponentState -Component $component -Inventory ([pscustomobject]@{})
+        } $document.DocumentElement
+
+        $state.IsInstalled | Should Be $true
+        $state.ApplicabilityReason | Should Match 'meet or exceed'
     }
 
     It 'plans a package under WhatIf without creating payload files' {

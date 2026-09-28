@@ -29,11 +29,25 @@ function Get-DellUpdate {
     .PARAMETER ExplainRules
         Include matching device and version details in verbose output.
 
+    .PARAMETER Details
+        Display every property on returned update objects. By default, output
+        uses a concise property set while retaining all properties for the
+        pipeline.
+
+    .PARAMETER HonorDCUPolicy
+        Apply Dell Command Update's configured release delay, update types,
+        device categories, and severity filters.
+
+    .PARAMETER DelayDays
+        Exclude packages released within the specified number of days. Valid
+        values are 1 through 45. Cannot be combined with -HonorDCUPolicy.
+
     .NOTES
         This command has no Dell Command Update or OpenManage dependency.
-        Downloaded CAB files are stored in C:\Windows\Temp\Dell. Extracted
-        catalogs are stored under C:\ProgramData\DellPSUpdate\Catalogs by
-        default. Use -UseCachedCatalog to avoid refreshing the model catalog.
+        Downloaded CAB files are stored under
+        C:\ProgramData\DellPSUpdate\Downloads. Extracted catalogs are stored
+        under C:\ProgramData\DellPSUpdate\Catalogs by default. Use
+        -UseCachedCatalog to avoid refreshing the model catalog.
     #>
     [CmdletBinding()]
     param(
@@ -41,12 +55,32 @@ function Get-DellUpdate {
         [switch]$NoTestInstalled,
         [switch]$UseCachedCatalog,
         [switch]$ExplainRules,
+        [switch]$Details,
+        [switch]$HonorDCUPolicy,
+        [ValidateRange(1, 45)]
+        [int]$DelayDays,
         [uri]$CatalogUrl = 'https://downloads.dell.com/catalog/CatalogIndexPC.cab',
         [string]$WorkingDirectory = (Join-Path $env:ProgramData 'DellPSUpdate\Catalogs')
     )
 
     if ($NoTestInstalled -and -not $All) {
         throw '-NoTestInstalled can only be used with -All.'
+    }
+    if ($HonorDCUPolicy -and $PSBoundParameters.ContainsKey('DelayDays')) {
+        throw '-HonorDCUPolicy and -DelayDays cannot be used together.'
+    }
+
+    $dcuPolicy = if ($HonorDCUPolicy) {
+        Get-DellCommandUpdatePolicy
+    }
+    $effectiveDelayDays = if ($dcuPolicy) {
+        $dcuPolicy.DelayDays
+    }
+    elseif ($PSBoundParameters.ContainsKey('DelayDays')) {
+        $DelayDays
+    }
+    else {
+        0
     }
 
     $computer = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
@@ -121,6 +155,7 @@ function Get-DellUpdate {
             }
             IsApplicable = $true
             IsInstalled = if ($NoTestInstalled) { $null } else { [bool]$state.IsInstalled }
+            WhyApplicable = [string]$state.ApplicabilityReason
             ApplicabilityRuleStatus = 1
             InstallRuleStatus = if ($NoTestInstalled) { $null } elseif ($state.IsInstalled) { 1 } else { 0 }
             MatchedDevices = @($state.Matches)
@@ -129,6 +164,12 @@ function Get-DellUpdate {
             FamilyID = $familyId
         }
         $update.PSObject.TypeNames.Insert(0, 'Dell.Client.Update.DellUpdate')
+        if (-not $Details) {
+            $defaultProperties = [string[]]@('ID', 'Name', 'Title', 'Version', 'DellVersion', 'ReleaseDate', 'Type', 'Category', 'URL', 'WhyApplicable')
+            $defaultPropertySet = [System.Management.Automation.PSPropertySet]::new('DefaultDisplayPropertySet', $defaultProperties)
+            $standardMembers = [System.Management.Automation.PSMemberSet]::new('PSStandardMembers', [System.Management.Automation.PSMemberInfo[]]@($defaultPropertySet))
+            $update.PSObject.Members.Add($standardMembers)
+        }
         $candidateUpdates.Add($update)
     }
 
@@ -143,7 +184,34 @@ function Get-DellUpdate {
         ) | Select-Object -First 1
     }
 
-    Write-Host "Model catalog evaluation complete: $componentCount packages checked; $(@($latestUpdates).Count) installed component families matched."
+    $matchedFamilyCount = @($latestUpdates).Count
+    if ($dcuPolicy) {
+        $policyExcludedUpdates = @($latestUpdates | Where-Object {
+            $_.Type -notin $dcuPolicy.Types -or
+            $_.Category -notin $dcuPolicy.Categories -or
+            $_.Severity -notin $dcuPolicy.Severities
+        })
+        foreach ($update in $policyExcludedUpdates) {
+            Write-Verbose "Excluding $($update.ReleaseID) because its type '$($update.Type)', category '$($update.Category)', or severity '$($update.Severity)' is disabled by Dell Command Update policy."
+        }
+        $latestUpdates = @($latestUpdates | Where-Object {
+            $_.Type -in $dcuPolicy.Types -and
+            $_.Category -in $dcuPolicy.Categories -and
+            $_.Severity -in $dcuPolicy.Severities
+        })
+    }
+    $deferredUpdates = @()
+    if ($effectiveDelayDays -gt 0) {
+        $releaseCutoff = (Get-Date).Date.AddDays(-$effectiveDelayDays)
+        $deferredUpdates = @($latestUpdates | Where-Object { $_.ReleaseDate.Date -gt $releaseCutoff })
+        foreach ($update in $deferredUpdates) {
+            Write-Verbose "Deferring $($update.ReleaseID) until $($update.ReleaseDate.Date.AddDays($effectiveDelayDays).ToShortDateString()) because the effective delay is $effectiveDelayDays days."
+        }
+        $latestUpdates = @($latestUpdates | Where-Object { $_.ReleaseDate.Date -le $releaseCutoff })
+    }
+
+    $delaySummary = if ($effectiveDelayDays -gt 0) { "; $($deferredUpdates.Count) deferred by the $effectiveDelayDays-day policy" } else { '' }
+    Write-Host "Model catalog evaluation complete: $componentCount packages checked; $matchedFamilyCount installed component families matched$delaySummary."
     foreach ($update in $latestUpdates) {
         if (-not $All -and $update.IsInstalled -ne $false) { continue }
         if ($ExplainRules) {

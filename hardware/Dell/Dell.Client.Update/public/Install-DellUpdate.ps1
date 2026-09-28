@@ -8,7 +8,7 @@ function Install-DellUpdate {
         searches by package ID. The command lists selected updates and asks
         for confirmation unless -Force is specified. Payloads are downloaded
         over HTTPS, validated with Dell's SHA-256 digest, silently installed,
-        logged, and removed from the temporary download directory.
+        logged, and retained in the reusable download cache.
 
     .PARAMETER PackageIds
         Install only these Dell package or release IDs. Multiple IDs may be
@@ -58,8 +58,8 @@ function Install-DellUpdate {
         Omit this parameter to include all.
 
     .PARAMETER Path
-        Optional payload download directory. When omitted, a session folder
-        under C:\Windows\Temp\Dell is created and removed automatically.
+        Optional payload download directory. When omitted, the reusable cache
+        at C:\ProgramData\DellPSUpdate\Downloads is used.
 
     .EXAMPLE
         Get-DellUpdate | Install-DellUpdate
@@ -224,9 +224,8 @@ function Install-DellUpdate {
             throw 'Install-DellUpdate must be run from an elevated PowerShell session.'
         }
 
-        $removePayloadDirectory = [string]::IsNullOrWhiteSpace($Path)
-        $payloadDirectory = if ($removePayloadDirectory) {
-            Join-Path (Get-DellPSUpdatePath -Name Downloads) $([guid]::NewGuid().ToString('N'))
+        $payloadDirectory = if ([string]::IsNullOrWhiteSpace($Path)) {
+            Get-DellPSUpdatePath -Name Downloads
         }
         else {
             $Path
@@ -240,12 +239,16 @@ function Install-DellUpdate {
         }
 
         try {
+            Write-Host "Found $($selectedPackages.Count) updates, starting process.."
+            $downloadedPackages = [System.Collections.Generic.List[object]]::new()
+            $downloadNumber = 0
             foreach ($package in $selectedPackages) {
+                $downloadNumber++
                 if (-not $PSCmdlet.ShouldProcess($package.Title, 'Download, verify, and install Dell update')) { continue }
 
                 $startedAt = Get-Date
                 try {
-
+                    Write-Host "Downloading update $downloadNumber of $($selectedPackages.Count): $($package.Title)"
                     $sourceUri = [uri]$package.DownloadUri
                     if ($sourceUri.Scheme -ne 'https') { throw "Refusing non-HTTPS catalog payload URI: '$sourceUri'." }
                     $null = New-Item -Path $payloadDirectory -ItemType Directory -Force
@@ -255,19 +258,52 @@ function Install-DellUpdate {
                         (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
                     }
                     if ($actualDigest -ine [string]$package.Sha256) {
-                        $webRequestParameters = @{
-                            Uri = $sourceUri
-                            OutFile = $installerPath
-                            UseBasicParsing = $true
-                            ErrorAction = 'Stop'
-                        }
-                        if ($Proxy) { $webRequestParameters.Proxy = $Proxy }
-                        if ($ProxyCredential) { $webRequestParameters.ProxyCredential = $ProxyCredential }
-                        if ($ProxyUseDefaultCredentials) { $webRequestParameters.ProxyUseDefaultCredentials = $true }
                         Write-DellInstallationLog "Downloading $($package.ReleaseID) from $sourceUri"
-                        Invoke-WebRequest @webRequestParameters
+                        Invoke-DellDownload -Source $sourceUri -Destination $installerPath -Proxy $Proxy -ProxyCredential $ProxyCredential -ProxyUseDefaultCredentials:$ProxyUseDefaultCredentials
+                    }
+                    else {
+                        Write-Host "Using previously downloaded payload for $($package.ReleaseID)."
                     }
                     $null = Test-DellUpdatePackage -Path $installerPath -ExpectedSha256 $package.Sha256
+                    $downloadedPackages.Add([pscustomobject]@{
+                        Package = $package
+                        InstallerPath = $installerPath
+                        StartedAt = $startedAt
+                    })
+                }
+                catch {
+                    Write-DellInstallationLog "Failed to download or validate $($package.ReleaseID): $($_.Exception.Message)"
+                    $result = [pscustomobject]@{
+                        ID = $package.ID
+                        PackageID = $package.PackageID
+                        ReleaseID = $package.ReleaseID
+                        Title = $package.Title
+                        Success = $false
+                        RebootRequired = $false
+                        PendingAction = 'NONE'
+                        ExitCode = $null
+                        FailureReason = $_.Exception.Message
+                        LogPath = $logPath
+                        Runtime = (Get-Date) - $startedAt
+                    }
+                    $result.PSObject.TypeNames.Insert(0, 'Dell.Client.Update.DellInstallResult')
+                    Publish-DellInstallationResult -Package $package -Result $result
+                    $historyRecords.Add((New-DellUpdateHistoryRecord -Package $package -Result $result))
+                    $result
+                }
+            }
+
+            if ($downloadedPackages.Count) {
+                Write-Host 'Download phase complete. Starting installation phase..'
+            }
+            $installNumber = 0
+            foreach ($downloadedPackage in $downloadedPackages) {
+                $installNumber++
+                $package = $downloadedPackage.Package
+                $installerPath = $downloadedPackage.InstallerPath
+                $startedAt = $downloadedPackage.StartedAt
+                try {
+                    Write-Host "Installing update $installNumber of $($downloadedPackages.Count): $($package.Title)"
 
                     Write-DellInstallationLog "Starting $($package.ReleaseID): $installerPath /s"
                     $processResult = Start-Process -FilePath $installerPath -ArgumentList '/s' -WorkingDirectory $payloadDirectory -Wait -PassThru
@@ -324,9 +360,6 @@ function Install-DellUpdate {
                 catch {
                     Write-Warning "Could not save Dell update installation history: $($_.Exception.Message)"
                 }
-            }
-            if ($removePayloadDirectory -and (Test-Path -LiteralPath $payloadDirectory)) {
-                Remove-Item -LiteralPath $payloadDirectory -Recurse -Force -ErrorAction SilentlyContinue
             }
         }
     }

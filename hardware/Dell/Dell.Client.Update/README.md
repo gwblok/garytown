@@ -2,7 +2,7 @@
 
 `Dell.Client.Update` is a PowerShell 5.1 module for discovering and installing Dell updates without requiring Dell Command Update, Dell OpenManage Inventory Agent, or the Dell `dcu-cli.exe` executable.
 
-The module downloads Dell's public catalog index, selects the model-specific catalog for the local computer, evaluates that catalog against native Windows device and driver inventory, and returns PowerShell objects that can be piped directly into the installer.
+The module downloads Dell's public catalog index with BITS, selects the model-specific catalog for the local computer, evaluates that catalog against native Windows device and driver inventory, and returns PowerShell objects that can be piped directly into the installer.
 
 ## Requirements
 
@@ -35,17 +35,16 @@ Get-Module Dell.Client.Update | Select-Object Name, Version, Path
 
 ## Storage Layout
 
-Downloaded files and persistent module data are intentionally separated.
+Downloaded files and module data are stored under `C:\ProgramData\DellPSUpdate`.
 
 | Purpose | Location | Retention |
 | --- | --- | --- |
-| Downloaded catalog CABs | `C:\Windows\Temp\Dell` | Retained for troubleshooting |
-| Temporary update payloads | `C:\Windows\Temp\Dell\<session-guid>` | Removed after installation when `-Path` is omitted |
+| Downloaded catalog CABs and update payloads | `C:\ProgramData\DellPSUpdate\Downloads` | Retained for reuse and troubleshooting |
 | Extracted model catalogs | `C:\ProgramData\DellPSUpdate\Catalogs` | Retained |
 | Installation logs | `C:\ProgramData\DellPSUpdate\Logs` | Retained unless `-NoLog` is used |
 | JSON installation history | `C:\ProgramData\DellPSUpdate\History` | Retained |
 
-When `Install-DellUpdate -Path <directory>` is used, that directory is treated as a reusable package cache and is not removed automatically.
+When `Install-DellUpdate -Path <directory>` is used, that directory is used instead of the default reusable package cache.
 
 ## Commands
 
@@ -87,7 +86,7 @@ Get-DellUpdate -ExplainRules -Verbose
 ### Discovery Process
 
 1. Read the Dell system ID from `Win32_ComputerSystem.SystemSKUNumber`.
-2. Download Dell's public `CatalogIndexPC.cab` to `C:\Windows\Temp\Dell`.
+2. Download Dell's public `CatalogIndexPC.cab` with BITS to `C:\ProgramData\DellPSUpdate\Downloads`.
 3. Resolve the model-specific catalog CAB.
 4. Validate the model catalog CAB using Dell's published SHA-256 digest.
 5. Extract the model XML under `C:\ProgramData\DellPSUpdate\Catalogs`.
@@ -98,7 +97,33 @@ Get-DellUpdate -ExplainRules -Verbose
 
 ### Update Object
 
-Returned objects use the type name `Dell.Client.Update.DellUpdate` and include:
+By default, returned objects display these properties:
+
+- `ID`, `Name`, `Title`, `Version`, and `DellVersion`
+- `ReleaseDate`, `Type`, and `Category`
+- `URL` and `WhyApplicable`
+
+Use `-Details` to display every property:
+
+```powershell
+Get-DellUpdate -Details
+```
+
+Honor Dell Command Update's configured release-delay policy, or specify an
+explicit delay from 1 through 45 days:
+
+```powershell
+Get-DellUpdate -HonorDCUPolicy
+Get-DellUpdate -DelayDays 14
+```
+
+`-HonorDCUPolicy` and `-DelayDays` cannot be combined. `-HonorDCUPolicy` applies
+DCU's configured update types, device categories, severities, and release delay.
+The effective delay is read from DCU's latest scan. Run a DCU scan first or use
+`-DelayDays` when no scan is available. Policy exclusions are described with
+`-Verbose`.
+
+The concise view changes only formatting. Returned objects retain all properties, so they can still be inspected, filtered, or piped to `Install-DellUpdate`. Full properties include:
 
 - `ID`, `PackageID`, and `ReleaseID`
 - `Name`, `Title`, `Version`, and `DellVersion`
@@ -108,7 +133,10 @@ Returned objects use the type name `Dell.Client.Update.DellUpdate` and include:
 - `Sha256`
 - `Installer.Program`, `Installer.Arguments`, and `Installer.Unattended`
 - `IsApplicable` and `IsInstalled`
+- `WhyApplicable`
 - `MatchedDevices`
+
+`WhyApplicable` lists the installed component versions that are older than the corresponding Dell catalog versions. Dell Command Update can return a different result when its configured policies exclude an otherwise applicable package, such as an update release-delay policy.
 
 ## Install-DellUpdate
 
@@ -183,6 +211,8 @@ Get-DellUpdate | Install-DellUpdate -Type BIOS
 ```
 
 ### Download and Trust Validation
+
+Catalogs and update payloads are downloaded synchronously with `Start-BitsTransfer`.
 
 Before execution, every package must pass all of these checks:
 

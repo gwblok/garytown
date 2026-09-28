@@ -4,6 +4,20 @@ All notable changes to `Dell.Client.Update` are documented here.
 
 The format follows Keep a Changelog conventions. The module currently uses semantic-style version numbers while the API is still evolving.
 
+## [Unreleased]
+
+### Added
+
+- Added `Get-DellUpdate -Details` and concise default output with `WhyApplicable` evidence.
+- Added `Get-DellUpdate -HonorDCUPolicy` to honor DCU release-delay, update-type, device-category, and severity filters.
+- Added `Get-DellUpdate -DelayDays` with a supported range of 1 through 45 days.
+
+### Changed
+
+- Downloads now use Background Intelligent Transfer Service (BITS).
+- Catalog and update payload downloads are retained under `C:\ProgramData\DellPSUpdate\Downloads`.
+- DCH base, component, and extension inventory matching now preserves Dell INF roles to avoid false-positive updates.
+
 ## [0.5.0] - 2026-09-27
 
 ### Added in 0.5.0
@@ -22,7 +36,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
   - `Catalogs`
   - `History`
   - `Logs`
-- Downloaded catalog CABs and temporary package payloads use `C:\Windows\Temp\Dell`.
+- Downloaded catalog CABs and package payloads use `C:\ProgramData\DellPSUpdate\Downloads`.
 - History filenames now include a GUID to prevent collisions.
 - Malformed history records are skipped individually instead of hiding every valid record in the same file.
 - Removed the obsolete global WSUS-style catalog engine and its unused module state.

@@ -2,8 +2,9 @@ function ConvertTo-DellIdentityVersion {
     param([string]$Version)
 
     if ([string]::IsNullOrWhiteSpace($Version)) { return $null }
-    if ($Version -match '^A(?<number>\d+)[A-Z]?$') {
-        return ('0001.{0}.0000' -f $Matches.number.PadLeft(4, '0'))
+    $dellVersionMatch = [regex]::Match($Version, '^A(?<number>\d+)[A-Z]?$')
+    if ($dellVersionMatch.Success) {
+        return ('0001.{0}.0000' -f $dellVersionMatch.Groups['number'].Value.PadLeft(4, '0'))
     }
     $parts = @($Version -split '\.')
     if ($parts.Count -lt 2 -or $parts.Count -gt 4 -or @($parts | Where-Object { $_ -notmatch '^\d+$' }).Count) { return $null }
@@ -64,8 +65,9 @@ function Get-DellModelInventory {
                 $hardwareIdIndex[$normalizedHardwareId] = [System.Collections.Generic.List[object]]::new()
             }
             if (-not $hardwareIdIndex[$normalizedHardwareId].Contains($item)) { $hardwareIdIndex[$normalizedHardwareId].Add($item) }
-            if ($hardwareId -notmatch '(?i)(?:VEN_|VID_)(?<vendor>[0-9A-F]{4}).*(?:DEV_|PID_)(?<device>[0-9A-F]{4})') { continue }
-            $key = "$($Matches.vendor):$($Matches.device)".ToUpperInvariant()
+            $hardwareMatch = [regex]::Match($hardwareId, '(?i)(?:VEN_|VID_)(?<vendor>[0-9A-F]{4}).*(?:DEV_|PID_)(?<device>[0-9A-F]{4})')
+            if (-not $hardwareMatch.Success) { continue }
+            $key = "$($hardwareMatch.Groups['vendor'].Value):$($hardwareMatch.Groups['device'].Value)".ToUpperInvariant()
             if (-not $hardwareIndex.ContainsKey($key)) {
                 $hardwareIndex[$key] = [System.Collections.Generic.List[object]]::new()
             }
@@ -181,9 +183,10 @@ function Get-DellModelComponentMatches {
         [Parameter(Mandatory)][object]$Inventory
     )
 
-    $matches = [System.Collections.Generic.List[object]]::new()
+    $componentResults = [System.Collections.Generic.List[object]]::new()
     $devices = @($Component.SelectNodes("./*[local-name()='SupportedDCHDevices' or local-name()='SupportedDevices']/*[local-name()='Device']"))
     foreach ($device in $devices) {
+        $infType = $device.GetAttribute('infType')
         $expectedVersionText = $device.GetAttribute('version')
         if (-not $expectedVersionText) { $expectedVersionText = $Component.GetAttribute('vendorVersion') }
         $expectedVersion = $null
@@ -198,18 +201,21 @@ function Get-DellModelComponentMatches {
         }
 
         foreach ($installedDevice in $matchingInventory) {
-            $matches.Add([pscustomobject]@{
+            if ($infType -eq 'extension' -and $installedDevice.IdentityType -ne 'Extension') { continue }
+            if ($infType -ne 'extension' -and $installedDevice.IdentityType -eq 'Extension') { continue }
+            $componentResults.Add([pscustomobject]@{
                 ComponentId = $device.GetAttribute('componentID')
                 DeviceName = $installedDevice.DeviceName
                 DeviceId = $installedDevice.DeviceId
                 InstalledVersion = $installedDevice.DriverVersion
                 ExpectedVersion = $expectedVersion
                 IdentityType = $installedDevice.IdentityType
+                InfType = $infType
             })
         }
     }
 
-    return @($matches | Sort-Object DeviceId, ExpectedVersion -Unique)
+    return @($componentResults | Sort-Object DeviceId, ExpectedVersion, InfType -Unique)
 }
 
 function Get-DellModelComponentState {
@@ -222,28 +228,45 @@ function Get-DellModelComponentState {
     if (-not $componentTypeNode) { return $null }
     $componentType = $componentTypeNode.GetAttribute('value')
     if ($componentType -eq 'BIOS') {
-        $installedVersion = ConvertTo-DellIdentityVersion -Version ([string](Get-CimInstance -ClassName Win32_BIOS -ErrorAction Stop).SMBIOSBIOSVersion)
+        $installedVersionText = [string](Get-CimInstance -ClassName Win32_BIOS -ErrorAction Stop).SMBIOSBIOSVersion
+        $expectedVersionText = $Component.GetAttribute('dellVersion')
+        $installedVersion = ConvertTo-DellIdentityVersion -Version $installedVersionText
         $expectedVersion = ConvertTo-DellIdentityVersion -Version $Component.GetAttribute('dellVersion')
         if (-not $installedVersion -or -not $expectedVersion) { return $null }
+        $isInstalled = [string]::Compare($installedVersion, $expectedVersion, [StringComparison]::OrdinalIgnoreCase) -ge 0
         return [pscustomobject]@{
             IsApplicable = $true
-            IsInstalled = ([string]::Compare($installedVersion, $expectedVersion, [StringComparison]::OrdinalIgnoreCase) -ge 0)
+            IsInstalled = $isInstalled
             Matches = @()
+            ApplicabilityReason = if ($isInstalled) {
+                "Installed BIOS $installedVersionText meets or exceeds catalog version $expectedVersionText."
+            }
+            else {
+                "Installed BIOS $installedVersionText is older than catalog version $expectedVersionText."
+            }
         }
     }
 
-    $matches = @(Get-DellModelComponentMatches -Component $Component -Inventory $Inventory)
-    if (-not $matches.Count) { return $null }
-    $packageVersion = $null
-    $null = [version]::TryParse($Component.GetAttribute('vendorVersion'), [ref]$packageVersion)
-    # Extension INFs can identify an installed bundle even when subordinate
-    # PnP components report independent versions.
-    $hasCurrentExtensionMarker = [bool]($matches | Where-Object { $_.IdentityType -eq 'Extension' -and $packageVersion -and $_.InstalledVersion -eq $packageVersion } | Select-Object -First 1)
-    $hasNewerPrimaryMarker = [bool]($matches | Where-Object { $_.IdentityType -eq 'PnP' -and $packageVersion -and $_.ExpectedVersion -eq $packageVersion -and $_.InstalledVersion -gt $_.ExpectedVersion } | Select-Object -First 1)
-    $outdatedMatches = @($matches | Where-Object { $_.InstalledVersion -lt $_.ExpectedVersion })
+    $componentResults = @(Get-DellModelComponentMatches -Component $Component -Inventory $Inventory)
+    if (-not $componentResults.Count) { return $null }
+    # Current base and extension markers identify an installed bundle even
+    # when superseded INFs remain in the Windows driver store.
+    $hasCurrentExtensionMarker = [bool]($componentResults | Where-Object { $_.IdentityType -eq 'Extension' -and $_.InfType -eq 'extension' -and $_.InstalledVersion -ge $_.ExpectedVersion } | Select-Object -First 1)
+    $hasCurrentBaseMarker = [bool]($componentResults | Where-Object { $_.IdentityType -eq 'PnP' -and $_.InfType -eq 'base' -and $_.InstalledVersion -ge $_.ExpectedVersion } | Select-Object -First 1)
+    $outdatedResults = @($componentResults | Where-Object { $_.InstalledVersion -lt $_.ExpectedVersion })
+    $isInstalled = $hasCurrentExtensionMarker -or $hasCurrentBaseMarker -or $outdatedResults.Count -eq 0
+    $applicabilityReason = if ($isInstalled) {
+        'Installed component markers meet or exceed the Dell catalog versions.'
+    }
+    else {
+        @($outdatedResults | ForEach-Object {
+            "$($_.DeviceName): installed $($_.InstalledVersion), catalog $($_.ExpectedVersion)"
+        } | Sort-Object -Unique) -join '; '
+    }
     return [pscustomobject]@{
         IsApplicable = $true
-        IsInstalled = ($hasCurrentExtensionMarker -or $hasNewerPrimaryMarker -or $outdatedMatches.Count -eq 0)
-        Matches = $matches
+        IsInstalled = $isInstalled
+        Matches = $componentResults
+        ApplicabilityReason = $applicabilityReason
     }
 }

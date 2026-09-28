@@ -6,10 +6,7 @@ function Get-DellPSUpdatePath {
     )
 
     $rootPath = Join-Path $env:ProgramData 'DellPSUpdate'
-    $path = if ($Name -eq 'Downloads') {
-        Join-Path $env:SystemRoot 'Temp\Dell'
-    }
-    elseif ($Name -eq 'Root') {
+    $path = if ($Name -eq 'Root') {
         $rootPath
     }
     else {
