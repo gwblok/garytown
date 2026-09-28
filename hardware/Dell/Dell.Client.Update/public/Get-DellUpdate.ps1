@@ -28,6 +28,12 @@ function Get-DellUpdate {
 
     .PARAMETER ExplainRules
         Include matching device and version details in verbose output.
+
+    .NOTES
+        This command has no Dell Command Update or OpenManage dependency.
+        Downloaded CAB files are stored in C:\Windows\Temp\Dell. Extracted
+        catalogs are stored under C:\ProgramData\DellPSUpdate\Catalogs by
+        default. Use -UseCachedCatalog to avoid refreshing the model catalog.
     #>
     [CmdletBinding()]
     param(

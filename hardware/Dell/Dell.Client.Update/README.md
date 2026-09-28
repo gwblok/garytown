@@ -38,8 +38,8 @@ Get-Module Dell.Client.Update | Select-Object Name, Version, Path
 Downloaded files and persistent module data are intentionally separated.
 
 | Purpose | Location | Retention |
-|---|---|---|
-| Downloaded catalog CABs | `C:\Windows\Temp\Dell` | Retained for troubleshooting/cache reuse |
+| --- | --- | --- |
+| Downloaded catalog CABs | `C:\Windows\Temp\Dell` | Retained for troubleshooting |
 | Temporary update payloads | `C:\Windows\Temp\Dell\<session-guid>` | Removed after installation when `-Path` is omitted |
 | Extracted model catalogs | `C:\ProgramData\DellPSUpdate\Catalogs` | Retained |
 | Installation logs | `C:\ProgramData\DellPSUpdate\Logs` | Retained unless `-NoLog` is used |
@@ -224,8 +224,8 @@ Use `-NoLog` to disable text logs. JSON history is still recorded for actual ins
 ### Proxy Support
 
 ```powershell
-Install-DellUpdate -PackageIds G896W \
-    -Proxy 'http://proxy.contoso.com:8080' \
+Install-DellUpdate -PackageIds G896W `
+    -Proxy 'http://proxy.contoso.com:8080' `
     -ProxyUseDefaultCredentials
 ```
 
@@ -254,7 +254,7 @@ HKLM:\SOFTWARE\Dell\ClientUpdate\BIOSUpdate
 Recorded values include install date, package and release IDs, target versions, package hash, status, exit code, message, and pending action. Non-BIOS packages do not update this key.
 
 ```powershell
-Get-DellUpdate -All |
+Get-DellUpdate |
     Where-Object Type -eq BIOS |
     Install-DellUpdate -SaveBIOSUpdateInfoToRegistry
 ```
@@ -297,7 +297,7 @@ Get-DellUpdateHist -Category Chipset -Type Driver
 
 Available filters:
 
-- `-Status Success, Failed, Skipped`
+- `-Status Success, Failed`
 - `-Category <Dell category[]>`
 - `-Type Application, BIOS, Driver, Firmware`
 - `-Last <count>`

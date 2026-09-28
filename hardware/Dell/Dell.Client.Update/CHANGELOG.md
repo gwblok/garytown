@@ -6,7 +6,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 
 ## [0.5.0] - 2026-09-27
 
-### Added
+### Added in 0.5.0
 
 - Added `Get-DellUpdateHist`.
 - Added automatic JSON history for every non-`WhatIf` installation session that attempts at least one package.
@@ -14,8 +14,9 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 - Added append-only history records with package IDs, release IDs, Dell version, result, reboot state, user/computer identity, hash, message, and runtime.
 - Added centralized module storage helpers.
 - Added detailed module README and operational guidance.
+- Added an offline Pester regression suite for packaging, pipeline, trust, `WhatIf`, and history behavior.
 
-### Changed
+### Changed in 0.5.0
 
 - Persistent module data now uses `C:\ProgramData\DellPSUpdate`:
   - `Catalogs`
@@ -31,7 +32,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 
 ## [0.4.0] - 2026-09-27
 
-### Added
+### Added in 0.4.0
 
 - Added `-SaveBIOSUpdateInfoToRegistry` to `Install-DellUpdate`.
 - Added Dell BIOS result reporting under `HKLM:\SOFTWARE\Dell\ClientUpdate\BIOSUpdate`.
@@ -39,7 +40,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 - Added append-only `root\DellClientUpdate:Dell_UpdateHistory` records for installation auditing and compliance.
 - Added structured reporting for successful and failed package attempts.
 
-### Security
+### Security in 0.4.0
 
 - Registry and WMI reporting require an elevated PowerShell session.
 - Reporting failures do not alter package installation outcomes.
@@ -47,7 +48,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 
 ## [0.3.0] - 2026-09-27
 
-### Added
+### Added in 0.3.0
 
 - Added Panasonic-inspired package selection:
   - `-PackageIds`
@@ -60,7 +61,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 - Added `RebootRequired` and `PendingAction` installation result fields.
 - Added per-package failure handling so one failed package does not terminate the entire selected batch.
 
-### Changed
+### Changed in 0.3.0
 
 - Omitting category, type, or severity filters includes all values.
 - Dell categories and criticalities are based on model catalog values rather than Panasonic or Lenovo taxonomy.
@@ -69,7 +70,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 
 ## [0.2.0] - 2026-09-26
 
-### Added
+### Added in 0.2.0
 
 - Added model-specific Dell catalog discovery through `CatalogIndexPC.cab`.
 - Added SHA-256 validation of model catalog CABs.
@@ -78,7 +79,7 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 - Added model-catalog payload metadata to update objects.
 - Added model-catalog Dell Update Package installation support.
 
-### Changed
+### Changed in 0.2.0
 
 - Replaced the 168 MB global `DellSDPCatalogPC.xml` scan with the approximately 9 MB model-specific catalog.
 - Excluded Dell OpenManage Inventory Agent packages.
@@ -88,12 +89,12 @@ The format follows Keep a Changelog conventions. The module currently uses seman
 
 ## [0.1.0] - 2026-09-25
 
-### Added
+### Added in 0.1.0
 
 - Initial `Get-DellUpdate` and `Install-DellUpdate` functions.
 - Initial Dell global catalog download and WSUS applicability-rule evaluation.
 - Initial native fallback for Dell inventory rules.
 
-### Deprecated
+### Deprecated in 0.1.0
 
 - The global catalog/rule-engine approach was replaced in version 0.2.0 because it was slower and produced false-positive historical packages when Dell-specific inventory identities could not be reconstructed exactly.

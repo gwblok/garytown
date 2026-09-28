@@ -8,7 +8,7 @@ function Get-DellUpdateHist {
         C:\ProgramData\DellPSUpdate\History and returns them newest first.
 
     .PARAMETER Status
-        Return only Success, Failed, or Skipped records.
+        Return only Success or Failed records.
 
     .PARAMETER Category
         Return only records matching one or more Dell catalog categories.
@@ -28,10 +28,15 @@ function Get-DellUpdateHist {
 
     .EXAMPLE
         Get-DellUpdateHist -Type BIOS -Last 10
+
+    .NOTES
+        History is read from C:\ProgramData\DellPSUpdate\History. Files are
+        retained until an administrator removes them. Invalid files or records
+        generate warnings and do not prevent valid history from being returned.
     #>
     [CmdletBinding()]
     param(
-        [ValidateSet('Success', 'Failed', 'Skipped')]
+        [ValidateSet('Success', 'Failed')]
         [string[]]$Status,
 
         [ValidateSet('Application', 'Audio', 'BIOS', 'Chipset', 'Communications', 'Docks/Stands', 'Input', 'Network', 'Security', 'Serial ATA', 'Storage', 'Systems Management', 'Video')]

@@ -58,7 +58,7 @@ function Install-DellUpdate {
         Omit this parameter to include all.
 
     .PARAMETER Path
-        Optional payload download directory. When omitted, a protected folder
+        Optional payload download directory. When omitted, a session folder
         under C:\Windows\Temp\Dell is created and removed automatically.
 
     .EXAMPLE
@@ -69,6 +69,13 @@ function Install-DellUpdate {
 
     .EXAMPLE
         Get-DellUpdate | Install-DellUpdate -ExcludePackageIds 4YHV8 -WhatIf
+
+    .NOTES
+        Installation requires elevation. Package SHA-256 and Dell
+        Authenticode checks are mandatory. Exit code 0 means success; exit
+        code 2 means success with a required reboot. The command does not
+        reboot the computer or modify BitLocker protection. Every attempted
+        package is recorded in JSON history unless the operation is WhatIf.
     #>
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Search', ConfirmImpact = 'Medium')]
     param(
@@ -259,15 +266,8 @@ function Install-DellUpdate {
                         if ($ProxyUseDefaultCredentials) { $webRequestParameters.ProxyUseDefaultCredentials = $true }
                         Write-DellInstallationLog "Downloading $($package.ReleaseID) from $sourceUri"
                         Invoke-WebRequest @webRequestParameters
-                        $actualDigest = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash
                     }
-                    if ($actualDigest -ine [string]$package.Sha256) {
-                        throw "Catalog SHA-256 validation failed for '$($package.Title)'."
-                    }
-                    $signature = Get-AuthenticodeSignature -LiteralPath $installerPath
-                    if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or $signature.SignerCertificate.Subject -notmatch '(?i)(?:^|,\s*)O=Dell(?: Technologies)? Inc\.(?:,|$)') {
-                        throw "Authenticode signature validation failed for '$($package.Title)': $($signature.StatusMessage)"
-                    }
+                    $null = Test-DellUpdatePackage -Path $installerPath -ExpectedSha256 $package.Sha256
 
                     Write-DellInstallationLog "Starting $($package.ReleaseID): $installerPath /s"
                     $processResult = Start-Process -FilePath $installerPath -ArgumentList '/s' -WorkingDirectory $payloadDirectory -Wait -PassThru

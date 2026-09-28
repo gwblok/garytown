@@ -8,6 +8,28 @@ function Get-DellSystemId {
     throw "Dell SystemSKUNumber '$sku' is not a four-character system ID."
 }
 
+function Get-DellExtractedXmlFile {
+    param(
+        [Parameter(Mandatory)][string]$Directory,
+        [Parameter(Mandatory)][string]$ExpectedRoot
+    )
+
+    $matches = [System.Collections.Generic.List[IO.FileInfo]]::new()
+    foreach ($file in (Get-ChildItem -LiteralPath $Directory -File -ErrorAction Stop)) {
+        try {
+            $document = [System.Xml.XmlDocument]::new()
+            $document.XmlResolver = $null
+            $document.Load($file.FullName)
+            if ($document.DocumentElement.LocalName -eq $ExpectedRoot) { $matches.Add($file) }
+        }
+        catch [System.Xml.XmlException] { }
+    }
+    if ($matches.Count -ne 1) {
+        throw "Expected exactly one '$ExpectedRoot' XML document in '$Directory'; found $($matches.Count)."
+    }
+    return $matches[0]
+}
+
 function Get-DellModelCatalogXml {
     [CmdletBinding()]
     param(
@@ -37,11 +59,12 @@ function Get-DellModelCatalogXml {
     Remove-Item -LiteralPath $indexExtractDirectory -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -Path $indexExtractDirectory -ItemType Directory -Force
     $expandOutput = & $expandPath $indexCabPath '-F:*' $indexExtractDirectory 2>&1
-    $extractedIndex = Get-ChildItem -LiteralPath $indexExtractDirectory -File | Select-Object -First 1
-    if ($LASTEXITCODE -ne 0 -or -not $extractedIndex) {
+    if ($LASTEXITCODE -ne 0) {
         throw "Could not extract Dell catalog index. expand.exe exit code: $LASTEXITCODE. $($expandOutput -join ' ')"
     }
+    $extractedIndex = Get-DellExtractedXmlFile -Directory $indexExtractDirectory -ExpectedRoot 'ManifestIndex'
     Copy-Item -LiteralPath $extractedIndex.FullName -Destination $indexXmlPath -Force
+    Remove-Item -LiteralPath $indexExtractDirectory -Recurse -Force
 
     $indexDocument = [System.Xml.XmlDocument]::new()
     $indexDocument.XmlResolver = $null
@@ -78,11 +101,12 @@ function Get-DellModelCatalogXml {
     Remove-Item -LiteralPath $extractDirectory -Recurse -Force -ErrorAction SilentlyContinue
     $null = New-Item -Path $extractDirectory -ItemType Directory -Force
     $expandOutput = & $expandPath $modelCabPath '-F:*' $extractDirectory 2>&1
-    $extractedXml = Get-ChildItem -LiteralPath $extractDirectory -File | Select-Object -First 1
-    if ($LASTEXITCODE -ne 0 -or -not $extractedXml) {
+    if ($LASTEXITCODE -ne 0) {
         throw "Could not extract Dell model catalog XML. expand.exe exit code: $LASTEXITCODE. $($expandOutput -join ' ')"
     }
+    $extractedXml = Get-DellExtractedXmlFile -Directory $extractDirectory -ExpectedRoot 'Manifest'
 
     Copy-Item -LiteralPath $extractedXml.FullName -Destination $modelXmlPath -Force
+    Remove-Item -LiteralPath $extractDirectory -Recurse -Force
     return $modelXmlPath
 }

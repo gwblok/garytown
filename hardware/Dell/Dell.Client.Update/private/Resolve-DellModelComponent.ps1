@@ -33,7 +33,13 @@ function Get-DellModelInventory {
     }
 
     foreach ($infFile in (Get-ChildItem -LiteralPath (Join-Path $env:SystemRoot 'INF') -Filter 'oem*.inf' -File -ErrorAction Stop)) {
-        $content = [IO.File]::ReadAllText($infFile.FullName)
+        try {
+            $content = [IO.File]::ReadAllText($infFile.FullName)
+        }
+        catch {
+            Write-Warning "Could not read installed driver extension INF '$($infFile.FullName)': $($_.Exception.Message)"
+            continue
+        }
         $extensionMatch = [regex]::Match($content, '(?im)^\s*ExtensionId\s*=\s*(?<id>\{[0-9A-F-]+\})\s*$')
         $versionMatch = [regex]::Match($content, '(?im)^\s*DriverVer\s*=\s*[^,]+,(?<version>[0-9.]+)\s*$')
         if (-not $extensionMatch.Success -or -not $versionMatch.Success) { continue }
@@ -230,6 +236,8 @@ function Get-DellModelComponentState {
     if (-not $matches.Count) { return $null }
     $packageVersion = $null
     $null = [version]::TryParse($Component.GetAttribute('vendorVersion'), [ref]$packageVersion)
+    # Extension INFs can identify an installed bundle even when subordinate
+    # PnP components report independent versions.
     $hasCurrentExtensionMarker = [bool]($matches | Where-Object { $_.IdentityType -eq 'Extension' -and $packageVersion -and $_.InstalledVersion -eq $packageVersion } | Select-Object -First 1)
     $hasNewerPrimaryMarker = [bool]($matches | Where-Object { $_.IdentityType -eq 'PnP' -and $packageVersion -and $_.ExpectedVersion -eq $packageVersion -and $_.InstalledVersion -gt $_.ExpectedVersion } | Select-Object -First 1)
     $outdatedMatches = @($matches | Where-Object { $_.InstalledVersion -lt $_.ExpectedVersion })

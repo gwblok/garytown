@@ -47,10 +47,45 @@ function Get-DellUpdateWmiClass {
 
     $scope = New-Object System.Management.ManagementScope("\\.\$Namespace")
     $scope.Connect()
+    $stringProperties = @('UpdateID', 'PackageID', 'ReleaseID', 'Title', 'Version', 'DellVersion', 'Status', 'Severity', 'Category', 'Type', 'InstallDate', 'Message', 'ComputerName', 'UserName', 'PackageHash', 'PendingAction')
+    $existingRecords = @()
     try {
         $class = New-Object System.Management.ManagementClass($scope, (New-Object System.Management.ManagementPath($ClassName)), $null)
         $null = $class.Get()
-        return $class
+        if (-not $class.Properties['RecordId']) {
+            throw "Existing WMI class '$Namespace`:$ClassName' has no RecordId key and cannot be upgraded safely."
+        }
+        $classChanged = $false
+        foreach ($propertyName in $stringProperties) {
+            if (-not $class.Properties[$propertyName]) {
+                $class.Properties.Add($propertyName, [System.Management.CimType]::String, $false)
+                $classChanged = $true
+            }
+        }
+        foreach ($propertyDefinition in @(
+            @{ Name = 'Size'; Type = [System.Management.CimType]::UInt64 },
+            @{ Name = 'Success'; Type = [System.Management.CimType]::Boolean },
+            @{ Name = 'RebootRequired'; Type = [System.Management.CimType]::Boolean },
+            @{ Name = 'HasExitCode'; Type = [System.Management.CimType]::Boolean },
+            @{ Name = 'ExitCode'; Type = [System.Management.CimType]::SInt32 }
+        )) {
+            if (-not $class.Properties[$propertyDefinition.Name]) {
+                $class.Properties.Add($propertyDefinition.Name, $propertyDefinition.Type, $false)
+                $classChanged = $true
+            }
+        }
+        if (-not $classChanged) { return $class }
+
+        $existingInstances = @($class.GetInstances())
+        $existingRecords = @($existingInstances | ForEach-Object {
+            $record = @{}
+            foreach ($property in $_.Properties) {
+                if ($property.Name -notlike '__*') { $record[$property.Name] = $property.Value }
+            }
+            $record
+        })
+        foreach ($existingInstance in $existingInstances) { $existingInstance.Delete() }
+        $class.Delete()
     }
     catch [System.Management.ManagementException] {
         if ($_.Exception.ErrorCode -ne [System.Management.ManagementStatus]::NotFound) { throw }
@@ -62,14 +97,24 @@ function Get-DellUpdateWmiClass {
     $class['__CLASS'] = $ClassName
     $class.Properties.Add('RecordId', [System.Management.CimType]::String, $false)
     $class.Properties['RecordId'].Qualifiers.Add('Key', $true)
-    foreach ($propertyName in @('UpdateID', 'PackageID', 'ReleaseID', 'Title', 'Version', 'DellVersion', 'Status', 'Severity', 'Category', 'Type', 'InstallDate', 'Message', 'ComputerName', 'UserName', 'PackageHash', 'PendingAction')) {
+    foreach ($propertyName in $stringProperties) {
         $class.Properties.Add($propertyName, [System.Management.CimType]::String, $false)
     }
     $class.Properties.Add('Size', [System.Management.CimType]::UInt64, $false)
     $class.Properties.Add('Success', [System.Management.CimType]::Boolean, $false)
     $class.Properties.Add('RebootRequired', [System.Management.CimType]::Boolean, $false)
+    $class.Properties.Add('HasExitCode', [System.Management.CimType]::Boolean, $false)
     $class.Properties.Add('ExitCode', [System.Management.CimType]::SInt32, $false)
     $null = $class.Put()
+    foreach ($record in $existingRecords) {
+        $instance = $class.CreateInstance()
+        foreach ($propertyName in $record.Keys) {
+            if ($class.Properties[$propertyName] -and $null -ne $record[$propertyName]) {
+                $instance[$propertyName] = $record[$propertyName]
+            }
+        }
+        $null = $instance.Put()
+    }
     return $class
 }
 
@@ -103,6 +148,7 @@ function Export-DellUpdateResultToWmi {
     $instance['PendingAction'] = [string]$Result.PendingAction
     $instance['Success'] = [bool]$Result.Success
     $instance['RebootRequired'] = [bool]$Result.RebootRequired
+    $instance['HasExitCode'] = $null -ne $Result.ExitCode
     if ($null -ne $Result.ExitCode) { $instance['ExitCode'] = [int]$Result.ExitCode }
     $null = $instance.Put()
 }
@@ -145,6 +191,13 @@ function Write-DellUpdateHistorySession {
     if (-not $Records.Count) { return $null }
     $null = New-Item -Path $HistoryPath -ItemType Directory -Force
     $historyFile = Join-Path $HistoryPath "InstallHist-$(Get-Date -Format 'yyyyMMdd_HHmmss_fff')-$([guid]::NewGuid().ToString('N')).json"
-    @($Records) | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $historyFile -Encoding UTF8
+    $temporaryFile = "$historyFile.tmp"
+    try {
+        @($Records) | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $temporaryFile -Encoding UTF8
+        Move-Item -LiteralPath $temporaryFile -Destination $historyFile -Force
+    }
+    finally {
+        Remove-Item -LiteralPath $temporaryFile -Force -ErrorAction SilentlyContinue
+    }
     return $historyFile
 }
