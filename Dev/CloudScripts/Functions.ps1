@@ -1243,6 +1243,112 @@ $configuredEmail = Start-process -FilePath  'C:\Program Files\Git\bin\git.exe' -
 Write-Host "Git configuration completed successfully!" -ForegroundColor Green
 }
 
+#Get Stuff from GitHub
+
+Write-Host -ForegroundColor Green "[+] Function Get-GitHubRepoContent"
+function Get-GitHubRepoContent {
+    <#
+.SYNOPSIS
+    Downloads a GitHub repository folder and its subfolders.
+    
+.DESCRIPTION
+    Accepts a public GitHub folder URL and downloads its contents using the GitHub API.
+    Preserves subfolders and overwrites matching files without deleting other destination files.
+    Returns a download summary object. GitHub API rate limits apply.
+    
+.PARAMETER GitHubUrl
+    Folder URL in the form https://github.com/owner/repo/tree/branch/folder.
+    Branch names containing slashes must be URL-encoded, for example feature%2Fupdates.
+    
+.PARAMETER DestinationPath
+    Directory to download the folder contents into. Defaults to $env:TEMP.
+    DownloadPath is an alias for this parameter.
+    
+.EXAMPLE
+    Get-GitHubRepoContent -GitHubUrl 'https://github.com/2pintsoftware/2Pint-DeployR/tree/main/Samples'
+    Downloads the contents of Samples to $env:TEMP.
+    
+.EXAMPLE
+    Get-GitHubRepoContent 'https://github.com/2pintsoftware/2Pint-DeployR/tree/main/Samples' -DestinationPath 'C:\Temp\Samples'
+    Downloads the contents of Samples to the specified directory.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [uri]$GitHubUrl,
+        [Alias('DownloadPath')]
+        [ValidateNotNullOrEmpty()]
+        [string]$DestinationPath = $env:TEMP
+    )
+
+    if (-not $GitHubUrl.IsAbsoluteUri -or $GitHubUrl.Scheme -ne 'https' -or
+        $GitHubUrl.Host -ne 'github.com' -or
+        $GitHubUrl.AbsolutePath -notmatch '^/([^/]+)/([^/]+)/tree/([^/]+)(?:/(.*))?$') {
+        throw 'Provide a GitHub folder URL: https://github.com/owner/repo/tree/branch/folder'
+    }
+
+    $GitHubRepo = "$($Matches[1])/$($Matches[2])"
+    $GitHubRef = [uri]::EscapeDataString([uri]::UnescapeDataString($Matches[3]))
+    $GitHubPath = ([string]$Matches[4]).TrimEnd('/')
+    $GitHubApiUrl = "https://api.github.com/repos/$GitHubRepo/contents/$($GitHubPath)?ref=$GitHubRef"
+    $Headers = @{ 'User-Agent' = 'Get-GitHubRepoContent'; Accept = 'application/vnd.github+json' }
+
+    New-Item -ItemType Directory -Path $DestinationPath -Force -ErrorAction Stop | Out-Null
+    $DestinationPath = (Resolve-Path -LiteralPath $DestinationPath -ErrorAction Stop).ProviderPath
+    Write-Host "Repository folder: $GitHubUrl" -ForegroundColor Cyan
+    Write-Host "Download destination: $DestinationPath" -ForegroundColor Cyan
+
+    function Get-GitHubDirectory {
+        param(
+            [string]$ApiUrl,
+            [string]$LocalPath
+        )
+
+        Write-Verbose "Fetching directory contents from: $ApiUrl"
+        $response = Invoke-RestMethod -Uri $ApiUrl -Headers $Headers -ErrorAction Stop
+        $downloadCount = 0
+        $successCount = 0
+
+        foreach ($item in $response) {
+            $itemPath = Join-Path -Path $LocalPath -ChildPath $item.name
+            if ($item.type -eq 'dir') {
+                New-Item -ItemType Directory -Path $itemPath -Force -ErrorAction Stop | Out-Null
+                $subCounts = Get-GitHubDirectory -ApiUrl $item.url -LocalPath $itemPath
+                $downloadCount += $subCounts.Total
+                $successCount += $subCounts.Success
+            }
+            elseif ($item.type -eq 'file') {
+                $downloadCount++
+                try {
+                    if (-not $item.download_url) {
+                        throw 'GitHub did not return a download URL for this file.'
+                    }
+                    Write-Host "Downloading: $($item.path)" -ForegroundColor White
+                    Invoke-WebRequest -Uri $item.download_url -Headers $Headers -OutFile $itemPath -UseBasicParsing -ErrorAction Stop
+                    $successCount++
+                }
+                catch {
+                    Write-Warning "Failed to download $($item.path): $($_.Exception.Message)"
+                }
+            }
+        }
+
+        return @{ Total = $downloadCount; Success = $successCount }
+    }
+
+    $results = Get-GitHubDirectory -ApiUrl $GitHubApiUrl -LocalPath $DestinationPath
+    Write-Host "Downloaded $($results.Success) of $($results.Total) files to: $DestinationPath" -ForegroundColor Green
+    [pscustomobject]@{
+        GitHubUrl = $GitHubUrl.AbsoluteUri
+        DestinationPath = $DestinationPath
+        Total = $results.Total
+        Success = $results.Success
+        Failed = $results.Total - $results.Success
+    }
+}
+
+
 Write-Host -ForegroundColor Green "[+] Function Install-StifleRClient210"
 function Install-StifleRClient210 {
     iex (irm 'https://raw.githubusercontent.com/gwblok/2PintLabs/refs/heads/main/GARYTOWN/210/StifleR_Client_Wrapper.ps1')

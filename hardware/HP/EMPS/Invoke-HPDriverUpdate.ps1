@@ -1,3 +1,223 @@
+function Get-HPDUDeviceInfo {
+    [CmdletBinding()]
+    param()
+
+    $computerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
+    $baseBoard = Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction Stop
+    $platform = ([string]$baseBoard.Product).Trim()
+    if ($platform -notmatch '^[0-9A-Fa-f]{4}$') {
+        throw "The device baseboard product '$platform' is not a supported HP platform ID."
+    }
+
+    [pscustomobject]@{
+        Platform = $platform.ToLowerInvariant()
+        Model = $computerSystem.Model
+    }
+}
+
+function Get-HPDUOsBuildNumber {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][ValidateSet('win10', 'win11')][string]$OperatingSystem,
+        [Parameter(Mandatory)][string]$OperatingSystemVersion
+    )
+
+    $buildNumbers = @{
+        win10 = @{ '1809' = '17763'; '1903' = '18362'; '1909' = '18363'; '2004' = '19041'; '2009' = '19042'; '21H1' = '19043'; '21H2' = '19044'; '22H2' = '19045' }
+        win11 = @{ '21H2' = '22000'; '22H2' = '22621'; '23H2' = '22631'; '24H2' = '26100'; '25H2' = '26200' }
+    }
+
+    $buildNumber = $buildNumbers[$OperatingSystem][$OperatingSystemVersion]
+    if (-not $buildNumber) {
+        throw "Unsupported operating system version '$OperatingSystemVersion' for $OperatingSystem."
+    }
+    $buildNumber
+}
+
+function Get-HPDUSupportedOperatingSystem {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Platform)
+
+    $candidates = @(
+        @{ OperatingSystem = 'win11'; OperatingSystemVersion = '25H2' },
+        @{ OperatingSystem = 'win11'; OperatingSystemVersion = '24H2' },
+        @{ OperatingSystem = 'win11'; OperatingSystemVersion = '23H2' },
+        @{ OperatingSystem = 'win11'; OperatingSystemVersion = '22H2' },
+        @{ OperatingSystem = 'win11'; OperatingSystemVersion = '21H2' },
+        @{ OperatingSystem = 'win10'; OperatingSystemVersion = '22H2' },
+        @{ OperatingSystem = 'win10'; OperatingSystemVersion = '21H2' }
+    )
+
+    foreach ($candidate in $candidates) {
+        $buildNumber = Get-HPDUOsBuildNumber @candidate
+        $architecture = if ([Environment]::Is64BitOperatingSystem) { '64-bit' } else { '32-bit' }
+        $uri = "https://workforceexperience.hp.com/services/srs/api/1.1/recommendations/?system-id=$Platform&os-arch=$architecture&os-build-number=$buildNumber&is-ltsc=false"
+        $response = Invoke-RestMethod -Uri $uri -Method Get -ErrorAction Stop
+        if (@($response.softpaqs).Count) {
+            return [pscustomobject]$candidate
+        }
+    }
+
+    throw "HP has no supported operating system catalog for platform $Platform."
+}
+
+function Get-HPDUReferenceXml {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Platform,
+        [Parameter(Mandatory)][ValidateSet('win10', 'win11')][string]$OperatingSystem,
+        [Parameter(Mandatory)][string]$OperatingSystemVersion,
+        [Parameter(Mandatory)][string]$CacheDirectory
+    )
+
+    $architecture = if ([Environment]::Is64BitOperatingSystem) { '64' } else { '32' }
+    $referenceVersion = if ($OperatingSystem -eq 'win11') { "11.0.$OperatingSystemVersion" } else { "10.0.$OperatingSystemVersion" }
+    $referenceName = "${Platform}_${architecture}_${referenceVersion}"
+    $cacheDirectory = Join-Path $CacheDirectory 'cache'
+    $cabPath = Join-Path $cacheDirectory "$referenceName.cab"
+    $extractDirectory = "$cabPath.dir"
+    $xmlPath = Join-Path $extractDirectory "$referenceName.xml"
+
+    if (-not (Test-Path -LiteralPath $xmlPath -PathType Leaf)) {
+        $null = New-Item -Path $cacheDirectory -ItemType Directory -Force -WhatIf:$false
+        $uri = "https://hpia.hpcloud.hp.com/ref/$Platform/$referenceName.cab"
+        Invoke-WebRequest -Uri $uri -OutFile $cabPath -ErrorAction Stop
+        $null = New-Item -Path $extractDirectory -ItemType Directory -Force -WhatIf:$false
+        & "$env:SystemRoot\System32\expand.exe" $cabPath '-F:*' $extractDirectory | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not extract HP reference catalog '$cabPath' (exit code $LASTEXITCODE)."
+        }
+    }
+
+    if (-not (Test-Path -LiteralPath $xmlPath -PathType Leaf)) {
+        throw "HP reference XML '$xmlPath' was not created from the downloaded catalog."
+    }
+    Get-Item -LiteralPath $xmlPath
+}
+
+function Get-HPDUSoftpaqList {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Platform,
+        [Parameter(Mandatory)][ValidateSet('win10', 'win11')][string]$OperatingSystem,
+        [Parameter(Mandatory)][string]$OperatingSystemVersion
+    )
+
+    $buildNumber = Get-HPDUOsBuildNumber -OperatingSystem $OperatingSystem -OperatingSystemVersion $OperatingSystemVersion
+    $architecture = if ([Environment]::Is64BitOperatingSystem) { '64-bit' } else { '32-bit' }
+    $uri = "https://workforceexperience.hp.com/services/srs/api/1.1/recommendations/?system-id=$Platform&os-arch=$architecture&os-build-number=$buildNumber&is-ltsc=false"
+    $response = Invoke-RestMethod -Uri $uri -Method Get -ErrorAction Stop
+
+    @($response.softpaqs | ForEach-Object {
+        [pscustomobject]@{
+            Id = "sp$($_.softpaqId)"
+            Name = $_.title
+            Version = $_.version
+            Category = $_.categoryName
+            ReleaseType = $_.releaseType
+            Url = $_.downloadUrl
+            MetadataUrl = $_.metadataUrl
+            Sha256 = $_.softpaqSha256
+            SilentInstall = $_.silentInstall
+            SuccessCodes = @($_.successCodes)
+            RebootCodes = @($_.rebootCodes)
+            ReleaseDate = $_.effectivityDate
+            Vendor = $_.vendor
+        }
+    })
+}
+
+function ConvertFrom-HPDUIni {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][object]$Content)
+
+    if ($Content -is [byte[]]) {
+        $Content = [System.Text.Encoding]::UTF8.GetString($Content)
+    }
+    else {
+        $Content = [string]$Content
+    }
+    $ini = @{}
+    $section = $null
+    foreach ($line in ($Content -split "`r?`n")) {
+        if ($line -match '^\[(.+)\]$') {
+            $section = $Matches[1]
+            $ini[$section] = @{}
+            continue
+        }
+        if (-not $section) {
+            $section = 'No-Section'
+            $ini[$section] = @{}
+        }
+        if ($line -match '^(.+?)\s*=\s*(.*)$') {
+            $name, $value = $Matches[1], $Matches[2]
+            if ($ini[$section].ContainsKey($name)) {
+                $ini[$section][$name] = @($ini[$section][$name]) + $value
+            }
+            else {
+                $ini[$section][$name] = $value
+            }
+        }
+        else {
+            $ini[$section]['_body'] = @($ini[$section]['_body']) + $line
+        }
+    }
+    $ini
+}
+
+function Get-HPDUSoftpaqMetadata {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][psobject]$Softpaq)
+
+    $metadataUri = $Softpaq.MetadataUrl
+    if (-not $metadataUri) {
+        $softpaqNumber = [int]([string]$Softpaq.Id -replace '^sp', '')
+        $blockStart = [int]($softpaqNumber / 1000)
+        $block = if (($softpaqNumber % 1000) -gt 500) { "$($blockStart)501-$($blockStart + 1)000" } else { "$($blockStart)001-$($blockStart)500" }
+        $metadataUri = "https://ftp.hp.com/pub/softpaq/sp$block/sp$softpaqNumber.cva"
+    }
+
+    $response = Invoke-WebRequest -Uri $metadataUri -ErrorAction Stop
+    ConvertFrom-HPDUIni -Content $response.Content
+}
+
+function Install-HPDUSoftpaq {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][psobject]$Softpaq,
+        [Parameter(Mandatory)][string]$DestinationPath
+    )
+
+    $null = New-Item -Path $DestinationPath -ItemType Directory -Force
+    $fileName = "$($Softpaq.Id).exe"
+    $installerPath = Join-Path $DestinationPath $fileName
+    Invoke-WebRequest -Uri $Softpaq.Url -OutFile $installerPath -ErrorAction Stop
+
+    if ($Softpaq.Sha256 -and (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash -ine $Softpaq.Sha256) {
+        Remove-Item -LiteralPath $installerPath -Force -ErrorAction SilentlyContinue
+        throw "Downloaded SoftPaq $($Softpaq.Id) failed its SHA-256 validation."
+    }
+    if ((Get-AuthenticodeSignature -FilePath $installerPath).Status -ne 'Valid') {
+        throw "Downloaded SoftPaq $($Softpaq.Id) does not have a valid Authenticode signature."
+    }
+    if (-not $Softpaq.SilentInstall) {
+        throw "HP did not provide a silent installation command for SoftPaq $($Softpaq.Id)."
+    }
+
+    $process = Start-Process -FilePath $installerPath -ArgumentList '-s', '-e cmd.exe', "/f `"$DestinationPath`"", '-a', "/c $($Softpaq.SilentInstall)" -Wait -PassThru
+    $successCodes = @($Softpaq.SuccessCodes)
+    if ($process.ExitCode -notin $successCodes) {
+        throw "SoftPaq $($Softpaq.Id) returned exit code $($process.ExitCode)."
+    }
+
+    [pscustomobject]@{
+        SoftpaqId = $Softpaq.Id
+        ExitCode = $process.ExitCode
+        RebootRequired = $process.ExitCode -in @($Softpaq.RebootCodes)
+        InstallerPath = $installerPath
+    }
+}
+
 Function Invoke-HPAnalyzer {
     <#
     .Name
@@ -26,7 +246,7 @@ Function Invoke-HPAnalyzer {
 
 
     .Dependencies
-        Requires HP Client Management Script Library
+        No HP Client Management Script Library dependency
         HP Business class devices (as supported by HPIA and HP CMSL)
         Internet access. Analyzer downloads content from Internet
 
@@ -127,8 +347,9 @@ Function Invoke-HPAnalyzer {
     }
     # use CMSL to find what is the device
     Try {
-        $ThisPlatformID = Get-HPDeviceProductID
-        $ThisPlatformName = Get-HPDeviceModel
+        $deviceInfo = Get-HPDUDeviceInfo
+        $ThisPlatformID = $deviceInfo.Platform
+        $ThisPlatformName = $deviceInfo.Model
     } Catch {
         Write-Warning 'HP CMSL is not available on this device, or device not supported'
         return 1
@@ -142,14 +363,9 @@ Function Invoke-HPAnalyzer {
     $OSVer = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'DisplayVersion'
 
     if ($OSVerOverride){
-        $MaxOSSupported = ((Get-HPDeviceDetails -oslist).OperatingSystem | Where-Object {$_ -notmatch "LTSB"} | Select-Object -Unique| measure -Maximum).Maximum
-        if ($MaxOSSupported -Match "11"){$MaxOS = "Win11"}
-        else {$MaxOS = "Win10"}
-        $MaxBuild = ((Get-HPDeviceDetails -oslist | Where-Object {$_.OperatingSystem -eq "$MaxOSSupported"}).OperatingSystemRelease | measure -Maximum).Maximum
-        #Write-Host " Max Build Supported for this Device: $MaxBuild"
-        #Write-Host " Max OS: $MaxOS"
-        $OSVer = $MaxBuild
-        $OS = $MaxOS
+        $supportedOperatingSystem = Get-HPDUSupportedOperatingSystem -Platform $ThisPlatformID
+        $OSVer = $supportedOperatingSystem.OperatingSystemVersion
+        $OS = $supportedOperatingSystem.OperatingSystem
         $script:OSOVerOverRideComment = "Overriding OS and/or OSVer with: $OS & $OSVer"
         }
     <#  Dan's Method
@@ -172,12 +388,13 @@ Function Invoke-HPAnalyzer {
     
     #####################################################################################
     $Script:xmlRefFileContent = $null
-    $CacheDir = (Convert-Path (Get-Location))    # get current location of script
+    $CacheDir = Join-Path ([System.IO.Path]::GetTempPath()) 'Invoke-HPDriverUpdate'
+    $null = New-Item -Path $CacheDir -ItemType Directory -Force -WhatIf:$false
     if ( $XmlFile ) {
         if ( Test-Path $XmlFile ) {
             Try {
                 $Error.Clear()            
-                $SoftpaqList = Get-SoftpaqList -platform $ThisPlatformID -os $OS -OsVer $OSVer -ReferenceUrl $CacheDir -ErrorAction Stop    
+                $SoftpaqList = Get-HPDUSoftpaqList -Platform $ThisPlatformID -OperatingSystem $OS -OperatingSystemVersion $OSVer
             } Catch {
                 $error[0].exception          # $error[0].exception.gettype().fullname 
                 return 3
@@ -190,22 +407,21 @@ Function Invoke-HPAnalyzer {
     } else {    
         Try {
             $Error.Clear()   
-            $Script:SoftpaqList = Get-SoftpaqList -platform $ThisPlatformID -os $OS -OsVer $OSVer -CacheDir $CacheDir -ErrorAction Stop
+            $Script:SoftpaqList = Get-HPDUSoftpaqList -Platform $ThisPlatformID -OperatingSystem $OS -OperatingSystemVersion $OSVer
+            $XmlFile = (Get-HPDUReferenceXml -Platform $ThisPlatformID -OperatingSystem $OS -OperatingSystemVersion $OSVer -CacheDirectory $CacheDir).FullName
         } Catch {
             $error[0].exception                       # $error[0].exception.gettype().fullname 
             'Remove "cache" folder and try again'
             if ( $OSVer -eq '22H2' ) { 'NOTE: CMSL version >= 1.6.8 is required to support Windows 22H2' }
             return -2
         }
-        # find the downloaded reference file (as expanded from the cab file)
-        $XmlFile = Get-Childitem -Path $CacheDir'\cache' -Include "*.xml" -Recurse -File |
-                where { ($_.Directory -match '.dir') -and `
-                    ($_.Name -match $ThisPlatformID) -and `
-                    ($_.Name -match $OS.Substring(3)) -and `
-                    ($_.Name -match $OSVer) }
     } # else if ( $XmlFile )
 
-    $Script:xmlContent = [xml](Get-Content -Path $XmlFile)
+    if (-not $XmlFile -or -not (Test-Path -LiteralPath $XmlFile -PathType Leaf)) {
+        throw "HP reference XML was not found for platform $ThisPlatformID, $OS $OSVer. Clear '$CacheDir' and retry."
+    }
+
+    $Script:xmlContent = [xml](Get-Content -LiteralPath $XmlFile -Raw)
     $Script:XMLRefFileDevices = $Script:xmlContent.SelectNodes("ImagePal/Devices/Device")
 
     # error codes for color coding, etc.
@@ -252,6 +468,7 @@ Function Invoke-HPAnalyzer {
         [CmdletBinding()] param( $pInstalled, $pToMatch )
 
         if ( -not $pInstalled ) { return $true }
+        if ( -not $pToMatch ) { return $false }
         # handle case: '1.1.28.1 A 7' (like in HP Notifications)
         if ( $pInstalled.contains(' ') ) { $pInstalled = $pInstalled.split(' ')[0] }  
         if ( $pToMatch.contains(' ') ) { $pToMatch = $pToMatch.split(' ')[0] } 
@@ -732,12 +949,16 @@ Function Invoke-HPAnalyzer {
             SoftpaqDate = $pSoftpaq.ReleaseDate ; `
             ReleaseType = $pSoftpaq.ReleaseType ; `
             URL = $pSoftpaq.url ; `
+            Sha256 = $pSoftpaq.Sha256 ; `
+            SilentInstall = $pSoftpaq.SilentInstall ; `
+            SuccessCodes = $pSoftpaq.SuccessCodes ; `
+            RebootCodes = $pSoftpaq.RebootCodes ; `
         }
         if ( $pSoftpaq.Category -match 'bios' ) {
             if ( $a_AnalyzeType -eq 'Array') { 
-                $a_InstalledBIOS = Get-HPBIOSSettingValue 'System BIOS Version'  # ex. 'Q70 Ver. 01.19.20  03/21/2022'
-                $a_InstalledBIOS = $a_InstalledBIOS.split(' ')[2]
-                $a_InstalledBIOSDate = $a_InstalledBIOS.substring($a_InstalledBIOS.lastIndexOf(' ')+1)
+                $a_Bios = Get-CimInstance -ClassName Win32_BIOS
+                $a_InstalledBIOS = ([regex]::Match([string]$a_Bios.SMBIOSBIOSVersion, '\d+(?:\.\d+)+')).Value
+                $a_InstalledBIOSDate = $a_Bios.ReleaseDate
             } else { #'XMLNode'
                 $a_TargetSystem = $pDriversList.SelectNodes("ImagePal/SystemInfo/System")
                 $a_InstalledBIOS = $a_TargetSystem.BiosVersion2.split(' ')[2] # BiosVersion2: "Q70 Ver. 01.19.20"
@@ -990,7 +1211,7 @@ Function Invoke-HPAnalyzer {
         Try {
             $Error.Clear()
             $lineNum = ((get-pscallstack)[0].Location -split " line ")[1] # get code line # in case of failure
-            $SpqMetadata = Get-SoftpaqMetadata $Spq.id -ErrorAction Stop  # get CVA file for this Softpaq
+            $SpqMetadata = Get-HPDUSoftpaqMetadata -Softpaq $Spq -ErrorAction Stop  # get CVA file for this Softpaq
         } catch {
             $Err = $error[0].exception          # OPTIONAL: $error[0].exception.gettype().fullname 
             if ( $Err -match '404' ) {                
@@ -1124,7 +1345,7 @@ Function Invoke-HPDriverUpdate {
 
 
     .Dependencies
-        Requires HP Client Management Script Library
+        No HP Client Management Script Library dependency
         HP Business class devices (as supported by HPIA and HP CMSL)
         Internet access. Analyzer downloads content from Internet
 
@@ -1242,9 +1463,9 @@ Function Invoke-HPDriverUpdate {
             Write-Output " Starting Update...."
             
             if ($Details){ #Just adding -verbose to commandline
-                if ($PSCmdlet.ShouldProcess("$($env:computername)","Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -verbose")){
-                    Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe -verbose"
-                    Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "$($Update.SoftpaqID).exe" -Verbose
+                if ($PSCmdlet.ShouldProcess("$($env:computername)","Download and silently install HP SoftPaq $($Update.SoftpaqID)")){
+                    Write-Output "  Downloading and silently installing $($Update.SoftpaqID)"
+                    Install-HPDUSoftpaq -Softpaq $Update -DestinationPath 'C:\SWSetup' -Verbose
                 }
                 else
                 {
@@ -1253,9 +1474,9 @@ Function Invoke-HPDriverUpdate {
                 }
             }
             else {
-                if ($PSCmdlet.ShouldProcess("$($env:computername)","Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe")){
-                    Write-Output "  Get-Softpaq -Number $($Update.SoftpaqID) -Action silentinstall -DestinationPath C:\SWSetup -SaveAs C:\SWSetup\$($Update.SoftpaqID).exe"
-                    Get-Softpaq -Number $Update.SoftpaqID -Action silentinstall -quiet -DestinationPath "C:\SWSetup" -SaveAs "$($Update.SoftpaqID).exe"
+                if ($PSCmdlet.ShouldProcess("$($env:computername)","Download and silently install HP SoftPaq $($Update.SoftpaqID)")){
+                    Write-Output "  Downloading and silently installing $($Update.SoftpaqID)"
+                    Install-HPDUSoftpaq -Softpaq $Update -DestinationPath 'C:\SWSetup'
                 }
                 else
                 {
