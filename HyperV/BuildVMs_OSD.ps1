@@ -157,6 +157,9 @@ if ($HostName -match "HPED800G6-HOST"){
 elseif ($HostName -eq "D-P-5810-VMHOST"){
     $HostName = 'P5180'
 }
+elseif ($HostName -eq "HPZ2SFFG4-01M5D"){
+    $HostName = 'Z2G4'
+}
 elseif ($HostName -eq "HP-Z2-SFF-G5"){
     $HostName = 'Z2G5'
 }
