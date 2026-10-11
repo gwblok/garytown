@@ -99,14 +99,14 @@ Function Install-Update {
 
 <#
 .SYNOPSIS
-    Installs Windows 11 enablement package to upgrade to 23H2 or 25H2.
+    Installs Windows 11 enablement package to upgrade to 23H2, 25H2 or 26H2.
 
 .DESCRIPTION
     This function downloads and installs the Windows 11 enablement package for the specified version.
     It automatically downloads the correct update file and installs it using the Install-Update function.
 
 .PARAMETER Version
-    The Windows 11 version to upgrade to. Valid values are "23H2" or "25H2".
+    The Windows 11 version to upgrade to. Valid values are "23H2", "25H2" or "26H2".
 
 .EXAMPLE
     Install-EnablementUpgrade -Version "23H2"
@@ -115,6 +115,10 @@ Function Install-Update {
 .EXAMPLE
     Install-EnablementUpgrade -Version "25H2"
     Upgrades Windows 11 to version 25H2.
+
+.EXAMPLE
+    Install-EnablementUpgrade -Version "26H2"
+    Upgrades Windows 11 to version 26H2.
 
 .NOTES
     Requires administrator privileges.
@@ -125,7 +129,7 @@ Function Install-EnablementUpgrade {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$true)]
-        [ValidateSet("23H2", "25H2")]
+        [ValidateSet("23H2", "25H2", "26H2")]
         [string]$Version
     )
 
@@ -140,6 +144,11 @@ Function Install-EnablementUpgrade {
             URL = "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/fa84cc49-18b2-4c26-b389-90c96e6ae0d2/public/windows11.0-kb5054156-x64_a0c1638cbcf4cf33dbe9a5bef69db374b4786974.msu"
             FileName = "windows11.0-kb5054156-x64.msu"
             KB = "KB5054156"
+        }
+        "26H2" = @{
+            URL = "https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/94520a88-858f-4832-a57d-7211f6d84a4e/public/Windows11.0-KB5121794-x64_5e20a3cce48d6611b16bdec42b07167f5456586a.msu"
+            FileName = "Windows11.0-KB5121794-x64.msu"
+            KB = "KB5121794"
         }
     }
 
@@ -214,3 +223,4 @@ Function Install-EnablementUpgrade {
 # Example usage (commented out - uncomment to run):
 # Install-EnablementUpgrade -Version "23H2"
 # Install-EnablementUpgrade -Version "25H2"
+# Install-EnablementUpgrade -Version "26H2"

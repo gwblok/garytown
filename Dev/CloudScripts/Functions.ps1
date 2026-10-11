@@ -385,7 +385,7 @@ Function Set-Win11ReqBypassRegValues {
         New-ItemProperty -Path "HKLM:\SYSTEM\Setup\MoSetup" -Name "AllowUpgradesWithUnsupportedTPMOrCPU" -Value 1 -PropertyType DWORD -Force | out-null
     }
 }
-Write-Host -ForegroundColor Green "[+] Function Install-EnablementUpgrade (-version 23H2, 25H2)"
+Write-Host -ForegroundColor Green "[+] Function Install-EnablementUpgrade (-version 23H2, 25H2, 26H2)"
 iex (irm https://raw.githubusercontent.com/gwblok/garytown/refs/heads/master/SoftwareUpdates/Install-Update.ps1)
 
 
