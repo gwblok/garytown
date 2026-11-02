@@ -20,8 +20,9 @@ I've created several scripts to use inside Intune's remediation script feature. 
 - [What's new in the ADK tools](https://learn.microsoft.com/en-us/windows-hardware/get-started/what-s-new-in-kits-and-tools)
 
 ## References from the Community
+
 - [Dealing With CVE-2023-24932, aka Remediating BlackLotus - anthonyfontanez.com](https://ajf.one/blacklotus)
-  - GitHub Scripts and FlowCharts: https://github.com/ajf8729/BlackLotus
+  - GitHub Scripts and FlowCharts: <https://github.com/ajf8729/BlackLotus>
 - [KB5025885: How to manage the Windows Boot Manager revocations for Secure Boot changes associated with CVE-2023-24932 – GARYTOWN](https://garytown.com/configmgr-task-sequence-kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932)
 - [KB5025885: Dealing with CVE-2023-24932 via Proactive Remediation & Configuration Items – GARYTOWN](https://garytown.com/kb5025885-dealing-cve-2023-24932-with-proactive-remediation-configuration-items)
 - [Slightly clear the fog around BlackLotus mitigations - Red Pill Blogs](https://technet.blogs.ms/blacklotus/)
@@ -62,11 +63,12 @@ The Update-BootMgr2023 Script resolves a machine in this state:
 ![Catch22](media/BootMgrCatch22.jpg)
 
 # ConfigMgr Folder
-You'll find a Baseline, along with the scripts that are in the exported baseline for reviewing.  There is also a Task Sequence Export (KB5025885 - Media Creator.zip) to use to update a boot.wim file, enabling the 2023 cert in your boot.wim file.  The Task Sequence to apply the Remediation can be found on my blog: https://garytown.com/configmgr-task-sequence-kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932
+
+You'll find a Baseline, along with the scripts that are in the exported baseline for reviewing.  There is also a Task Sequence Export (KB5025885 - Media Creator.zip) to use to update a boot.wim file, enabling the 2023 cert in your boot.wim file.  The Task Sequence to apply the Remediation can be found on my blog: <https://garytown.com/configmgr-task-sequence-kb5025885-how-to-manage-the-windows-boot-manager-revocations-for-secure-boot-changes-associated-with-cve-2023-24932>
 
 # Intune Folder
-This will contain scripts used with Intune Remediation feature.  I'll plan to have one script for a "Status Report" which will only be a detection script to give you an overview of devices and their remediation state.  I'll also provide scripts for performing steps 1-3, which you can control via a variable in the script.
 
+This will contain scripts used with Intune Remediation feature.  I'll plan to have one script for a "Status Report" which will only be a detection script to give you an overview of devices and their remediation state.  I'll also provide scripts for performing steps 1-3, which you can control via a variable in the script.
 
 # Change Log
 
@@ -80,3 +82,4 @@ This will contain scripts used with Intune Remediation feature.  I'll plan to ha
 - 26.4.2 - MAJOR OVERHAUL based on so many changes MS made in March 2026
   - Renamed several script to simplify and added a lot of notes
   - Updated Scripts to require devices have the March 2026 CUs installed.
+- 26.11.2 - OS applicability check: builds 26300 (26H2) and newer are now approved without a UBR check, so new releases no longer need script updates.  Also fixed the check failing on builds not in the UBR list (previously a null error, or silently treated as compliant in the ConfigMgr scripts).  Applied to the Test/Invoke scripts, ConfigMgr and Intune scripts.

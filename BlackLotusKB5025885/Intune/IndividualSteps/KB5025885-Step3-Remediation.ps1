@@ -41,13 +41,14 @@ $Build = $CurrentOSInfo.GetValue('CurrentBuild')
 
 #July 2025 UBRs
 $JulyPatch = @('19045.6093','22621.5624','22631.5624','26100.4652','26200.4652')
-$MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
-if ($null -eq $MatchedPatch){
+$MatchedPatch = $JulyPatch | Where-Object {$_.Split(".")[0] -eq $Build} | Select-Object -First 1
+#Builds 26300 (26H2) and newer are approved without a UBR check
+if ($null -eq $MatchedPatch -and [int]$Build -lt 26300){
     Write-Output "The OS ($Build.$UBR) is not supported for this remediation."
     Write-Error "Exit 5 - OS Version not supported"
     exit 5
 }
-[int]$MatchedUBR = $MatchedPatch.split(".")[1]
+[int]$MatchedUBR = if ($MatchedPatch) {$MatchedPatch.Split(".")[1]} else {0}
 
 
 if ($UBR -ge $MatchedUBR){

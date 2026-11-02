@@ -170,11 +170,12 @@ function Invoke-BlackLotusKB5025885Compliance {
 
     #July 2024 UBRs
     $JulyPatch = @('19045.4651','22621.3880','22631.3880','26100.1150','26120.1','26200.1')
-    $MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
-    if ($null -eq $MatchedPatch){
+    $MatchedPatch = $JulyPatch | Where-Object {$_.Split(".")[0] -eq $Build} | Select-Object -First 1
+    #Builds 26300 (26H2) and newer are approved without a UBR check
+    if ($null -eq $MatchedPatch -and [int]$Build -lt 26300){
         $Applicability = "The OS ($Build.$UBR) is not supported for this remediation."
     }
-    [int]$MatchedUBR = $MatchedPatch.split(".")[1]
+    [int]$MatchedUBR = if ($MatchedPatch) {$MatchedPatch.Split(".")[1]} else {0}
 
     if ($UBR -ge $MatchedUBR){
         #$OSSupported = $true

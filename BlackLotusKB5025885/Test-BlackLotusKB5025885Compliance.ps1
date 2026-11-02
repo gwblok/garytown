@@ -56,22 +56,19 @@ function Test-BlackLotusKB5025885Compliance {
     #Region Applicability
     $CurrentOSInfo = Get-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
     $Build = $CurrentOSInfo.GetValue('CurrentBuild')
+    [int]$BuildNumber = $Build
     [int]$UBR = $CurrentOSInfo.GetValue('UBR')
 
-    #July 2024 UBRs
-    $JulyPatch = @('19045.4651','22621.3880','22631.3880','26100.1150','26120.1','26200.1')
-    $MatchedPatch = $JulyPatch | Where-Object {$_ -match $Build}
-    if ($null -eq $MatchedPatch){
-        $Applicability = "The OS ($Build.$UBR) is not supported for this remediation."
-    }
-    [int]$MatchedUBR = $MatchedPatch.split(".")[1]
+    #Builds at or above this (26H2 and newer) already include the fixes
+    $MinAutoApprovedBuild = 26300
 
-    if ($UBR -ge $MatchedUBR){
-        #$OSSupported = $true
-    }
-    else {
-        #$OSSupported = $false
-        $Applicability = "The OS ($Build.$UBR) is not supported for this remediation."
+    if ($BuildNumber -lt $MinAutoApprovedBuild) {
+        #July 2024 UBRs
+        $JulyPatch = @('19045.4651','22621.3880','22631.3880','26100.1150','26120.1','26200.1')
+        $MatchedPatch = $JulyPatch | Where-Object {$_.Split(".")[0] -eq $Build} | Select-Object -First 1
+        if ($null -eq $MatchedPatch -or $UBR -lt [int]$MatchedPatch.Split(".")[1]){
+            $Applicability = "The OS ($Build.$UBR) is not supported for this remediation."
+        }
     }
     if (Confirm-SecureBootUEFI -ErrorAction SilentlyContinue) {
         #This is required for remediation to work
