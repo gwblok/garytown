@@ -190,6 +190,9 @@ elseif ($HostName -match "HPZBSG10-GWB"){
 elseif ($HostName -eq "DELL-P7920"){
     $HostName = 'P7920'
 }
+elseif ($HostName -eq "LX9-14-21QB-PF5"){
+    $HostName = 'LX9'
+}
 else{
     $HostName = 'HVHst'
 }
