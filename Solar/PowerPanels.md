@@ -4,40 +4,29 @@ Photo-based circuit directory. Panel 1 is the first photo; Panel 2 is the second
 
 Each cell lists **position - circuit label**, followed by **amp rating / pole count**. `Unclear` means the photo does not support a reliable reading. Ratings are breaker handle ratings, not measured loads.
 
-## Circuit Layout
+## Current Circuit Layout of Panel 1 & Panel 2
 
-| Panel 1 L | Panel 1 R | Panel 2 L | Panel 2 R |
-| --- | --- | --- | --- |
-| **1 - Main Floor Laundry**<br>20 A / 1-pole | **2 - Garage Fridge**<br>20 A / 1-pole | **1 - Prep Room Circuit 2**<br>20 A / 1-pole | **2 - Master & Basement Bath Receptacles**<br>20 A / 1-pole |
-| **3 - Kitchen Disposal**<br>15 A / 1-pole | **4 - Garage Freezer**<br>20 A / 1-pole | **3 - Prep Room Dishwasher**<br>20 A / 1-pole | **4 - 2nd Floor Bath Receptacles**<br>20 A / 1-pole |
-| **5 - Kitchen Island Dishwasher**<br>20 A / 1-pole | **6 - Pantry Receptacles**<br>20 A / 1-pole | **5 - Office Receptacles**<br>20 A / 1-pole | **6 - Kitchen Circuit 2**<br>20 A / 1-pole |
-| **7 - Master Bed & Bath**<br>15 A / 1-pole | **8 - Main Floor & Basement Bath Receptacles**<br>20 A / 1-pole | **7 - Office Closet Receptacles**<br>20 A / 1-pole | **8 - Bar Receptacles**<br>15 A / 1-pole |
-| **9 - Main & Lower Level Furnace**<br>Unclear A / 1-pole | **10 - Kitchen Fridge**<br>15 A / 1-pole | **9 - NW Basement Bedroom / North Half Family Room Receptacles**<br>15 A / 1-pole | **10 - Foyer / Prep Room / Pantry / Closet Receptacles (Partial Label)**<br>15 A / 1-pole |
-| **11 - Garage Receptacles**<br>20 A / 1-pole | **12 - Kitchen Circuit 1**<br>20 A / 1-pole | **11 - Laundry / Hall / Bath / Utility / Office / Family Room Receptacles (Partial Label)**<br>15 A / 1-pole | **12 - Main Floor / Master Bedroom / Garage / Additional Text Unclear (Partial Label)**<br>15 A / 1-pole |
-| **13 - Lower Level Laundry**<br>20 A / 1-pole | **14 - Living Room & Kitchen Lights**<br>15 A / 1-pole | **13 - Prep Room Disposal**<br>15 A / 1-pole | **14 - Lower-Level Bedrooms & Closets / Home School Room**<br>20 A / 1-pole |
-| **15 - Prep Room Circuit 1**<br>20 A / 1-pole | **16 - Main Hall / Stairs / Additional Text Unclear**<br>15 A / 1-pole | **15 - Main Floor North Hall, Bath & NE Bedroom**<br>15 A / 1-pole | **16 - 2nd Floor Furnace**<br>20 A / 1-pole |
-| **17/19 - 2nd Floor Air Conditioner**<br>25 A / 2-pole | **18 - Utility Room Receptacles**<br>20 A / 1-pole | **17 - Bonus Room**<br>15 A / 1-pole | **18 - 2nd Floor North Bedroom**<br>15 A / 1-pole |
-| **19 - See 17/19**<br>Same breaker; not an additional circuit | **20 - Garage Lights**<br>15 A / 1-pole | **19 - 2nd Floor SE Bedroom, Foyer Receptacles**<br>15 A / 1-pole | **20/22 - EV Outlet (Handwritten)**<br>50 A / 2-pole |
-| **21/23 - Oven**<br>40 A / 2-pole | **22 - Guest Bedroom / Deck Receptacles**<br>15 A / 1-pole | **21 - 2nd Floor Family Room (Loft)**<br>15 A / 1-pole | **22 - See 20/22**<br>Same breaker; not an additional circuit |
-| **23 - See 21/23**<br>Same breaker; not an additional circuit | **24 - Kitchen Island / Under-Cabinet Puck / Dining Room / Stairway / Backyard Flood Lights**<br>15 A / 1-pole | **23 - 2nd Floor Bath / South Foyer Lights**<br>15 A / 1-pole; verify abbreviation | **24 - Unlabeled / Appears Unoccupied**<br>N/A |
-| **25 - Unlabeled / Appears Unoccupied**<br>N/A | **26 - Unlabeled / Appears Unoccupied**<br>N/A | **25 - Family Room & Bar Lights**<br>15 A / 1-pole | **26 - Unlabeled / Appears Unoccupied**<br>N/A |
-| **27 - Unlabeled / Appears Unoccupied**<br>N/A | **28 - Unlabeled / Appears Unoccupied**<br>N/A | **27/29 - Main & Lower Level Air Conditioner**<br>25 A / 2-pole | **28 - Unlabeled / Appears Unoccupied**<br>N/A |
-| **29 - Unlabeled / Appears Unoccupied**<br>N/A | **30 - Unlabeled / Appears Unoccupied**<br>N/A | **29 - See 27/29**<br>Same breaker; not an additional circuit | **30 - Unlabeled / Appears Unoccupied**<br>N/A |
+| Panel 1 L | Panel 1 R | | Panel 2 L | Panel 2 R |
+| --- | --- | --- | --- | --- |
+| **1 - Main Floor Laundry**<br>20 A / 1-pole | **2 - Garage Fridge**<br>20 A / 1-pole | | **1 - Prep Room Circuit 2**<br>20 A / 1-pole | **2 - Master & Basement Bath Receptacles**<br>20 A / 1-pole |
+| **3 - Kitchen Disposal**<br>15 A / 1-pole | **4 - Garage Freezer**<br>20 A / 1-pole | | **3 - Prep Room Dishwasher**<br>20 A / 1-pole | **4 - 2nd Floor Bath Receptacles**<br>20 A / 1-pole |
+| **5 - Kitchen Island Dishwasher**<br>20 A / 1-pole | **6 - Pantry Receptacles**<br>20 A / 1-pole | | **5 - Office Receptacles**<br>20 A / 1-pole | **6 - Kitchen Circuit 2**<br>20 A / 1-pole |
+| **7 - Master Bed & Bath**<br>15 A / 1-pole | **8 - Main Floor & Basement Bath Receptacles**<br>20 A / 1-pole | | **7 - Office Closet Receptacles**<br>20 A / 1-pole | **8 - Bar Receptacles**<br>15 A / 1-pole |
+| **9 - Main & Lower Level Furnace**<br>Unclear A / 1-pole | **10 - Kitchen Fridge**<br>15 A / 1-pole | | **9 - NW Basement Bedroom / North Half Family Room Receptacles**<br>15 A / 1-pole | **10 - Foyer / Prep Room / Pantry / Closet Receptacles (Partial Label)**<br>15 A / 1-pole |
+| **11 - Garage Receptacles**<br>20 A / 1-pole | **12 - Kitchen Circuit 1**<br>20 A / 1-pole | | **11 - Laundry / Hall / Bath / Utility / Office / Family Room Receptacles (Partial Label)**<br>15 A / 1-pole | **12 - Main Floor / Master Bedroom / Garage / Additional Text Unclear (Partial Label)**<br>15 A / 1-pole |
+| **13 - Lower Level Laundry**<br>20 A / 1-pole | **14 - Living Room & Kitchen Lights**<br>15 A / 1-pole | | **13 - Prep Room Disposal**<br>15 A / 1-pole | **14 - Lower-Level Bedrooms & Closets / Home School Room**<br>20 A / 1-pole |
+| **15 - Prep Room Circuit 1**<br>20 A / 1-pole | **16 - Main Hall / Stairs / Additional Text Unclear**<br>15 A / 1-pole | | **15 - Main Floor North Hall, Bath & NE Bedroom**<br>15 A / 1-pole | **16 - 2nd Floor Furnace**<br>20 A / 1-pole |
+| **17/19 - 2nd Floor Air Conditioner**<br>25 A / 2-pole | **18 - Utility Room Receptacles**<br>20 A / 1-pole | | **17 - Bonus Room**<br>15 A / 1-pole | **18 - 2nd Floor North Bedroom**<br>15 A / 1-pole |
+| **19 - See 17/19**<br>Same breaker; not an additional circuit | **20 - Garage Lights**<br>15 A / 1-pole | | **19 - 2nd Floor SE Bedroom, Foyer Receptacles**<br>15 A / 1-pole | **20/22 - EV Outlet (Handwritten)**<br>50 A / 2-pole |
+| **21/23 - Oven**<br>40 A / 2-pole | **22 - Guest Bedroom / Deck Receptacles**<br>15 A / 1-pole | | **21 - 2nd Floor Family Room (Loft)**<br>15 A / 1-pole | **22 - See 20/22**<br>Same breaker; not an additional circuit |
+| **23 - See 21/23**<br>Same breaker; not an additional circuit | **24 - Kitchen Island / Under-Cabinet Puck / Dining Room / Stairway / Backyard Flood Lights**<br>15 A / 1-pole | | **23 - 2nd Floor Bath / South Foyer Lights**<br>15 A / 1-pole; verify abbreviation | **24 - Unlabeled / Appears Unoccupied**<br>N/A |
+| **25 - Unlabeled / Appears Unoccupied**<br>N/A | **26 - Unlabeled / Appears Unoccupied**<br>N/A | | **25 - Family Room & Bar Lights**<br>15 A / 1-pole | **26 - Unlabeled / Appears Unoccupied**<br>N/A |
+| **27 - Unlabeled / Appears Unoccupied**<br>N/A | **28 - Unlabeled / Appears Unoccupied**<br>N/A | | **27/29 - Main & Lower Level Air Conditioner**<br>25 A / 2-pole | **28 - Unlabeled / Appears Unoccupied**<br>N/A |
+| **29 - Unlabeled / Appears Unoccupied**<br>N/A | **30 - Unlabeled / Appears Unoccupied**<br>N/A | | **29 - See 27/29**<br>Same breaker; not an additional circuit | **30 - Unlabeled / Appears Unoccupied**<br>N/A |
 
 ## Proposed SPAN 48-Space Panel
 
 Planning recommendation for solar, two Tesla Powerwall 3 batteries, daily time-of-use shifting, and selective outage backup. Allocate **40 spaces to household circuits, six provisional spaces to generation/storage connections, and two spare spaces**. Keep main-floor laundry and the kitchen island dishwasher; leave lower-level laundry and the prep room dishwasher outside SPAN. SPAN model, breaker compatibility, connection locations, and equipment space requirements must be confirmed before treating this as a final fit.
-
-### Capacity And Operating Assumptions
-
-- The updated photo-based directory shows 50 occupied household spaces. Excluding ten spaces below leaves 40: 38 single-pole circuits and the two-pole main/lower-level AC. Actual circuit identities and wiring still require installer verification.
-- Panel spaces are not an amperage budget. Do not add breaker handle ratings to estimate demand. Confirm service amperage, each feeder rating, SPAN bus/main ratings, conductor capacity, phase balance, and a code-compliant load calculation with the installer.
-- "120 on each" may describe voltage, not amperage. A typical split-phase panel supplies both 120 V and 240 V; two existing panels are not necessarily two equal halves of service capacity.
-- The proposal shows 17.94 kW DC solar and 14.82 kW AC inverter capacity. Neither is guaranteed output, and Minnesota solar should not be assumed to supply the entire 6-9 PM peak period, especially in winter. Size evening battery use assuming little or no late-evening solar.
-- Two 13.5 kWh batteries provide 27 kWh nominal usable storage. Available evening energy depends on state of charge, backup reserve, losses, and temperature; instantaneous output and AC starting capability depend on the installed configuration.
-- Keep main-floor AC available for daily peak shifting, but shed it early during an outage. Confirm that the retained furnace circuit powers its indoor blower and controls. Heating priority assumes fuel-fired furnaces, not electric resistance heating.
-- The Enphase microinverter / Powerwall 3 combination needs a confirmed AC-coupled design, including solar operation during outages. Solar and battery connections may be outside SPAN or require different space allocations. The three two-pole reserves are placeholders, not approved equipment breaker sizes or wiring instructions.
-- Source circuit numbers below identify the existing panels. Proposed slots are illustrative directory positions, not phase-balancing or installation instructions. Preserve required paired circuits and shared-neutral arrangements; installer placement may differ.
 
 ### SPAN Panel Visual Layout
 
