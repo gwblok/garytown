@@ -1,8 +1,7 @@
 # Power Panel Directory
 
-Photo-based circuit directory. Panel 1 is the first photo; Panel 2 is the second photo. L and R refer to the left and right breaker columns when facing each panel.
 
-Each cell lists **position - circuit label**, followed by **amp rating / pole count**. `Unclear` means the photo does not support a reliable reading. Ratings are breaker handle ratings, not measured loads.
+Each cell lists **position - circuit label**, followed by **amp rating / pole count**. Ratings are breaker handle ratings, not measured loads.
 
 ## Current Circuit Layout of Panel 1 & Panel 2
 
